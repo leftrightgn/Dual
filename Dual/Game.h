@@ -14,6 +14,7 @@
 #include "GameContext.h"
 #include "Scene/SceneId.h"
 
+
 // A basic game implementation that creates a D3D11 device and
 // provides a game loop.
 class Game final : public DX::IDeviceNotify
@@ -88,5 +89,7 @@ private:
 
     // シーンマネージャー
     Imase::SceneManager<SceneId, GameContext> m_sceneManager;
+
+
 
 };

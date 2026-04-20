@@ -180,6 +180,11 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Camera\CameraController.h" />
+    <ClInclude Include="Camera\FirstPersonMode.h" />
+    <ClInclude Include="Camera\ICameraMode.h" />
+    <ClInclude Include="Camera\CinematicMode.h" />
+    <ClInclude Include="Camera\ThirdPersonMode.h" />
     <ClInclude Include="Common\DeviceResources.h" />
     <ClInclude Include="Common\StepTimer.h" />
     <ClInclude Include="DirectXTK_Utilities\Animation.h" />
@@ -239,6 +244,23 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Resources\Shaders\SkyboxEffect_Common.hlsli">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Resources\Shaders\SkyboxEffect_PS.hlsl">
+      <ShaderType>Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)Resources\Shaders/%(Filename).cso</ObjectFileOutput>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Resources\Shaders\SkyboxEffect_VS.hlsl">
+      <ShaderType>Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -19,9 +19,14 @@ void GameScene::Update(Imase::ISceneController<SceneId>& sceneController, GameCo
 
 	debugRenderer.DrawText({ 0.0f, 0.0f }, L"GameScene");
 
-    if (m_debugCamera)
+    float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
+
+    m_targetPos = m_world.Translation();
+
+
+    if (m_cameraController)
     {
-        m_debugCamera->Update(true);
+        m_cameraController->Update(deltaTime);
     }
     m_water->Update(gameContext.timer.GetElapsedSeconds());
     m_animation.Update(gameContext.timer.GetElapsedSeconds());
@@ -36,9 +41,9 @@ void GameScene::Render(GameContext& gameContext)
     // Turn OFF depth writing and face culling
     context->OMSetDepthStencilState(gameContext.commonStates.DepthRead(), 0);
     context->RSSetState(gameContext.commonStates.CullNone());
-    if (m_debugCamera)
+    if (m_cameraController)
     {
-        SimpleMath::Matrix view = m_debugCamera->GetCameraMatrix();
+        SimpleMath::Matrix view = m_cameraController->GetView();
         m_effect->SetView(view);
     }
    
@@ -51,9 +56,9 @@ void GameScene::Render(GameContext& gameContext)
     context->PSSetSamplers(0, 1, &wrapSampler);
     context->OMSetBlendState(gameContext.commonStates.AlphaBlend(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthRead(), 0);
-    SimpleMath::Matrix view = m_debugCamera->GetCameraMatrix();
+    SimpleMath::Matrix view = m_cameraController->GetView();
 
-    SimpleMath::Vector3 camPos = m_debugCamera->GetEyePosition();
+    SimpleMath::Vector3 camPos = m_cameraController->GetPosition();
  
     m_water->Draw(context, view, m_proj, camPos);
     context->RSSetState(gameContext.commonStates.CullCounterClockwise());
@@ -121,14 +126,20 @@ void GameScene::OnEnter(GameContext& gameContext)
     int width = static_cast<int>(viewport.Width);
     int height = static_cast<int>(viewport.Height);
 
-    m_debugCamera = std::make_unique<Imase::DebugCamera>(width, height);
+    //m_debugCamera = std::make_unique<Imase::DebugCamera>(width, height);
+
+    m_cameraController = std::make_unique<CameraController>();
+
+    m_targetPos = DirectX::SimpleMath::Vector3(0.0f, 1.5f, 0.0f);
+
+    m_cameraController->SetMode(std::make_unique<CinematicMode>(m_targetPos, 8.0f, 0.0f, 1.0f, 10.0f));
 
     float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
     m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
         DirectX::XM_PI / 4.0f, aspectRatio, 0.1f, 1000.0f);
 
     m_effect->SetProjection(m_proj);
-    m_world = DirectX::SimpleMath::Matrix::CreateScale(10.0f);
+    m_world = DirectX::SimpleMath::Matrix::CreateScale(10.1f);
 
 
     // Water
@@ -136,15 +147,15 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_water->Initialize(device, gameContext.deviceResources.GetD3DDeviceContext(), L"Resources/Textures/water.dds", L"Resources/Textures/waternormal.dds", L"Resources/Textures/waternoise.dds");
 
     m_fxFactory = std::make_unique<EffectFactory>(device);
-    static_cast<EffectFactory*>(m_fxFactory.get())->SetDirectory(L"Resources/Models");
+    static_cast<EffectFactory*>(m_fxFactory.get())->SetDirectory(L"Resources/Models/soldier");
 
     
-    m_model = Model::CreateFromSDKMESH(device, L"Resources/Models/soldier.sdkmesh",
+    m_model = Model::CreateFromSDKMESH(device, L"Resources/Models/soldier/soldier.sdkmesh",
         *m_fxFactory,
         static_cast<ModelLoaderFlags>(ModelLoader_Clockwise | ModelLoader_IncludeBones));
 
     DX::ThrowIfFailed(
-        m_animation.Load(L"Resources/Models/soldier.sdkmesh_anim")
+        m_animation.Load(L"Resources/Models/soldier/soldier.sdkmesh_anim")
     );
     m_animation.Bind(*m_model);
 
