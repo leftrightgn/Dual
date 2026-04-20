@@ -18,25 +18,6 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID01_Base_color.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID01_Metallic.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID01_Mixed_AO.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID01_Normal_DirectX.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID01_Roughness.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID02_alpha.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID02_Base_color.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID02_Metallic.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID02_Mixed_AO.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID02_Normal_DirectX.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID02_Roughness.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID03_alpha.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID03_Base_color.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID03_Metallic.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID03_Mixed_AO.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID03_Normal_DirectX.png" />
-    <ImageContentTask Include="..\..\..\..\Downloads\knight\textures\ID03_Roughness.png" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

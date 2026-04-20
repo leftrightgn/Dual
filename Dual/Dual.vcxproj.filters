@@ -96,6 +96,11 @@
     <ClInclude Include="DirectXTK_Utilities\Animation.h">
       <Filter>DirectXTK_Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Camera\ICameraMode.h" />
+    <ClInclude Include="Camera\CinematicMode.h" />
+    <ClInclude Include="Camera\FirstPersonMode.h" />
+    <ClInclude Include="Camera\ThirdPersonMode.h" />
+    <ClInclude Include="Camera\CameraController.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -105,6 +110,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Resources\Shaders\SkyboxEffect_Common.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
@@ -131,5 +137,9 @@
     <Filter Include="Effect">
       <UniqueIdentifier>{5915fa9b-369f-46a7-b832-10067f3f5875}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Resources\Shaders\SkyboxEffect_PS.hlsl" />
+    <FxCompile Include="Resources\Shaders\SkyboxEffect_VS.hlsl" />
   </ItemGroup>
 </Project>
