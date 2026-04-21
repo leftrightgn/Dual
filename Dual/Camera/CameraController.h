@@ -5,6 +5,7 @@ class CameraController
 {
 private:
 	CameraData m_data;
+
 	std::unique_ptr<ICameraMode> m_currentMode;
 
 public:
@@ -19,6 +20,14 @@ public:
 		if (m_currentMode)
 		{
 			m_currentMode->Update(m_data, deltaTime);
+		}
+	}
+
+	void ProcessInput(const CameraInputState& input)
+	{
+		if (m_currentMode)
+		{
+			m_currentMode->ProcessInput(input);
 		}
 	}
 

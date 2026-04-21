@@ -75,6 +75,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -180,13 +181,18 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Components\TransfromComponent.h" />
+    <ClInclude Include="Entities\Actor.h" />
     <ClInclude Include="Camera\CameraController.h" />
+    <ClInclude Include="Camera\DebugCameraMode.h" />
     <ClInclude Include="Camera\FirstPersonMode.h" />
     <ClInclude Include="Camera\ICameraMode.h" />
     <ClInclude Include="Camera\CinematicMode.h" />
+    <ClInclude Include="Camera\SpringCameraMode.h" />
     <ClInclude Include="Camera\ThirdPersonMode.h" />
     <ClInclude Include="Common\DeviceResources.h" />
     <ClInclude Include="Common\StepTimer.h" />
+    <ClInclude Include="Components\IComponent.h" />
     <ClInclude Include="DirectXTK_Utilities\Animation.h" />
     <ClInclude Include="DirectXTK_Utilities\DebugDraw.h" />
     <ClInclude Include="Effect\ReadData.h" />

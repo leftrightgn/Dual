@@ -8,6 +8,7 @@
 //--------------------------------------------------------------------------------------
 #include "pch.h"
 #include "GameScene.h"
+#include <Camera/DebugCameraMode.h>
 
 
 using namespace DirectX;
@@ -21,15 +22,31 @@ void GameScene::Update(Imase::ISceneController<SceneId>& sceneController, GameCo
 
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
-    m_targetPos = m_world.Translation();
+    //m_targetPos = m_world.Translation();
 
 
     if (m_cameraController)
     {
+        CameraInputState cameraInput;
+        auto mouseState = gameContext.mouseButtonTracker.GetLastState();
+
+        if (mouseState.leftButton && mouseState.positionMode == DirectX::Mouse::MODE_RELATIVE)
+        {
+            cameraInput.mouseX = static_cast<float>(mouseState.x);
+            cameraInput.mouseY = static_cast<float>(mouseState.y);
+        }
+
+        if (mouseState.scrollWheelValue != 0)
+        {
+            cameraInput.scrollWheelDelta = static_cast<float>(mouseState.scrollWheelValue);
+            DirectX::Mouse::Get().ResetScrollWheelValue();
+        }
+        m_cameraController->ProcessInput(cameraInput);
         m_cameraController->Update(deltaTime);
     }
-    m_water->Update(gameContext.timer.GetElapsedSeconds());
-    m_animation.Update(gameContext.timer.GetElapsedSeconds());
+    //m_debugCamera->Update(true);
+    m_water->Update(deltaTime);
+    m_animation.Update(deltaTime);
 }
 
 // 描画
@@ -45,7 +62,14 @@ void GameScene::Render(GameContext& gameContext)
     {
         SimpleMath::Matrix view = m_cameraController->GetView();
         m_effect->SetView(view);
+
+       
     }
+   /* if (m_debugCamera)
+    {
+        SimpleMath::Matrix view = m_debugCamera->GetCameraMatrix();
+        m_effect->SetView(view);
+    }*/
    
     m_sky->Draw(m_effect.get(), m_skyInputLayout.Get());
 
@@ -57,8 +81,10 @@ void GameScene::Render(GameContext& gameContext)
     context->OMSetBlendState(gameContext.commonStates.AlphaBlend(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthRead(), 0);
     SimpleMath::Matrix view = m_cameraController->GetView();
+    //SimpleMath::Matrix view = m_debugCamera->GetCameraMatrix();
 
     SimpleMath::Vector3 camPos = m_cameraController->GetPosition();
+    //SimpleMath::Vector3 camPos = m_debugCamera->GetEyePosition();
  
     m_water->Draw(context, view, m_proj, camPos);
     context->RSSetState(gameContext.commonStates.CullCounterClockwise());
@@ -132,14 +158,14 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     m_targetPos = DirectX::SimpleMath::Vector3(0.0f, 1.5f, 0.0f);
 
-    m_cameraController->SetMode(std::make_unique<CinematicMode>(m_targetPos, 8.0f, 0.0f, 1.0f, 10.0f));
+    m_cameraController->SetMode(std::make_unique<DebugCameraMode>());
 
     float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
     m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
         DirectX::XM_PI / 4.0f, aspectRatio, 0.1f, 1000.0f);
 
     m_effect->SetProjection(m_proj);
-    m_world = DirectX::SimpleMath::Matrix::CreateScale(10.1f);
+    m_world = DirectX::SimpleMath::Matrix::CreateScale(0.0001f);
 
 
     // Water
@@ -147,15 +173,24 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_water->Initialize(device, gameContext.deviceResources.GetD3DDeviceContext(), L"Resources/Textures/water.dds", L"Resources/Textures/waternormal.dds", L"Resources/Textures/waternoise.dds");
 
     m_fxFactory = std::make_unique<EffectFactory>(device);
-    static_cast<EffectFactory*>(m_fxFactory.get())->SetDirectory(L"Resources/Models/soldier");
+    static_cast<EffectFactory*>(m_fxFactory.get())->SetDirectory(L"Resources/Models/knight");
 
-    
-    m_model = Model::CreateFromSDKMESH(device, L"Resources/Models/soldier/soldier.sdkmesh",
+    m_model = Model::CreateFromSDKMESH(device, L"Resources/Models/knight/knight.sdkmesh",
         *m_fxFactory,
         static_cast<ModelLoaderFlags>(ModelLoader_Clockwise | ModelLoader_IncludeBones));
+    /*try {
+        m_model = Model::CreateFromSDKMESH(device, L"Resources/Models/knight/knight.sdkmesh",
+            *m_fxFactory,
+            static_cast<ModelLoaderFlags>(ModelLoader_Clockwise | ModelLoader_IncludeBones));
+    }
+    catch (const std::exception& e)
+    {
+
+        OutputDebugStringA(e.what());
+    }*/
 
     DX::ThrowIfFailed(
-        m_animation.Load(L"Resources/Models/soldier/soldier.sdkmesh_anim")
+        m_animation.Load(L"Resources/Models/knight/knight.sdkmesh_anim")
     );
     m_animation.Bind(*m_model);
 

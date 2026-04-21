@@ -24,7 +24,7 @@ public:
 	}
 
 	// Cinematic mode ignores player input
-	void ProcessInput(float mouseX, float mouseY) override { return; }
+	void ProcessInput(const CameraInputState& input) override { return; }
 
 	void Update(CameraData& outData, float deltaTime) override
 	{
@@ -33,8 +33,8 @@ public:
 
 		// Calculate the camera position by trigonometry for a circle
 
-		float x = m_centerofStage.x + (std::cos(m_currentAngle) * m_radius);
-		float z = m_centerofStage.z + (std::sin(m_currentAngle) * m_radius);
+		float x = m_centerofStage.x + (cosf(m_currentAngle) * m_radius);
+		float z = m_centerofStage.z + (sinf(m_currentAngle) * m_radius);
 
 		outData.position = DirectX::SimpleMath::Vector3(x, m_centerofStage.y + m_cameraHeight, z);
 

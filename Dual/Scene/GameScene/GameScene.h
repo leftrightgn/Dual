@@ -16,7 +16,7 @@
 #include "ImaseLib/DebugCamera.h"
 #include "DirectXTK_Utilities/Animation.h"
 #include "Camera/CameraController.h"
-#include "Camera/CinematicMode.h"
+
 
 
 class GameScene : public Imase::SceneBase<SceneId, GameContext>
@@ -44,7 +44,7 @@ private:
 
 	std::unique_ptr<Water> m_water;
 
-	//std::unique_ptr<Imase::DebugCamera> m_debugCamera;
+	std::unique_ptr<Imase::DebugCamera> m_debugCamera;
 
 	DirectX::SimpleMath::Matrix m_proj;
 

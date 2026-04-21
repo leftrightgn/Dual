@@ -101,6 +101,11 @@
     <ClInclude Include="Camera\FirstPersonMode.h" />
     <ClInclude Include="Camera\ThirdPersonMode.h" />
     <ClInclude Include="Camera\CameraController.h" />
+    <ClInclude Include="Camera\DebugCameraMode.h" />
+    <ClInclude Include="Camera\SpringCameraMode.h" />
+    <ClInclude Include="Components\IComponent.h" />
+    <ClInclude Include="Entities\Actor.h" />
+    <ClInclude Include="Components\TransfromComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
