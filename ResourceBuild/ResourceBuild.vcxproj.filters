@@ -20,4 +20,12 @@
       <UniqueIdentifier>{64d3c325-defb-4f05-8fd9-b13d316840e3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ImageContentTask Include="Textures\blinn2SG_Mixed_AO.jpeg">
+      <Filter>Textures</Filter>
+    </ImageContentTask>
+    <ImageContentTask Include="Textures\blinn4SG_Mixed_AO.jpeg">
+      <Filter>Textures</Filter>
+    </ImageContentTask>
+  </ItemGroup>
 </Project>

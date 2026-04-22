@@ -22,10 +22,10 @@ public:
 
 	}
 
-	void ProcessInput(float mouseX, float mouseY) override
+	void ProcessInput(const CameraInputState& input) override
 	{
-		m_yaw += mouseX * m_mouseSensitivity;
-		m_pitch += mouseY * m_mouseSensitivity;
+		m_yaw += input.mouseX * m_mouseSensitivity;
+		m_pitch += input.mouseY * m_mouseSensitivity;
 
 		// 85degree limit
 		const float pitchLimit = (DirectX::XM_PIDIV2 - 0.1f);

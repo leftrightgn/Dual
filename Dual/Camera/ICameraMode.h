@@ -4,19 +4,26 @@
 // Data Container
 struct CameraData
 {
-	DirectX::SimpleMath::Vector3 position;
-	DirectX::SimpleMath::Matrix viewMatrix;
-	DirectX::SimpleMath::Matrix projMatrix;
-	float fov;
+	DirectX::SimpleMath::Vector3 position = {};
+	DirectX::SimpleMath::Matrix viewMatrix = {};
+	DirectX::SimpleMath::Matrix projMatrix = {};
+	float fov = {};
 };
 
+// Input Data Container
+struct CameraInputState
+{
+	float mouseX = 0.0f;
+	float mouseY = 0.0f;
+	float scrollWheelDelta = 0.0f;
+};
 // Strategy interface
 class ICameraMode
 {
 public:
 
-	~ICameraMode() = default;
+	virtual ~ICameraMode() = default;
 
 	virtual void Update(CameraData& outData, float deltaTime) = 0;
-	virtual void ProcessInput(float mouseX, float mouseY) = 0;
+	virtual void ProcessInput(const CameraInputState& input) = 0;
 };

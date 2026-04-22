@@ -24,10 +24,10 @@ public:
 	{
 	}
 
-	void ProcessInput(float mouseX, float mouseY) override
+	void ProcessInput(const CameraInputState& input) override
 	{
-		m_pitch += mouseX * m_mouseSensitivity;
-		m_yaw += mouseY * m_mouseSensitivity;
+		m_pitch += input.mouseX * m_mouseSensitivity;
+		m_yaw += input.mouseY * m_mouseSensitivity;
 
 		// max look down 85degree
 		const float maxPitchDown = (DirectX::XM_PIDIV2 - 1.0f);
@@ -37,6 +37,13 @@ public:
 
 		// clamp the pitch 
 		m_pitch = std::clamp(m_pitch, maxPitchUp, maxPitchDown);
+
+
+		if (input.scrollWheelDelta != 0.0f)
+		{
+			m_boomLength -= (input.scrollWheelDelta / 100.0f);
+			m_boomLength = std::clamp(m_boomLength, 1.0f, 10.0f);
+		}
 	}
 
 	void Update(CameraData& outData, float deltaTime) override
