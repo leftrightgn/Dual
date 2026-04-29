@@ -9,12 +9,22 @@
 #include "pch.h"
 #include "GameScene.h"
 #include <Camera/DebugCameraMode.h>
+#include <Components/TransfromComponent.h>
+#include <Components/SkinnedModelComponent.h>
+#include <Camera/ThirdPersonMode.h>
+#include <Camera/FirstPersonMode.h>
+#include <BlackBoard/CombatBlackBoard.h>
+#include <Components/PlayerInputComponent.h>
+#include <Components/CharacterMovementComponent.h>
+#include <Components/CombatStateMachineComponent.h>
+
+
 
 
 using namespace DirectX;
 
 // 更新
-void GameScene::Update(Imase::ISceneController<SceneId>& sceneController, GameContext& gameContext)
+void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, GameContext& gameContext)
 {
 	Imase::DebugRenderer& debugRenderer = gameContext.debugRenderer;
 
@@ -22,38 +32,77 @@ void GameScene::Update(Imase::ISceneController<SceneId>& sceneController, GameCo
 
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
-    //m_targetPos = m_world.Translation();
 
+    if (!m_actors.empty())
+    {
+        HEIN::PlayerInputComponent* inputComp = m_actors[0]->GetComponent<HEIN::PlayerInputComponent>();
+        if (inputComp)
+        {
+            inputComp->ProcessInput(gameContext);
+        }
+    }
+   
 
+    // Update Actors FIRST! 
+
+    for (std::unique_ptr<HEIN::Actor>& actor : m_actors)
+    {
+        actor->Update(deltaTime);
+
+        HEIN::TransformComponent* transform = actor->GetComponent<HEIN::TransformComponent>();
+        if (transform != nullptr)
+        {
+            //DirectX::SimpleMath::Vector3 pos = transform->GetPosition();
+            //pos.z -= 10.0f * deltaTime;
+            //transform->SetPosition(pos);
+        }
+    }
+
+    // NOW read the bone position safely
+    if (!m_actors.empty())
+    {
+        HEIN::TransformComponent* pTransform = m_actors[0]->GetComponent<HEIN::TransformComponent>();
+        HEIN::SkinnedModelComponent* pModel = m_actors[0]->GetComponent<HEIN::SkinnedModelComponent>();
+
+        if (pTransform != nullptr && pModel != nullptr)
+        {
+            DirectX::SimpleMath::Matrix worldMatrix = pTransform->GetWorldMatrix();
+            m_targetPos = pModel->GetBoneWorldPosition(L"mixamorig:Head", worldMatrix);
+        }
+    }
+
+    //  Update the Camera using the valid target position
     if (m_cameraController)
     {
-        CameraInputState cameraInput;
-        auto mouseState = gameContext.mouseButtonTracker.GetLastState();
-
-        if (mouseState.leftButton && mouseState.positionMode == DirectX::Mouse::MODE_RELATIVE)
-        {
-            cameraInput.mouseX = static_cast<float>(mouseState.x);
-            cameraInput.mouseY = static_cast<float>(mouseState.y);
-        }
-
-        if (mouseState.scrollWheelValue != 0)
-        {
-            cameraInput.scrollWheelDelta = static_cast<float>(mouseState.scrollWheelValue);
-            DirectX::Mouse::Get().ResetScrollWheelValue();
-        }
-        m_cameraController->ProcessInput(cameraInput);
         m_cameraController->Update(deltaTime);
+        D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
+        float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
+
+        m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
+            m_cameraController->GetFov(),  // gets FOV from current camera mode
+            aspectRatio,
+            0.01f,
+            1000.0f
+        );
+
+        m_effect->SetProjection(m_proj);
     }
-    //m_debugCamera->Update(true);
-    m_water->Update(deltaTime);
-    m_animation.Update(deltaTime);
+
+    //  Update Environment
+    if (m_water)
+    {
+        m_water->Update(deltaTime);
+    }
+
+    
+  
 }
 
 // 描画
 void GameScene::Render(GameContext& gameContext)
 {
     ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
-   
+
 
     // Turn OFF depth writing and face culling
     context->OMSetDepthStencilState(gameContext.commonStates.DepthRead(), 0);
@@ -63,14 +112,14 @@ void GameScene::Render(GameContext& gameContext)
         SimpleMath::Matrix view = m_cameraController->GetView();
         m_effect->SetView(view);
 
-       
+
     }
-   /* if (m_debugCamera)
-    {
-        SimpleMath::Matrix view = m_debugCamera->GetCameraMatrix();
-        m_effect->SetView(view);
-    }*/
-   
+    /* if (m_debugCamera)
+     {
+         SimpleMath::Matrix view = m_debugCamera->GetCameraMatrix();
+         m_effect->SetView(view);
+     }*/
+
     m_sky->Draw(m_effect.get(), m_skyInputLayout.Get());
 
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
@@ -85,23 +134,31 @@ void GameScene::Render(GameContext& gameContext)
 
     SimpleMath::Vector3 camPos = m_cameraController->GetPosition();
     //SimpleMath::Vector3 camPos = m_debugCamera->GetEyePosition();
- 
-    m_water->Draw(context, view, m_proj, camPos);
+
+    m_water->Draw(gameContext, view, m_proj, camPos);
     context->RSSetState(gameContext.commonStates.CullCounterClockwise());
     // Reset Blend State
     context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
 
-    size_t nbones = m_model->bones.size();
+    for (std::unique_ptr<HEIN::Actor>& actor : m_actors)
+    {
+        HEIN::TransformComponent* transformComp = actor->GetComponent<HEIN::TransformComponent>();
 
-    m_animation.Apply(*m_model, nbones, m_drawBones.get());
+        // Grab ALL models attached to this actor
+        std::vector<HEIN::SkinnedModelComponent*> models = actor->GetComponents<HEIN::SkinnedModelComponent>();
 
+        if (transformComp != nullptr && !models.empty())
+        {
+            DirectX::SimpleMath::Matrix world = transformComp->GetWorldMatrix();
 
-
-    m_model->DrawSkinned(context, gameContext.commonStates, nbones, m_drawBones.get(),
-        m_world, view, m_proj);
-
-    
+            // Loop through and draw them (the SetVisible check we added will hide the inactive one!)
+            for (HEIN::SkinnedModelComponent* modelComp : models)
+            {
+                modelComp->Draw(gameContext, world, view, m_proj);
+            }
+        }
+    }
 }
 
 // シーン切り替え時に呼び出される関数
@@ -153,48 +210,64 @@ void GameScene::OnEnter(GameContext& gameContext)
     int height = static_cast<int>(viewport.Height);
 
     //m_debugCamera = std::make_unique<Imase::DebugCamera>(width, height);
-
-    m_cameraController = std::make_unique<CameraController>();
-
-    m_targetPos = DirectX::SimpleMath::Vector3(0.0f, 1.5f, 0.0f);
-
-    m_cameraController->SetMode(std::make_unique<DebugCameraMode>());
-
+    
     float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
     m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
-        DirectX::XM_PI / 4.0f, aspectRatio, 0.1f, 1000.0f);
+        DirectX::XM_PI / 4.0f, aspectRatio, 0.01f, 1000.0f);
 
     m_effect->SetProjection(m_proj);
-    m_world = DirectX::SimpleMath::Matrix::CreateScale(0.0001f);
+   
 
 
     // Water
     m_water = std::make_unique<Water>();
-    m_water->Initialize(device, gameContext.deviceResources.GetD3DDeviceContext(), L"Resources/Textures/water.dds", L"Resources/Textures/waternormal.dds", L"Resources/Textures/waternoise.dds");
+    m_water->Initialize(gameContext, L"Resources/Textures/water.dds", L"Resources/Textures/waternormal.dds", L"Resources/Textures/waternoise.dds");
 
-    m_fxFactory = std::make_unique<EffectFactory>(device);
-    static_cast<EffectFactory*>(m_fxFactory.get())->SetDirectory(L"Resources/Models/knight");
+    m_player = std::make_unique<HEIN::Actor>(L"Player");
 
-    m_model = Model::CreateFromSDKMESH(device, L"Resources/Models/knight/knight.sdkmesh",
-        *m_fxFactory,
-        static_cast<ModelLoaderFlags>(ModelLoader_Clockwise | ModelLoader_IncludeBones));
-    /*try {
-        m_model = Model::CreateFromSDKMESH(device, L"Resources/Models/knight/knight.sdkmesh",
-            *m_fxFactory,
-            static_cast<ModelLoaderFlags>(ModelLoader_Clockwise | ModelLoader_IncludeBones));
-    }
-    catch (const std::exception& e)
-    {
-
-        OutputDebugStringA(e.what());
-    }*/
-
-    DX::ThrowIfFailed(
-        m_animation.Load(L"Resources/Models/knight/knight.sdkmesh_anim")
-    );
-    m_animation.Bind(*m_model);
-
-    m_drawBones = ModelBone::MakeArray(m_model->bones.size());
+    HEIN::TransformComponent* ptransform = m_player->AddComponent<HEIN::TransformComponent>();
+    ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
+    ptransform->SetScale(DirectX::SimpleMath::Vector3(0.1f));
+   
+    DirectX::SimpleMath::Vector3 pos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+    HEIN::SkinnedModelComponent* m_tpsModel = m_player->AddComponent<HEIN::SkinnedModelComponent>();
     
+    // ThirdPersonCamera model
+    m_tpsModel->Initialize(gameContext,
+        L"Resources/Models/knight/knight.sdkmesh", // normal model
+        L"Resources/Models/knight");
+    m_tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/knightidle.sdkmesh_anim");
+    m_tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/knight.sdkmesh_anim");
 
+    // FirstPersonCamera model
+    HEIN::SkinnedModelComponent* m_fpsModel = m_player->AddComponent<HEIN::SkinnedModelComponent>();
+    m_fpsModel->Initialize(gameContext,
+        L"Resources/Models/knight/headless.sdkmesh", // headless/arms model
+        L"Resources/Models/knight");
+    m_fpsModel->LoadAnimation("Idle", L"Resources/Models/knight/knightidle.sdkmesh_anim");
+    m_fpsModel->LoadAnimation("Walk", L"Resources/Models/knight/knight.sdkmesh_anim");
+
+
+    m_cameraController = std::make_unique<HEIN::CameraController>();
+
+    m_cameraController->RegisterCamera(HEIN::CameraType::Debug, []() { return std::make_unique<HEIN::DebugCameraMode>(); });
+    DirectX::SimpleMath::Matrix worldMatrix = ptransform->GetWorldMatrix();
+    m_targetPos = m_fpsModel->GetBoneWorldPosition(L"mixamorig:Head", worldMatrix);
+    m_cameraController->RegisterCamera(HEIN::CameraType::FirstPerson, [this, m_fpsModel, m_tpsModel]() 
+        { return std::make_unique<HEIN::FirstPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); });
+    m_cameraController->RegisterCamera(HEIN::CameraType::ThirdPerson, [this, m_fpsModel, m_tpsModel]() 
+        { return std::make_unique<HEIN::ThirdPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); });
+
+    m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
+
+    m_player->AddComponent<HEIN::CombatBlackBoard>();
+    m_player->AddComponent<HEIN::PlayerInputComponent>(m_cameraController.get()); // Requires the camera controller
+    m_player->AddComponent<HEIN::CharacterMovementComponent>();
+    m_player->AddComponent<HEIN::CombatStateMachineComponent>();
+   
+    m_player->Start();
+
+    m_actors.push_back(std::move(m_player));
+
+   
 }

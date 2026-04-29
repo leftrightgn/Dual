@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "pch.h" 
-
+#include "GameContext.h"
 class Water
 {
 private:
@@ -23,16 +23,16 @@ private:
 
     struct WaterSettingsBuffer
     {
-        DirectX::SimpleMath::Vector3 waterColor;
-        float fresnelPower;
-        float specularPower;
-        float waveSpeed;
-        float normalBlend;
-        float padding3;
-        float uvScale;
-        float offset;
-        float multiplier;
-        float padding4;
+        DirectX::SimpleMath::Vector3 waterColor{};
+        float fresnelPower{};
+        float specularPower{};
+        float waveSpeed{};
+        float normalBlend{};
+        float padding3{};
+        float uvScale{};
+        float offset{};
+        float multiplier{};
+        float padding4{};
     };
 
     // Standard Vertex Structure
@@ -75,9 +75,9 @@ public:
     Water();
     ~Water();
 
-    void Initialize(ID3D11Device* device, ID3D11DeviceContext* context, const wchar_t* textureFilename, const wchar_t* normalMapFilename, const wchar_t* noiseMapFilename);
+    void Initialize(GameContext& gameContext, const wchar_t* textureFilename, const wchar_t* normalMapFilename, const wchar_t* noiseMapFilename);
     void Update(float deltaTime);
-    void Draw(ID3D11DeviceContext* context,
+    void Draw(GameContext& gameContext,
         const DirectX::SimpleMath::Matrix& view,
         const DirectX::SimpleMath::Matrix& projection,
         const DirectX::SimpleMath::Vector3& cameraPos);

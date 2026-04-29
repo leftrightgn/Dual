@@ -22,7 +22,7 @@ Water::Water()
 
 Water::~Water() {}
 
-void Water::Initialize(ID3D11Device* device, ID3D11DeviceContext* context, const wchar_t* textureFilename, const wchar_t* normalMapFilename, const wchar_t* noiseMapFilename)
+void Water::Initialize(GameContext& gameContext, const wchar_t* textureFilename, const wchar_t* normalMapFilename, const wchar_t* noiseMapFilename)
 {
     //  GENERATE GRID MESH (100x100) ---
     int width = 500;
@@ -70,6 +70,7 @@ void Water::Initialize(ID3D11Device* device, ID3D11DeviceContext* context, const
     }
     m_indexCount = (int)indices.size();
 
+    auto device = gameContext.deviceResources.GetD3DDevice();
     // Create Vertex Buffer
     D3D11_BUFFER_DESC vbd = {};
     vbd.Usage = D3D11_USAGE_DEFAULT;
@@ -151,8 +152,9 @@ void Water::Update(float deltaTime)
     m_totalTime += deltaTime;
 }
 
-void Water::Draw(ID3D11DeviceContext* context, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& projection, const DirectX::SimpleMath::Vector3& cameraPos)
+void Water::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& projection, const DirectX::SimpleMath::Vector3& cameraPos)
 {
+    auto context = gameContext.deviceResources.GetD3DDeviceContext();
     // Update Constant Buffer (Matrices + Time)
     WaterConstantBuffer data;
 

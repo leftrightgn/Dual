@@ -12,7 +12,7 @@
 using namespace DirectX;
 
 // 更新
-void BaseScene::Update(Imase::ISceneController<SceneId>& sceneController, GameContext& gameContext)
+void BaseScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, GameContext& gameContext)
 {
 	Imase::DebugRenderer& debugRenderer = gameContext.debugRenderer;
 

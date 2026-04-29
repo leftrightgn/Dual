@@ -34,5 +34,10 @@ struct GameContext
 
 	// デバッグ用の描画セット
 	Imase::DebugRenderer& debugRenderer;
+
+	DirectX::Mouse::State mouseState;
+
+	DirectX::Keyboard::State keyboardState;
+
 };
 

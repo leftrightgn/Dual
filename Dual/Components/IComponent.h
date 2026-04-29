@@ -1,24 +1,29 @@
 #pragma once
 
-class Actor;
 
-class IComponent
+namespace HEIN
 {
-protected:
+	class Actor;
 
-	Actor* m_owner;
-
-public:
-
-	IComponent(Actor* owner)
-		: m_owner(owner)
+	class IComponent
 	{
-	}
+	protected:
 
-	virtual ~IComponent() = default;
+		Actor* m_owner;
 
-	virtual void Update(float deltaTime) = 0;
-	virtual void Render() = 0;
+	public:
 
-	Actor* GetOwner() const { return m_owner; }
-};
+		IComponent(Actor* owner)
+			: m_owner(owner)
+		{
+		}
+
+		virtual ~IComponent() = default;
+
+		virtual void Update(float deltaTime) = 0;
+
+		virtual void Start() {}
+
+		Actor* GetOwner() const { return m_owner; }
+	};
+}

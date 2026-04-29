@@ -181,6 +181,10 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BlackBoard\CombatBlackBoard.h" />
+    <ClInclude Include="Components\CharacterMovementComponent.h" />
+    <ClInclude Include="Components\CombatStateMachineComponent.h" />
+    <ClInclude Include="Components\PlayerInputComponent.h" />
     <ClInclude Include="Components\TransfromComponent.h" />
     <ClInclude Include="Entities\Actor.h" />
     <ClInclude Include="Camera\CameraController.h" />
@@ -214,6 +218,9 @@
     <ClInclude Include="Scene\BaseScene\BaseScene.h" />
     <ClInclude Include="Scene\GameScene\GameScene.h" />
     <ClInclude Include="Scene\SceneId.h" />
+    <ClInclude Include="Components\SkinnedModelComponent.h" />
+    <ClInclude Include="States\CombatStates.h" />
+    <ClInclude Include="States\ICombatState.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\DeviceResources.cpp" />
@@ -238,6 +245,8 @@
     </ClCompile>
     <ClCompile Include="Scene\BaseScene\BaseScene.cpp" />
     <ClCompile Include="Scene\GameScene\GameScene.cpp" />
+    <ClCompile Include="Components\SkinnedModelComponent.cpp" />
+    <ClCompile Include="States\CombatStates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
