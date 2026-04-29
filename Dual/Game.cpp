@@ -95,6 +95,8 @@ void Game::Update(DX::StepTimer const& timer)
     auto mouse = Mouse::Get().GetState();
     m_mouseButtonTracker.Update(mouse);
 
+    m_gameContext->mouseState = mouse ;
+
     // シーンの更新
     m_sceneManager.Update(*m_gameContext);
 

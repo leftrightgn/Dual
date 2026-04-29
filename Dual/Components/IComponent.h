@@ -2,23 +2,25 @@
 
 class Actor;
 
-class IComponent
+namespace HEIN
 {
-protected:
-
-	Actor* m_owner;
-
-public:
-
-	IComponent(Actor* owner)
-		: m_owner(owner)
+	class IComponent
 	{
-	}
+	protected:
 
-	virtual ~IComponent() = default;
+		Actor* m_owner;
 
-	virtual void Update(float deltaTime) = 0;
-	virtual void Render() = 0;
+	public:
 
-	Actor* GetOwner() const { return m_owner; }
-};
+		IComponent(Actor* owner)
+			: m_owner(owner)
+		{
+		}
+
+		virtual ~IComponent() = default;
+
+		virtual void Update(float deltaTime) = 0;
+
+		Actor* GetOwner() const { return m_owner; }
+	};
+}

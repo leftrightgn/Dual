@@ -43,6 +43,7 @@
     <ClCompile Include="DirectXTK_Utilities\Animation.cpp">
       <Filter>DirectXTK_Utilities</Filter>
     </ClCompile>
+    <ClCompile Include="Components\SkinnedModelComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -106,6 +107,11 @@
     <ClInclude Include="Components\IComponent.h" />
     <ClInclude Include="Entities\Actor.h" />
     <ClInclude Include="Components\TransfromComponent.h" />
+    <ClInclude Include="Components\SkinnedModelComponent.h" />
+    <ClInclude Include="BlackBoard\CombatBlackBoard.h" />
+    <ClInclude Include="Components\PlayerInputComponent.h" />
+    <ClInclude Include="Components\CharacterMovementComponent.h" />
+    <ClInclude Include="States\ICombatState.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

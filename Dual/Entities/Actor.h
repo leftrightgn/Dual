@@ -10,7 +10,7 @@ class Actor
 private:
 
 	// Memory safe Array of Components
-	std::vector<std::unique_ptr<IComponent>> m_components;
+	std::vector<std::unique_ptr<HEIN::IComponent>> m_components;
 
 	std::wstring m_tag;
 
@@ -32,13 +32,7 @@ public:
 		}
 	}
 
-	void Render()
-	{
-		for (auto& comp : m_components)
-		{
-			comp->Render();
-		}
-	}
+
 
 	// Template  Components
 	// Creates a component, adds it to the Actor, and returns a pointer to it
@@ -57,15 +51,30 @@ public:
 	template <typename T>
 	T* GetComponent()
 	{
-		for (auto& comp : m_components)
+		for (std::unique_ptr<HEIN::IComponent>& comp : m_components)
 		{
 			T* target = dynamic_cast<T*>(comp.get());
-			if (target)
+			if (target != nullptr)
 			{
 				return target;
 			}
 		}
 		return nullptr;
+	}
+
+	template <typename T>
+	std::vector<T*> GetComponents()
+	{
+		std::vector<T*> result;
+		for (std::unique_ptr<HEIN::IComponent>& comp : m_components)
+		{
+			T* target = dynamic_cast<T*>(comp.get());
+			if (target != nullptr)
+			{
+				result.push_back(target);
+			}
+		}
+		return result;
 	}
 };
 

@@ -1,7 +1,8 @@
 #pragma once
-#include <pch.h>
 #include "ICameraMode.h"
+#include <SimpleMath.h>
 
+using namespace HEIN;
 
 class SpringCameraMode : public ICameraMode
 {
@@ -30,7 +31,7 @@ public:
 
 	void ProcessInput(const CameraInputState& input) override { return; }
 
-	void Update(CameraData& outData, float deltaTime) override
+	void Update(CameraData& outData, float deltaTime, ICameraController& controller) override
 	{
 		UpdateSpring(*m_desiredEye, m_currentPosition, m_positionVelocity, deltaTime);
 		UpdateSpring(*m_desiredTarget, m_currentLookAt, m_lookAtVelocity, deltaTime);

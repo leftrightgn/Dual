@@ -14,8 +14,8 @@
 #include "Effect/Water.h"
 #include "Effect/SkyboxEffect.h"
 #include "ImaseLib/DebugCamera.h"
-#include "DirectXTK_Utilities/Animation.h"
 #include "Camera/CameraController.h"
+#include <Entities/Actor.h>
 
 
 
@@ -50,17 +50,15 @@ private:
 
 	DirectX::SimpleMath::Matrix m_world;
 
-	std::unique_ptr<DirectX::EffectFactory> m_fxFactory;
 
-	std::unique_ptr<DirectX::Model> m_model;
-
-	DirectX::ModelBone::TransformArray m_drawBones;
-
-	DX::AnimationSDKMESH m_animation;
-
-	std::unique_ptr<CameraController> m_cameraController;
+	std::unique_ptr<HEIN::CameraController> m_cameraController;
 
 	DirectX::SimpleMath::Vector3 m_targetPos;
+
+	std::unique_ptr<Actor> m_player;
+	std::vector<std::unique_ptr<Actor>> m_actors;
+
+	
 };
 
 

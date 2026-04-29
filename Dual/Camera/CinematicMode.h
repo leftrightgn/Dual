@@ -1,6 +1,8 @@
 #pragma once
 #include "ICameraMode.h"
 
+using namespace HEIN;
+
 class CinematicMode : public ICameraMode
 {
 private:
@@ -13,7 +15,7 @@ private:
 
 public:
 
-	CinematicMode(DirectX::SimpleMath::Vector3 centerPoint, float radius = 8.0f, float currentAngle = 0.0f, float orbitSpeed = 0.5f, float cameraHeight = 2.5f)
+	CinematicMode(DirectX::SimpleMath::Vector3 centerPoint, float radius = 8.0f, float currentAngle = 0.0f, float orbitSpeed = 0.5f, float cameraHeight = 1.5f)
 		: m_centerofStage(centerPoint)
 		, m_radius(radius)
 		, m_currentAngle(currentAngle)
@@ -26,7 +28,7 @@ public:
 	// Cinematic mode ignores player input
 	void ProcessInput(const CameraInputState& input) override { return; }
 
-	void Update(CameraData& outData, float deltaTime) override
+	void Update(CameraData& outData, float deltaTime, ICameraController& controller) override
 	{
 		// Advance the angle over time
 		m_currentAngle += m_orbitSpeed * deltaTime;
