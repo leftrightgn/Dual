@@ -235,12 +235,15 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_targetPos = ptransform->GetPosition();
     DirectX::SimpleMath::Vector3 pos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
     SkinnedModelComponent* m_tpsModel = m_player->AddComponent<SkinnedModelComponent>();
+    
+    // ThirdPersonCamera model
     m_tpsModel->Initialize(gameContext,
         L"Resources/Models/knight/knight.sdkmesh", // normal model
         L"Resources/Models/knight");
     m_tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/knightidle.sdkmesh_anim");
     m_tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/knight.sdkmesh_anim");
 
+    // FirstPersonCamera model
     SkinnedModelComponent* m_fpsModel = m_player->AddComponent<SkinnedModelComponent>();
     m_fpsModel->Initialize(gameContext,
         L"Resources/Models/knight/headless.sdkmesh", // headless/arms model
