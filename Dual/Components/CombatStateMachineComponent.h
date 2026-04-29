@@ -14,6 +14,7 @@ namespace HEIN
 
 		std::unique_ptr<IdleState> m_idleState;
 		std::unique_ptr<WalkState> m_walkState;
+		std::unique_ptr<OneHandAttackState> m_oneHandAtkState;
 
 	public:
 
@@ -22,6 +23,7 @@ namespace HEIN
 		{
 			m_idleState = std::make_unique<IdleState>();
 			m_walkState = std::make_unique<WalkState>();
+			m_oneHandAtkState = std::make_unique<OneHandAttackState>();
 		}
 
 		void Start()
@@ -55,6 +57,7 @@ namespace HEIN
 		// Getter for transitions
 		IdleState* GetIdleState() { return m_idleState.get(); }
 		WalkState* GetWalkState() { return m_walkState.get(); }
+		OneHandAttackState* GetOneHandAtkState() { return m_oneHandAtkState.get(); }
 
 	};
 

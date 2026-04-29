@@ -21,11 +21,16 @@ void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	auto blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
 
+	if (blackboard->isAttackingIntent && blackboard->currentStamina >= 15.0f) {
+		stateMachine->ChangeState(stateMachine->GetOneHandAtkState());
+		return;
+	}
 	if (blackboard->moveIntent.LengthSquared() > 0.1f)
 	{
 		stateMachine->ChangeState(stateMachine->GetWalkState());
 		return;
 	}
+
 }
 
 void HEIN::IdleState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/)
@@ -49,6 +54,11 @@ void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	auto blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
 
+	if (blackboard->isAttackingIntent && blackboard->currentStamina >= 15.0f) {
+		stateMachine->ChangeState(stateMachine->GetOneHandAtkState());
+		return;
+	}
+
 	if (blackboard->moveIntent.LengthSquared() <= 0.1f)
 	{
 		stateMachine->ChangeState(stateMachine->GetIdleState());
@@ -57,5 +67,35 @@ void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 }
 
 void HEIN::WalkState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/)
+{
+}
+
+void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/)
+{
+	auto blackboard = owner->GetComponent<CombatBlackBoard>();
+	if (blackboard)
+	{
+		blackboard->currentStance = CombatStance::OneHand;
+		blackboard->currentStamina -= 1.0f;
+	}
+	auto models = owner->GetComponents<SkinnedModelComponent>();
+	for (auto* model : models)
+	{
+		model->ChangeAnimation("OneHand");
+	}
+	m_timer = 0.0f;
+}
+
+void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
+{
+	m_timer += deltaTime;
+
+	if (m_timer >= WINDUP_DURATION)
+	{
+		stateMachine->ChangeState(stateMachine->GetIdleState());
+	}
+}
+
+void HEIN::OneHandAttackState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/)
 {
 }
