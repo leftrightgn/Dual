@@ -1,6 +1,7 @@
 #pragma once
 #include <SimpleMath.h>
 #include "IComponent.h"
+#include <Entities/Actor.h>
 
 namespace HEIN
 {
@@ -45,7 +46,7 @@ namespace HEIN
                 DirectX::SimpleMath::Matrix::CreateTranslation(m_position);
         }
 
-        void Update(float deltaTime) override {}
+        void Update(float /*deltaTime*/) override {}
 
     };
 }

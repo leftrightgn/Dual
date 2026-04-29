@@ -11,7 +11,7 @@ namespace HEIN
 		DirectX::SimpleMath::Vector3 position = {};
 		DirectX::SimpleMath::Matrix viewMatrix = {};
 		DirectX::SimpleMath::Matrix projMatrix = {};
-		float fov = {};
+		float fov = DirectX::XMConvertToRadians(50.0f);
 	};
 
 	// Input Data Container
@@ -55,9 +55,9 @@ namespace HEIN
         virtual bool RequiresRelativeMouse() const { return false; }
 		virtual bool LocksPlayerRotation() const { return false; }
 
-		virtual void OnEnter(CameraData& data) {};
-		virtual void OnExit(CameraData& data) {};
-		virtual void OnSuspend(CameraData& data) {};
-		virtual void OnResume(CameraData& data) {};
+		virtual void OnEnter(CameraData& /*data*/) {};
+		virtual void OnExit(CameraData& /*data*/) {};
+		virtual void OnSuspend(CameraData& /*data*/) {};
+		virtual void OnResume(CameraData& /*data*/) {};
 	};
 }

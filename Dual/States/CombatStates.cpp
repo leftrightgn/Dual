@@ -4,11 +4,9 @@
 #include <BlackBoard/CombatBlackBoard.h>
 #include <Components/SkinnedModelComponent.h>
 
-void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine)
+void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/)
 {
 	auto blackboard = owner->GetComponent<CombatBlackBoard>();
-	auto model = owner->GetComponent<SkinnedModelComponent>();
-
 	if (blackboard) blackboard->currentStance = CombatStance::Idle;
 
 	auto models = owner->GetComponents<SkinnedModelComponent>();
@@ -18,7 +16,7 @@ void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMa
 	}
 }
 
-void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
+void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float /*deltaTime*/)
 {
 	auto blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
@@ -30,15 +28,13 @@ void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	}
 }
 
-void HEIN::IdleState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine)
+void HEIN::IdleState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/)
 {
 }
 
-void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine)
+void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/)
 {
 	auto blackboard = owner->GetComponent<CombatBlackBoard>();
-	auto model = owner->GetComponent<SkinnedModelComponent>();
-
 	if (blackboard) blackboard->currentStance = CombatStance::Walking;
 
 	auto models = owner->GetComponents<SkinnedModelComponent>();
@@ -48,7 +44,7 @@ void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMa
 	}
 }
 
-void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
+void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float /*deltaTime*/)
 {
 	auto blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
@@ -60,6 +56,6 @@ void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	}
 }
 
-void HEIN::WalkState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine)
+void HEIN::WalkState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/)
 {
 }

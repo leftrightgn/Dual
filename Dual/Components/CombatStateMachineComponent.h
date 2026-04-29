@@ -2,6 +2,7 @@
 #include <memory>
 #include "Components/IComponent.h"
 #include "States/CombatStates.h"
+#include <States/ICombatState.h>
 
 namespace HEIN
 {

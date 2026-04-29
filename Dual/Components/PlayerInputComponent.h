@@ -7,93 +7,109 @@
 #include <Mouse.h>
 #include <Keyboard.h>
 
-
-class PlayerInputComponent : public HEIN::IComponent
+namespace HEIN
 {
-private:
-
-	HEIN::CombatBlackBoard* m_blackboard = nullptr;
-	HEIN::CameraController* m_cameraController = nullptr;
-
-public:
-
-	PlayerInputComponent(Actor* owner, HEIN::CameraController* cameraController)
-		: HEIN::IComponent(owner)
-		, m_cameraController(cameraController)
+	class PlayerInputComponent : public HEIN::IComponent
 	{
-	}
-	
-	void Start()
-	{
-		m_blackboard = m_owner->GetComponent<HEIN::CombatBlackBoard>();
-	}
+	private:
 
-	void ProcessInput(const GameContext& gameContext)
-	{
-		if (m_cameraController != nullptr)
+		HEIN::CombatBlackBoard* m_blackboard = nullptr;
+		HEIN::CameraController* m_cameraController = nullptr; // initialize to nullptr to avoid potential uninitialized-use
+
+	public:
+
+		PlayerInputComponent(Actor* owner, HEIN::CameraController* cameraController)
+			: HEIN::IComponent(owner)
+			, m_cameraController(cameraController)
 		{
-			HEIN::CameraInputState cameraInput;
-			DirectX::Mouse::State mouseState = gameContext.mouseState;
-
-			cameraInput.mouseX = static_cast<float>(mouseState.x);
-			cameraInput.mouseY = static_cast<float>(mouseState.y);
-			cameraInput.isLeftMouseDown = mouseState.leftButton;
-			cameraInput.scrollWheelDelta = static_cast<float>(mouseState.scrollWheelValue);
-
-			m_cameraController->ProcessInput(cameraInput);
-
-			// Handle Camera Switching
-			if (gameContext.keyboardTracker.pressed.T)
-			{
-				m_cameraController->RequestSwitch(HEIN::CameraType::ThirdPerson);
-			}
-			if (gameContext.keyboardTracker.pressed.P)
-			{
-				m_cameraController->RequestSwitch(HEIN::CameraType::FirstPerson);
-			}
 		}
 
-		if (m_blackboard != nullptr)
+		void Start()
 		{
-			DirectX::SimpleMath::Vector3 localInput = DirectX::SimpleMath::Vector3::Zero;
+			m_blackboard = m_owner->GetComponent<HEIN::CombatBlackBoard>();
+		}
 
-			DirectX::Keyboard::State kbState = DirectX::Keyboard::Get().GetState();
+		void ProcessInput(const GameContext& gameContext)
+		{
+			// Capture member into a local variable so the static analyzer can see the null-check covers all uses
+			HEIN::CameraController* cameraController = m_cameraController;
 
-			if (kbState.W) localInput.z += 1.0f;
-			if (kbState.S) localInput.z -= 1.0f;
-			if (kbState.A) localInput.x += 1.0f;
-			if (kbState.D) localInput.x -= 1.0f;
-
-			// Get the Camera's Forward direction
-			DirectX::SimpleMath::Matrix view = m_cameraController->GetView();
-			DirectX::SimpleMath::Matrix invView = view.Invert();
-			DirectX::SimpleMath::Vector3 camForward = invView.Forward();
-
-			// Calculate the pure Camera Yaw
-			float cameraYaw = atan2f(camForward.x, camForward.z);
-
-			// Transform local WASD input into World Direction based on the Camera
-			DirectX::SimpleMath::Matrix camRotation = DirectX::SimpleMath::Matrix::CreateRotationY(cameraYaw);
-			DirectX::SimpleMath::Vector3 worldIntent = DirectX::SimpleMath::Vector3::TransformNormal(localInput, camRotation);
-
-			if (worldIntent.LengthSquared() > 0) worldIntent.Normalize();
-			m_blackboard->moveIntent = worldIntent; // intent is in absolute world space!
-
-			if (m_cameraController->LocksPlayerRotation())
+			if (cameraController != nullptr)
 			{
-				HEIN::TransformComponent* transform = m_owner->GetComponent<HEIN::TransformComponent>();
-				if (transform)
+				HEIN::CameraInputState cameraInput;
+				DirectX::Mouse::State mouseState = gameContext.mouseState;
+
+				cameraInput.mouseX = static_cast<float>(mouseState.x);
+				cameraInput.mouseY = static_cast<float>(mouseState.y);
+				cameraInput.isLeftMouseDown = mouseState.leftButton;
+				cameraInput.scrollWheelDelta = static_cast<float>(mouseState.scrollWheelValue);
+
+				cameraController->ProcessInput(cameraInput);
+
+				// Handle Camera Switching
+				if (gameContext.keyboardTracker.pressed.T)
 				{
-					DirectX::SimpleMath::Vector3 rot = transform->GetRotation();
-					rot.y = cameraYaw + DirectX::XM_PI;
-					transform->SetRotation(rot);
+					cameraController->RequestSwitch(HEIN::CameraType::ThirdPerson);
+				}
+				if (gameContext.keyboardTracker.pressed.P)
+				{
+					cameraController->RequestSwitch(HEIN::CameraType::FirstPerson);
 				}
 			}
 
-			m_blackboard->isAttackingIntent = gameContext.mouseState.leftButton;
-			m_blackboard->isParryingIntent = gameContext.mouseState.rightButton;
-		}
-	}
+			if (m_blackboard != nullptr)
+			{
+				DirectX::SimpleMath::Vector3 localInput = DirectX::SimpleMath::Vector3::Zero;
 
-	void Update(float deltaTime) override {}
-};
+				DirectX::Keyboard::State kbState = DirectX::Keyboard::Get().GetState();
+
+				if (kbState.W) localInput.z += 1.0f;
+				if (kbState.S) localInput.z -= 1.0f;
+				if (kbState.A) localInput.x += 1.0f;
+				if (kbState.D) localInput.x -= 1.0f;
+
+				DirectX::SimpleMath::Vector3 worldIntent = DirectX::SimpleMath::Vector3::Zero;
+
+				// If we have a camera controller, transform input by camera yaw.
+				if (cameraController != nullptr)
+				{
+					// Get the Camera's Forward direction
+					DirectX::SimpleMath::Matrix view = cameraController->GetView();
+					DirectX::SimpleMath::Matrix invView = view.Invert();
+					DirectX::SimpleMath::Vector3 camForward = invView.Forward();
+
+					// Calculate the pure Camera Yaw
+					float cameraYaw = atan2f(camForward.x, camForward.z);
+
+					// Transform local WASD input into World Direction based on the Camera
+					DirectX::SimpleMath::Matrix camRotation = DirectX::SimpleMath::Matrix::CreateRotationY(cameraYaw);
+					worldIntent = DirectX::SimpleMath::Vector3::TransformNormal(localInput, camRotation);
+
+					if (cameraController->LocksPlayerRotation())
+					{
+						HEIN::TransformComponent* transform = m_owner->GetComponent<HEIN::TransformComponent>();
+						if (transform)
+						{
+							DirectX::SimpleMath::Vector3 rot = transform->GetRotation();
+							rot.y = cameraYaw + DirectX::XM_PI;
+							transform->SetRotation(rot);
+						}
+					}
+				}
+				else
+				{
+					// No camera: interpret local input directly as world intent (no rotation)
+					worldIntent = localInput;
+				}
+
+				if (worldIntent.LengthSquared() > 0) worldIntent.Normalize();
+				m_blackboard->moveIntent = worldIntent; // intent is in absolute world space!
+
+				m_blackboard->isAttackingIntent = gameContext.mouseState.leftButton;
+				m_blackboard->isParryingIntent = gameContext.mouseState.rightButton;
+			}
+		}
+
+		void Update(float /*deltaTime*/) override {}
+	};
+}

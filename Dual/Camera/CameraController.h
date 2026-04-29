@@ -79,7 +79,7 @@ namespace HEIN
 			m_nextCameraKey = type;
 		}
 
-		void RequestPop(CameraType type) override
+		void RequestPop(CameraType /*type*/) override
 		{
 			m_nextCommand = Command::Pop;
 		}

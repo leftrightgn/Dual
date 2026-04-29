@@ -55,8 +55,8 @@ private:
 
 	DirectX::SimpleMath::Vector3 m_targetPos;
 
-	std::unique_ptr<Actor> m_player;
-	std::vector<std::unique_ptr<Actor>> m_actors;
+	std::unique_ptr<HEIN::Actor> m_player;
+	std::vector<std::unique_ptr<HEIN::Actor>> m_actors;
 
 	
 };

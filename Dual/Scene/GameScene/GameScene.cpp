@@ -13,8 +13,6 @@
 #include <Components/SkinnedModelComponent.h>
 #include <Camera/ThirdPersonMode.h>
 #include <Camera/FirstPersonMode.h>
-#include <Camera/CinematicMode.h>
-#include <Camera/SpringCameraMode.h>
 #include <BlackBoard/CombatBlackBoard.h>
 #include <Components/PlayerInputComponent.h>
 #include <Components/CharacterMovementComponent.h>
@@ -26,7 +24,7 @@
 using namespace DirectX;
 
 // 更新
-void GameScene::Update(Imase::ISceneController<SceneId>& sceneController, GameContext& gameContext)
+void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, GameContext& gameContext)
 {
 	Imase::DebugRenderer& debugRenderer = gameContext.debugRenderer;
 
@@ -37,7 +35,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& sceneController, GameCo
 
     if (!m_actors.empty())
     {
-        PlayerInputComponent* inputComp = m_actors[0]->GetComponent<PlayerInputComponent>();
+        HEIN::PlayerInputComponent* inputComp = m_actors[0]->GetComponent<HEIN::PlayerInputComponent>();
         if (inputComp)
         {
             inputComp->ProcessInput(gameContext);
@@ -47,11 +45,11 @@ void GameScene::Update(Imase::ISceneController<SceneId>& sceneController, GameCo
 
     // Update Actors FIRST! 
 
-    for (std::unique_ptr<Actor>& actor : m_actors)
+    for (std::unique_ptr<HEIN::Actor>& actor : m_actors)
     {
         actor->Update(deltaTime);
 
-        TransformComponent* transform = actor->GetComponent<TransformComponent>();
+        HEIN::TransformComponent* transform = actor->GetComponent<HEIN::TransformComponent>();
         if (transform != nullptr)
         {
             //DirectX::SimpleMath::Vector3 pos = transform->GetPosition();
@@ -63,8 +61,8 @@ void GameScene::Update(Imase::ISceneController<SceneId>& sceneController, GameCo
     // NOW read the bone position safely
     if (!m_actors.empty())
     {
-        TransformComponent* pTransform = m_actors[0]->GetComponent<TransformComponent>();
-        SkinnedModelComponent* pModel = m_actors[0]->GetComponent<SkinnedModelComponent>();
+        HEIN::TransformComponent* pTransform = m_actors[0]->GetComponent<HEIN::TransformComponent>();
+        HEIN::SkinnedModelComponent* pModel = m_actors[0]->GetComponent<HEIN::SkinnedModelComponent>();
 
         if (pTransform != nullptr && pModel != nullptr)
         {
@@ -137,25 +135,25 @@ void GameScene::Render(GameContext& gameContext)
     SimpleMath::Vector3 camPos = m_cameraController->GetPosition();
     //SimpleMath::Vector3 camPos = m_debugCamera->GetEyePosition();
 
-    m_water->Draw(context, view, m_proj, camPos);
+    m_water->Draw(gameContext, view, m_proj, camPos);
     context->RSSetState(gameContext.commonStates.CullCounterClockwise());
     // Reset Blend State
     context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
 
-    for (std::unique_ptr<Actor>& actor : m_actors)
+    for (std::unique_ptr<HEIN::Actor>& actor : m_actors)
     {
-        TransformComponent* transformComp = actor->GetComponent<TransformComponent>();
+        HEIN::TransformComponent* transformComp = actor->GetComponent<HEIN::TransformComponent>();
 
         // Grab ALL models attached to this actor
-        std::vector<SkinnedModelComponent*> models = actor->GetComponents<SkinnedModelComponent>();
+        std::vector<HEIN::SkinnedModelComponent*> models = actor->GetComponents<HEIN::SkinnedModelComponent>();
 
         if (transformComp != nullptr && !models.empty())
         {
             DirectX::SimpleMath::Matrix world = transformComp->GetWorldMatrix();
 
             // Loop through and draw them (the SetVisible check we added will hide the inactive one!)
-            for (SkinnedModelComponent* modelComp : models)
+            for (HEIN::SkinnedModelComponent* modelComp : models)
             {
                 modelComp->Draw(gameContext, world, view, m_proj);
             }
@@ -223,16 +221,16 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     // Water
     m_water = std::make_unique<Water>();
-    m_water->Initialize(device, gameContext.deviceResources.GetD3DDeviceContext(), L"Resources/Textures/water.dds", L"Resources/Textures/waternormal.dds", L"Resources/Textures/waternoise.dds");
+    m_water->Initialize(gameContext, L"Resources/Textures/water.dds", L"Resources/Textures/waternormal.dds", L"Resources/Textures/waternoise.dds");
 
-    m_player = std::make_unique<Actor>(L"Player");
+    m_player = std::make_unique<HEIN::Actor>(L"Player");
 
-    TransformComponent* ptransform = m_player->AddComponent<TransformComponent>();
+    HEIN::TransformComponent* ptransform = m_player->AddComponent<HEIN::TransformComponent>();
     ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     ptransform->SetScale(DirectX::SimpleMath::Vector3(0.1f));
    
     DirectX::SimpleMath::Vector3 pos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
-    SkinnedModelComponent* m_tpsModel = m_player->AddComponent<SkinnedModelComponent>();
+    HEIN::SkinnedModelComponent* m_tpsModel = m_player->AddComponent<HEIN::SkinnedModelComponent>();
     
     // ThirdPersonCamera model
     m_tpsModel->Initialize(gameContext,
@@ -242,7 +240,7 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/knight.sdkmesh_anim");
 
     // FirstPersonCamera model
-    SkinnedModelComponent* m_fpsModel = m_player->AddComponent<SkinnedModelComponent>();
+    HEIN::SkinnedModelComponent* m_fpsModel = m_player->AddComponent<HEIN::SkinnedModelComponent>();
     m_fpsModel->Initialize(gameContext,
         L"Resources/Models/knight/headless.sdkmesh", // headless/arms model
         L"Resources/Models/knight");
@@ -252,19 +250,19 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     m_cameraController = std::make_unique<HEIN::CameraController>();
 
-    m_cameraController->RegisterCamera(HEIN::CameraType::Debug, []() { return std::make_unique<DebugCameraMode>(); });
+    m_cameraController->RegisterCamera(HEIN::CameraType::Debug, []() { return std::make_unique<HEIN::DebugCameraMode>(); });
     DirectX::SimpleMath::Matrix worldMatrix = ptransform->GetWorldMatrix();
     m_targetPos = m_fpsModel->GetBoneWorldPosition(L"mixamorig:Head", worldMatrix);
     m_cameraController->RegisterCamera(HEIN::CameraType::FirstPerson, [this, m_fpsModel, m_tpsModel]() 
-        { return std::make_unique<FirstPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); });
+        { return std::make_unique<HEIN::FirstPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); });
     m_cameraController->RegisterCamera(HEIN::CameraType::ThirdPerson, [this, m_fpsModel, m_tpsModel]() 
-        { return std::make_unique<ThirdPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); });
+        { return std::make_unique<HEIN::ThirdPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); });
 
     m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
 
     m_player->AddComponent<HEIN::CombatBlackBoard>();
-    m_player->AddComponent<PlayerInputComponent>(m_cameraController.get()); // Requires the camera controller
-    m_player->AddComponent<CharacterMovementComponent>();
+    m_player->AddComponent<HEIN::PlayerInputComponent>(m_cameraController.get()); // Requires the camera controller
+    m_player->AddComponent<HEIN::CharacterMovementComponent>();
     m_player->AddComponent<HEIN::CombatStateMachineComponent>();
    
     m_player->Start();

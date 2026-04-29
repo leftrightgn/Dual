@@ -1,9 +1,10 @@
 #pragma once
 
-class Actor;
 
 namespace HEIN
 {
+	class Actor;
+
 	class IComponent
 	{
 	protected:

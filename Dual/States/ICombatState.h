@@ -1,12 +1,9 @@
 #pragma once
 
-class Actor;
-
-
 namespace HEIN
 {
 	class CombatStateMachineComponent;
-
+	class Actor;
 
 	class ICombatState
 	{
