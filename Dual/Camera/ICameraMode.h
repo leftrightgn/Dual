@@ -53,6 +53,7 @@ namespace HEIN
 		virtual void Update(CameraData& outData, float deltaTime, ICameraController& controller ) = 0;
 		virtual void ProcessInput(const CameraInputState& input) = 0;
         virtual bool RequiresRelativeMouse() const { return false; }
+		virtual bool LocksPlayerRotation() const { return false; }
 
 		virtual void OnEnter(CameraData& data) {};
 		virtual void OnExit(CameraData& data) {};

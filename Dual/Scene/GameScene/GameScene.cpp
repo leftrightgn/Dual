@@ -77,6 +77,17 @@ void GameScene::Update(Imase::ISceneController<SceneId>& sceneController, GameCo
     if (m_cameraController)
     {
         m_cameraController->Update(deltaTime);
+        D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
+        float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
+
+        m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
+            m_cameraController->GetFov(),  // gets FOV from current camera mode
+            aspectRatio,
+            0.01f,
+            1000.0f
+        );
+
+        m_effect->SetProjection(m_proj);
     }
 
     //  Update Environment
@@ -201,10 +212,10 @@ void GameScene::OnEnter(GameContext& gameContext)
     int height = static_cast<int>(viewport.Height);
 
     //m_debugCamera = std::make_unique<Imase::DebugCamera>(width, height);
-
+    
     float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
     m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
-        DirectX::XM_PI / 4.0f, aspectRatio, 0.1f, 1000.0f);
+        DirectX::XM_PI / 4.0f, aspectRatio, 0.01f, 1000.0f);
 
     m_effect->SetProjection(m_proj);
    

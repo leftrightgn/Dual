@@ -79,13 +79,15 @@ public:
 			if (worldIntent.LengthSquared() > 0) worldIntent.Normalize();
 			m_blackboard->moveIntent = worldIntent; // intent is in absolute world space!
 
-			// Force the character to always face the camera's target 
-			HEIN::TransformComponent* transform = m_owner->GetComponent<HEIN::TransformComponent>();
-			if (transform)
+			if (m_cameraController->LocksPlayerRotation())
 			{
-				DirectX::SimpleMath::Vector3 rot = transform->GetRotation();
-				rot.y = cameraYaw + DirectX::XM_PI;
-				transform->SetRotation(rot);
+				HEIN::TransformComponent* transform = m_owner->GetComponent<HEIN::TransformComponent>();
+				if (transform)
+				{
+					DirectX::SimpleMath::Vector3 rot = transform->GetRotation();
+					rot.y = cameraYaw + DirectX::XM_PI;
+					transform->SetRotation(rot);
+				}
 			}
 
 			m_blackboard->isAttackingIntent = gameContext.mouseState.leftButton;

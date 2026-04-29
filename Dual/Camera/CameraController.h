@@ -59,6 +59,13 @@ namespace HEIN
 		// Getters for GameScene.cpp
 		DirectX::SimpleMath::Matrix GetView() const { return m_data.viewMatrix; }
 		DirectX::SimpleMath::Vector3 GetPosition() const { return m_data.position; }
+		float GetFov() const { return m_data.fov; }
+
+		bool LocksPlayerRotation() const
+		{
+			if (m_cameraStack.empty()) return false;
+			return m_cameraStack.back()->LocksPlayerRotation();
+		}
 
 		void RequestSwitch(CameraType type) override
 		{

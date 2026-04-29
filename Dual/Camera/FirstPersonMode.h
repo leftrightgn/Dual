@@ -33,8 +33,8 @@ public:
 		, m_pitch(0.0f)
 		, m_yaw(0.0f)
 		, m_mouseSensitivity(0.005f)
-		, m_targetHeight(16.0f)
-		, m_boomlenght(5.0f)
+		, m_targetHeight(15.0f)
+		, m_boomlenght(4.5f)
 	{
 
 	}
@@ -53,7 +53,7 @@ public:
 		m_pitch += -input.mouseY * m_mouseSensitivity;
 
 		
-		constexpr float pitchLimit = (DirectX::XMConvertToRadians(85.0f)); 
+		constexpr float pitchLimit = (DirectX::XMConvertToRadians(80.0f)); 
 		m_pitch = std::clamp(m_pitch, -pitchLimit, pitchLimit);
 
 		/*constexpr float yawLimit = (DirectX::XMConvertToRadians(60.0f));
@@ -72,11 +72,12 @@ public:
 	
 		DirectX::SimpleMath::Matrix yawOnly = DirectX::SimpleMath::Matrix::CreateRotationY(m_yaw);
 		DirectX::SimpleMath::Vector3 flatForward = yawOnly.Forward();
-		DirectX::SimpleMath::Vector3 flatRight = yawOnly.Right();
+		DirectX::SimpleMath::Vector3 right = yawOnly.Right();
+	
 		flatForward.Normalize();
 
 		outData.position += flatForward * m_boomlenght;
-		outData.position += flatRight * -1.0f;
+		outData.position += right * -0.3f;
 
 		DirectX::SimpleMath::Vector3 target = outData.position + rotation.Forward();
 		DirectX::SimpleMath::Vector3 up = DirectX::SimpleMath::Vector3::Up;
@@ -87,9 +88,10 @@ public:
 			up
 		);
 
-		outData.fov = DirectX::XM_PI / 2.5f;
+		outData.fov = DirectX::XMConvertToRadians(90.0f);
 	}
 
 	bool RequiresRelativeMouse() const override { return true; }
+	bool LocksPlayerRotation() const override { return true; }
 };
 

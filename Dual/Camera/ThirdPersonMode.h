@@ -72,9 +72,10 @@ public:
 			DirectX::SimpleMath::Vector3::Up
 		);
 
-		outData.fov = DirectX::XM_PI / 3.0f;
+		outData.fov = DirectX::XMConvertToRadians(50.0f);
 	}
 
 	bool RequiresRelativeMouse() const override { return true; }
+	bool LocksPlayerRotation() const override { return true; }
 
 };
