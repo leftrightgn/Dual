@@ -57,29 +57,5 @@ namespace HEIN
 
 	};
 
-	inline void IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
-	{
-		auto blackboard = owner->GetComponent<CombatBlackBoard>();
-		if (!blackboard) return;
-
-		if (blackboard->moveIntent.LengthSquared() > 0.1f)
-		{
-			stateMachine->ChangeState(stateMachine->GetWalkState());
-			return;
-		}
-	}
-
-	inline void WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
-	{
-		auto blackboard = owner->GetComponent<CombatBlackBoard>();
-		if (!blackboard) return;
-
-		if (blackboard->moveIntent.LengthSquared() <= 0.1f)
-		{
-			stateMachine->ChangeState(stateMachine->GetIdleState());
-			return;
-		}
-
-	}
 }
 

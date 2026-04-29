@@ -37,5 +37,7 @@ struct GameContext
 
 	DirectX::Mouse::State mouseState;
 
+	DirectX::Keyboard::State keyboardState;
+
 };
 

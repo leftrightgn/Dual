@@ -15,6 +15,10 @@
 #include <Camera/FirstPersonMode.h>
 #include <Camera/CinematicMode.h>
 #include <Camera/SpringCameraMode.h>
+#include <BlackBoard/CombatBlackBoard.h>
+#include <Components/PlayerInputComponent.h>
+#include <Components/CharacterMovementComponent.h>
+#include <Components/CombatStateMachineComponent.h>
 
 
 
@@ -31,21 +35,15 @@ void GameScene::Update(Imase::ISceneController<SceneId>& sceneController, GameCo
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
 
-
-    // Grab Mouse Input First
-    if (m_cameraController)
+    if (!m_actors.empty())
     {
-        HEIN::CameraInputState cameraInput;
-        DirectX::Mouse::State mouseState = gameContext.mouseState;
-
-        cameraInput.mouseX = static_cast<float>(mouseState.x);
-        cameraInput.mouseY = static_cast<float>(mouseState.y);
-        cameraInput.isLeftMouseDown = mouseState.leftButton;
-        cameraInput.scrollWheelDelta = static_cast<float>(mouseState.scrollWheelValue);
-
-
-        m_cameraController->ProcessInput(cameraInput);
+        PlayerInputComponent* inputComp = m_actors[0]->GetComponent<PlayerInputComponent>();
+        if (inputComp)
+        {
+            inputComp->ProcessInput(gameContext);
+        }
     }
+   
 
     // Update Actors FIRST! 
 
@@ -87,14 +85,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& sceneController, GameCo
         m_water->Update(deltaTime);
     }
 
-    if (gameContext.keyboardTracker.pressed.T)
-    {
-        m_cameraController->RequestSwitch(HEIN::CameraType::ThirdPerson);
-    }
-    if (gameContext.keyboardTracker.pressed.P)
-    {
-        m_cameraController->RequestSwitch(HEIN::CameraType::FirstPerson);
-    }
+    
   
 }
 
@@ -211,10 +202,6 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     //m_debugCamera = std::make_unique<Imase::DebugCamera>(width, height);
 
-    m_cameraController = std::make_unique<CameraController>();
-
-   
-
     float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
     m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
         DirectX::XM_PI / 4.0f, aspectRatio, 0.1f, 1000.0f);
@@ -232,7 +219,7 @@ void GameScene::OnEnter(GameContext& gameContext)
     TransformComponent* ptransform = m_player->AddComponent<TransformComponent>();
     ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     ptransform->SetScale(DirectX::SimpleMath::Vector3(0.1f));
-    m_targetPos = ptransform->GetPosition();
+   
     DirectX::SimpleMath::Vector3 pos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
     SkinnedModelComponent* m_tpsModel = m_player->AddComponent<SkinnedModelComponent>();
     
@@ -255,6 +242,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_cameraController = std::make_unique<HEIN::CameraController>();
 
     m_cameraController->RegisterCamera(HEIN::CameraType::Debug, []() { return std::make_unique<DebugCameraMode>(); });
+    DirectX::SimpleMath::Matrix worldMatrix = ptransform->GetWorldMatrix();
+    m_targetPos = m_fpsModel->GetBoneWorldPosition(L"mixamorig:Head", worldMatrix);
     m_cameraController->RegisterCamera(HEIN::CameraType::FirstPerson, [this, m_fpsModel, m_tpsModel]() 
         { return std::make_unique<FirstPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); });
     m_cameraController->RegisterCamera(HEIN::CameraType::ThirdPerson, [this, m_fpsModel, m_tpsModel]() 
@@ -262,9 +251,14 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
 
+    m_player->AddComponent<HEIN::CombatBlackBoard>();
+    m_player->AddComponent<PlayerInputComponent>(m_cameraController.get()); // Requires the camera controller
+    m_player->AddComponent<CharacterMovementComponent>();
+    m_player->AddComponent<HEIN::CombatStateMachineComponent>();
    
-   
+    m_player->Start();
+
     m_actors.push_back(std::move(m_player));
 
- 
+   
 }

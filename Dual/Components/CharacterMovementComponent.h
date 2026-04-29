@@ -20,6 +20,7 @@ public:
 	{
 	}
 
+
 	void Start()
 	{
 		m_blackboard = m_owner->GetComponent<HEIN::CombatBlackBoard>();
@@ -36,7 +37,7 @@ public:
 			m_blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		}
 
-		// Apply physics momentum
+		// Apply physics momentum directly 
 		DirectX::SimpleMath::Vector3 desiredVelocity = m_blackboard->moveIntent * m_acceleration;
 
 		m_blackboard->currentVelocity = DirectX::SimpleMath::Vector3::Lerp(
@@ -49,13 +50,5 @@ public:
 		DirectX::SimpleMath::Vector3 pos = m_transform->GetPosition();
 		pos += m_blackboard->currentVelocity * deltaTime;
 		m_transform->SetPosition(pos);
-
-		if (m_blackboard->moveIntent.LengthSquared() > 0.01f)
-		{
-			float targetYaw = atan2f(m_blackboard->moveIntent.x, m_blackboard->moveIntent.z);
-			DirectX::SimpleMath::Vector3 rot = m_transform->GetRotation();
-			rot.y = targetYaw;
-			m_transform->SetRotation(rot);
-		}
 	}
 };

@@ -32,6 +32,14 @@ public:
 		}
 	}
 
+	void Start()
+	{
+		// Initialize all attached components
+		for (auto& comp : m_components)
+		{
+			comp->Start();
+		}
+	}
 
 
 	// Template  Components

@@ -246,6 +246,7 @@
     <ClCompile Include="Scene\BaseScene\BaseScene.cpp" />
     <ClCompile Include="Scene\GameScene\GameScene.cpp" />
     <ClCompile Include="Components\SkinnedModelComponent.cpp" />
+    <ClCompile Include="States\CombatStates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

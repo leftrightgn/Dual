@@ -21,6 +21,8 @@ namespace HEIN
 
 		virtual void Update(float deltaTime) = 0;
 
+		virtual void Start() {}
+
 		Actor* GetOwner() const { return m_owner; }
 	};
 }

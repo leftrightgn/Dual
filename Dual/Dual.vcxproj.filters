@@ -44,6 +44,7 @@
       <Filter>DirectXTK_Utilities</Filter>
     </ClCompile>
     <ClCompile Include="Components\SkinnedModelComponent.cpp" />
+    <ClCompile Include="States\CombatStates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />

@@ -1,10 +1,13 @@
 #pragma once
 
 class Actor;
-class CombatStateMachineComponent;
+
 
 namespace HEIN
 {
+	class CombatStateMachineComponent;
+
+
 	class ICombatState
 	{
 	public:

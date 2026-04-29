@@ -90,12 +90,13 @@ void Game::Update(DX::StepTimer const& timer)
     // キーボードトラッカーの更新
     auto keyboard = Keyboard::Get().GetState();
     m_keyboardTracker.Update(keyboard);
-
+ 
     // マウスボタントラッカーの更新
     auto mouse = Mouse::Get().GetState();
     m_mouseButtonTracker.Update(mouse);
 
     m_gameContext->mouseState = mouse ;
+    m_gameContext->keyboardState = keyboard;
 
     // シーンの更新
     m_sceneManager.Update(*m_gameContext);

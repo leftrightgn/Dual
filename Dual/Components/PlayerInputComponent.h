@@ -5,6 +5,7 @@
 #include "GameContext.h"
 #include "Entities/Actor.h"
 #include <Mouse.h>
+#include <Keyboard.h>
 
 
 class PlayerInputComponent : public HEIN::IComponent
@@ -54,16 +55,38 @@ public:
 
 		if (m_blackboard != nullptr)
 		{
-			DirectX::SimpleMath::Vector3 inputDir = DirectX::SimpleMath::Vector3::Zero;
+			DirectX::SimpleMath::Vector3 localInput = DirectX::SimpleMath::Vector3::Zero;
 
-			if (gameContext.keyboardTracker.pressed.W) inputDir.z += 1.0f;
-			if (gameContext.keyboardTracker.pressed.S) inputDir.z -= 1.0f;
-			if (gameContext.keyboardTracker.pressed.A) inputDir.x -= 1.0f;
-			if (gameContext.keyboardTracker.pressed.D) inputDir.x += 1.0f;
+			DirectX::Keyboard::State kbState = DirectX::Keyboard::Get().GetState();
 
+			if (kbState.W) localInput.z += 1.0f;
+			if (kbState.S) localInput.z -= 1.0f;
+			if (kbState.A) localInput.x += 1.0f;
+			if (kbState.D) localInput.x -= 1.0f;
 
-			if (inputDir.LengthSquared() > 0) inputDir.Normalize();
-			m_blackboard->moveIntent = inputDir;
+			// Get the Camera's Forward direction
+			DirectX::SimpleMath::Matrix view = m_cameraController->GetView();
+			DirectX::SimpleMath::Matrix invView = view.Invert();
+			DirectX::SimpleMath::Vector3 camForward = invView.Forward();
+
+			// Calculate the pure Camera Yaw
+			float cameraYaw = atan2f(camForward.x, camForward.z);
+
+			// Transform local WASD input into World Direction based on the Camera
+			DirectX::SimpleMath::Matrix camRotation = DirectX::SimpleMath::Matrix::CreateRotationY(cameraYaw);
+			DirectX::SimpleMath::Vector3 worldIntent = DirectX::SimpleMath::Vector3::TransformNormal(localInput, camRotation);
+
+			if (worldIntent.LengthSquared() > 0) worldIntent.Normalize();
+			m_blackboard->moveIntent = worldIntent; // intent is in absolute world space!
+
+			// Force the character to always face the camera's target 
+			HEIN::TransformComponent* transform = m_owner->GetComponent<HEIN::TransformComponent>();
+			if (transform)
+			{
+				DirectX::SimpleMath::Vector3 rot = transform->GetRotation();
+				rot.y = cameraYaw + DirectX::XM_PI;
+				transform->SetRotation(rot);
+			}
 
 			m_blackboard->isAttackingIntent = gameContext.mouseState.leftButton;
 			m_blackboard->isParryingIntent = gameContext.mouseState.rightButton;
