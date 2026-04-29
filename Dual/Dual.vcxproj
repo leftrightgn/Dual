@@ -183,6 +183,7 @@
   <ItemGroup>
     <ClInclude Include="BlackBoard\CombatBlackBoard.h" />
     <ClInclude Include="Components\CharacterMovementComponent.h" />
+    <ClInclude Include="Components\CombatStateMachineComponent.h" />
     <ClInclude Include="Components\PlayerInputComponent.h" />
     <ClInclude Include="Components\TransfromComponent.h" />
     <ClInclude Include="Entities\Actor.h" />
@@ -218,6 +219,7 @@
     <ClInclude Include="Scene\GameScene\GameScene.h" />
     <ClInclude Include="Scene\SceneId.h" />
     <ClInclude Include="Components\SkinnedModelComponent.h" />
+    <ClInclude Include="States\CombatStates.h" />
     <ClInclude Include="States\ICombatState.h" />
   </ItemGroup>
   <ItemGroup>

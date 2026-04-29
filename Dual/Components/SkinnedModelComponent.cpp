@@ -8,7 +8,7 @@ SkinnedModelComponent::SkinnedModelComponent(Actor* owner)
 {
 }
 
-void SkinnedModelComponent::Initialize(GameContext& gameContext, const wchar_t* modelPath, const wchar_t* animPath, const wchar_t* textureDir)
+void SkinnedModelComponent::Initialize(GameContext& gameContext, const wchar_t* modelPath, const wchar_t* textureDir)
 {
 	ID3D11Device* device = gameContext.deviceResources.GetD3DDevice();
 
@@ -24,9 +24,6 @@ void SkinnedModelComponent::Initialize(GameContext& gameContext, const wchar_t* 
 				          DirectX::ModelLoader_IncludeBones
 				         )
 	          );
-
-	DX::ThrowIfFailed(m_animation.Load(animPath));
-	m_animation.Bind(*m_model);
 
 	m_drawBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 
@@ -45,8 +42,11 @@ void SkinnedModelComponent::Initialize(GameContext& gameContext, const wchar_t* 
 
 void SkinnedModelComponent::Update(float deltaTime)
 {
-	m_animation.Update(deltaTime);
-	m_animation.Apply(*m_model, m_model->bones.size(), m_drawBones.get());
+	if (m_currentAnimation && m_model)
+	{
+		m_currentAnimation->Update(deltaTime);
+		m_currentAnimation->Apply(*m_model, m_model->bones.size(), m_drawBones.get());
+	}
 }
 
 void SkinnedModelComponent::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world,const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj)
@@ -77,5 +77,31 @@ DirectX::SimpleMath::Vector3 SkinnedModelComponent::GetBoneWorldPosition(const w
 	}
 
 	return DirectX::SimpleMath::Vector3::Zero;
+}
+
+void SkinnedModelComponent::LoadAnimation(const std::string& name, const wchar_t* animPath)
+{
+	if (!m_model) return;
+
+	auto newAnim = std::make_unique<DX::AnimationSDKMESH>();
+	DX::ThrowIfFailed(newAnim->Load(animPath));
+	newAnim->Bind(*m_model);
+
+	m_animations[name] = std::move(newAnim);
+
+	if (m_currentAnimation == nullptr)
+	{
+		m_currentAnimation = m_animations[name].get();
+	}
+
+}
+
+void SkinnedModelComponent::ChangeAnimation(const std::string& name)
+{
+	auto it = m_animations.find(name);
+	if (it != m_animations.end())
+	{
+		m_currentAnimation = it->second.get();
+	}
 }
 

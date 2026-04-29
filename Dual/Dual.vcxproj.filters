@@ -112,6 +112,8 @@
     <ClInclude Include="Components\PlayerInputComponent.h" />
     <ClInclude Include="Components\CharacterMovementComponent.h" />
     <ClInclude Include="States\ICombatState.h" />
+    <ClInclude Include="States\CombatStates.h" />
+    <ClInclude Include="Components\CombatStateMachineComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
