@@ -35,7 +35,7 @@ namespace HEIN
 			, m_yaw(0.0f)
 			, m_mouseSensitivity(0.005f)
 			, m_targetHeight(15.0f)
-			, m_boomlenght(4.5f)
+			, m_boomlenght(5.5f)
 		{
 
 		}

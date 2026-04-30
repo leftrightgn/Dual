@@ -238,6 +238,7 @@ void GameScene::OnEnter(GameContext& gameContext)
         L"Resources/Models/knight");
     m_tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/knightidle.sdkmesh_anim");
     m_tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/knight.sdkmesh_anim");
+    m_tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/OneHand.sdkmesh_anim");
 
     // FirstPersonCamera model
     HEIN::SkinnedModelComponent* m_fpsModel = m_player->AddComponent<HEIN::SkinnedModelComponent>();
@@ -246,6 +247,7 @@ void GameScene::OnEnter(GameContext& gameContext)
         L"Resources/Models/knight");
     m_fpsModel->LoadAnimation("Idle", L"Resources/Models/knight/knightidle.sdkmesh_anim");
     m_fpsModel->LoadAnimation("Walk", L"Resources/Models/knight/knight.sdkmesh_anim");
+    m_fpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/OneHand.sdkmesh_anim");
 
 
     m_cameraController = std::make_unique<HEIN::CameraController>();

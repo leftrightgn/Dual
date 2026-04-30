@@ -27,4 +27,19 @@ namespace HEIN
 
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
 	};
+
+	// OneHandSwordAttack State
+	class OneHandAttackState : public ICombatState
+	{
+	private:
+		float m_timer = 0.0f;
+		const float WINDUP_DURATION = 6.2f;
+	public:
+		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+
+		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
+
+		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+
+	};
 }

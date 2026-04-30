@@ -9,6 +9,7 @@ namespace HEIN
 		Idle,
 		Walking,
 		AttackWindup,
+		OneHand,
 		AttackRelese,
 		AttackRecovery,
 		Parrying,
