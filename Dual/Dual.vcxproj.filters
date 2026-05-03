@@ -45,6 +45,7 @@
     </ClCompile>
     <ClCompile Include="Components\SkinnedModelComponent.cpp" />
     <ClCompile Include="States\CombatStates.cpp" />
+    <ClCompile Include="Effect\Skybox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -117,6 +118,7 @@
     <ClInclude Include="Components\CombatStateMachineComponent.h" />
     <ClInclude Include="Components\SocketComponent.h" />
     <ClInclude Include="Components\StaticModelComponent.h" />
+    <ClInclude Include="Effect\Skybox.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

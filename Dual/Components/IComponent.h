@@ -1,4 +1,5 @@
 #pragma once
+#include "../GameContext.h"
 
 
 namespace HEIN
@@ -23,6 +24,8 @@ namespace HEIN
 		virtual void Update(float deltaTime) = 0;
 
 		virtual void Start() {}
+
+		virtual void Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj) {}
 
 		Actor* GetOwner() const { return m_owner; }
 	};

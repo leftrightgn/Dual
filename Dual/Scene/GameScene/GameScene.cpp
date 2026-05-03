@@ -1,11 +1,4 @@
-﻿//--------------------------------------------------------------------------------------
-// File: GameScene.cpp
-//
-// 新規シーン作成時の元にするファイル
-//
-// Date: 2026.4.13
-// Author: Hideyasu Imase
-//--------------------------------------------------------------------------------------
+﻿
 #include "pch.h"
 #include "GameScene.h"
 #include <Camera/DebugCameraMode.h>
@@ -34,45 +27,30 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
 
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
-
-    if (!m_actors.empty())
+    if (m_player != nullptr)
     {
-        HEIN::PlayerInputComponent* inputComp = m_actors[0]->GetComponent<HEIN::PlayerInputComponent>();
+        HEIN::PlayerInputComponent* inputComp = m_player->GetComponent<HEIN::PlayerInputComponent>();
         if (inputComp)
         {
             inputComp->ProcessInput(gameContext);
         }
     }
-   
-
-    // Update Actors FIRST! 
-
     for (std::unique_ptr<HEIN::Actor>& actor : m_actors)
     {
         actor->Update(deltaTime);
-
-        HEIN::TransformComponent* transform = actor->GetComponent<HEIN::TransformComponent>();
-        if (transform != nullptr)
-        {
-            //DirectX::SimpleMath::Vector3 pos = transform->GetPosition();
-            //pos.z -= 10.0f * deltaTime;
-            //transform->SetPosition(pos);
-        }
     }
-
+    // [LOGIC: DEBUG TOOL]
+    // Real-time socket tweaking. (Delete or comment out before shipping the game!)
     HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
     if (pSocketComp != nullptr)
     {
         HEIN::Socket* weaponSocket = pSocketComp->GetSocket(L"WeaponSocket");
         if (weaponSocket != nullptr)
         {
-            float moveSpeed = 0.05f; // Removed deltaTime, moves a fixed amount per frame
-
-            // Use pure Windows API to guarantee the key press is registered
+            float moveSpeed = 0.05f;
             if (gameContext.keyboardState.Up)    weaponSocket->localPosition.x += moveSpeed;
             if (gameContext.keyboardState.Down)  weaponSocket->localPosition.x -= moveSpeed;
-
-            if (gameContext.keyboardState.Left)  weaponSocket->localPosition.z += moveSpeed; // Testing Z pos!
+            if (gameContext.keyboardState.Left)  weaponSocket->localPosition.z += moveSpeed;
             if (gameContext.keyboardState.Right) weaponSocket->localPosition.z -= moveSpeed;
 
             if (gameContext.keyboardState.F1)
@@ -85,11 +63,12 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
             }
         }
     }
-    // NOW read the bone position safely
-    if (!m_actors.empty())
+    // [LOGIC: CAMERA TRACKING]
+    // Read the bone position safely to update the camera target
+    if (m_player != nullptr)
     {
-        HEIN::TransformComponent* pTransform = m_actors[0]->GetComponent<HEIN::TransformComponent>();
-        HEIN::SkinnedModelComponent* pModel = m_actors[0]->GetComponent<HEIN::SkinnedModelComponent>();
+        HEIN::TransformComponent* pTransform = m_player->GetComponent<HEIN::TransformComponent>();
+        HEIN::SkinnedModelComponent* pModel = m_player->GetComponent<HEIN::SkinnedModelComponent>();
 
         if (pTransform != nullptr && pModel != nullptr)
         {
@@ -97,8 +76,6 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
             m_targetPos = pModel->GetBoneWorldPosition(L"mixamorig:Head", worldMatrix);
         }
     }
-
-    //  Update the Camera using the valid target position
     if (m_cameraController)
     {
         m_cameraController->Update(deltaTime);
@@ -106,13 +83,11 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
 
         m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
-            m_cameraController->GetFov(),  // gets FOV from current camera mode
+            m_cameraController->GetFov(),
             aspectRatio,
             0.01f,
             1000.0f
         );
-
-        m_effect->SetProjection(m_proj);
     }
 
     //  Update Environment
@@ -121,7 +96,19 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         m_water->Update(deltaTime);
     }
 
-    
+    if (m_swordActor != nullptr && m_player != nullptr)
+    {
+        HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
+        HEIN::TransformComponent* swordTrans = m_swordActor->GetComponent<HEIN::TransformComponent>();
+
+        if (pSocketComp != nullptr && pSocketComp->HasSocket(L"WeaponSocket") && swordTrans != nullptr)
+        {
+           
+            DirectX::SimpleMath::Matrix socketWorld = pSocketComp->GetSocketWorldMatrix(L"WeaponSocket");
+
+            swordTrans->SetParentMatrix(socketWorld);
+        }
+    }
   
 }
 
@@ -129,147 +116,52 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
 void GameScene::Render(GameContext& gameContext)
 {
     ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
-
-
-    // Turn OFF depth writing and face culling
-    context->OMSetDepthStencilState(gameContext.commonStates.DepthRead(), 0);
-    context->RSSetState(gameContext.commonStates.CullNone());
-    if (m_cameraController)
-    {
-        SimpleMath::Matrix view = m_cameraController->GetView();
-        m_effect->SetView(view);
-
-
-    }
-    /* if (m_debugCamera)
-     {
-         SimpleMath::Matrix view = m_debugCamera->GetCameraMatrix();
-         m_effect->SetView(view);
-     }*/
-
-
-    m_sky->Draw(m_effect.get(), m_skyInputLayout.Get());
-
-    context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
-
-    ID3D11SamplerState* wrapSampler = gameContext.commonStates.LinearWrap();
-    context->RSSetState(gameContext.commonStates.CullNone());
-    context->PSSetSamplers(0, 1, &wrapSampler);
-    context->OMSetBlendState(gameContext.commonStates.AlphaBlend(), nullptr, 0xFFFFFFFF);
-    context->OMSetDepthStencilState(gameContext.commonStates.DepthRead(), 0);
     SimpleMath::Matrix view = m_cameraController->GetView();
     //SimpleMath::Matrix view = m_debugCamera->GetCameraMatrix();
 
     SimpleMath::Vector3 camPos = m_cameraController->GetPosition();
     //SimpleMath::Vector3 camPos = m_debugCamera->GetEyePosition();
 
-    m_water->Draw(gameContext, view, m_proj, camPos);
-    context->RSSetState(gameContext.commonStates.CullCounterClockwise());
-    // Reset Blend State
-    context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
-    context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
+    if (m_skybox)
+    {
+        m_skybox->Draw(gameContext, view, m_proj);
+    }
 
     for (std::unique_ptr<HEIN::Actor>& actor : m_actors)
     {
-        HEIN::TransformComponent* transformComp = actor->GetComponent<HEIN::TransformComponent>();
-
-        if (transformComp != nullptr)
-        {
-            DirectX::SimpleMath::Matrix world = transformComp->GetWorldMatrix();
-
-            // THE MAGNET EFFECT: Is this actor the sword?
-            if (actor.get() == m_swordActor && m_player != nullptr)
-            {
-                HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
-                if (pSocketComp != nullptr && pSocketComp->HasSocket(L"WeaponSocket"))
-                {
-                    // Get the hand position with the 90-degree twist, but NO scale
-                    DirectX::SimpleMath::Matrix socketWorld = pSocketComp->GetSocketWorldMatrix(L"WeaponSocket");
-
-                    // Combine the clean sword scale (0.1f) with the hand's location
-                    world = DirectX::SimpleMath::Matrix::CreateScale(transformComp->GetScale()) * socketWorld;
-
-                    if (m_debugSphere)
-                    {
-                        m_debugSphere->Draw(socketWorld, view, m_proj, DirectX::Colors::Red);
-                    }
-                }
-            }
-
-            // Draw Skinned Models (The Player)
-            std::vector<HEIN::SkinnedModelComponent*> skinnedModels = actor->GetComponents<HEIN::SkinnedModelComponent>();
-            for (HEIN::SkinnedModelComponent* modelComp : skinnedModels)
-            {
-                modelComp->Draw(gameContext, world, view, m_proj);
-            }
-
-            // Draw Static Models (The Sword)
-            std::vector<HEIN::StaticModelComponent*> staticModels = actor->GetComponents<HEIN::StaticModelComponent>();
-            for (HEIN::StaticModelComponent* modelComp : staticModels)
-            {
-                modelComp->Draw(gameContext, world, view, m_proj);
-            }
-        }
+        actor->Draw(gameContext, view, m_proj);
     }
+    ID3D11SamplerState* wrapSampler = gameContext.commonStates.LinearWrap();
+    context->RSSetState(gameContext.commonStates.CullNone());
+    context->PSSetSamplers(0, 1, &wrapSampler);
+    context->OMSetBlendState(gameContext.commonStates.AlphaBlend(), nullptr, 0xFFFFFFFF);
+    context->OMSetDepthStencilState(gameContext.commonStates.DepthRead(), 0); 
+
+    if (m_water)
+    {
+        m_water->Draw(gameContext, view, m_proj, camPos);
+    }
+
+    // Cleanup and reset states back to normal for the next frame
+    context->RSSetState(gameContext.commonStates.CullCounterClockwise());
+    context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
+    context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
+
+    
 }
 
 // シーン切り替え時に呼び出される関数
 void GameScene::OnEnter(GameContext& gameContext)
 {
-    ID3D11Device* device = gameContext.deviceResources.GetD3DDevice();
-
-	m_sky = DirectX::GeometricPrimitive::CreateGeoSphere(gameContext.deviceResources.GetD3DDeviceContext(), 2.f, 3, false /*invert for being inside the shape*/);
-
-	m_effect = std::make_unique<DX::SkyboxEffect>(gameContext.deviceResources.GetD3DDevice());
-
-    // array of descriptors — essentially a list of instructions telling the GPU how to read vertex data
-    const D3D11_INPUT_ELEMENT_DESC inputElementDesc[] =
-    {
-        // SemanticName, SemanticIndex, Format, InputSlot, AlignedByteOffset, ...
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    };
-    // DXGI_FORMAT_R32G32B32_FLOAT is data type/ R32G32B32 means three 32-bit channels
-    // FLOAT means they're floating point numbers. So this reads three floats — your x, y, and z. 
-    // If you needed a fourth w component it would be R32G32B32A32_FLOAT.
-    // D3D11_INPUT_PER_VERTEX_DATA — tells the GPU to advance to the next vertex's data for each vertex
-    // drawn, which is the normal behaviour. The alternative D3D11_INPUT_PER_INSTANCE_DATA is for a more
-    // advanced technique called instancing where you draw many copies of a mesh at once.
-
-
-    // Get the shader bytecode from your effect
-    const void* shaderByteCode = nullptr;
-    size_t byteCodeLength = 0;
-    m_effect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
-
-    // Manually create the layout
-    DX::ThrowIfFailed(
-        device->CreateInputLayout(
-            inputElementDesc,
-            std::size(inputElementDesc),
-            shaderByteCode,
-            byteCodeLength,
-            m_skyInputLayout.ReleaseAndGetAddressOf()
-        )
-    );
-    DX::ThrowIfFailed(
-        DirectX::CreateDDSTextureFromFile(device, L"Resources/Textures/sky.dds",
-            nullptr, m_cubemap.ReleaseAndGetAddressOf()));
-
-    m_effect->SetTexture(m_cubemap.Get());
+    m_skybox = std::make_unique<HEIN::Skybox>();
+    m_skybox->Initialize(gameContext, L"Resources/Textures/sky.dds");
 
     D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
     int width = static_cast<int>(viewport.Width);
     int height = static_cast<int>(viewport.Height);
-
-    //m_debugCamera = std::make_unique<Imase::DebugCamera>(width, height);
-    
     float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
     m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
         DirectX::XM_PI / 4.0f, aspectRatio, 0.01f, 1000.0f);
-
-    m_effect->SetProjection(m_proj);
-   
-    m_debugSphere = DirectX::GeometricPrimitive::CreateSphere(gameContext.deviceResources.GetD3DDeviceContext(), 1.0f);
 
     // Water
     m_water = std::make_unique<Water>();

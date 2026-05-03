@@ -12,7 +12,7 @@
 #include "GameContext.h"
 #include "../SceneId.h"
 #include "Effect/Water.h"
-#include "Effect/SkyboxEffect.h"
+#include "Effect/Skybox.h"
 #include "ImaseLib/DebugCamera.h"
 #include "Camera/CameraController.h"
 #include <Entities/Actor.h>
@@ -34,13 +34,7 @@ public:
 
 private:
 
-	std::unique_ptr<DirectX::GeometricPrimitive> m_sky;
-
-	std::unique_ptr<DX::SkyboxEffect> m_effect;
-
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_skyInputLayout;
-
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_cubemap;
+	std::unique_ptr<HEIN::Skybox> m_skybox;
 
 	std::unique_ptr<Water> m_water;
 
