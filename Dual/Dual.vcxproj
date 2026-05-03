@@ -185,6 +185,8 @@
     <ClInclude Include="Components\CharacterMovementComponent.h" />
     <ClInclude Include="Components\CombatStateMachineComponent.h" />
     <ClInclude Include="Components\PlayerInputComponent.h" />
+    <ClInclude Include="Components\SocketComponent.h" />
+    <ClInclude Include="Components\StaticModelComponent.h" />
     <ClInclude Include="Components\TransfromComponent.h" />
     <ClInclude Include="Entities\Actor.h" />
     <ClInclude Include="Camera\CameraController.h" />

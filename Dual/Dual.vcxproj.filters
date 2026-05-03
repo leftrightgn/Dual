@@ -115,6 +115,8 @@
     <ClInclude Include="States\ICombatState.h" />
     <ClInclude Include="States\CombatStates.h" />
     <ClInclude Include="Components\CombatStateMachineComponent.h" />
+    <ClInclude Include="Components\SocketComponent.h" />
+    <ClInclude Include="Components\StaticModelComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

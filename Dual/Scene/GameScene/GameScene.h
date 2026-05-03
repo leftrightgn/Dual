@@ -55,10 +55,11 @@ private:
 
 	DirectX::SimpleMath::Vector3 m_targetPos;
 
-	std::unique_ptr<HEIN::Actor> m_player;
+	HEIN::Actor* m_player = nullptr;
+	HEIN::Actor* m_swordActor = nullptr;
 	std::vector<std::unique_ptr<HEIN::Actor>> m_actors;
 
-	
+	std::unique_ptr<DirectX::GeometricPrimitive> m_debugSphere;
 };
 
 
