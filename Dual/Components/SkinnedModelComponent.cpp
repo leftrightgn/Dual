@@ -81,6 +81,24 @@ namespace HEIN
 		return DirectX::SimpleMath::Vector3::Zero;
 	}
 
+	DirectX::SimpleMath::Matrix SkinnedModelComponent::GetBoneWorldMatrix(const wchar_t* boneName, const DirectX::SimpleMath::Matrix& actorWorldMatrix)
+	{
+		if (!m_model) return DirectX::SimpleMath::Matrix::Identity;
+
+		for (size_t i = 0; i < m_model->bones.size(); i++)
+		{
+			if (m_model->bones[i].name.find(boneName) != std::wstring::npos)
+			{
+				DirectX::SimpleMath::Matrix boneMatrix = m_drawBones[i];
+				DirectX::SimpleMath::Matrix finalWorldMatrix = boneMatrix * actorWorldMatrix;
+
+				return finalWorldMatrix;
+			}
+		}
+
+		return DirectX::SimpleMath::Matrix::Identity;
+	}
+
 	void SkinnedModelComponent::LoadAnimation(const std::string& name, const wchar_t* animPath)
 	{
 		if (!m_model) return;

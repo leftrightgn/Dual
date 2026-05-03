@@ -35,6 +35,7 @@ namespace HEIN
 		void Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj);
 
 		DirectX::SimpleMath::Vector3 GetBoneWorldPosition(const wchar_t* boneName, const DirectX::SimpleMath::Matrix& actorWorldMatrix);
+		DirectX::SimpleMath::Matrix GetBoneWorldMatrix(const wchar_t* boneName, const DirectX::SimpleMath::Matrix& actorWorldMatrix);
 
 		void LoadAnimation(const std::string& name, const wchar_t* animPath);
 		void ChangeAnimation(const std::string& name);

@@ -17,6 +17,8 @@
 #include <Components/PlayerInputComponent.h>
 #include <Components/CharacterMovementComponent.h>
 #include <Components/CombatStateMachineComponent.h>
+#include <Components/SocketComponent.h>
+#include <Components/StaticModelComponent.h>
 
 
 
@@ -58,6 +60,31 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         }
     }
 
+    HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
+    if (pSocketComp != nullptr)
+    {
+        HEIN::Socket* weaponSocket = pSocketComp->GetSocket(L"WeaponSocket");
+        if (weaponSocket != nullptr)
+        {
+            float moveSpeed = 0.05f; // Removed deltaTime, moves a fixed amount per frame
+
+            // Use pure Windows API to guarantee the key press is registered
+            if (gameContext.keyboardState.Up)    weaponSocket->localPosition.x += moveSpeed;
+            if (gameContext.keyboardState.Down)  weaponSocket->localPosition.x -= moveSpeed;
+
+            if (gameContext.keyboardState.Left)  weaponSocket->localPosition.z += moveSpeed; // Testing Z pos!
+            if (gameContext.keyboardState.Right) weaponSocket->localPosition.z -= moveSpeed;
+
+            if (gameContext.keyboardState.F1)
+            {
+                wchar_t debugMsg[256];
+                swprintf_s(debugMsg, L"PERFECT SOCKET: Pos(%.3f, %.3f, %.3f), Rot(%.3f, %.3f, %.3f)\n",
+                    weaponSocket->localPosition.x, weaponSocket->localPosition.y, weaponSocket->localPosition.z,
+                    weaponSocket->localRotation.x, weaponSocket->localRotation.y, weaponSocket->localRotation.z);
+                OutputDebugString(debugMsg);
+            }
+        }
+    }
     // NOW read the bone position safely
     if (!m_actors.empty())
     {
@@ -120,6 +147,7 @@ void GameScene::Render(GameContext& gameContext)
          m_effect->SetView(view);
      }*/
 
+
     m_sky->Draw(m_effect.get(), m_skyInputLayout.Get());
 
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
@@ -145,15 +173,39 @@ void GameScene::Render(GameContext& gameContext)
     {
         HEIN::TransformComponent* transformComp = actor->GetComponent<HEIN::TransformComponent>();
 
-        // Grab ALL models attached to this actor
-        std::vector<HEIN::SkinnedModelComponent*> models = actor->GetComponents<HEIN::SkinnedModelComponent>();
-
-        if (transformComp != nullptr && !models.empty())
+        if (transformComp != nullptr)
         {
             DirectX::SimpleMath::Matrix world = transformComp->GetWorldMatrix();
 
-            // Loop through and draw them (the SetVisible check we added will hide the inactive one!)
-            for (HEIN::SkinnedModelComponent* modelComp : models)
+            // THE MAGNET EFFECT: Is this actor the sword?
+            if (actor.get() == m_swordActor && m_player != nullptr)
+            {
+                HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
+                if (pSocketComp != nullptr && pSocketComp->HasSocket(L"WeaponSocket"))
+                {
+                    // Get the hand position with the 90-degree twist, but NO scale
+                    DirectX::SimpleMath::Matrix socketWorld = pSocketComp->GetSocketWorldMatrix(L"WeaponSocket");
+
+                    // Combine the clean sword scale (0.1f) with the hand's location
+                    world = DirectX::SimpleMath::Matrix::CreateScale(transformComp->GetScale()) * socketWorld;
+
+                    if (m_debugSphere)
+                    {
+                        m_debugSphere->Draw(socketWorld, view, m_proj, DirectX::Colors::Red);
+                    }
+                }
+            }
+
+            // Draw Skinned Models (The Player)
+            std::vector<HEIN::SkinnedModelComponent*> skinnedModels = actor->GetComponents<HEIN::SkinnedModelComponent>();
+            for (HEIN::SkinnedModelComponent* modelComp : skinnedModels)
+            {
+                modelComp->Draw(gameContext, world, view, m_proj);
+            }
+
+            // Draw Static Models (The Sword)
+            std::vector<HEIN::StaticModelComponent*> staticModels = actor->GetComponents<HEIN::StaticModelComponent>();
+            for (HEIN::StaticModelComponent* modelComp : staticModels)
             {
                 modelComp->Draw(gameContext, world, view, m_proj);
             }
@@ -217,20 +269,20 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     m_effect->SetProjection(m_proj);
    
-
+    m_debugSphere = DirectX::GeometricPrimitive::CreateSphere(gameContext.deviceResources.GetD3DDeviceContext(), 1.0f);
 
     // Water
     m_water = std::make_unique<Water>();
     m_water->Initialize(gameContext, L"Resources/Textures/water.dds", L"Resources/Textures/waternormal.dds", L"Resources/Textures/waternoise.dds");
 
-    m_player = std::make_unique<HEIN::Actor>(L"Player");
+    std::unique_ptr<HEIN::Actor> playerActor = std::make_unique<HEIN::Actor>(L"Player");
 
-    HEIN::TransformComponent* ptransform = m_player->AddComponent<HEIN::TransformComponent>();
+    HEIN::TransformComponent* ptransform = playerActor->AddComponent<HEIN::TransformComponent>();
     ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     ptransform->SetScale(DirectX::SimpleMath::Vector3(0.1f));
    
     DirectX::SimpleMath::Vector3 pos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
-    HEIN::SkinnedModelComponent* m_tpsModel = m_player->AddComponent<HEIN::SkinnedModelComponent>();
+    HEIN::SkinnedModelComponent* m_tpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
     
     // ThirdPersonCamera model
     m_tpsModel->Initialize(gameContext,
@@ -241,13 +293,33 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/OneHand.sdkmesh_anim");
 
     // FirstPersonCamera model
-    HEIN::SkinnedModelComponent* m_fpsModel = m_player->AddComponent<HEIN::SkinnedModelComponent>();
+    HEIN::SkinnedModelComponent* m_fpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
     m_fpsModel->Initialize(gameContext,
         L"Resources/Models/knight/headless.sdkmesh", // headless/arms model
         L"Resources/Models/knight");
     m_fpsModel->LoadAnimation("Idle", L"Resources/Models/knight/knightidle.sdkmesh_anim");
     m_fpsModel->LoadAnimation("Walk", L"Resources/Models/knight/knight.sdkmesh_anim");
     m_fpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/OneHand.sdkmesh_anim");
+
+
+    HEIN::SocketComponent* socketComp = playerActor->AddComponent<HEIN::SocketComponent>();
+    HEIN::Socket weaponSocket(
+        L"WeaponSocket",
+        L"mixamorig:RightHand",
+        DirectX::SimpleMath::Vector3(-7.800f, -2.150f, 13.7f),
+        DirectX::SimpleMath::Vector3(DirectX::XM_PIDIV2, 0.0f, 0.0f)
+    );
+    socketComp->AddSocket(weaponSocket);
+
+    std::unique_ptr<HEIN::Actor> sword = std::make_unique<HEIN::Actor>(L"Sword");
+    HEIN::TransformComponent* swordTransform = sword->AddComponent<HEIN::TransformComponent>();
+
+    swordTransform->SetScale(DirectX::SimpleMath::Vector3(2.0f));
+
+    HEIN::StaticModelComponent* swordModel = sword->AddComponent<HEIN::StaticModelComponent>();
+    swordModel->Initialize(gameContext, L"Resources/Models/knight/sword.sdkmesh", L"Resources/Models/knight");
+
+    sword->Start();
 
 
     m_cameraController = std::make_unique<HEIN::CameraController>();
@@ -262,14 +334,17 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
 
-    m_player->AddComponent<HEIN::CombatBlackBoard>();
-    m_player->AddComponent<HEIN::PlayerInputComponent>(m_cameraController.get()); // Requires the camera controller
-    m_player->AddComponent<HEIN::CharacterMovementComponent>();
-    m_player->AddComponent<HEIN::CombatStateMachineComponent>();
+    playerActor->AddComponent<HEIN::CombatBlackBoard>();
+    playerActor->AddComponent<HEIN::PlayerInputComponent>(m_cameraController.get()); // Requires the camera controller
+    playerActor->AddComponent<HEIN::CharacterMovementComponent>();
+    playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
    
-    m_player->Start();
-
-    m_actors.push_back(std::move(m_player));
+    playerActor->Start();
+    m_swordActor = sword.get();
+    m_player = playerActor.get();
+    m_actors.push_back(std::move(playerActor));
+    m_actors.push_back(std::move(sword));
+    
 
    
 }
