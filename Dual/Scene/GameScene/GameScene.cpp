@@ -41,7 +41,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
     }
     // [LOGIC: DEBUG TOOL]
     // Real-time socket tweaking. (Delete or comment out before shipping the game!)
-    HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
+    /*HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
     if (pSocketComp != nullptr)
     {
         HEIN::Socket* weaponSocket = pSocketComp->GetSocket(L"WeaponSocket");
@@ -62,7 +62,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
                 OutputDebugString(debugMsg);
             }
         }
-    }
+    }*/
     // [LOGIC: CAMERA TRACKING]
     // Read the bone position safely to update the camera target
     if (m_player != nullptr)
