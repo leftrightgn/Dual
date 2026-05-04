@@ -86,7 +86,7 @@ void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent
 	m_timer = 0.0f;
 }
 
-void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
+void HEIN::OneHandAttackState::Update(Actor* /*owner*/, CombatStateMachineComponent* stateMachine, float deltaTime)
 {
 	m_timer += deltaTime;
 

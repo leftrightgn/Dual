@@ -221,6 +221,7 @@
     <ClInclude Include="Scene\GameScene\GameScene.h" />
     <ClInclude Include="Scene\SceneId.h" />
     <ClInclude Include="Components\SkinnedModelComponent.h" />
+    <ClInclude Include="Effect\Skybox.h" />
     <ClInclude Include="States\CombatStates.h" />
     <ClInclude Include="States\ICombatState.h" />
   </ItemGroup>
@@ -248,6 +249,7 @@
     <ClCompile Include="Scene\BaseScene\BaseScene.cpp" />
     <ClCompile Include="Scene\GameScene\GameScene.cpp" />
     <ClCompile Include="Components\SkinnedModelComponent.cpp" />
+    <ClCompile Include="Effect\Skybox.cpp" />
     <ClCompile Include="States\CombatStates.cpp" />
   </ItemGroup>
   <ItemGroup>

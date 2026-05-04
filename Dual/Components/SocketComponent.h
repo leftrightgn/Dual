@@ -42,10 +42,19 @@ namespace HEIN
     public:
         SocketComponent(Actor* owner)
             : IComponent(owner)
+            , m_model(nullptr)
+            , m_transform(nullptr)
         {
         }
 
-        void Update(float deltaTime) override {}
+        void Start() override
+        {
+      
+            m_model = m_owner->GetComponent<SkinnedModelComponent>();
+            m_transform = m_owner->GetComponent<TransformComponent>();
+        }
+
+        void Update(float /*deltaTime*/) override {}
 
         void UpdateSocketOffset(const std::wstring& socketName,
             const DirectX::SimpleMath::Vector3& newPos,

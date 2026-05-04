@@ -11,7 +11,7 @@ namespace HEIN
         DirectX::SimpleMath::Vector3 m_position;
         DirectX::SimpleMath::Vector3 m_rotation;
         DirectX::SimpleMath::Vector3 m_scale;
-
+        DirectX::SimpleMath::Matrix m_parentMatrix;
     public:
 
         TransformComponent(Actor* owner)
@@ -19,6 +19,7 @@ namespace HEIN
             , m_position(0.0f, 0.0f, 0.0f)
             , m_rotation(0.0f, 0.0f, 0.0f)
             , m_scale(1.0f, 1.0f, 1.0f)
+            , m_parentMatrix(DirectX::SimpleMath::Matrix::Identity)
         {
         }
 
@@ -33,6 +34,8 @@ namespace HEIN
         void SetScale(const DirectX::SimpleMath::Vector3& scale) { m_scale = scale; }
         const DirectX::SimpleMath::Vector3& GetScale() const { return m_scale; }
 
+        void SetParentMatrix(const DirectX::SimpleMath::Matrix& parent) { m_parentMatrix = parent; }
+
         // --- Core 3D Math ---
 
         // Generates the World Matrix for DirectX 11 rendering
@@ -43,7 +46,8 @@ namespace HEIN
             // CreateFromYawPitchRoll takes (Y, X, Z) 
             return  DirectX::SimpleMath::Matrix::CreateScale(m_scale) *
                 DirectX::SimpleMath::Matrix::CreateFromYawPitchRoll(m_rotation.y, m_rotation.x, m_rotation.z) *
-                DirectX::SimpleMath::Matrix::CreateTranslation(m_position);
+                DirectX::SimpleMath::Matrix::CreateTranslation(m_position) *
+                m_parentMatrix;;
         }
 
         void Update(float /*deltaTime*/) override {}
