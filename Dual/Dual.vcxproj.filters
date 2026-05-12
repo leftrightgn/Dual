@@ -46,6 +46,10 @@
     <ClCompile Include="Components\SkinnedModelComponent.cpp" />
     <ClCompile Include="States\CombatStates.cpp" />
     <ClCompile Include="Effect\Skybox.cpp" />
+    <ClCompile Include="Camera\FirstPersonMode.cpp" />
+    <ClCompile Include="Camera\ThirdPersonMode.cpp" />
+    <ClCompile Include="Camera\CinematicMode.cpp" />
+    <ClCompile Include="Camera\DebugCameraMode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
