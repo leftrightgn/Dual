@@ -7,6 +7,12 @@ namespace HEIN
 	{
 	private:
 
+		static constexpr float DEFAULT_RADIUS = 8.0f;
+		static constexpr float DEFAULT_CURRENTANGLE = 0.0f;
+		static constexpr float DEFAULT_ORBITSPEED = 0.5f;
+		static constexpr float DEFAULT_CAMERAHEIGHT = 1.5f;
+	private:
+
 		DirectX::SimpleMath::Vector3 m_centerofStage;
 		float m_radius;
 		float m_currentAngle;
@@ -15,41 +21,19 @@ namespace HEIN
 
 	public:
 
-		CinematicMode(DirectX::SimpleMath::Vector3 centerPoint, float radius = 8.0f, float currentAngle = 0.0f, float orbitSpeed = 0.5f, float cameraHeight = 1.5f)
-			: m_centerofStage(centerPoint)
-			, m_radius(radius)
-			, m_currentAngle(currentAngle)
-			, m_orbitSpeed(orbitSpeed)
-			, m_cameraHeight(cameraHeight)
-
-		{
-		}
-
+		CinematicMode(
+			  DirectX::SimpleMath::Vector3 centerPoint,
+			  float radius = DEFAULT_RADIUS,
+			  float currentAngle = DEFAULT_CURRENTANGLE,
+			  float orbitSpeed = DEFAULT_ORBITSPEED,
+			  float cameraHeight = DEFAULT_CAMERAHEIGHT
+		);
+	
 		// Cinematic mode ignores player input
 		void ProcessInput(const CameraInputState& /*input*/) override { return; }
 
-		void Update(CameraData& outData, float deltaTime, ICameraController& /*controller*/) override
-		{
-			// Advance the angle over time
-			m_currentAngle += m_orbitSpeed * deltaTime;
-
-			// Calculate the camera position by trigonometry for a circle
-
-			float x = m_centerofStage.x + (cosf(m_currentAngle) * m_radius);
-			float z = m_centerofStage.z + (sinf(m_currentAngle) * m_radius);
-
-			outData.position = DirectX::SimpleMath::Vector3(x, m_centerofStage.y + m_cameraHeight, z);
-
-			// Always look perfectly at the center of the stage 
-			outData.viewMatrix = DirectX::SimpleMath::Matrix::CreateLookAt(
-				outData.position,
-				m_centerofStage,
-				DirectX::SimpleMath::Vector3::Up
-			);
-
-			// FOV
-			outData.fov = DirectX::XMConvertToRadians(50.0f);
-		}
+		void Update(CameraData& outData, float deltaTime, ICameraController& controller) override;
+		
 	};
 
 }

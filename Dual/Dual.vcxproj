@@ -226,6 +226,10 @@
     <ClInclude Include="States\ICombatState.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Camera\CinematicMode.cpp" />
+    <ClCompile Include="Camera\DebugCameraMode.cpp" />
+    <ClCompile Include="Camera\FirstPersonMode.cpp" />
+    <ClCompile Include="Camera\ThirdPersonMode.cpp" />
     <ClCompile Include="Common\DeviceResources.cpp" />
     <ClCompile Include="DirectXTK_Utilities\Animation.cpp" />
     <ClCompile Include="DirectXTK_Utilities\DebugDraw.cpp" />
