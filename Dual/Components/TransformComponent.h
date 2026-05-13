@@ -1,7 +1,6 @@
 #pragma once
 #include <SimpleMath.h>
 #include "IComponent.h"
-#include <Entities/Actor.h>
 
 namespace HEIN
 {

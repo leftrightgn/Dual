@@ -4,7 +4,7 @@
 #include <string>
 #include "Components/IComponent.h"
 #include <utility>
-#include <Components/TransfromComponent.h>
+#include <Components/TransformComponent.h>
 
 namespace HEIN
 {
@@ -20,35 +20,15 @@ namespace HEIN
 
 	public:
 
-		Actor(const std::wstring& tag = L"Actor")
-			: m_tag(tag)
-		{
-
-		}
-
+		Actor(const std::wstring& tag = L"Actor");
+	
 		~Actor() = default;
 
-		void Update(float deltaTime)
-		{
-			for (auto& comp : m_components)
-			{
-				comp->Update(deltaTime);
-			}
-		}
+		void Update(float deltaTime);
+		
 
-		void Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj)
-		{
-			TransformComponent* transform = GetComponent<TransformComponent>();
-			if (!transform) return;
-
-			DirectX::SimpleMath::Matrix world = transform->GetWorldMatrix();
-
-			
-			for (auto& component : m_components)
-			{
-				component->Draw(gameContext, world, view, proj);
-			}
-		}
+		void Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj);
+		
 
 		void Start()
 		{

@@ -1,6 +1,6 @@
 #pragma once
 #include "Components/IComponent.h"
-#include "Components/TransfromComponent.h"
+#include "Components/TransformComponent.h"
 #include "BlackBoard/CombatBlackBoard.h"
 #include "Entities/Actor.h"
 

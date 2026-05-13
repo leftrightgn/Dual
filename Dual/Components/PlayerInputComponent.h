@@ -55,6 +55,10 @@ namespace HEIN
 				{
 					cameraController->RequestSwitch(HEIN::CameraType::FirstPerson);
 				}
+				if (gameContext.keyboardTracker.pressed.E)
+				{
+					cameraController->RequestSwitch(HEIN::CameraType::Spring);
+				}
 			}
 
 			if (m_blackboard != nullptr)

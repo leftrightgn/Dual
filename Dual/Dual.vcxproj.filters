@@ -50,6 +50,8 @@
     <ClCompile Include="Camera\ThirdPersonMode.cpp" />
     <ClCompile Include="Camera\CinematicMode.cpp" />
     <ClCompile Include="Camera\DebugCameraMode.cpp" />
+    <ClCompile Include="Camera\SpringCameraMode.cpp" />
+    <ClCompile Include="Entities\Actor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -112,7 +114,7 @@
     <ClInclude Include="Camera\SpringCameraMode.h" />
     <ClInclude Include="Components\IComponent.h" />
     <ClInclude Include="Entities\Actor.h" />
-    <ClInclude Include="Components\TransfromComponent.h" />
+    <ClInclude Include="Components\TransformComponent.h" />
     <ClInclude Include="Components\SkinnedModelComponent.h" />
     <ClInclude Include="BlackBoard\CombatBlackBoard.h" />
     <ClInclude Include="Components\PlayerInputComponent.h" />
