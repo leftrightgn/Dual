@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "SkinnedModelComponent.h"
-#include "TransfromComponent.h"
+#include "TransformComponent.h"
 #include "Entities/Actor.h"
 
 namespace HEIN

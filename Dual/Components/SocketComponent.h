@@ -1,7 +1,7 @@
 #pragma once
 #include "Components/IComponent.h"
 #include "Components/SkinnedModelComponent.h"
-#include "TransfromComponent.h" 
+#include "TransformComponent.h" 
 #include <string>
 #include <unordered_map>
 #include <SimpleMath.h>

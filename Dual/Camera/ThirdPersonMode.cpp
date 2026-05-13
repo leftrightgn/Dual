@@ -17,7 +17,7 @@ HEIN::ThirdPersonMode::ThirdPersonMode(
 {
 }
 
-void HEIN::ThirdPersonMode::OnEnter(CameraData& data)
+void HEIN::ThirdPersonMode::OnEnter(CameraData& /*data*/)
 {
 	if (m_fpsModel != nullptr) m_fpsModel->SetVisible(false);
 	if (m_tpsModel != nullptr) m_tpsModel->SetVisible(true);

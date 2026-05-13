@@ -48,6 +48,7 @@ private:
 	std::unique_ptr<HEIN::CameraController> m_cameraController;
 
 	DirectX::SimpleMath::Vector3 m_targetPos;
+	DirectX::SimpleMath::Vector3 m_springEyePos;
 
 	HEIN::Actor* m_player = nullptr;
 	HEIN::Actor* m_swordActor = nullptr;

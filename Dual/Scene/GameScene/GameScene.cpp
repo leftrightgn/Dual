@@ -2,7 +2,7 @@
 #include "pch.h"
 #include "GameScene.h"
 #include <Camera/DebugCameraMode.h>
-#include <Components/TransfromComponent.h>
+#include <Components/TransformComponent.h>
 #include <Components/SkinnedModelComponent.h>
 #include <Camera/ThirdPersonMode.h>
 #include <Camera/FirstPersonMode.h>
@@ -12,6 +12,7 @@
 #include <Components/CombatStateMachineComponent.h>
 #include <Components/SocketComponent.h>
 #include <Components/StaticModelComponent.h>
+#include <Camera/SpringCameraMode.h>
 
 
 
@@ -223,6 +224,8 @@ void GameScene::OnEnter(GameContext& gameContext)
         { return std::make_unique<HEIN::FirstPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); });
     m_cameraController->RegisterCamera(HEIN::CameraType::ThirdPerson, [this, m_fpsModel, m_tpsModel]() 
         { return std::make_unique<HEIN::ThirdPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); });
+    m_cameraController->RegisterCamera(HEIN::CameraType::Spring, [this, ptransform]()
+        { return std::make_unique<HEIN::SpringCameraMode>(ptransform, &m_targetPos); });
 
     m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
 
