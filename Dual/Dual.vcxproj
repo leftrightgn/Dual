@@ -232,6 +232,12 @@
     <ClCompile Include="Camera\SpringCameraMode.cpp" />
     <ClCompile Include="Camera\ThirdPersonMode.cpp" />
     <ClCompile Include="Common\DeviceResources.cpp" />
+    <ClCompile Include="Components\CharacterMovementComponent.cpp" />
+    <ClCompile Include="Components\CombatStateMachineComponent.cpp" />
+    <ClCompile Include="Components\PlayerInputComponent.cpp" />
+    <ClCompile Include="Components\SocketComponent.cpp" />
+    <ClCompile Include="Components\StaticModelComponent.cpp" />
+    <ClCompile Include="Components\TransformComponent.cpp" />
     <ClCompile Include="DirectXTK_Utilities\Animation.cpp" />
     <ClCompile Include="DirectXTK_Utilities\DebugDraw.cpp" />
     <ClCompile Include="Effect\SkyboxEffect.cpp" />

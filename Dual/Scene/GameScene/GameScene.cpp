@@ -140,7 +140,7 @@ void GameScene::Render(GameContext& gameContext)
 
     if (m_water)
     {
-        m_water->Draw(gameContext, view, m_proj, camPos);
+        //m_water->Draw(gameContext, view, m_proj, camPos);
     }
 
     // Cleanup and reset states back to normal for the next frame
@@ -194,6 +194,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_fpsModel->LoadAnimation("Walk", L"Resources/Models/knight/knight.sdkmesh_anim");
     m_fpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/OneHand.sdkmesh_anim");
 
+  
+    //Sword
 
     HEIN::SocketComponent* socketComp = playerActor->AddComponent<HEIN::SocketComponent>();
     HEIN::Socket weaponSocket(
@@ -214,7 +216,7 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     sword->Start();
 
-
+    // Camera
     m_cameraController = std::make_unique<HEIN::CameraController>();
 
     m_cameraController->RegisterCamera(HEIN::CameraType::Debug, []() { return std::make_unique<HEIN::DebugCameraMode>(); });
@@ -229,17 +231,31 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
 
+    // Stage
+    std::unique_ptr<HEIN::Actor> stageActor = std::make_unique<HEIN::Actor>(L"Stage");
+    HEIN::TransformComponent* tranStage = stageActor->AddComponent<HEIN::TransformComponent>();
+
+    tranStage->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 2.0f, 0.0f));
+    tranStage->SetScale(DirectX::SimpleMath::Vector3(8.0f));
+
+    HEIN::StaticModelComponent* stageModel = stageActor->AddComponent<HEIN::StaticModelComponent>();
+
+    stageModel->Initialize(gameContext, L"Resources/Models/stage/stage.sdkmesh", L"Resources/Models/stage");
+
+    stageActor->Start();
+
+    // Connect
     playerActor->AddComponent<HEIN::CombatBlackBoard>();
     playerActor->AddComponent<HEIN::PlayerInputComponent>(m_cameraController.get()); // Requires the camera controller
     playerActor->AddComponent<HEIN::CharacterMovementComponent>();
     playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
    
     playerActor->Start();
-    m_swordActor = sword.get();
     m_player = playerActor.get();
+    m_swordActor = sword.get();
+    m_stageActor = stageActor.get();
     m_actors.push_back(std::move(playerActor));
     m_actors.push_back(std::move(sword));
-    
-
+    m_actors.push_back(std::move(stageActor));
    
 }

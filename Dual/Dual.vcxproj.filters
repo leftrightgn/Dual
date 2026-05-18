@@ -52,6 +52,12 @@
     <ClCompile Include="Camera\DebugCameraMode.cpp" />
     <ClCompile Include="Camera\SpringCameraMode.cpp" />
     <ClCompile Include="Entities\Actor.cpp" />
+    <ClCompile Include="Components\CharacterMovementComponent.cpp" />
+    <ClCompile Include="Components\CombatStateMachineComponent.cpp" />
+    <ClCompile Include="Components\PlayerInputComponent.cpp" />
+    <ClCompile Include="Components\SocketComponent.cpp" />
+    <ClCompile Include="Components\StaticModelComponent.cpp" />
+    <ClCompile Include="Components\TransformComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />

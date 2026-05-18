@@ -1,11 +1,10 @@
 #pragma once
-#include <memory>
-#include "Components/IComponent.h"
-#include "States/CombatStates.h"
-#include <States/ICombatState.h>
+#include <States/CombatStates.h>
 
 namespace HEIN
 {
+	class ICombatState;
+	class IComponent;
 	class CombatStateMachineComponent : public IComponent
 	{
 	private:
@@ -18,42 +17,14 @@ namespace HEIN
 
 	public:
 
-		CombatStateMachineComponent(Actor* owner)
-			: IComponent(owner)
-		{
-			m_idleState = std::make_unique<IdleState>();
-			m_walkState = std::make_unique<WalkState>();
-			m_oneHandAtkState = std::make_unique<OneHandAttackState>();
-		}
+		CombatStateMachineComponent(Actor* owner);
+		
+		void Start();
+	
+		void Update(float deltaTime) override;
 
-		void Start()
-		{
-			ChangeState(m_idleState.get());
-		}
-
-		void Update(float deltaTime) override
-		{
-			if (m_currentState)
-			{
-				m_currentState->Update(m_owner, this, deltaTime);
-			}
-		}
-
-		void ChangeState(ICombatState* newState)
-		{
-			if (m_currentState)
-			{
-				m_currentState->OnExit(m_owner, this);
-			}
-
-			m_currentState = newState;
-
-			if (m_currentState)
-			{
-				m_currentState->OnEnter(m_owner, this);
-			}
-		}
-
+		void ChangeState(ICombatState* newState);
+		
 		// Getter for transitions
 		IdleState* GetIdleState() { return m_idleState.get(); }
 		WalkState* GetWalkState() { return m_walkState.get(); }

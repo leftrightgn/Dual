@@ -13,14 +13,8 @@ namespace HEIN
         DirectX::SimpleMath::Matrix m_parentMatrix;
     public:
 
-        TransformComponent(Actor* owner)
-            : IComponent(owner)
-            , m_position(0.0f, 0.0f, 0.0f)
-            , m_rotation(0.0f, 0.0f, 0.0f)
-            , m_scale(1.0f, 1.0f, 1.0f)
-            , m_parentMatrix(DirectX::SimpleMath::Matrix::Identity)
-        {
-        }
+        TransformComponent(Actor* owner);
+            
 
         // --- Getters & Setters ---
 
@@ -38,18 +32,9 @@ namespace HEIN
         // --- Core 3D Math ---
 
         // Generates the World Matrix for DirectX 11 rendering
-        DirectX::SimpleMath::Matrix GetWorldMatrix() const
-        {
-
-            // the order of matrix multiplication is Scale * Rotation * Translation
-            // CreateFromYawPitchRoll takes (Y, X, Z) 
-            return  DirectX::SimpleMath::Matrix::CreateScale(m_scale) *
-                DirectX::SimpleMath::Matrix::CreateFromYawPitchRoll(m_rotation.y, m_rotation.x, m_rotation.z) *
-                DirectX::SimpleMath::Matrix::CreateTranslation(m_position) *
-                m_parentMatrix;;
-        }
-
-        void Update(float /*deltaTime*/) override {}
+        DirectX::SimpleMath::Matrix GetWorldMatrix() const;
+      
+        void Update(float deltaTime) override;
 
     };
 }

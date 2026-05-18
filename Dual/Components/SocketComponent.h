@@ -1,13 +1,10 @@
 #pragma once
-#include "Components/IComponent.h"
-#include "Components/SkinnedModelComponent.h"
-#include "TransformComponent.h" 
-#include <string>
-#include <unordered_map>
-#include <SimpleMath.h>
+#include "IComponent.h"
 
 namespace HEIN
 {
+    class SkinnedModelComponent;
+    class TransformComponent;
     // A struct to define a single socket attachment point
     struct Socket
     {
@@ -40,91 +37,25 @@ namespace HEIN
         TransformComponent* m_transform;
 
     public:
-        SocketComponent(Actor* owner)
-            : IComponent(owner)
-            , m_model(nullptr)
-            , m_transform(nullptr)
-        {
-        }
+        SocketComponent(Actor* owner);
 
-        void Start() override
-        {
-      
-            m_model = m_owner->GetComponent<SkinnedModelComponent>();
-            m_transform = m_owner->GetComponent<TransformComponent>();
-        }
+        void Start() override;
 
         void Update(float /*deltaTime*/) override {}
 
-        void UpdateSocketOffset(const std::wstring& socketName,
+        void UpdateSocketOffset(
+            const std::wstring& socketName,
             const DirectX::SimpleMath::Vector3& newPos,
-            const DirectX::SimpleMath::Vector3& newRot)
-        {
-            if (HasSocket(socketName))
-            {
-                m_sockets[socketName].localPosition = newPos;
-                m_sockets[socketName].localRotation = newRot;
-            }
-        }
+            const DirectX::SimpleMath::Vector3& newRot
+        );
 
-        void AddSocket(const Socket& socket)
-        {
-            m_sockets[socket.name] = socket;
-        }
+        void AddSocket(const Socket& socket);
 
-        bool HasSocket(const std::wstring& socketName) const
-        {
-            return m_sockets.find(socketName) != m_sockets.end();
-        }
+        bool HasSocket(const std::wstring& socketName) const;
 
-        Socket* GetSocket(const std::wstring& socketName)
-        {
-            if (HasSocket(socketName))
-            {
-                return &m_sockets[socketName];
-            }
-            return nullptr;
-        }
-
-        DirectX::SimpleMath::Matrix GetSocketWorldMatrix(const std::wstring& socketName)
-        {
-           
-            SkinnedModelComponent* model = m_owner->GetComponent<SkinnedModelComponent>();
-            TransformComponent* transform = m_owner->GetComponent<TransformComponent>();
-
-           
-            if (!HasSocket(socketName) || model == nullptr || transform == nullptr)
-            {
-                if (transform != nullptr)
-                {
-                    return transform->GetWorldMatrix();
-                }
-                return DirectX::SimpleMath::Matrix::Identity;
-            }
-
-            const Socket& socket = m_sockets[socketName];
-
-            DirectX::SimpleMath::Matrix ownerWorld = transform->GetWorldMatrix();
-            DirectX::SimpleMath::Matrix boneWorld = model->GetBoneWorldMatrix(socket.boneName.c_str(), ownerWorld);
-
-            DirectX::SimpleMath::Vector3 extractedScale;
-            DirectX::SimpleMath::Quaternion extractedRotation;
-            DirectX::SimpleMath::Vector3 extractedTranslation;
-
-            if (boneWorld.Decompose(extractedScale, extractedRotation, extractedTranslation))
-            {
-                DirectX::SimpleMath::Matrix offsetMatrix =
-                    DirectX::SimpleMath::Matrix::CreateFromYawPitchRoll(socket.localRotation.y, socket.localRotation.x, socket.localRotation.z) *
-                    DirectX::SimpleMath::Matrix::CreateTranslation(socket.localPosition);
-
-                DirectX::SimpleMath::Matrix cleanBoneMatrix =
-                    DirectX::SimpleMath::Matrix::CreateFromQuaternion(extractedRotation) *
-                    DirectX::SimpleMath::Matrix::CreateTranslation(extractedTranslation);
-
-                return offsetMatrix * cleanBoneMatrix;
-            }
-
-            return ownerWorld;
-        }
+        Socket* GetSocket(const std::wstring& socketName);
+      
+        DirectX::SimpleMath::Matrix GetSocketWorldMatrix(const std::wstring& socketName);
+        
     };
 }

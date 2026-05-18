@@ -1,11 +1,6 @@
 #pragma once
 #include "IComponent.h"
 #include "DirectXTK_Utilities/Animation.h"
-#include "GameContext.h"
-#include <Model.h>
-#include <Effects.h>
-#include <SimpleMath.h>
-#include <Entities/Actor.h>
 
 namespace HEIN
 {
@@ -28,14 +23,29 @@ namespace HEIN
 
 		SkinnedModelComponent(Actor* owner);
 
-		void Initialize(GameContext& gameContext, const wchar_t* modelPath, const wchar_t* textureDir);
+		void Initialize(
+			GameContext& gameContext, 
+			const wchar_t* modelPath, 
+			const wchar_t* textureDir
+		);
 
 		void Update(float deltaTime) override;
 
-		void Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj);
+		void Draw(
+			GameContext& gameContext,
+			const DirectX::SimpleMath::Matrix& world, 
+			const DirectX::SimpleMath::Matrix& view,
+			const DirectX::SimpleMath::Matrix& proj
+		);
 
-		DirectX::SimpleMath::Vector3 GetBoneWorldPosition(const wchar_t* boneName, const DirectX::SimpleMath::Matrix& actorWorldMatrix);
-		DirectX::SimpleMath::Matrix GetBoneWorldMatrix(const wchar_t* boneName, const DirectX::SimpleMath::Matrix& actorWorldMatrix);
+		DirectX::SimpleMath::Vector3 GetBoneWorldPosition(
+			const wchar_t* boneName,
+			const DirectX::SimpleMath::Matrix& actorWorldMatrix
+		);
+		DirectX::SimpleMath::Matrix GetBoneWorldMatrix(
+			const wchar_t* boneName,
+			const DirectX::SimpleMath::Matrix& actorWorldMatrix
+		);
 
 		void LoadAnimation(const std::string& name, const wchar_t* animPath);
 		void ChangeAnimation(const std::string& name);

@@ -34,6 +34,7 @@ void HEIN::SpringCameraMode::Update(CameraData& outData, float deltaTime, ICamer
 
 	backward.y = 0.0f;
 	backward.Normalize();
+	
 
 	DirectX::SimpleMath::Vector3 targetEye = targetLookAt + (backward * m_followDistance) + DirectX::SimpleMath::Vector3(0.0f, m_heightOffset, 0.0f);
 
