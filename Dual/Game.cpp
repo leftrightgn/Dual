@@ -98,6 +98,11 @@ void Game::Update(DX::StepTimer const& timer)
     m_gameContext->mouseState = mouse ;
     m_gameContext->keyboardState = keyboard;
 
+    if (keyboard.Escape)
+    {
+        ExitGame();
+    }
+
     // シーンの更新
     m_sceneManager.Update(*m_gameContext);
 

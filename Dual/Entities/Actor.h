@@ -4,10 +4,12 @@
 #include <string>
 #include "Components/IComponent.h"
 #include <utility>
-#include <Components/TransformComponent.h>
+
+
 
 namespace HEIN
 {
+	class IComponent;
 
 	class Actor
 	{
@@ -21,23 +23,14 @@ namespace HEIN
 	public:
 
 		Actor(const std::wstring& tag = L"Actor");
-	
+
 		~Actor() = default;
 
 		void Update(float deltaTime);
-		
 
 		void Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj);
-		
 
-		void Start()
-		{
-			// Initialize all attached components
-			for (auto& comp : m_components)
-			{
-				comp->Start();
-			}
-		}
+		void Start();
 
 
 		// Template  Components

@@ -26,8 +26,8 @@ namespace HEIN
 		SpringCameraMode(
 			const TransformComponent* targetTransform,
 			const DirectX::SimpleMath::Vector3* desiredTarget,
-			float followDistance = 4.5f,
-			float heightOffset = 1.5f,
+			float followDistance = 9.5f,
+			float heightOffset = 30.5f,
 			float freq = 8.0f
 		);
 			

@@ -1,0 +1,41 @@
+#include "pch.h"
+#include "StaticModelComponent.h"
+
+HEIN::StaticModelComponent::StaticModelComponent(Actor* owner)
+	: IComponent(owner) 
+{
+}
+
+void HEIN::StaticModelComponent::Initialize(
+    GameContext& gameContext, 
+    const wchar_t* modelPath,
+    const wchar_t* textureDir
+)
+{
+    ID3D11Device* device = gameContext.deviceResources.GetD3DDevice();
+
+    m_fxFactory = std::make_unique<DirectX::EffectFactory>(device);
+    static_cast<DirectX::EffectFactory*>(m_fxFactory.get())->SetDirectory(textureDir);
+
+    m_model = DirectX::Model::CreateFromSDKMESH(device, modelPath, *m_fxFactory);
+}
+
+void HEIN::StaticModelComponent::Update(float)
+{
+}
+
+void HEIN::StaticModelComponent::Draw(
+    GameContext& gameContext, 
+    const DirectX::SimpleMath::Matrix& world,
+    const DirectX::SimpleMath::Matrix& view, 
+    const DirectX::SimpleMath::Matrix& proj
+)
+{
+    if (!m_isVisible || !m_model) return;
+
+    ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
+    DirectX::DX11::CommonStates& states = gameContext.commonStates;
+
+
+    m_model->Draw(context, states, world, view, proj);
+}

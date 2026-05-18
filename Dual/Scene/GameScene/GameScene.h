@@ -52,6 +52,7 @@ private:
 
 	HEIN::Actor* m_player = nullptr;
 	HEIN::Actor* m_swordActor = nullptr;
+	HEIN::Actor* m_stageActor = nullptr;
 	std::vector<std::unique_ptr<HEIN::Actor>> m_actors;
 
 	std::unique_ptr<DirectX::GeometricPrimitive> m_debugSphere;

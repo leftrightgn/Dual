@@ -1,4 +1,8 @@
+#include "pch.h"
 #include "Actor.h"
+#include "Components/IComponent.h"
+#include <Components/TransformComponent.h>
+
 
 HEIN::Actor::Actor(const std::wstring& tag)
 	: m_tag(tag)
@@ -24,5 +28,14 @@ void HEIN::Actor::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matr
 	for (auto& component : m_components)
 	{
 		component->Draw(gameContext, world, view, proj);
+	}
+}
+
+void HEIN::Actor::Start()
+{
+	// Initialize all attached components
+	for (auto& comp : m_components)
+	{
+		comp->Start();
 	}
 }
