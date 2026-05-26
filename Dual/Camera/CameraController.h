@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <optional>
+#include <cmath>
 
 namespace HEIN
 {
@@ -22,6 +23,11 @@ namespace HEIN
 
 		Command m_nextCommand = Command::None;
 		std::optional<CameraType> m_nextCameraKey = std::nullopt;
+
+		CameraData m_previousCameraData;
+		bool m_isBlending = false;
+		float m_blendDuration = 1.0f;
+		float m_blendTimer = 0.0f;
 
 	public:
 
@@ -44,6 +50,32 @@ namespace HEIN
 			if (!m_cameraStack.empty())
 			{
 				m_cameraStack.back()->Update(m_data, deltaTime, *this);
+			}
+
+			if (m_isBlending)
+			{
+				m_blendTimer += deltaTime;
+				float t = m_blendTimer / m_blendDuration;
+
+				if (t >= 1.0f)
+				{
+					m_isBlending = false;
+				}
+				else
+				{
+					m_data.position = DirectX::SimpleMath::Vector3::Lerp(m_previousCameraData.position, m_data.position, t);
+
+					m_data.fov = std::lerp(m_previousCameraData.fov, m_data.fov, t);
+
+					DirectX::SimpleMath::Quaternion oldRot = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_previousCameraData.viewMatrix.Transpose());
+					DirectX::SimpleMath::Quaternion newRot = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_data.viewMatrix.());
+
+					DirectX::SimpleMath::Quaternion blendRot = DirectX::SimpleMath::Quaternion::Slerp(oldRot, newRot, t);
+
+					DirectX::SimpleMath::Matrix camWorld = DirectX::SimpleMath::Matrix::CreateFromQuaternion(blendRot);
+					camWorld.Translation(m_data.position);
+					m_data.viewMatrix = camWorld.Invert();
+				}
 			}
 			ApplyRequest();
 		}
@@ -89,6 +121,10 @@ namespace HEIN
 		void ApplyRequest()
 		{
 			if (m_nextCommand == Command::None) return;
+
+			m_previousCameraData = m_data;
+			m_isBlending = true;
+			m_blendTimer = 0.0f;
 
 			if (m_nextCommand == Command::Switch)
 			{

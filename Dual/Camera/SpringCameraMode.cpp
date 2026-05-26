@@ -16,11 +16,26 @@ HEIN::SpringCameraMode::SpringCameraMode(
 	, m_currentLookAt(DirectX::SimpleMath::Vector3::Zero)
 	, m_positionVelocity(DirectX::SimpleMath::Vector3::Zero)
 	, m_lookAtVelocity(DirectX::SimpleMath::Vector3::Zero)
+	, m_pitch(PITCH)
+	, m_yaw(YAW)
+	, m_mouseSensitivity(DEFAULT_MOUSE_SENSITIVITY)
 	, m_followDistance(followDistance)
 	, m_heightOffset(heightOffset)
 	, m_isInitialized(false)
 {
 	SetFrequency(freq);
+}
+
+void HEIN::SpringCameraMode::ProcessInput(const CameraInputState& input)
+{
+	m_yaw += -input.mouseX * m_mouseSensitivity;
+	m_pitch += -input.mouseY * m_mouseSensitivity;
+
+	constexpr float maxPitchDown = (DirectX::XMConvertToRadians(5.0f));  // look down
+	constexpr float maxPitchUp = -(DirectX::XMConvertToRadians(45.0f));  // look up
+
+	// clamp the pitch 
+	m_pitch = std::clamp(m_pitch, maxPitchUp, maxPitchDown);
 }
 
 void HEIN::SpringCameraMode::Update(CameraData& outData, float deltaTime, ICameraController& /*controller*/)
@@ -29,14 +44,13 @@ void HEIN::SpringCameraMode::Update(CameraData& outData, float deltaTime, ICamer
 
 	DirectX::SimpleMath::Vector3 targetLookAt = *m_desiredTarget;
 
-	DirectX::SimpleMath::Matrix worldMatrix = m_targetTransform->GetWorldMatrix();
-	DirectX::SimpleMath::Vector3 backward = worldMatrix.Backward();
+	DirectX::SimpleMath::Matrix rotation = DirectX::SimpleMath::Matrix::CreateFromYawPitchRoll(m_yaw, m_pitch, 0.0f);
+	DirectX::SimpleMath::Vector3 shoulderOffset = rotation.Right() * 0.5f;
 
-	backward.y = 0.0f;
-	backward.Normalize();
+	DirectX::SimpleMath::Vector3 camBackWard = rotation.Backward();
 	
 
-	DirectX::SimpleMath::Vector3 targetEye = targetLookAt + (backward * m_followDistance) + DirectX::SimpleMath::Vector3(0.0f, m_heightOffset, 0.0f);
+	DirectX::SimpleMath::Vector3 targetEye = targetLookAt + (camBackWard * m_followDistance) + DirectX::SimpleMath::Vector3(0.0f, m_heightOffset, 0.0f) + shoulderOffset;
 
 	if (!m_isInitialized)
 	{

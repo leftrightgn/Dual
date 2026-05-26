@@ -74,7 +74,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         if (pTransform != nullptr && pModel != nullptr)
         {
             DirectX::SimpleMath::Matrix worldMatrix = pTransform->GetWorldMatrix();
-            m_targetPos = pModel->GetBoneWorldPosition(L"mixamorig:Head", worldMatrix);
+            m_targetPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End_end", worldMatrix);
         }
     }
     if (m_cameraController)

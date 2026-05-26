@@ -13,6 +13,8 @@ namespace HEIN
         void Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj);
 
     private:
+        static const std::vector<D3D11_INPUT_ELEMENT_DESC> INPUT_LAYOUT;
+
         std::unique_ptr<DirectX::GeometricPrimitive> m_sky;
         std::unique_ptr<DX::SkyboxEffect> m_effect;
         Microsoft::WRL::ComPtr<ID3D11InputLayout> m_skyInputLayout;

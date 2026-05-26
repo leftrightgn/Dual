@@ -15,7 +15,7 @@ namespace HEIN
 		static constexpr float PITCH = 0.0f;
 		static constexpr float YAW = 0.0f;
 		static constexpr float TARGET_HEIGHT = 15.0f;
-		static constexpr float BOOM_LENGTH = 5.5f;
+		static constexpr float BOOM_LENGTH = 5.0f;
 		static constexpr float MOUSE_SENSITIVITY = 0.005f;
 
 	private:

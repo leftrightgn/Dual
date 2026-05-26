@@ -140,7 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Resources\Shaders\SkyboxEffect_Common.hlsli" />
+    <None Include="Shaders\SkyboxEffect_Common.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
@@ -169,7 +169,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Resources\Shaders\SkyboxEffect_PS.hlsl" />
-    <FxCompile Include="Resources\Shaders\SkyboxEffect_VS.hlsl" />
+    <FxCompile Include="Shaders\SkyboxEffect_PS.hlsl" />
+    <FxCompile Include="Shaders\SkyboxEffect_VS.hlsl" />
   </ItemGroup>
 </Project>
