@@ -8,6 +8,15 @@ namespace HEIN
 
 	class SpringCameraMode : public ICameraMode
 	{
+
+	private:
+
+		static constexpr float DEFAULT_MOUSE_SENSITIVITY = 0.005f;
+		static constexpr float DEFAULT_FOLLOW_DISTANCE = 60.0f;
+		static constexpr float DEFAULT_HEIGHT_OFFSET = 10.0f;
+		static constexpr float DEFAULT_FRE = 8.0f;
+		static constexpr float PITCH = -0.35f;
+		static constexpr float YAW = 0.0f;
 	private:
 
 		const TransformComponent* m_targetTransform;
@@ -18,6 +27,9 @@ namespace HEIN
 		DirectX::SimpleMath::Vector3 m_lookAtVelocity;
 		float m_stiffness;
 		float m_damping;
+		float m_pitch;
+		float m_yaw;
+		float m_mouseSensitivity;
 		float m_followDistance;
 		float m_heightOffset;
 		bool  m_isInitialized;
@@ -26,17 +38,19 @@ namespace HEIN
 		SpringCameraMode(
 			const TransformComponent* targetTransform,
 			const DirectX::SimpleMath::Vector3* desiredTarget,
-			float followDistance = 9.5f,
-			float heightOffset = 30.5f,
-			float freq = 8.0f
+			float followDistance = DEFAULT_FOLLOW_DISTANCE,
+			float heightOffset = DEFAULT_HEIGHT_OFFSET,
+			float freq = DEFAULT_FRE
 		);
 			
-		void ProcessInput(const CameraInputState& /*input*/) override { return; }
+		void ProcessInput(const CameraInputState& input) override;
 
 		void Update(CameraData& outData, float deltaTime, ICameraController& controller) override;
 		
 		void SetFrequency(float freq);
 	
+		bool RequiresRelativeMouse() const override { return true; }
+		bool LocksPlayerRotation() const override { return true; }
 	private:
 
 		void UpdateSpring(

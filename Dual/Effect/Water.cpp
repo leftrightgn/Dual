@@ -99,8 +99,8 @@ void Water::Initialize(GameContext& gameContext, const wchar_t* textureFilename,
     // LOAD SHADERS ---
    
     Microsoft::WRL::ComPtr<ID3DBlob> vsBlob, psBlob;
-    D3DCompileFromFile(L"Resources/Shaders/WaterVS.hlsl", nullptr, nullptr, "main", "vs_4_0", 0, 0, &vsBlob, nullptr);
-    D3DCompileFromFile(L"Resources/Shaders/WaterPS.hlsl", nullptr, nullptr, "main", "ps_4_0", 0, 0, &psBlob, nullptr);
+    D3DCompileFromFile(L"Shaders/WaterVS.hlsl", nullptr, nullptr, "main", "vs_4_0", 0, 0, &vsBlob, nullptr);
+    D3DCompileFromFile(L"Shaders/WaterPS.hlsl", nullptr, nullptr, "main", "ps_4_0", 0, 0, &psBlob, nullptr);
 
     device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_vertexShader.ReleaseAndGetAddressOf());
     device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pixelShader.ReleaseAndGetAddressOf());

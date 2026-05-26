@@ -42,6 +42,11 @@ namespace HEIN
 			const wchar_t* boneName,
 			const DirectX::SimpleMath::Matrix& actorWorldMatrix
 		);
+		DirectX::SimpleMath::Vector3 GetBoneWorldPosition(
+			const int boneNum,
+			const DirectX::SimpleMath::Matrix& actorWorldMatrix
+		);
+
 		DirectX::SimpleMath::Matrix GetBoneWorldMatrix(
 			const wchar_t* boneName,
 			const DirectX::SimpleMath::Matrix& actorWorldMatrix

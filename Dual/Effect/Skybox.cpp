@@ -1,6 +1,20 @@
 #include "pch.h"
 #include "Skybox.h"
 
+const std::vector<D3D11_INPUT_ELEMENT_DESC> HEIN::Skybox::INPUT_LAYOUT =
+{
+    // SemanticName, SemanticIndex, Format, InputSlot, AlignedByteOffset, ...
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    // DXGI_FORMAT_R32G32B32_FLOAT is data type/ R32G32B32 means three 32-bit channels
+   // FLOAT means they're floating point numbers. So this reads three floats — your x, y, and z. 
+   // If you needed a fourth w component it would be R32G32B32A32_FLOAT.
+   // D3D11_INPUT_PER_VERTEX_DATA — tells the GPU to advance to the next vertex's data for each vertex
+   // drawn, which is the normal behaviour. The alternative D3D11_INPUT_PER_INSTANCE_DATA is for a more
+   // advanced technique called instancing where you draw many copies of a mesh at once.
+
+};
+
+
 void HEIN::Skybox::Initialize(GameContext& gameContext, const wchar_t* texturePath)
 {
     ID3D11Device* device = gameContext.deviceResources.GetD3DDevice();
@@ -9,20 +23,8 @@ void HEIN::Skybox::Initialize(GameContext& gameContext, const wchar_t* texturePa
 
     m_effect = std::make_unique<DX::SkyboxEffect>(gameContext.deviceResources.GetD3DDevice());
 
-    // array of descriptors — essentially a list of instructions telling the GPU how to read vertex data
-    const D3D11_INPUT_ELEMENT_DESC inputElementDesc[] =
-    {
-        // SemanticName, SemanticIndex, Format, InputSlot, AlignedByteOffset, ...
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    };
-    // DXGI_FORMAT_R32G32B32_FLOAT is data type/ R32G32B32 means three 32-bit channels
-    // FLOAT means they're floating point numbers. So this reads three floats — your x, y, and z. 
-    // If you needed a fourth w component it would be R32G32B32A32_FLOAT.
-    // D3D11_INPUT_PER_VERTEX_DATA — tells the GPU to advance to the next vertex's data for each vertex
-    // drawn, which is the normal behaviour. The alternative D3D11_INPUT_PER_INSTANCE_DATA is for a more
-    // advanced technique called instancing where you draw many copies of a mesh at once.
-
-
+  
+  
     // Get the shader bytecode from your effect
     const void* shaderByteCode = nullptr;
     size_t byteCodeLength = 0;
@@ -31,8 +33,8 @@ void HEIN::Skybox::Initialize(GameContext& gameContext, const wchar_t* texturePa
     // Manually create the layout
     DX::ThrowIfFailed(
         device->CreateInputLayout(
-            inputElementDesc,
-            std::size(inputElementDesc),
+            &INPUT_LAYOUT[0],
+            static_cast<UINT>(INPUT_LAYOUT.size()),
             shaderByteCode,
             byteCodeLength,
             m_skyInputLayout.ReleaseAndGetAddressOf()

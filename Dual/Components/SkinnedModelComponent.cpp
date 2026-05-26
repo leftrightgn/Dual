@@ -30,13 +30,13 @@ namespace HEIN
 		m_drawBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 
 		// bone name checker
-		//OutputDebugStringW(L"--- BONE LIST START ---\n");
-		//for (const auto& bone : m_model->bones)
-		//{
-		//	OutputDebugStringW(bone.name.c_str());
-		//	OutputDebugStringW(L"\n");
-		//}
-		//OutputDebugStringW(L"--- BONE LIST END ---\n");
+		OutputDebugStringW(L"--- BONE LIST START ---\n");
+		for (const auto& bone : m_model->bones)
+		{
+			OutputDebugStringW(bone.name.c_str());
+			OutputDebugStringW(L"\n");
+		}
+		OutputDebugStringW(L"--- BONE LIST END ---\n");
 
 
 
@@ -79,6 +79,14 @@ namespace HEIN
 		}
 
 		return DirectX::SimpleMath::Vector3::Zero;
+	}
+
+	DirectX::SimpleMath::Vector3 SkinnedModelComponent::GetBoneWorldPosition(const int boneNum, const DirectX::SimpleMath::Matrix& actorWorldMatrix)
+	{
+		DirectX::SimpleMath::Matrix boneMatrix = m_drawBones[boneNum];
+		DirectX::SimpleMath::Matrix finalWorldMatrix = boneMatrix * actorWorldMatrix;
+
+		return finalWorldMatrix.Translation();
 	}
 
 	DirectX::SimpleMath::Matrix SkinnedModelComponent::GetBoneWorldMatrix(const wchar_t* boneName, const DirectX::SimpleMath::Matrix& actorWorldMatrix)
