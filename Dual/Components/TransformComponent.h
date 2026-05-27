@@ -8,7 +8,7 @@ namespace HEIN
     {
     private:
         DirectX::SimpleMath::Vector3 m_position;
-        DirectX::SimpleMath::Vector3 m_rotation;
+        DirectX::SimpleMath::Quaternion m_rotation;
         DirectX::SimpleMath::Vector3 m_scale;
         DirectX::SimpleMath::Matrix m_parentMatrix;
     public:
@@ -21,11 +21,13 @@ namespace HEIN
         void SetPosition(const DirectX::SimpleMath::Vector3& pos) { m_position = pos; }
         const DirectX::SimpleMath::Vector3& GetPosition() const { return m_position; }
 
-        void SetRotation(const DirectX::SimpleMath::Vector3& rot) { m_rotation = rot; }
-        const DirectX::SimpleMath::Vector3& GetRotation() const { return m_rotation; }
+        void SetRotation(const DirectX::SimpleMath::Quaternion& rot) { m_rotation = rot; }
+        const DirectX::SimpleMath::Quaternion& GetRotation() const { return m_rotation; }
 
         void SetScale(const DirectX::SimpleMath::Vector3& scale) { m_scale = scale; }
         const DirectX::SimpleMath::Vector3& GetScale() const { return m_scale; }
+
+        void SetRotationEuler(const DirectX::SimpleMath::Vector3& eulerAngles);
 
         void SetParentMatrix(const DirectX::SimpleMath::Matrix& parent) { m_parentMatrix = parent; }
 

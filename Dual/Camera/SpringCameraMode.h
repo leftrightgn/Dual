@@ -15,8 +15,14 @@ namespace HEIN
 		static constexpr float DEFAULT_FOLLOW_DISTANCE = 60.0f;
 		static constexpr float DEFAULT_HEIGHT_OFFSET = 10.0f;
 		static constexpr float DEFAULT_FRE = 8.0f;
-		static constexpr float PITCH = -0.35f;
 		static constexpr float YAW = 0.0f;
+		static constexpr float PITCH = -0.35f;
+		static constexpr float ROLL = 0.0f;
+		static constexpr float MAX_PITCH_DOWN = 5.0f;
+		static constexpr float MAX_PITCH_UP = 45.0f;
+		static constexpr float SPRING_CAM_FOV = 50.0f;
+		static constexpr float SHOULDER_OFFSET = 0.5f;
+		static constexpr float DAMPING = 2.0f;
 	private:
 
 		const TransformComponent* m_targetTransform;
@@ -27,8 +33,9 @@ namespace HEIN
 		DirectX::SimpleMath::Vector3 m_lookAtVelocity;
 		float m_stiffness;
 		float m_damping;
-		float m_pitch;
 		float m_yaw;
+		float m_pitch;
+		float m_roll;
 		float m_mouseSensitivity;
 		float m_followDistance;
 		float m_heightOffset;
@@ -42,10 +49,16 @@ namespace HEIN
 			float heightOffset = DEFAULT_HEIGHT_OFFSET,
 			float freq = DEFAULT_FRE
 		);
+
+		void OnEnter(CameraData& data) override;
 			
 		void ProcessInput(const CameraInputState& input) override;
 
-		void Update(CameraData& outData, float deltaTime, ICameraController& controller) override;
+		void Update(
+			CameraData& outData,
+			float deltaTime, 
+			ICameraController& controller
+		) override;
 		
 		void SetFrequency(float freq);
 	

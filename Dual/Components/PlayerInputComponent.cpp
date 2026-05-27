@@ -84,9 +84,16 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 				HEIN::TransformComponent* transform = m_owner->GetComponent<HEIN::TransformComponent>();
 				if (transform)
 				{
-					DirectX::SimpleMath::Vector3 rot = transform->GetRotation();
-					rot.y = cameraYaw + DirectX::XM_PI;
-					transform->SetRotation(rot);
+					float YAW = cameraYaw + DirectX::XM_PI;
+					DirectX::SimpleMath::Quaternion alignedRot =
+						DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll
+						(
+							YAW,
+							NETUAL_PITCH,
+							NETUAL_ROLL
+						);
+
+					transform->SetRotation(alignedRot);
 				}
 			}
 		}

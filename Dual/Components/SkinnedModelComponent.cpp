@@ -21,22 +21,23 @@ namespace HEIN
 			device,
 			modelPath,
 			*m_fxFactory,
-			static_cast<DirectX::ModelLoaderFlags>(
+			static_cast<DirectX::ModelLoaderFlags>
+			(
 				DirectX::ModelLoader_Clockwise |
 				DirectX::ModelLoader_IncludeBones
-				)
+		    )
 		);
 
 		m_drawBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 
 		// bone name checker
-		OutputDebugStringW(L"--- BONE LIST START ---\n");
+		/*OutputDebugStringW(L"--- BONE LIST START ---\n");
 		for (const auto& bone : m_model->bones)
 		{
 			OutputDebugStringW(bone.name.c_str());
 			OutputDebugStringW(L"\n");
 		}
-		OutputDebugStringW(L"--- BONE LIST END ---\n");
+		OutputDebugStringW(L"--- BONE LIST END ---\n");*/
 
 
 
