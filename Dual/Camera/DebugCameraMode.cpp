@@ -6,8 +6,9 @@ HEIN::DebugCameraMode::DebugCameraMode(
 	  DirectX::SimpleMath::Vector3 target
 )
     : m_target(target)
-    , m_pitch(PITCH)
     , m_yaw(YAW)
+    , m_pitch(PITCH)
+    , m_roll(ROLL)
     , m_distance(startDistance)
     , m_mouseSensitivity(MOUSE_SENSITIVITY)
     , m_lastMouseX(LAST_MOUSEPOS)
@@ -44,8 +45,8 @@ void HEIN::DebugCameraMode::ProcessInput(const CameraInputState& input)
 
     if (actualScrollDelta != 0.0f)
     {
-        m_distance -= (actualScrollDelta / 120.0f);
-        m_distance = std::max(0.1f, m_distance); // Prevent zooming past the center point
+        m_distance -= (actualScrollDelta / SCROLL_WHEEL_DELTA);
+        m_distance = std::max(MIN_DISTANCE, m_distance); // Prevent zooming past the center point
     }
 
     // Only look around if the Left Mouse Button is held down
@@ -77,19 +78,26 @@ void HEIN::DebugCameraMode::ProcessInput(const CameraInputState& input)
     }
 
     // Clamp the pitch so it doesn't flip upside down
-    const float pitchLimit = DirectX::XM_PIDIV2 - 0.01f;
+    const float pitchLimit = DirectX::XM_PIDIV2 - PITCH_LIMIT_OFFSET;
     m_pitch = std::clamp(m_pitch, -pitchLimit, pitchLimit);
 
 }
 
 void HEIN::DebugCameraMode::Update(CameraData& outData, float /*deltaTime*/, ICameraController& /*controller*/)
 {
-    DirectX::SimpleMath::Matrix rotation = DirectX::SimpleMath::Matrix::CreateFromYawPitchRoll(m_yaw, m_pitch, 0.0f);
+    DirectX::SimpleMath::Quaternion rotation = 
+        DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(m_yaw, m_pitch, m_roll);
 
-    DirectX::SimpleMath::Vector3 offset = rotation.Backward() * m_distance;
+    DirectX::SimpleMath::Vector3 rotBackward = 
+        DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Backward, rotation);
+
+    DirectX::SimpleMath::Vector3 offset = rotBackward * m_distance;
 
     outData.position = m_target + offset;
-    outData.viewMatrix = DirectX::SimpleMath::Matrix::CreateLookAt(outData.position, m_target, DirectX::SimpleMath::Vector3::Up);
-    outData.fov = DirectX::XMConvertToRadians(50.0f);
+    outData.rotation = rotation;
+    outData.viewMatrix = 
+        DirectX::SimpleMath::Matrix::CreateLookAt(outData.position, m_target, DirectX::SimpleMath::Vector3::Up);
+
+    outData.fov = DirectX::XMConvertToRadians(DEBUG_CAM_FOV);
 
 }

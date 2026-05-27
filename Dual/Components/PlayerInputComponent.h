@@ -11,6 +11,11 @@ namespace HEIN
 	{
 	private:
 
+		static constexpr float NETUAL_PITCH = 0.0f;
+		static constexpr float NETUAL_ROLL = 0.0f;
+
+	private:
+
 		HEIN::CombatBlackBoard* m_blackboard = nullptr;
 		HEIN::CameraController* m_cameraController = nullptr; 
 

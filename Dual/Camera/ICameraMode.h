@@ -9,6 +9,7 @@ namespace HEIN
 	struct CameraData
 	{
 		DirectX::SimpleMath::Vector3 position = {};
+		DirectX::SimpleMath::Quaternion rotation = DirectX::SimpleMath::Quaternion::Identity;
 		DirectX::SimpleMath::Matrix viewMatrix = {};
 		DirectX::SimpleMath::Matrix projMatrix = {};
 		float fov = DirectX::XMConvertToRadians(50.0f);

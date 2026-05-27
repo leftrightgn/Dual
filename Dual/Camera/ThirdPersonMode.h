@@ -1,8 +1,6 @@
 #pragma once
 #include "ICameraMode.h"
-#include <algorithm>
 #include <SimpleMath.h>
-#include <DirectXMath.h>
 #include <Components/SkinnedModelComponent.h>
 
 namespace HEIN
@@ -12,11 +10,16 @@ namespace HEIN
 	{
 	private:
 
-		static constexpr float PITCH = -0.35f;
 		static constexpr float YAW = 0.0f;
+		static constexpr float PITCH = -0.35f;
+		static constexpr float ROLL = 0.0f;
 		static constexpr float BOOM_LENGTH = 23.0f;
 		static constexpr float MOUSE_SENSITIVITY = 0.005f;
 		static constexpr float TARGET_HEIGHT = 15.0f;
+		static constexpr float MAX_PITCH_DOWN = 5.0f;
+		static constexpr float MAX_PITCH_UP = 45.0f; 
+		static constexpr float TPS_CAM_FOV = 50.0f;
+		static constexpr float SHOULDER_OFFSET = 0.5f;
 
 	private:
 
@@ -25,8 +28,9 @@ namespace HEIN
 		SkinnedModelComponent* m_fpsModel;
 		SkinnedModelComponent* m_tpsModel;
 
-		float m_pitch;
 		float m_yaw;
+		float m_pitch;
+		float m_roll;
 		float m_boomLength;
 		float m_mouseSensitivity;
 		float m_targetHeight;

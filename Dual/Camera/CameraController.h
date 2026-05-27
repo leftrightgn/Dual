@@ -67,10 +67,8 @@ namespace HEIN
 
 					m_data.fov = std::lerp(m_previousCameraData.fov, m_data.fov, t);
 
-					DirectX::SimpleMath::Quaternion oldRot = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_previousCameraData.viewMatrix.Transpose());
-					DirectX::SimpleMath::Quaternion newRot = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_data.viewMatrix.());
 
-					DirectX::SimpleMath::Quaternion blendRot = DirectX::SimpleMath::Quaternion::Slerp(oldRot, newRot, t);
+					DirectX::SimpleMath::Quaternion blendRot = DirectX::SimpleMath::Quaternion::Slerp(m_previousCameraData.rotation, m_data.rotation, t);
 
 					DirectX::SimpleMath::Matrix camWorld = DirectX::SimpleMath::Matrix::CreateFromQuaternion(blendRot);
 					camWorld.Translation(m_data.position);
@@ -90,6 +88,7 @@ namespace HEIN
 
 		// Getters for GameScene.cpp
 		DirectX::SimpleMath::Matrix GetView() const { return m_data.viewMatrix; }
+		DirectX::SimpleMath::Quaternion GetRotation() const { return m_data.rotation; }
 		DirectX::SimpleMath::Vector3 GetPosition() const { return m_data.position; }
 		float GetFov() const { return m_data.fov; }
 

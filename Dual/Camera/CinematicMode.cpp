@@ -34,6 +34,8 @@ void HEIN::CinematicMode::Update(CameraData& outData, float deltaTime, ICameraCo
 		DirectX::SimpleMath::Vector3::Up
 	);
 
+	DirectX::SimpleMath::Matrix inverseView = outData.viewMatrix.Invert();
+	outData.rotation = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(inverseView);
 	// FOV
 	outData.fov = DirectX::XMConvertToRadians(50.0f);
 }

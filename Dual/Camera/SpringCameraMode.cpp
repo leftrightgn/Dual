@@ -16,8 +16,9 @@ HEIN::SpringCameraMode::SpringCameraMode(
 	, m_currentLookAt(DirectX::SimpleMath::Vector3::Zero)
 	, m_positionVelocity(DirectX::SimpleMath::Vector3::Zero)
 	, m_lookAtVelocity(DirectX::SimpleMath::Vector3::Zero)
-	, m_pitch(PITCH)
 	, m_yaw(YAW)
+	, m_pitch(PITCH)
+	, m_roll(ROLL)
 	, m_mouseSensitivity(DEFAULT_MOUSE_SENSITIVITY)
 	, m_followDistance(followDistance)
 	, m_heightOffset(heightOffset)
@@ -26,13 +27,25 @@ HEIN::SpringCameraMode::SpringCameraMode(
 	SetFrequency(freq);
 }
 
+void HEIN::SpringCameraMode::OnEnter(CameraData& data)
+{
+	DirectX::SimpleMath::Vector3 backward = DirectX::SimpleMath::Vector3::Transform(
+		DirectX::SimpleMath::Vector3::Backward,
+		data.rotation
+	);
+
+	m_yaw = std::atan2(backward.x, backward.z);
+	m_pitch = std::asin(-backward.y);
+
+}
+
 void HEIN::SpringCameraMode::ProcessInput(const CameraInputState& input)
 {
 	m_yaw += -input.mouseX * m_mouseSensitivity;
 	m_pitch += -input.mouseY * m_mouseSensitivity;
 
-	constexpr float maxPitchDown = (DirectX::XMConvertToRadians(5.0f));  // look down
-	constexpr float maxPitchUp = -(DirectX::XMConvertToRadians(45.0f));  // look up
+	constexpr float maxPitchDown = (DirectX::XMConvertToRadians(MAX_PITCH_DOWN));  // look down
+	constexpr float maxPitchUp = -(DirectX::XMConvertToRadians(MAX_PITCH_UP));  // look up
 
 	// clamp the pitch 
 	m_pitch = std::clamp(m_pitch, maxPitchUp, maxPitchDown);
@@ -44,13 +57,22 @@ void HEIN::SpringCameraMode::Update(CameraData& outData, float deltaTime, ICamer
 
 	DirectX::SimpleMath::Vector3 targetLookAt = *m_desiredTarget;
 
-	DirectX::SimpleMath::Matrix rotation = DirectX::SimpleMath::Matrix::CreateFromYawPitchRoll(m_yaw, m_pitch, 0.0f);
-	DirectX::SimpleMath::Vector3 shoulderOffset = rotation.Right() * 0.5f;
+	DirectX::SimpleMath::Quaternion rotation = 
+		DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(m_yaw, m_pitch, m_roll);
 
-	DirectX::SimpleMath::Vector3 camBackWard = rotation.Backward();
+	DirectX::SimpleMath::Vector3 rotRight = 
+		DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Right, rotation);
+
+	DirectX::SimpleMath::Vector3 shoulderOffset = rotRight * SHOULDER_OFFSET;
+
+	DirectX::SimpleMath::Vector3 camBackWard = 
+		DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Backward, rotation);
 	
 
-	DirectX::SimpleMath::Vector3 targetEye = targetLookAt + (camBackWard * m_followDistance) + DirectX::SimpleMath::Vector3(0.0f, m_heightOffset, 0.0f) + shoulderOffset;
+	DirectX::SimpleMath::Vector3 targetEye = 
+		targetLookAt + (camBackWard * m_followDistance) + 
+		DirectX::SimpleMath::Vector3::Up * m_heightOffset + 
+		shoulderOffset;
 
 	if (!m_isInitialized)
 	{
@@ -62,18 +84,23 @@ void HEIN::SpringCameraMode::Update(CameraData& outData, float deltaTime, ICamer
 	UpdateSpring(targetEye, m_currentPosition, m_positionVelocity, deltaTime);
 	UpdateSpring(targetLookAt, m_currentLookAt, m_lookAtVelocity, deltaTime);
 
+	outData.rotation = rotation;
 	outData.position = m_currentPosition;
 
-	outData.viewMatrix = DirectX::SimpleMath::Matrix::CreateLookAt(outData.position, m_currentLookAt, DirectX::SimpleMath::Vector3::Up);
+	outData.viewMatrix = 
+		DirectX::SimpleMath::Matrix::CreateLookAt(
+			outData.position, m_currentLookAt, 
+			DirectX::SimpleMath::Vector3::Up
+		);
 
-	outData.fov = DirectX::XMConvertToRadians(50.0f);
+	outData.fov = DirectX::XMConvertToRadians(SPRING_CAM_FOV);
 
 }
 
 void HEIN::SpringCameraMode::SetFrequency(float freq)
 {
 	m_stiffness = freq * freq;
-	m_damping = 2.0f * freq;
+	m_damping = DAMPING * freq;
 }
 
 void HEIN::SpringCameraMode::UpdateSpring(
