@@ -1,6 +1,6 @@
 #pragma once
 #include "pch.h"
-#include "GameContext.h"
+#include "Framework/GameContext.h"
 #include "Effect/SkyboxEffect.h"
 #include <GeometricPrimitive.h>
 

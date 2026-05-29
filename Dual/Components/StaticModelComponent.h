@@ -1,6 +1,6 @@
 #pragma once
 #include "Components/IComponent.h"
-#include "GameContext.h"
+#include "Framework/GameContext.h"
 #include "pch.h"
 
 namespace HEIN

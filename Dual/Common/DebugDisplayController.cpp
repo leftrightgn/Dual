@@ -55,6 +55,9 @@ namespace HEIN
 		if (m_isMagnified)
 		{
 			debugViewport = fullscreen;
+			ID3D11RenderTargetView* rtv = gameContext.deviceResources.GetRenderTargetView();
+			const float clearColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f }; 
+			context->ClearRenderTargetView(rtv, clearColor);
 		}
 		else
 		{
@@ -67,10 +70,7 @@ namespace HEIN
 		}
 		context->RSSetViewports(1, &debugViewport);
 
-		if (!m_isMagnified)
-		{
-			context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		}
+		context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 		float aspect = debugViewport.Width / debugViewport.Height;
 

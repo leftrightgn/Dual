@@ -81,9 +81,6 @@ private:
     // コモンステート
     std::unique_ptr<DirectX::CommonStates> m_states;
 
-    // デバッグ用の描画セット
-    std::unique_ptr<Imase::DebugRenderer> m_debugRenderer;
-
     // ゲームコンテキスト
     std::optional<GameContext> m_gameContext;
 

@@ -182,6 +182,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BlackBoard\CombatBlackBoard.h" />
+    <ClInclude Include="Common\DebugDisplayController.h" />
+    <ClInclude Include="Common\DebugRenderer.h" />
+    <ClInclude Include="Common\InputManager.h" />
     <ClInclude Include="Components\CharacterMovementComponent.h" />
     <ClInclude Include="Components\CombatStateMachineComponent.h" />
     <ClInclude Include="Components\PlayerInputComponent.h" />
@@ -206,16 +209,13 @@
     <ClInclude Include="Effect\Water.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Game.h" />
-    <ClInclude Include="GameContext.h" />
+    <ClInclude Include="Framework\Game.h" />
+    <ClInclude Include="Framework\GameContext.h" />
     <ClInclude Include="ImaseLib\DebugCamera.h" />
-    <ClInclude Include="ImaseLib\DebugRenderer.h" />
     <ClInclude Include="ImaseLib\GridFloor.h" />
     <ClInclude Include="ImaseLib\SceneManager.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="ImaseLib\Task.h" />
-    <ClInclude Include="ImaseLib\TaskSystem.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Scene\BaseScene\BaseScene.h" />
     <ClInclude Include="Scene\GameScene\GameScene.h" />
@@ -231,7 +231,10 @@
     <ClCompile Include="Camera\FirstPersonMode.cpp" />
     <ClCompile Include="Camera\SpringCameraMode.cpp" />
     <ClCompile Include="Camera\ThirdPersonMode.cpp" />
+    <ClCompile Include="Common\DebugDisplayController.cpp" />
+    <ClCompile Include="Common\DebugRenderer.cpp" />
     <ClCompile Include="Common\DeviceResources.cpp" />
+    <ClCompile Include="Common\InputManager.cpp" />
     <ClCompile Include="Components\CharacterMovementComponent.cpp" />
     <ClCompile Include="Components\CombatStateMachineComponent.cpp" />
     <ClCompile Include="Components\PlayerInputComponent.cpp" />
@@ -245,13 +248,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Entities\Actor.cpp" />
-    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Framework\Game.cpp" />
+    <ClCompile Include="Framework\Main.cpp" />
     <ClCompile Include="ImaseLib\DebugCamera.cpp" />
-    <ClCompile Include="ImaseLib\DebugRenderer.cpp" />
     <ClCompile Include="ImaseLib\GridFloor.cpp" />
-    <ClCompile Include="ImaseLib\Task.cpp" />
-    <ClCompile Include="ImaseLib\TaskSystem.cpp" />
-    <ClCompile Include="Main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

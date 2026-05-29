@@ -1,7 +1,7 @@
 #pragma once
 #include "Camera/CameraController.h"
 #include "Entities/Actor.h"
-#include "GameContext.h"
+#include "Framework/GameContext.h"
 
 namespace HEIN
 {

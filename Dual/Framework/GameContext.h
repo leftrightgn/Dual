@@ -10,9 +10,10 @@
 
 #include "Common/StepTimer.h"
 #include "Common/DeviceResources.h"
-#include "ImaseLib/DebugRenderer.h"
 #include "ImaseLib/DebugCamera.h"
 #include "ImaseLib/GridFloor.h"
+#include "Common/DebugRenderer.h"
+#include "Common/InputManager.h"
 
 // 各シーンに渡す共通リソースを記述してください
 struct GameContext
@@ -32,12 +33,14 @@ struct GameContext
 	// コモンステート
 	DirectX::CommonStates& commonStates;
 
-	// デバッグ用の描画セット
-	Imase::DebugRenderer& debugRenderer;
 
 	DirectX::Mouse::State mouseState;
 
 	DirectX::Keyboard::State keyboardState;
+	
+	HEIN::DebugRenderer myDebugRenderer;
+
+	HEIN::InputManager inputManager;
 
 };
 

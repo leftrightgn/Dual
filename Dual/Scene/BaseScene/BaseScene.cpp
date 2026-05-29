@@ -14,9 +14,7 @@ using namespace DirectX;
 // 更新
 void BaseScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, GameContext& gameContext)
 {
-	Imase::DebugRenderer& debugRenderer = gameContext.debugRenderer;
-
-	debugRenderer.DrawText({ 0.0f, 0.0f }, L"BaseScene");
+	gameContext;
 }
 
 // 描画
