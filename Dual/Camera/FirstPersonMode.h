@@ -16,8 +16,8 @@ namespace HEIN
 		static constexpr float PITCH = 0.0f;
 		static constexpr float ROLL = 0.0f;
 		static constexpr float PITCH_LIMIT = 80.0f;
-		static constexpr float TARGET_HEIGHT = 15.0f;
-		static constexpr float BOOM_LENGTH = 5.0f;
+		static constexpr float TARGET_HEIGHT = 0.0f;
+		static constexpr float BOOM_LENGTH = 1.0f;
 		static constexpr float MOUSE_SENSITIVITY = 0.005f;
 		static constexpr float CENTER_OFFSET = -0.56f;
 		static constexpr float FPS_CAM_FOV = 60.0f;

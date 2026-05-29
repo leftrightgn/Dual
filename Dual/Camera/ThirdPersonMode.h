@@ -13,9 +13,9 @@ namespace HEIN
 		static constexpr float YAW = 0.0f;
 		static constexpr float PITCH = -0.35f;
 		static constexpr float ROLL = 0.0f;
-		static constexpr float BOOM_LENGTH = 23.0f;
+		static constexpr float BOOM_LENGTH = 30.0f;
 		static constexpr float MOUSE_SENSITIVITY = 0.005f;
-		static constexpr float TARGET_HEIGHT = 15.0f;
+		static constexpr float TARGET_HEIGHT = 0.0f;
 		static constexpr float MAX_PITCH_DOWN = 5.0f;
 		static constexpr float MAX_PITCH_UP = 45.0f; 
 		static constexpr float TPS_CAM_FOV = 50.0f;

@@ -29,6 +29,7 @@ namespace HEIN
 		);
 
 		m_drawBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
+		m_skinBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 
 		// bone name checker
 		/*OutputDebugStringW(L"--- BONE LIST START ---\n");
@@ -49,6 +50,11 @@ namespace HEIN
 		{
 			m_currentAnimation->Update(deltaTime);
 			m_currentAnimation->Apply(*m_model, m_model->bones.size(), m_drawBones.get());
+			for (size_t i = 0; i < m_model->bones.size(); ++i)
+			{
+				m_skinBones[i] = m_drawBones[i];
+			}
+			m_currentAnimation->ApplySkinMatrix(*m_model, m_model->bones.size(), m_skinBones.get());
 		}
 	}
 
@@ -61,7 +67,7 @@ namespace HEIN
 		ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
 		DirectX::DX11::CommonStates& states = gameContext.commonStates;
 
-		m_model->DrawSkinned(context, states, m_model->bones.size(), m_drawBones.get(), world, view, proj);
+		m_model->DrawSkinned(context, states, m_model->bones.size(), m_skinBones.get(), world, view, proj);
 	}
 
 	DirectX::SimpleMath::Vector3 SkinnedModelComponent::GetBoneWorldPosition(const wchar_t* boneName, const DirectX::SimpleMath::Matrix& actorWorldMatrix)

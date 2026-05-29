@@ -1,15 +1,12 @@
 //--------------------------------------------------------------------------------------
 // File: Animation.cpp
-//
 // Simple animation playback system for CMO and SDKMESH for DirectX Tool Kit
-//
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 //--------------------------------------------------------------------------------------
 
 #include "pch.h"
 #include "Animation.h"
-
 #include <cassert>
 #include <fstream>
 #include <stdexcept>
@@ -24,8 +21,8 @@ namespace
 {
 #pragma pack(push,8)
 
-    constexpr uint32_t SDKMESH_FILE_VERSION = 101;
-    constexpr uint32_t MAX_FRAME_NAME = 100;
+    static constexpr uint32_t SDKMESH_FILE_VERSION = 101;
+    static constexpr uint32_t MAX_FRAME_NAME = 100;
 
     struct SDKANIMATION_FILE_HEADER
     {
@@ -65,48 +62,66 @@ namespace
 #pragma pack(pop)
 }
 
-AnimationSDKMESH::AnimationSDKMESH() noexcept :
-    m_animTime(0.0),
-    m_animSize(0)
+// Constructor
+AnimationSDKMESH::AnimationSDKMESH() noexcept
+    :
+    m_startTime(0.0),               // Start time
+    m_endTime(0.0),                 // End time
+    m_animTime(0.0),                // Animation time
+    m_animData{},                   // Animation data
+    m_animSize(0),                  // Animation size
+    m_boneToTrack{},                // Bone to track conversion
+    m_animBones{},                  // Animation bones
+    m_boneNumber{},                 // Bone number
+    m_boneTransforms{}              // Bone transform matrices
 {
 }
 
+// Load animation data
 HRESULT AnimationSDKMESH::Load(_In_z_ const wchar_t* fileName)
 {
+    // Release resources
     Release();
 
     if (!fileName)
         return E_INVALIDARG;
 
+    // Declare file stream
     std::ifstream inFile(fileName, std::ios::in | std::ios::binary | std::ios::ate);
     if (!inFile)
         return E_FAIL;
 
-    const std::streampos len = inFile.tellg();
+    // Get file size
+    std::streampos length = inFile.tellg();
     if (!inFile)
         return E_FAIL;
 
-    if (len > UINT32_MAX)
-        return HRESULT_FROM_WIN32(ERROR_FILE_TOO_LARGE);
-
-    if (static_cast<size_t>(len) < sizeof(SDKANIMATION_FILE_HEADER))
+    if (length < sizeof(SDKANIMATION_FILE_HEADER))
         return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
 
-    std::unique_ptr<uint8_t[]> blob(new (std::nothrow) uint8_t[size_t(len)]);
+    if (length > UINT32_MAX)
+        return HRESULT_FROM_WIN32(ERROR_FILE_TOO_LARGE);
+
+    // Allocate memory area to read file
+    std::unique_ptr<uint8_t[]> blob(new (std::nothrow) uint8_t[size_t(length)]);
     if (!blob)
         return E_OUTOFMEMORY;
 
+    // Move seek pointer to the beginning
     inFile.seekg(0, std::ios::beg);
     if (!inFile)
         return E_FAIL;
 
-    inFile.read(reinterpret_cast<char*>(blob.get()), len);
+    // Read file
+    inFile.read(reinterpret_cast<char*>(blob.get()), length);
     if (!inFile)
         return E_FAIL;
 
+    // Close file stream
     inFile.close();
 
-    auto header = reinterpret_cast<const SDKANIMATION_FILE_HEADER*>(blob.get());
+    // Get header
+    const SDKANIMATION_FILE_HEADER* header = reinterpret_cast<const SDKANIMATION_FILE_HEADER*>(blob.get());
 
     if (header->Version != SDKMESH_FILE_VERSION
         || header->IsBigEndian != 0
@@ -116,16 +131,19 @@ HRESULT AnimationSDKMESH::Load(_In_z_ const wchar_t* fileName)
         || header->AnimationFPS == 0)
         return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
 
+    // Calculate data size
     uint64_t dataSize = header->AnimationDataOffset + header->AnimationDataSize;
-    if (dataSize > uint64_t(len))
+    if (dataSize > uint64_t(length))
         return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
 
     m_animData.swap(blob);
-    m_animSize = static_cast<size_t>(len);
 
+    // Calculate animation size
+    m_animSize = static_cast<size_t>(length);
     return S_OK;
 }
 
+// Bind model and bones
 bool AnimationSDKMESH::Bind(const Model& model)
 {
     assert(m_animData && m_animSize > 0);
@@ -133,12 +151,23 @@ bool AnimationSDKMESH::Bind(const Model& model)
     if (model.bones.empty())
         return false;
 
-    auto header = reinterpret_cast<const SDKANIMATION_FILE_HEADER*>(m_animData.get());
+    const SDKANIMATION_FILE_HEADER* header = reinterpret_cast<const SDKANIMATION_FILE_HEADER*>(m_animData.get());
     assert(header->Version == SDKMESH_FILE_VERSION);
-    auto frameData = reinterpret_cast<SDKANIMATION_FRAME_DATA*>(m_animData.get() + header->AnimationDataOffset);
+    SDKANIMATION_FRAME_DATA* frameData = reinterpret_cast<SDKANIMATION_FRAME_DATA*>(m_animData.get() + header->AnimationDataOffset);
+
+    if (header->NumAnimationKeys > 0 && header->AnimationFPS > 0)
+    {
+        // Calculate animation end time
+        m_endTime = static_cast<float>(header->NumAnimationKeys) / static_cast<float>(header->AnimationFPS);
+    }
+    else
+    {
+        // Set to 0 if data is invalid
+        m_endTime = 0.0f;
+    }
 
     m_boneToTrack.resize(model.bones.size());
-    for (auto& it : m_boneToTrack)
+    for (uint32_t& it : m_boneToTrack)
     {
         it = ModelBone::c_Invalid;
     }
@@ -159,61 +188,51 @@ bool AnimationSDKMESH::Bind(const Model& model)
         MultiByteToWideChar(CP_UTF8, 0, frameData[j].FrameName, -1, frameName, MAX_FRAME_NAME);
 
         size_t count = 0;
-        for (const auto& it : model.bones)
+        for (const DirectX::ModelBone& it : model.bones)
         {
             if (_wcsicmp(frameName, it.name.c_str()) == 0)
             {
+#if(_DEBUG)
+                wchar_t buffer[128];
+                swprintf_s(buffer, _countof(buffer), L"%3zu: %-40ws \n", count, it.name.c_str());
+                OutputDebugString(buffer);
+#endif
                 m_boneToTrack[count] = static_cast<uint32_t>(j);
                 result = true;
                 break;
             }
-
-            ++count;
+            count++;
         }
     }
 
+    // Allocate bone array
     m_animBones = ModelBone::MakeArray(model.bones.size());
-
     return result;
 }
 
+// Update animation time
 void AnimationSDKMESH::Update(float delta)
 {
-    m_animTime += static_cast<double>(delta);
+    m_animTime += delta;
 }
 
 _Use_decl_annotations_
-void AnimationSDKMESH::Apply(
-    const DirectX::Model& model,
-    size_t nbones,
-    XMMATRIX* boneTransforms) const
+void AnimationSDKMESH::Apply(const DirectX::Model& model, size_t nbones, XMMATRIX* boneTransforms) const
 {
     assert(m_animData && m_animSize > 0);
 
-    if (!nbones || !boneTransforms)
-    {
-        throw std::invalid_argument("Bone transforms array required");
-    }
+    const SDKANIMATION_FILE_HEADER* header = reinterpret_cast<const SDKANIMATION_FILE_HEADER*>(m_animData.get());
+    SDKANIMATION_FRAME_DATA* frameData = reinterpret_cast<SDKANIMATION_FRAME_DATA*>(m_animData.get() + header->AnimationDataOffset);
 
-    if (nbones < model.bones.size())
-    {
-        throw std::invalid_argument("Bone transforms array is too small");
-    }
+    // Calculate keyframe interpolation
+    float timeInTicks = static_cast<float>(header->AnimationFPS) * static_cast<float>(m_animTime);
+    uint32_t tick1 = static_cast<uint32_t>(timeInTicks) % header->NumAnimationKeys;
 
-    if (model.bones.empty())
-    {
-        throw std::runtime_error("Model is missing bones");
-    }
+    // Smooth interpolation when looping (if last frame, set next frame to 0)
+    uint32_t tick2 = (tick1 + 1 < header->NumAnimationKeys) ? (tick1 + 1) : 0;
 
-    auto header = reinterpret_cast<const SDKANIMATION_FILE_HEADER*>(m_animData.get());
-    assert(header->Version == SDKMESH_FILE_VERSION);
-
-    // Determine animation time
-    auto tick = static_cast<uint32_t>(static_cast<double>(header->AnimationFPS) * m_animTime);
-    tick %= header->NumAnimationKeys;
-
-    // Compute local bone transforms
-    auto frameData = reinterpret_cast<SDKANIMATION_FRAME_DATA*>(m_animData.get() + header->AnimationDataOffset);
+    // Set interpolation factor
+    float lerpFactor = timeInTicks - std::floor(timeInTicks);
 
     for (size_t j = 0; j < nbones; ++j)
     {
@@ -223,32 +242,65 @@ void AnimationSDKMESH::Apply(
         }
         else
         {
-            auto frame = &frameData[m_boneToTrack[j]];
-            auto data = &frame->pAnimationData[tick];
+            SDKANIMATION_FRAME_DATA* frame = &frameData[m_boneToTrack[j]];
+            const SDKANIMATION_DATA* data1 = &frame->pAnimationData[tick1];
+            const SDKANIMATION_DATA* data2 = &frame->pAnimationData[tick2];
 
-            XMVECTOR quat = XMVectorSet(data->Orientation.x, data->Orientation.y, data->Orientation.z, data->Orientation.w);
-            if (XMVector4Equal(quat, g_XMZero))
-                quat = XMQuaternionIdentity();
-            else
-                quat = XMQuaternionNormalize(quat);
+            // Linear interpolation of position (Lerp)
+            XMVECTOR position1 = XMLoadFloat3(&data1->Translation);
+            XMVECTOR position2 = XMLoadFloat3(&data2->Translation);
+            XMVECTOR interpolatedPosition = XMVectorLerp(position1, position2, lerpFactor);
 
-            XMMATRIX trans = XMMatrixTranslation(data->Translation.x, data->Translation.y, data->Translation.z);
-            XMMATRIX rotation = XMMatrixRotationQuaternion(quat);
-            XMMATRIX scale = XMMatrixScaling(data->Scaling.x, data->Scaling.y, data->Scaling.z);
+            // Spherical linear interpolation of rotation (Slerp)
+            XMVECTOR q1 = XMLoadFloat4(&data1->Orientation);
+            XMVECTOR q2 = XMLoadFloat4(&data2->Orientation);
+            XMVECTOR interpolatedRotation = XMQuaternionSlerp(q1, q2, lerpFactor);
 
-            m_animBones[j] = XMMatrixMultiply(XMMatrixMultiply(rotation, scale), trans);
+            // Fix: Quaternion normalization (prevent deformation)
+            interpolatedRotation = XMQuaternionNormalize(interpolatedRotation);
+
+            // Linear interpolation of scale (Lerp)
+            XMVECTOR scale1 = XMLoadFloat3(&data1->Scaling);
+            XMVECTOR scale2 = XMLoadFloat3(&data2->Scaling);
+            XMVECTOR interpolatedScale = XMVectorLerp(scale1, scale2, lerpFactor);
+
+            // Fix matrix multiplication order (Scale x Rotation x Translation)
+            XMMATRIX scale = XMMatrixScalingFromVector(interpolatedScale);
+            XMMATRIX rotation = XMMatrixRotationQuaternion(interpolatedRotation);
+            XMMATRIX translation = XMMatrixTranslationFromVector(interpolatedPosition);
+            m_animBones[j] = scale * rotation * translation;
         }
     }
 
-    // Compute absolute locations
+    // Apply absolute bone transformations
     model.CopyAbsoluteBoneTransforms(nbones, m_animBones.get(), boneTransforms);
 
-    // Adjust for model's bind pose.
-    for (size_t j = 0; j < nbones; ++j)
+    // Apply inverse bind pose matrix (prevent deformation) is currently commented out in original file
+    //for (size_t index = 0; index < nbones; ++index)
+    //{
+        //boneTransforms[index] = XMMatrixMultiply(model.invBindPoseMatrices[index], boneTransforms[index]);
+    //}
+}
+
+// Apply skin matrix (apply inverse bind pose matrix to prevent deformation)
+void AnimationSDKMESH::ApplySkinMatrix(const DirectX::Model& model, size_t nbones, DirectX::XMMATRIX* outSkinningBones)
+{
+    // Apply inverse bind pose matrix (prevent deformation)
+    for (size_t index = 0; index < nbones; ++index)
     {
-        boneTransforms[j] = XMMatrixMultiply(model.invBindPoseMatrices[j], boneTransforms[j]);
+        outSkinningBones[index] = XMMatrixMultiply(model.invBindPoseMatrices[index], outSkinningBones[index]);
     }
 }
+
+void AnimationSDKMESH::Release()
+{
+    m_animTime = 0.0;
+    m_animSize = 0;
+    m_animData.reset();
+    m_boneToTrack.clear();
+    m_animBones.reset();
+}
+
 
 
 //--------------------------------------------------------------------------------------
@@ -273,16 +325,15 @@ namespace
         float Time;
         DirectX::XMFLOAT4X4 Transform;
     };
-
     static_assert(sizeof(Keyframe) == 72, "CMO Mesh structure size incorrect");
 
 #pragma pack(pop)
 }
 
 AnimationCMO::AnimationCMO() noexcept :
-    m_animTime(0.f),
-    m_startTime(0.f),
-    m_endTime(0.f)
+    m_animTime(0.0f),
+    m_startTime(0.0f),
+    m_endTime(0.0f)
 {
 }
 
@@ -296,23 +347,23 @@ HRESULT AnimationCMO::Load(const wchar_t* fileName, size_t offset, const wchar_t
     if (!inFile)
         return E_FAIL;
 
-    const std::streampos len = inFile.tellg();
+    std::streampos length = inFile.tellg();
     if (!inFile)
         return E_FAIL;
 
-    if (len > UINT32_MAX)
+    if (length > UINT32_MAX)
         return HRESULT_FROM_WIN32(ERROR_FILE_TOO_LARGE);
 
     inFile.seekg(static_cast<std::streamoff>(offset), std::ios::beg);
     if (!inFile)
         return E_FAIL;
 
-    auto remaining = len - static_cast<std::streamoff>(offset);
+    std::streamoff remaining = length - static_cast<std::streamoff>(offset);
 
-    auto dataSize = static_cast<size_t>(remaining);
-    if (dataSize < sizeof(uint32_t))
+    if (remaining < sizeof(uint32_t))
         return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
 
+    size_t dataSize = static_cast<size_t>(remaining);
     std::unique_ptr<uint8_t[]> blob(new (std::nothrow) uint8_t[dataSize]);
     if (!blob)
         return E_OUTOFMEMORY;
@@ -323,7 +374,7 @@ HRESULT AnimationCMO::Load(const wchar_t* fileName, size_t offset, const wchar_t
 
     inFile.close();
 
-    auto nClips = reinterpret_cast<const uint32_t*>(blob.get());
+    const uint32_t* nClips = reinterpret_cast<const uint32_t*>(blob.get());
     size_t usedSize = sizeof(uint32_t);
     if (dataSize < usedSize)
         return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
@@ -334,18 +385,18 @@ HRESULT AnimationCMO::Load(const wchar_t* fileName, size_t offset, const wchar_t
     for (size_t j = 0; j < *nClips; ++j)
     {
         // Clip name
-        auto nName = reinterpret_cast<const uint32_t*>(blob.get() + usedSize);
+        const uint32_t* nName = reinterpret_cast<const uint32_t*>(blob.get() + usedSize);
         usedSize += sizeof(uint32_t);
         if (dataSize < usedSize)
             return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
 
-        auto name = reinterpret_cast<const wchar_t*>(blob.get() + usedSize);
+        const wchar_t* name = reinterpret_cast<const wchar_t*>(blob.get() + usedSize);
 
         usedSize += sizeof(wchar_t) * (*nName);
         if (dataSize < usedSize)
             return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
 
-        auto clip = reinterpret_cast<const Clip*>(blob.get() + usedSize);
+        const Clip* clip = reinterpret_cast<const Clip*>(blob.get() + usedSize);
         usedSize += sizeof(Clip);
         if (dataSize < usedSize)
             return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
@@ -353,7 +404,7 @@ HRESULT AnimationCMO::Load(const wchar_t* fileName, size_t offset, const wchar_t
         if (!clip->keys)
             return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
 
-        auto keys = reinterpret_cast<const Keyframe*>(blob.get() + usedSize);
+        const Keyframe* keys = reinterpret_cast<const Keyframe*>(blob.get() + usedSize);
         usedSize += sizeof(Keyframe) * clip->keys;
         if (dataSize < usedSize)
             return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
@@ -372,11 +423,9 @@ HRESULT AnimationCMO::Load(const wchar_t* fileName, size_t offset, const wchar_t
                 m_keys[k].second = keys[k].Time;
                 m_transforms[k] = XMLoadFloat4x4(&keys[k].Transform);
             }
-
             return S_OK;
         }
     }
-
     return E_FAIL;
 }
 
@@ -397,10 +446,7 @@ void AnimationCMO::Update(float delta)
 }
 
 _Use_decl_annotations_
-void AnimationCMO::Apply(
-    const Model& model,
-    size_t nbones,
-    XMMATRIX* boneTransforms) const
+void AnimationCMO::Apply(const Model& model, size_t nbones, XMMATRIX* boneTransforms) const
 {
     assert(!m_keys.empty());
 
@@ -422,12 +468,11 @@ void AnimationCMO::Apply(
     // Compute local bone transforms
     model.CopyBoneTransformsTo(nbones, m_animBones.get());
 
-
     // Apply keyframes
     if (m_animTime >= m_startTime)
     {
         size_t k = 0;
-        for (auto kit : m_keys)
+        for (const Key& kit : m_keys)
         {
             if (kit.second > m_animTime)
             {
