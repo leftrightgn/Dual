@@ -12,6 +12,7 @@ namespace HEIN
 		std::unique_ptr<DirectX::Model> m_model;
 		std::unique_ptr<DirectX::EffectFactory> m_fxFactory;
 		DirectX::ModelBone::TransformArray m_drawBones;
+		DirectX::ModelBone::TransformArray m_skinBones;
 		//DX::AnimationSDKMESH m_animation;
 		std::unordered_map < std::string, std::unique_ptr<DX::AnimationSDKMESH>> m_animations;
 

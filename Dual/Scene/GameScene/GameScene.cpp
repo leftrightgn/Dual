@@ -42,7 +42,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
     }
     // [LOGIC: DEBUG TOOL]
     // Real-time socket tweaking. (Delete or comment out before shipping the game!)
-    /*HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
+    HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
     if (pSocketComp != nullptr)
     {
         HEIN::Socket* weaponSocket = pSocketComp->GetSocket(L"WeaponSocket");
@@ -51,8 +51,8 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
             float moveSpeed = 0.05f;
             if (gameContext.keyboardState.Up)    weaponSocket->localPosition.x += moveSpeed;
             if (gameContext.keyboardState.Down)  weaponSocket->localPosition.x -= moveSpeed;
-            if (gameContext.keyboardState.Left)  weaponSocket->localPosition.z += moveSpeed;
-            if (gameContext.keyboardState.Right) weaponSocket->localPosition.z -= moveSpeed;
+            if (gameContext.keyboardState.Left)  weaponSocket->localPosition.y += moveSpeed;
+            if (gameContext.keyboardState.Right) weaponSocket->localPosition.y -= moveSpeed;
 
             if (gameContext.keyboardState.F1)
             {
@@ -63,7 +63,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
                 OutputDebugString(debugMsg);
             }
         }
-    }*/
+    }
     // [LOGIC: CAMERA TRACKING]
     // Read the bone position safely to update the camera target
     if (m_player != nullptr)
@@ -74,7 +74,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         if (pTransform != nullptr && pModel != nullptr)
         {
             DirectX::SimpleMath::Matrix worldMatrix = pTransform->GetWorldMatrix();
-            m_targetPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End_end", worldMatrix);
+            m_targetPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End", worldMatrix);
         }
     }
     if (m_cameraController)
@@ -200,9 +200,9 @@ void GameScene::OnEnter(GameContext& gameContext)
     HEIN::SocketComponent* socketComp = playerActor->AddComponent<HEIN::SocketComponent>();
     HEIN::Socket weaponSocket(
         L"WeaponSocket",
-        L"mixamorig:RightHand",
-        DirectX::SimpleMath::Vector3(-7.800f, -2.150f, 13.7f),
-        DirectX::SimpleMath::Vector3(DirectX::XM_PIDIV2, 0.0f, 0.0f)
+        L"mixamorig:RightHandThumb4",
+        DirectX::SimpleMath::Vector3(-1.100f, -0.900f, 0.000f),
+        DirectX::SimpleMath::Vector3(2.892f, 1.300f, 1.600f)
     );
     socketComp->AddSocket(weaponSocket);
 

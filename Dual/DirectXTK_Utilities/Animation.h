@@ -1,4 +1,5 @@
-#//--------------------------------------------------------------------------------------
+#pragma once
+//--------------------------------------------------------------------------------------
 // File: Animation.h
 //
 // Simple animation playback system for CMO and SDKMESH for DirectX Tool Kit
@@ -15,13 +16,34 @@
 #include <utility>
 #include <vector>
 
-
 namespace DX
 {
     class AnimationSDKMESH
     {
     public:
+        // Additional accessors
+        // Get animation time
+        double GetAnimTime() const { return m_animTime; }
+        // Set animation time
+        void SetAnimTime(const double& animTime) { m_animTime = animTime; }
+        // Set animation start time
+        void SetStartTime(const double& startTime) { m_animTime = startTime; }
+        // Get animation end time
+        double GetEndTime() const { return m_endTime; }
+        // Set animation end time
+        void SetEndTime(const double& endTime) { m_endTime = endTime; }
+
+        // Get AnimData
+        uint8_t* GetAnimData() { return m_animData.get(); }
+        // Get specified BoneToTrack
+        uint32_t GetBoneToTrack(const int& index) { return m_boneToTrack[index]; }
+        // Get bone transforms
+        DirectX::XMMATRIX* GetBoneTransforms() { return m_boneTransforms; }
+
+    public:
+        // Constructor
         AnimationSDKMESH() noexcept;
+        // Destructor
         ~AnimationSDKMESH() = default;
 
         AnimationSDKMESH(AnimationSDKMESH&&) = default;
@@ -30,32 +52,40 @@ namespace DX
         AnimationSDKMESH(AnimationSDKMESH const&) = delete;
         AnimationSDKMESH& operator= (AnimationSDKMESH const&) = delete;
 
+        // Load animation
         HRESULT Load(_In_z_ const wchar_t* fileName);
-
-        void Release()
-        {
-            m_animTime = 0.0;
-            m_animSize = 0;
-            m_animData.reset();
-            m_boneToTrack.clear();
-            m_animBones.reset();
-        }
-
+        // Release resources
+        void Release();
+        // Bind model
         bool Bind(const DirectX::Model& model);
-
+        // Update animation
         void Update(float delta);
-
-        void Apply(
-            const DirectX::Model& model,
-            size_t nbones,
-            _Out_writes_(nbones) DirectX::XMMATRIX* boneTransforms) const;
+        // Apply bone transformations
+        void Apply(const DirectX::Model& model, size_t nbones, _Out_writes_(nbones) DirectX::XMMATRIX* boneTransforms) const;
+        // Apply skin matrix
+        void ApplySkinMatrix(const DirectX::Model& model, size_t nbones, DirectX::XMMATRIX* outSkinningBones);
 
     private:
-        double                              m_animTime;
-        std::unique_ptr<uint8_t[]>          m_animData;
-        size_t                              m_animSize;
-        std::vector<uint32_t>               m_boneToTrack;
+        // Start time
+        double m_startTime;
+        // End time
+        double m_endTime;
+        // Animation time
+        double m_animTime;
+        // Animation data buffer
+        std::unique_ptr<uint8_t[]> m_animData;
+        // Animation size
+        size_t  m_animSize;
+        // Bone to track conversion array
+        std::vector<uint32_t> m_boneToTrack;
+        // Animation bones
         DirectX::ModelBone::TransformArray  m_animBones;
+        // Bone number
+        int m_boneNumber;
+        // Bone transform matrix
+        DirectX::XMMATRIX* m_boneTransforms;
+        // Blend factor
+        float m_blendFactor;
     };
 
     class AnimationCMO
@@ -92,10 +122,10 @@ namespace DX
     private:
         using Key = std::pair<uint32_t, float>;
 
-        float                               m_animTime;
-        float                               m_startTime;
-        float                               m_endTime;
-        std::vector<Key>                    m_keys;
+        float  m_animTime;
+        float  m_startTime;
+        float  m_endTime;
+        std::vector<Key> m_keys;
         DirectX::ModelBone::TransformArray  m_transforms;
         DirectX::ModelBone::TransformArray  m_animBones;
     };
