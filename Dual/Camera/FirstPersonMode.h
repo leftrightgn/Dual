@@ -19,7 +19,7 @@ namespace HEIN
 		static constexpr float TARGET_HEIGHT = 0.0f;
 		static constexpr float BOOM_LENGTH = 1.0f;
 		static constexpr float MOUSE_SENSITIVITY = 0.005f;
-		static constexpr float CENTER_OFFSET = -0.56f;
+		static constexpr float CENTER_OFFSET = 0.0f;
 		static constexpr float FPS_CAM_FOV = 60.0f;
 
 	private:

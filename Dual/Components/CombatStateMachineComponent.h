@@ -10,6 +10,7 @@ namespace HEIN
 	private:
 
 		ICombatState* m_currentState = nullptr;
+		ICombatState* m_pendingState = nullptr;
 
 		std::unique_ptr<IdleState> m_idleState;
 		std::unique_ptr<WalkState> m_walkState;
@@ -24,6 +25,8 @@ namespace HEIN
 		void Update(float deltaTime) override;
 
 		void ChangeState(ICombatState* newState);
+
+		void ApplyPendingState();
 		
 		// Getter for transitions
 		IdleState* GetIdleState() { return m_idleState.get(); }

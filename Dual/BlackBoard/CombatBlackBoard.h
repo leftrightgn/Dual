@@ -17,10 +17,8 @@ namespace HEIN
 	};
 
 	// Only holds Data contains zero logic
-	class CombatBlackBoard : public IComponent
+	struct CombatBlackBoard : public IComponent
 	{
-	public:
-
 		// Intentions 
 		DirectX::SimpleMath::Vector3 moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		bool isAttackingIntent = false;
@@ -35,8 +33,6 @@ namespace HEIN
 		float maxStamina = 100.0f;
 		float currentHealth = 100.0f;
 		CombatStance currentStance = CombatStance::Idle;
-
-	public:
 
 		CombatBlackBoard(Actor* owner)
 			: IComponent(owner)

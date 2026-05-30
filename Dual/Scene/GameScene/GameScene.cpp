@@ -15,20 +15,15 @@
 #include <Camera/SpringCameraMode.h>
 
 
-
-
 using namespace DirectX;
 
 // 更新
 void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, GameContext& gameContext)
 {
-	Imase::DebugRenderer& debugRenderer = gameContext.debugRenderer;
-
-	debugRenderer.DrawText({ 0.0f, 0.0f }, L"GameScene");
-
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
-    if (m_player != nullptr)
+    m_debugDisplay->Update(gameContext);
+    if (m_player != nullptr && !m_debugDisplay->isMagnified())
     {
         HEIN::PlayerInputComponent* inputComp = m_player->GetComponent<HEIN::PlayerInputComponent>();
         if (inputComp)
@@ -148,7 +143,7 @@ void GameScene::Render(GameContext& gameContext)
     context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
 
-    
+    m_debugDisplay->Render(gameContext, m_actors, m_skybox.get());
 }
 
 // シーン切り替え時に呼び出される関数
@@ -181,18 +176,18 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_tpsModel->Initialize(gameContext,
         L"Resources/Models/knight/knight.sdkmesh", // normal model
         L"Resources/Models/knight");
-    m_tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/knightidle.sdkmesh_anim");
-    m_tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/knight.sdkmesh_anim");
-    m_tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/OneHand.sdkmesh_anim");
+    m_tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/idle.sdkmesh_anim");
+    m_tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
+    m_tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
 
     // FirstPersonCamera model
     HEIN::SkinnedModelComponent* m_fpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
     m_fpsModel->Initialize(gameContext,
-        L"Resources/Models/knight/headless.sdkmesh", // headless/arms model
+        L"Resources/Models/knight/knight.sdkmesh", // headless/arms model
         L"Resources/Models/knight");
-    m_fpsModel->LoadAnimation("Idle", L"Resources/Models/knight/knightidle.sdkmesh_anim");
-    m_fpsModel->LoadAnimation("Walk", L"Resources/Models/knight/knight.sdkmesh_anim");
-    m_fpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/OneHand.sdkmesh_anim");
+    m_fpsModel->LoadAnimation("Idle", L"Resources/Models/knight/idle.sdkmesh_anim");
+    m_fpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
+    m_fpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
 
   
     //Sword
@@ -244,6 +239,9 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     stageActor->Start();
 
+    //
+    m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
+    m_debugDisplay->Initialize();
     // Connect
     playerActor->AddComponent<HEIN::CombatBlackBoard>();
     playerActor->AddComponent<HEIN::PlayerInputComponent>(m_cameraController.get()); // Requires the camera controller

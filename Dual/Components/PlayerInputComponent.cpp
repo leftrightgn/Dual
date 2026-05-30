@@ -6,7 +6,7 @@
 #include "Entities/Actor.h"
 #include <Mouse.h>
 #include <Keyboard.h>
-#include "../GameContext.h"
+#include "Framework/GameContext.h"
 
 HEIN::PlayerInputComponent::PlayerInputComponent(Actor* owner, HEIN::CameraController* cameraController)
 	: HEIN::IComponent(owner)
@@ -27,7 +27,7 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 	if (cameraController != nullptr)
 	{
 		HEIN::CameraInputState cameraInput;
-		DirectX::Mouse::State mouseState = gameContext.mouseState;
+		const DirectX::Mouse::State& mouseState = gameContext.mouseState;
 
 		cameraInput.mouseX = static_cast<float>(mouseState.x);
 		cameraInput.mouseY = static_cast<float>(mouseState.y);
@@ -36,46 +36,27 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 
 		cameraController->ProcessInput(cameraInput);
 
-		// Handle Camera Switching
-		if (gameContext.keyboardTracker.pressed.T)
+		// Handle Camera Switching cleanly
+		HEIN::CameraType targetCameraType;
+		if (gameContext.inputManager.WasCameraSwitchPressed(gameContext, targetCameraType))
 		{
-			cameraController->RequestSwitch(HEIN::CameraType::ThirdPerson);
-		}
-		if (gameContext.keyboardTracker.pressed.P)
-		{
-			cameraController->RequestSwitch(HEIN::CameraType::FirstPerson);
-		}
-		if (gameContext.keyboardTracker.pressed.E)
-		{
-			cameraController->RequestSwitch(HEIN::CameraType::Spring);
+			cameraController->RequestSwitch(targetCameraType);
 		}
 	}
 
 	if (m_blackboard != nullptr)
 	{
-		DirectX::SimpleMath::Vector3 localInput = DirectX::SimpleMath::Vector3::Zero;
-
-		DirectX::Keyboard::State kbState = DirectX::Keyboard::Get().GetState();
-
-		if (kbState.W) localInput.z += 1.0f;
-		if (kbState.S) localInput.z -= 1.0f;
-		if (kbState.A) localInput.x += 1.0f;
-		if (kbState.D) localInput.x -= 1.0f;
-
+		// Get logical movement directly from the manager
+		DirectX::SimpleMath::Vector3 localInput = gameContext.inputManager.GetMoveIntent(gameContext);
 		DirectX::SimpleMath::Vector3 worldIntent = DirectX::SimpleMath::Vector3::Zero;
 
-		// If we have a camera controller, transform input by camera yaw.
 		if (cameraController != nullptr)
 		{
-			// Get the Camera's Forward direction
 			DirectX::SimpleMath::Matrix view = cameraController->GetView();
 			DirectX::SimpleMath::Matrix invView = view.Invert();
 			DirectX::SimpleMath::Vector3 camForward = invView.Forward();
 
-			// Calculate the pure Camera Yaw
 			float cameraYaw = atan2f(camForward.x, camForward.z);
-
-			// Transform local WASD input into World Direction based on the Camera
 			DirectX::SimpleMath::Matrix camRotation = DirectX::SimpleMath::Matrix::CreateRotationY(cameraYaw);
 			worldIntent = DirectX::SimpleMath::Vector3::TransformNormal(localInput, camRotation);
 
@@ -92,22 +73,20 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 							NETUAL_PITCH,
 							NETUAL_ROLL
 						);
-
 					transform->SetRotation(alignedRot);
 				}
 			}
 		}
 		else
 		{
-			// No camera: interpret local input directly as world intent (no rotation)
 			worldIntent = localInput;
 		}
 
 		if (worldIntent.LengthSquared() > 0) worldIntent.Normalize();
-		m_blackboard->moveIntent = worldIntent; // intent is in absolute world space!
+		m_blackboard->moveIntent = worldIntent;
 
-		m_blackboard->isAttackingIntent = gameContext.mouseState.leftButton;
-		m_blackboard->isParryingIntent = gameContext.mouseState.rightButton;
+		// Get combat logic cleanly
+		m_blackboard->isAttackingIntent = gameContext.inputManager.IsAttacking(gameContext);
 	}
 }
 

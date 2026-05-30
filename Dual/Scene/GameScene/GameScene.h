@@ -9,13 +9,14 @@
 #pragma once
 #include "pch.h"
 #include "ImaseLib/SceneManager.h"
-#include "GameContext.h"
+#include "Framework/GameContext.h"
 #include "../SceneId.h"
 #include "Effect/Water.h"
 #include "Effect/Skybox.h"
 #include "ImaseLib/DebugCamera.h"
 #include "Camera/CameraController.h"
 #include <Entities/Actor.h>
+#include "Common/DebugDisplayController.h"
 
 
 
@@ -57,6 +58,8 @@ private:
 	std::vector<std::unique_ptr<HEIN::Actor>> m_actors;
 
 	std::unique_ptr<DirectX::GeometricPrimitive> m_debugSphere;
+
+	std::unique_ptr<HEIN::DebugDisplayController> m_debugDisplay;
 };
 
 
