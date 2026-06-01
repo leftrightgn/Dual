@@ -5,6 +5,34 @@
 
 namespace HEIN
 {
+	void InputManager::Update(const GameContext& context)
+	{
+		if (context.mouseState.positionMode == DirectX::Mouse::MODE_RELATIVE)
+		{
+			m_deltaX = context.mouseState.x;
+			m_deltaY = context.mouseState.y;
+		}
+		else
+		{
+			m_deltaX = context.mouseState.x - m_lastMouseX;
+			m_deltaY = context.mouseState.y - m_lastMouseY;
+
+		}
+		
+		m_lastMouseX = context.mouseState.x;
+		m_lastMouseY = context.mouseState.y;
+
+		
+	}
+	std::pair<int, int> InputManager::GetMouseDelta()
+	{
+		return std::make_pair(m_deltaX, m_deltaY);
+	}
+	
+	bool InputManager::IsDebugDrugHeld(const GameContext& context)
+	{
+		return context.mouseState.leftButton;
+	}
 	DirectX::SimpleMath::Vector3 InputManager::GetMoveIntent(const GameContext& context)
 	{
 		DirectX::SimpleMath::Vector3 intent = DirectX::SimpleMath::Vector3::Zero;

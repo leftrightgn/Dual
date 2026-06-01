@@ -27,23 +27,41 @@ namespace HEIN
 		if (gameContext.keyboardTracker.pressed.F2) m_isMagnified = !m_isMagnified;
 		if (gameContext.keyboardTracker.pressed.F3) m_isVisible = !m_isVisible;
 
-		const float deltaTime = static_cast<float>(gameContext.timer.GetFramesPerSecond());
+		const float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
 		m_debugcameraController->Update(deltaTime);
 
 		if (m_isMagnified)
 		{
 			CameraInputState debugInput;
-			DirectX::Mouse::State mouseState = DirectX::Mouse::Get().GetState();
-			debugInput.mouseX = static_cast<float>(mouseState.x);
-			debugInput.mouseY = static_cast<float>(mouseState.y);
-			debugInput.isLeftMouseDown = mouseState.leftButton;
-			debugInput.scrollWheelDelta = mouseState.scrollWheelValue;
+			
+			std::pair<int, int> mouseDelta = gameContext.inputManager.GetMouseDelta();
+			bool isHeld = gameContext.inputManager.IsDebugDrugHeld(gameContext);
+
+		
+			if (isHeld)
+			{
+				m_virtualMouseX += static_cast<float>(mouseDelta.first);
+				m_virtualMouseY += static_cast<float>(mouseDelta.second);
+			}
+
+			debugInput.mouseX = m_virtualMouseX;
+			debugInput.mouseY = m_virtualMouseY;
+
+			debugInput.isLeftMouseDown = isHeld;
+			debugInput.scrollWheelDelta = gameContext.mouseState.scrollWheelValue;
+
 			m_debugcameraController->ProcessInput(debugInput);
 		}
 	}
 
-	void DebugDisplayController::Render(GameContext& gameContext, const std::vector<std::unique_ptr<Actor>>& actors, Skybox* skybox)
+	void DebugDisplayController::Render(
+		GameContext& gameContext,
+		const std::vector<std::unique_ptr<Actor>>& actors,
+		Skybox* skybox,
+		DirectX::SimpleMath::Matrix mainView,
+		DirectX::SimpleMath::Matrix mainProj
+		)
 	{
 		if (!m_isVisible) return;
 
@@ -58,6 +76,8 @@ namespace HEIN
 			ID3D11RenderTargetView* rtv = gameContext.deviceResources.GetRenderTargetView();
 			const float clearColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f }; 
 			context->ClearRenderTargetView(rtv, clearColor);
+
+			
 		}
 		else
 		{
@@ -85,6 +105,16 @@ namespace HEIN
 
 		if (skybox && m_isMagnified) skybox->Draw(gameContext, view, m_projMatrix);
 		for (const auto& actor : actors) actor->Draw(gameContext, view, m_projMatrix);
+		gameContext.myDebugRenderer.Initialize(gameContext.deviceResources.GetD3DDevice(), gameContext.deviceResources.GetD3DDeviceContext());
+		DirectX::BoundingFrustum mainCamFrustum(mainProj, false);
+		DirectX::SimpleMath::Matrix mainCamWorld = mainView.Invert();
+		mainCamFrustum.Transform(mainCamFrustum, mainCamWorld);
+		gameContext.myDebugRenderer.Begin(view, m_projMatrix);
+		gameContext.myDebugRenderer.DrawFrustum(mainCamFrustum, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+		DirectX::BoundingSphere camEye(mainCamWorld.Translation(), 0.3f);
+		gameContext.myDebugRenderer.DrawSphere(camEye, DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f));
+
+		gameContext.myDebugRenderer.End();
 
 		context->RSSetViewports(1, &fullscreen);
 	}

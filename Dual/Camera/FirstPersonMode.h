@@ -1,13 +1,9 @@
 #pragma once
 #include "ICameraMode.h"
-#include <algorithm>
-#include <DirectXMath.h>
 #include <Components/SkinnedModelComponent.h>
-
 
 namespace HEIN
 {
-
 	class FirstPersonMode : public ICameraMode
 	{
 	private:
@@ -43,13 +39,13 @@ namespace HEIN
 		FirstPersonMode(
 			  const DirectX::SimpleMath::Vector3* headPos,
 			  SkinnedModelComponent* fpsModel,
-			  SkinnedModelComponent* tpsModel);
+			  SkinnedModelComponent* tpsModel
+		);
 	
 		void OnEnter(CameraData& data) override;
 
 		void ProcessInput(const CameraInputState& input) override;
 		
-
 		void Update(CameraData& outData, float deltaTime, ICameraController& controller) override;
 
 		bool RequiresRelativeMouse() const override { return true; }

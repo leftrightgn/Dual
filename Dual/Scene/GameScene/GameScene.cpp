@@ -20,6 +20,8 @@ using namespace DirectX;
 // 更新
 void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, GameContext& gameContext)
 {
+    gameContext.inputManager.Update(gameContext);
+
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
     m_debugDisplay->Update(gameContext);
@@ -37,7 +39,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
     }
     // [LOGIC: DEBUG TOOL]
     // Real-time socket tweaking. (Delete or comment out before shipping the game!)
-    HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
+    /*HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
     if (pSocketComp != nullptr)
     {
         HEIN::Socket* weaponSocket = pSocketComp->GetSocket(L"WeaponSocket");
@@ -58,7 +60,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
                 OutputDebugString(debugMsg);
             }
         }
-    }
+    }*/
     // [LOGIC: CAMERA TRACKING]
     // Read the bone position safely to update the camera target
     if (m_player != nullptr)
@@ -68,7 +70,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
 
         if (pTransform != nullptr && pModel != nullptr)
         {
-            DirectX::SimpleMath::Matrix worldMatrix = pTransform->GetWorldMatrix();
+            SimpleMath::Matrix worldMatrix = pTransform->GetWorldMatrix();
             m_targetPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End", worldMatrix);
         }
     }
@@ -78,7 +80,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
         float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
 
-        m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
+        m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(
             m_cameraController->GetFov(),
             aspectRatio,
             0.01f,
@@ -100,12 +102,13 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         if (pSocketComp != nullptr && pSocketComp->HasSocket(L"WeaponSocket") && swordTrans != nullptr)
         {
            
-            DirectX::SimpleMath::Matrix socketWorld = pSocketComp->GetSocketWorldMatrix(L"WeaponSocket");
+            SimpleMath::Matrix socketWorld = pSocketComp->GetSocketWorldMatrix(L"WeaponSocket");
 
             swordTrans->SetParentMatrix(socketWorld);
         }
     }
   
+    
 }
 
 // 描画
@@ -143,7 +146,7 @@ void GameScene::Render(GameContext& gameContext)
     context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
 
-    m_debugDisplay->Render(gameContext, m_actors, m_skybox.get());
+    m_debugDisplay->Render(gameContext, m_actors, m_skybox.get(), view, m_proj);
 }
 
 // シーン切り替え時に呼び出される関数
@@ -156,7 +159,7 @@ void GameScene::OnEnter(GameContext& gameContext)
     int width = static_cast<int>(viewport.Width);
     int height = static_cast<int>(viewport.Height);
     float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
-    m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
+    m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(
         DirectX::XM_PI / 4.0f, aspectRatio, 0.01f, 1000.0f);
 
     // Water
@@ -166,10 +169,10 @@ void GameScene::OnEnter(GameContext& gameContext)
     std::unique_ptr<HEIN::Actor> playerActor = std::make_unique<HEIN::Actor>(L"Player");
 
     HEIN::TransformComponent* ptransform = playerActor->AddComponent<HEIN::TransformComponent>();
-    ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
-    ptransform->SetScale(DirectX::SimpleMath::Vector3(0.1f));
+    ptransform->SetPosition(SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
+    ptransform->SetScale(SimpleMath::Vector3(0.1f));
    
-    DirectX::SimpleMath::Vector3 pos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+    //SimpleMath::Vector3 pos = SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
     HEIN::SkinnedModelComponent* m_tpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
     
     // ThirdPersonCamera model
@@ -207,23 +210,50 @@ void GameScene::OnEnter(GameContext& gameContext)
     swordTransform->SetScale(DirectX::SimpleMath::Vector3(2.0f));
 
     HEIN::StaticModelComponent* swordModel = sword->AddComponent<HEIN::StaticModelComponent>();
-    swordModel->Initialize(gameContext, L"Resources/Models/knight/sword.sdkmesh", L"Resources/Models/knight");
+    swordModel->Initialize(
+        gameContext, 
+        L"Resources/Models/knight/sword.sdkmesh", 
+        L"Resources/Models/knight"
+    );
 
     sword->Start();
 
     // Camera
     m_cameraController = std::make_unique<HEIN::CameraController>();
 
-    m_cameraController->RegisterCamera(HEIN::CameraType::Debug, []() { return std::make_unique<HEIN::DebugCameraMode>(); });
-    DirectX::SimpleMath::Matrix worldMatrix = ptransform->GetWorldMatrix();
-    m_targetPos = m_fpsModel->GetBoneWorldPosition(L"mixamorig:Head", worldMatrix);
-    m_cameraController->RegisterCamera(HEIN::CameraType::FirstPerson, [this, m_fpsModel, m_tpsModel]() 
-        { return std::make_unique<HEIN::FirstPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); });
-    m_cameraController->RegisterCamera(HEIN::CameraType::ThirdPerson, [this, m_fpsModel, m_tpsModel]() 
-        { return std::make_unique<HEIN::ThirdPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); });
-    m_cameraController->RegisterCamera(HEIN::CameraType::Spring, [this, ptransform]()
-        { return std::make_unique<HEIN::SpringCameraMode>(ptransform, &m_targetPos); });
+    // Debug Camera Registration
+    m_cameraController->RegisterCamera(
+        HEIN::CameraType::Debug, 
+        []() 
+        { return std::make_unique<HEIN::DebugCameraMode>(); }
+    );
 
+    DirectX::SimpleMath::Matrix worldMatrix = ptransform->GetWorldMatrix();
+
+    m_targetPos = m_fpsModel->GetBoneWorldPosition(L"mixamorig:Head", worldMatrix);
+
+    // First Person Camera Registration
+    m_cameraController->RegisterCamera(
+        HEIN::CameraType::FirstPerson, 
+        [this, m_fpsModel, m_tpsModel]() 
+        { return std::make_unique<HEIN::FirstPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); }
+    );
+
+    // Third Person Camera Registration
+    m_cameraController->RegisterCamera(
+        HEIN::CameraType::ThirdPerson,
+        [this, m_fpsModel, m_tpsModel]() 
+        { return std::make_unique<HEIN::ThirdPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); }
+    );
+
+    // Spring Camera Registration
+    m_cameraController->RegisterCamera(
+        HEIN::CameraType::Spring,
+        [this, ptransform]()
+        { return std::make_unique<HEIN::SpringCameraMode>(ptransform, &m_targetPos); }
+    );
+
+    // Set the Default Camera 
     m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
 
     // Stage
@@ -242,6 +272,7 @@ void GameScene::OnEnter(GameContext& gameContext)
     //
     m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
     m_debugDisplay->Initialize();
+    gameContext.myDebugRenderer.Initialize(gameContext.deviceResources.GetD3DDevice(), gameContext.deviceResources.GetD3DDeviceContext());
     // Connect
     playerActor->AddComponent<HEIN::CombatBlackBoard>();
     playerActor->AddComponent<HEIN::PlayerInputComponent>(m_cameraController.get()); // Requires the camera controller

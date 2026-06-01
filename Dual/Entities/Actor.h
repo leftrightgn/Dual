@@ -28,7 +28,11 @@ namespace HEIN
 
 		void Update(float deltaTime);
 
-		void Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj);
+		void Draw(
+			GameContext& gameContext,
+			const DirectX::SimpleMath::Matrix& view,
+			const DirectX::SimpleMath::Matrix& proj
+		);
 
 		void Start();
 
