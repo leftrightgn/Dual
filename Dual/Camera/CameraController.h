@@ -67,7 +67,6 @@ namespace HEIN
 
 					m_data.fov = std::lerp(m_previousCameraData.fov, m_data.fov, t);
 
-
 					DirectX::SimpleMath::Quaternion blendRot = DirectX::SimpleMath::Quaternion::Slerp(m_previousCameraData.rotation, m_data.rotation, t);
 
 					DirectX::SimpleMath::Matrix camWorld = DirectX::SimpleMath::Matrix::CreateFromQuaternion(blendRot);

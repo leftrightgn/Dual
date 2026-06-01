@@ -17,6 +17,9 @@ namespace HEIN
 		bool m_isMagnified;
 
 		DirectX::SimpleMath::Matrix m_projMatrix;
+
+		float m_virtualMouseX = 0.0f;
+		float m_virtualMouseY = 0.0f;
 	public:
 
 		DebugDisplayController();
@@ -26,7 +29,12 @@ namespace HEIN
 
 		void Update(const GameContext& gameContext);
 
-		void Render(GameContext& gameContext, const std::vector<std::unique_ptr<Actor>>& actors, Skybox* skybox);
+		void Render(
+			GameContext& gameContext,
+			const std::vector<std::unique_ptr<Actor>>& actors, 
+			Skybox* skybox,
+			DirectX::SimpleMath::Matrix mainView,
+			DirectX::SimpleMath::Matrix mainProj);
 
 		bool isMagnified() { return m_isMagnified; }
 

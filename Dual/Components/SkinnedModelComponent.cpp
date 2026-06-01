@@ -70,7 +70,9 @@ namespace HEIN
 		m_model->DrawSkinned(context, states, m_model->bones.size(), m_skinBones.get(), world, view, proj);
 	}
 
-	DirectX::SimpleMath::Vector3 SkinnedModelComponent::GetBoneWorldPosition(const wchar_t* boneName, const DirectX::SimpleMath::Matrix& actorWorldMatrix)
+	DirectX::SimpleMath::Vector3 SkinnedModelComponent::GetBoneWorldPosition(
+		const wchar_t* boneName, 
+		const DirectX::SimpleMath::Matrix& actorWorldMatrix)
 	{
 		if (!m_model) return DirectX::SimpleMath::Vector3::Zero;
 
@@ -88,15 +90,23 @@ namespace HEIN
 		return DirectX::SimpleMath::Vector3::Zero;
 	}
 
-	DirectX::SimpleMath::Vector3 SkinnedModelComponent::GetBoneWorldPosition(const int boneNum, const DirectX::SimpleMath::Matrix& actorWorldMatrix)
+	DirectX::SimpleMath::Vector3 SkinnedModelComponent::GetBoneWorldPosition(
+		const int boneNum, 
+		const DirectX::SimpleMath::Matrix& actorWorldMatrix
+	)
 	{
+		if (!m_model) return DirectX::SimpleMath::Vector3::Zero;
+
 		DirectX::SimpleMath::Matrix boneMatrix = m_drawBones[boneNum];
 		DirectX::SimpleMath::Matrix finalWorldMatrix = boneMatrix * actorWorldMatrix;
 
 		return finalWorldMatrix.Translation();
 	}
 
-	DirectX::SimpleMath::Matrix SkinnedModelComponent::GetBoneWorldMatrix(const wchar_t* boneName, const DirectX::SimpleMath::Matrix& actorWorldMatrix)
+	DirectX::SimpleMath::Matrix SkinnedModelComponent::GetBoneWorldMatrix(
+		const wchar_t* boneName,
+		const DirectX::SimpleMath::Matrix& actorWorldMatrix
+	)
 	{
 		if (!m_model) return DirectX::SimpleMath::Matrix::Identity;
 
@@ -114,6 +124,20 @@ namespace HEIN
 		return DirectX::SimpleMath::Matrix::Identity;
 	}
 
+	DirectX::SimpleMath::Matrix SkinnedModelComponent::GetBoneWorldMatrix(const int boneNum, const DirectX::SimpleMath::Matrix& actorWorldMatrix)
+	{
+		if (!m_model) return DirectX::SimpleMath::Matrix::Identity;
+
+		if (boneNum < 0 && static_cast<size_t>(boneNum) >= m_model->bones.size())
+		{
+			return DirectX::SimpleMath::Matrix::Identity;
+		}
+		DirectX::SimpleMath::Matrix boneMatrix = m_drawBones[boneNum];
+		DirectX::SimpleMath::Matrix finalWorldMatrix = boneMatrix * actorWorldMatrix;
+
+		return finalWorldMatrix;
+	}
+
 	void SkinnedModelComponent::LoadAnimation(const std::string& name, const wchar_t* animPath)
 	{
 		if (!m_model) return;
@@ -128,7 +152,6 @@ namespace HEIN
 		{
 			m_currentAnimation = m_animations[name].get();
 		}
-
 	}
 
 	void SkinnedModelComponent::ChangeAnimation(const std::string& name)

@@ -51,10 +51,8 @@ HEIN::Socket* HEIN::SocketComponent::GetSocket(const std::wstring& socketName)
 
 DirectX::SimpleMath::Matrix HEIN::SocketComponent::GetSocketWorldMatrix(const std::wstring& socketName)
 {
-
     SkinnedModelComponent* model = m_owner->GetComponent<SkinnedModelComponent>();
     TransformComponent* transform = m_owner->GetComponent<TransformComponent>();
-
 
     if (!HasSocket(socketName) || model == nullptr || transform == nullptr)
     {
