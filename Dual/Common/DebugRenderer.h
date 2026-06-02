@@ -29,33 +29,33 @@ namespace HEIN
 		void DrawLine(
 			const DirectX::SimpleMath::Vector3& startPos,
 			const DirectX::SimpleMath::Vector3& endPos,
-			const DirectX::FXMVECTOR& color = DirectX::Colors::White
+			DirectX::FXMVECTOR color = DirectX::Colors::White
 		);
 
 		void DrawVector(
 			const DirectX::SimpleMath::Vector3& position,
 			const DirectX::SimpleMath::Vector3& vector,
-			const DirectX::FXMVECTOR& color = DirectX::Colors::White
+			DirectX::FXMVECTOR color = DirectX::Colors::White
 		);
 
 		void DrawSphere(
 			const DirectX::BoundingSphere& sphere,
-			const DirectX::FXMVECTOR& color = DirectX::Colors::White
+			DirectX::FXMVECTOR color = DirectX::Colors::White
 		);
 
 		void DrawBox(
 			const DirectX::BoundingBox& box,
-			const DirectX::FXMVECTOR& color = DirectX::Colors::White
+			DirectX::FXMVECTOR color = DirectX::Colors::White
 		);
 
 		void DrawOrientedBox(
 			const DirectX::BoundingOrientedBox& obb,
-			const DirectX::FXMVECTOR& color = DirectX::Colors::White
+			DirectX::FXMVECTOR color = DirectX::Colors::White
 		);
 
 		void DrawFrustum(
 			const DirectX::BoundingFrustum& frustum,
-			const DirectX::FXMVECTOR& color = DirectX::Colors::White
+			DirectX::FXMVECTOR color = DirectX::Colors::White
 		);
 		
 		void DrawGrid(
@@ -63,14 +63,14 @@ namespace HEIN
 			const DirectX::SimpleMath::Vector3& yAxis,
 			const DirectX::SimpleMath::Vector3& origin,
 			size_t xdivs, size_t ydivs,
-			const DirectX::FXMVECTOR& color = DirectX::Colors::White
+			DirectX::FXMVECTOR color = DirectX::Colors::White
 		);
 		
 		void DrawRing(
 			const DirectX::SimpleMath::Vector3& origin,
 			const DirectX::SimpleMath::Vector3& majorAxis,
 			const DirectX::SimpleMath::Vector3& minorAxis,
-			const DirectX::FXMVECTOR& color = DirectX::Colors::White
+			DirectX::FXMVECTOR color = DirectX::Colors::White
 		);
 
 		void DrawQuad(
@@ -78,14 +78,14 @@ namespace HEIN
 			const DirectX::SimpleMath::Vector3& pointB,
 			const DirectX::SimpleMath::Vector3& pointC,
 			const DirectX::SimpleMath::Vector3& pointD,
-			const DirectX::FXMVECTOR& color = DirectX::Colors::White
+			DirectX::FXMVECTOR color = DirectX::Colors::White
 		);
 
 		void DrawRay(
 			const DirectX::SimpleMath::Vector3& origin,
 			const DirectX::SimpleMath::Vector3& direction,
 			bool normalized,
-			const DirectX::FXMVECTOR& color = DirectX::Colors::White
+			DirectX::FXMVECTOR color = DirectX::Colors::White
 		);
 	};
 

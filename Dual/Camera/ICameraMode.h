@@ -22,6 +22,7 @@ namespace HEIN
 		float mouseY{};
 		float scrollWheelDelta{};
 		bool isLeftMouseDown = false;
+		DirectX::SimpleMath::Vector3 movementIntent;
 	};
 
 	enum class CameraType

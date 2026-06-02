@@ -47,7 +47,7 @@ namespace HEIN
 
 			debugInput.mouseX = m_virtualMouseX;
 			debugInput.mouseY = m_virtualMouseY;
-
+			debugInput.movementIntent = gameContext.inputManager.GetDebugMoveIntent(gameContext);
 			debugInput.isLeftMouseDown = isHeld;
 			debugInput.scrollWheelDelta = gameContext.mouseState.scrollWheelValue;
 

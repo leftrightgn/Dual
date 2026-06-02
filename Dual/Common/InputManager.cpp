@@ -5,22 +5,22 @@
 
 namespace HEIN
 {
-	void InputManager::Update(const GameContext& context)
+	void InputManager::Update(const GameContext& gameContext)
 	{
-		if (context.mouseState.positionMode == DirectX::Mouse::MODE_RELATIVE)
+		if (gameContext.mouseState.positionMode == DirectX::Mouse::MODE_RELATIVE)
 		{
-			m_deltaX = context.mouseState.x;
-			m_deltaY = context.mouseState.y;
+			m_deltaX = gameContext.mouseState.x;
+			m_deltaY = gameContext.mouseState.y;
 		}
 		else
 		{
-			m_deltaX = context.mouseState.x - m_lastMouseX;
-			m_deltaY = context.mouseState.y - m_lastMouseY;
+			m_deltaX = gameContext.mouseState.x - m_lastMouseX;
+			m_deltaY = gameContext.mouseState.y - m_lastMouseY;
 
 		}
 		
-		m_lastMouseX = context.mouseState.x;
-		m_lastMouseY = context.mouseState.y;
+		m_lastMouseX = gameContext.mouseState.x;
+		m_lastMouseY = gameContext.mouseState.y;
 
 		
 	}
@@ -29,52 +29,63 @@ namespace HEIN
 		return std::make_pair(m_deltaX, m_deltaY);
 	}
 	
-	bool InputManager::IsDebugDrugHeld(const GameContext& context)
+	bool InputManager::IsDebugDrugHeld(const GameContext& gameContext)
 	{
-		return context.mouseState.leftButton;
+		return gameContext.mouseState.leftButton;
 	}
-	DirectX::SimpleMath::Vector3 InputManager::GetMoveIntent(const GameContext& context)
+	DirectX::SimpleMath::Vector3 InputManager::GetMoveIntent(const GameContext& gameContext)
 	{
 		DirectX::SimpleMath::Vector3 intent = DirectX::SimpleMath::Vector3::Zero;
 
-		if (context.keyboardState.W) intent.z += 1.0f;
-		if (context.keyboardState.S) intent.z -= 1.0f;
-		if (context.keyboardState.A) intent.x += 1.0f;
-		if (context.keyboardState.D) intent.x -= 1.0f;
+		if (gameContext.keyboardState.W) intent.z += 1.0f;
+		if (gameContext.keyboardState.S) intent.z -= 1.0f;
+		if (gameContext.keyboardState.A) intent.x += 1.0f;
+		if (gameContext.keyboardState.D) intent.x -= 1.0f;
 
 		return intent;
 	}
-	bool InputManager::IsAttacking(const GameContext& context)
+	DirectX::SimpleMath::Vector3 InputManager::GetDebugMoveIntent(const GameContext& gameContext)
 	{
-		return context.mouseState.leftButton;
+		DirectX::SimpleMath::Vector3 intent = DirectX::SimpleMath::Vector3::Zero;
+
+		if (gameContext.keyboardState.W) intent.z -= 1.0f;
+		if (gameContext.keyboardState.S) intent.z += 1.0f;
+		if (gameContext.keyboardState.A) intent.x -= 1.0f;
+		if (gameContext.keyboardState.D) intent.x += 1.0f;
+
+		return intent;
+	}
+	bool InputManager::IsAttacking(const GameContext& gameContext)
+	{
+		return gameContext.mouseState.leftButton;
 	}
 	
-	bool InputManager::WasCameraSwitchPressed(const GameContext& context, HEIN::CameraType& outType)
+	bool InputManager::WasCameraSwitchPressed(const GameContext& gameContext, HEIN::CameraType& outType)
 	{
-		if (context.keyboardTracker.pressed.T)
+		if (gameContext.keyboardTracker.pressed.T)
 		{
 			outType = HEIN::CameraType::ThirdPerson;
 			return true;
 		}
-		if (context.keyboardTracker.pressed.P)
+		if (gameContext.keyboardTracker.pressed.P)
 		{
 			outType = HEIN::CameraType::FirstPerson;
 			return true;
 		}
-		if (context.keyboardTracker.pressed.E)
+		if (gameContext.keyboardTracker.pressed.E)
 		{
 			outType = HEIN::CameraType::Spring;
 			return true;
 		}
 		return false;
 	}
-	bool InputManager::WasDebugMagnifyPressed(const GameContext& context)
+	bool InputManager::WasDebugMagnifyPressed(const GameContext& gameContext)
 	{
-		return context.keyboardTracker.pressed.F2;
+		return gameContext.keyboardTracker.pressed.F2;
 	}
-	bool InputManager::WasDebugTogglePressed(const GameContext& context)
+	bool InputManager::WasDebugTogglePressed(const GameContext& gameContext)
 	{
-		return context.keyboardTracker.pressed.F3;
+		return gameContext.keyboardTracker.pressed.F3;
 	}
 }
 

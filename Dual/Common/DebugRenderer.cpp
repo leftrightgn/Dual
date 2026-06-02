@@ -46,7 +46,7 @@ namespace HEIN
 	void DebugRenderer::DrawLine(
 		const DirectX::SimpleMath::Vector3& startPos,
 		const DirectX::SimpleMath::Vector3& endPos, 
-		const DirectX::FXMVECTOR& color
+		DirectX::FXMVECTOR color
 	)
 	{
 
@@ -61,7 +61,7 @@ namespace HEIN
 	void DebugRenderer::DrawVector(
 		const DirectX::SimpleMath::Vector3& position, 
 		const DirectX::SimpleMath::Vector3& vector,
-		const DirectX::FXMVECTOR& color
+		DirectX::FXMVECTOR color
 	)
 	{
 		const float cosTheta = cosf(DirectX::XMConvertToRadians(20.0f));
@@ -92,19 +92,19 @@ namespace HEIN
 		DrawLine(position + vector, arrowL, color);
 	     
 	}
-	void DebugRenderer::DrawSphere(const DirectX::BoundingSphere& sphere, const DirectX::FXMVECTOR& color)
+	void DebugRenderer::DrawSphere(const DirectX::BoundingSphere& sphere, DirectX::FXMVECTOR color)
 	{
 		DX::Draw(m_primitiveBatch.get(), sphere, color);
 	}
-	void DebugRenderer::DrawBox(const DirectX::BoundingBox& box, const DirectX::FXMVECTOR& color)
+	void DebugRenderer::DrawBox(const DirectX::BoundingBox& box, DirectX::FXMVECTOR color)
 	{
 		DX::Draw(m_primitiveBatch.get(), box, color);
 	}
-	void DebugRenderer::DrawOrientedBox(const DirectX::BoundingOrientedBox& obb, const DirectX::FXMVECTOR& color)
+	void DebugRenderer::DrawOrientedBox(const DirectX::BoundingOrientedBox& obb, DirectX::FXMVECTOR color)
 	{
 		DX::Draw(m_primitiveBatch.get(), obb, color);
 	}
-	void DebugRenderer::DrawFrustum(const DirectX::BoundingFrustum& frustum, const DirectX::FXMVECTOR& color)
+	void DebugRenderer::DrawFrustum(const DirectX::BoundingFrustum& frustum, DirectX::FXMVECTOR color)
 	{
 		DX::Draw(m_primitiveBatch.get(), frustum, color);
 	}
@@ -113,7 +113,7 @@ namespace HEIN
 		const DirectX::SimpleMath::Vector3& yAxis, 
 		const DirectX::SimpleMath::Vector3& origin, 
 		size_t xdivs, size_t ydivs, 
-		const DirectX::FXMVECTOR& color)
+		DirectX::FXMVECTOR color)
 	{
 		DX::DrawGrid(m_primitiveBatch.get(), xAxis, yAxis, origin, xdivs, ydivs, color);
 	}
@@ -121,7 +121,7 @@ namespace HEIN
 		const DirectX::SimpleMath::Vector3& origin, 
 		const DirectX::SimpleMath::Vector3& majorAxis,
 		const DirectX::SimpleMath::Vector3& minorAxis, 
-		const DirectX::FXMVECTOR& color
+		DirectX::FXMVECTOR color
 	)
 	{
 		DX::DrawRing(m_primitiveBatch.get(), origin, majorAxis, minorAxis, color);
@@ -131,7 +131,7 @@ namespace HEIN
 		const DirectX::SimpleMath::Vector3& pointB,
 		const DirectX::SimpleMath::Vector3& pointC, 
 		const DirectX::SimpleMath::Vector3& pointD,
-		const DirectX::FXMVECTOR& color
+		DirectX::FXMVECTOR color
 	)
 	{
 		DX::DrawQuad(m_primitiveBatch.get(), pointA, pointB, pointC, pointD, color);
@@ -140,7 +140,7 @@ namespace HEIN
 		const DirectX::SimpleMath::Vector3& origin, 
 		const DirectX::SimpleMath::Vector3& direction, 
 		bool normalized, 
-		const DirectX::FXMVECTOR& color
+		DirectX::FXMVECTOR color
 	)
 	{
 		DX::DrawRay(m_primitiveBatch.get(), origin, direction, normalized, color);
