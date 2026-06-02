@@ -191,6 +191,7 @@
     <ClInclude Include="Components\SocketComponent.h" />
     <ClInclude Include="Components\StaticModelComponent.h" />
     <ClInclude Include="Components\TransformComponent.h" />
+    <ClInclude Include="DebugCollisionRenderer.h" />
     <ClInclude Include="Entities\Actor.h" />
     <ClInclude Include="Camera\CameraController.h" />
     <ClInclude Include="Camera\DebugCameraMode.h" />
@@ -241,6 +242,7 @@
     <ClCompile Include="Components\SocketComponent.cpp" />
     <ClCompile Include="Components\StaticModelComponent.cpp" />
     <ClCompile Include="Components\TransformComponent.cpp" />
+    <ClCompile Include="DebugCollisionRenderer.cpp" />
     <ClCompile Include="DirectXTK_Utilities\Animation.cpp" />
     <ClCompile Include="DirectXTK_Utilities\DebugDraw.cpp" />
     <ClCompile Include="Effect\SkyboxEffect.cpp" />

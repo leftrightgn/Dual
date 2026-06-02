@@ -92,6 +92,7 @@
     <ClCompile Include="Common\InputManager.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="DebugCollisionRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -209,6 +210,7 @@
     <ClInclude Include="Common\InputManager.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="DebugCollisionRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

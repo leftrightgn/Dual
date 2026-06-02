@@ -20,19 +20,21 @@ namespace HEIN
 		InputManager() = default;
 		~InputManager() = default;
 
-		static void Update(const GameContext& context);
+		static void Update(const GameContext& gameContext);
 
 		static std::pair<int, int> GetMouseDelta();
 
-		static bool IsDebugDrugHeld(const GameContext& context);
+		static bool IsDebugDrugHeld(const GameContext& gameContext);
 
-		static DirectX::SimpleMath::Vector3 GetMoveIntent(const GameContext& context);
+		static DirectX::SimpleMath::Vector3 GetMoveIntent(const GameContext& gameContext);
+
+		static DirectX::SimpleMath::Vector3 GetDebugMoveIntent(const GameContext& gameContext);
 
 		static bool IsAttacking(const GameContext& context);
 
-		static bool WasCameraSwitchPressed(const GameContext& context, HEIN::CameraType& outType);
-		static bool WasDebugMagnifyPressed(const GameContext& context);
-		static bool WasDebugTogglePressed(const GameContext& context);
+		static bool WasCameraSwitchPressed(const GameContext& gameContext, HEIN::CameraType& outType);
+		static bool WasDebugMagnifyPressed(const GameContext& gameContext);
+		static bool WasDebugTogglePressed(const GameContext& gameContext);
 
 
 	};

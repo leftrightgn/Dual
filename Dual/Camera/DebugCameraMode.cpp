@@ -81,6 +81,18 @@ void HEIN::DebugCameraMode::ProcessInput(const CameraInputState& input)
     const float pitchLimit = DirectX::XM_PIDIV2 - PITCH_LIMIT_OFFSET;
     m_pitch = std::clamp(m_pitch, -pitchLimit, pitchLimit);
 
+    if (input.movementIntent.LengthSquared() > 0.0f)
+    {
+        DirectX::SimpleMath::Quaternion rotation =
+            DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(m_yaw, PITCH, YAW);
+
+        DirectX::SimpleMath::Vector3 worldMovement =
+            DirectX::SimpleMath::Vector3::Transform(input.movementIntent, rotation);
+
+        float panSpeed = 1.0f;
+
+        m_target += worldMovement * panSpeed;
+    }
 }
 
 void HEIN::DebugCameraMode::Update(CameraData& outData, float /*deltaTime*/, ICameraController& /*controller*/)
