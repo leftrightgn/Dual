@@ -1,19 +1,26 @@
 #pragma once
 
+#include <vector>
+#include "SimpleMath.h"
+#include "CommonStates.h"
+#include "Effects.h"
+#include "GeometricPrimitive.h"
+#include "PrimitiveBatch.h"
+#include "VertexTypes.h"
 namespace HEIN
 {
 	class DebugCollisionRenderer
 	{
 	private:
-		static const uint32_t DISPLAY_COLLISION_MAX = 100;
-
-		uint32_t m_collisionMax;
+		static const uint32_t DISPLAY_COLLISION_MAX = 200;
 
 		bool m_modelActive;
 
 		bool m_lineActive;
 
-		struct Sphere
+		uint32_t m_collisionMax;
+
+		struct SphereData
 		{
 			DirectX::SimpleMath::Vector3 center;
 
@@ -21,7 +28,7 @@ namespace HEIN
 
 			DirectX::SimpleMath::Color lineColor;
 
-			constexpr Sphere(
+			constexpr SphereData(
 				const DirectX::SimpleMath::Vector3& center,
 				float radius,
 				DirectX::SimpleMath::Color lineColor) noexcept
@@ -29,7 +36,22 @@ namespace HEIN
 			}
 		};
 
-		struct Box
+		struct AABBData
+		{
+			DirectX::SimpleMath::Vector3 center;
+
+			DirectX::SimpleMath::Vector3 extents;
+
+			DirectX::SimpleMath::Color lineColor;
+
+			constexpr AABBData(
+				const DirectX::SimpleMath::Vector3& center,
+				const DirectX::SimpleMath::Vector3& extents,
+				DirectX::SimpleMath::Color lineColor)noexcept
+				: center(center), extents(extents), lineColor(lineColor) {
+			}
+		};
+		struct OBBData
 		{
 			DirectX::SimpleMath::Vector3 center;
 
@@ -39,7 +61,7 @@ namespace HEIN
 
 			DirectX::SimpleMath::Color lineColor;
 
-			constexpr Box(
+			constexpr OBBData(
 				const DirectX::SimpleMath::Vector3& center,
 				const DirectX::SimpleMath::Vector3& extents,
 				const DirectX::SimpleMath::Quaternion& rotate,
@@ -48,7 +70,7 @@ namespace HEIN
 			}
 		};
 
-		struct Mesh
+		struct MeshData
 		{
 			const std::vector<DirectX::VertexPosition>& vertexes;
 			
@@ -60,7 +82,7 @@ namespace HEIN
 
 			DirectX::SimpleMath::Color lineColor;
 
-			constexpr Mesh(
+			constexpr MeshData(
 				const std::vector<DirectX::VertexPosition>& vertexes,
 				const std::vector<uint16_t>& indexes,
 				const DirectX::SimpleMath::Vector3& position,
@@ -69,26 +91,28 @@ namespace HEIN
 				: vertexes(vertexes), indexes(indexes), position(position), rotate(rotate), lineColor(lineColor) {}
 		};
 
-		struct LineSegment
+		struct LineSegmentData
 		{
 			DirectX::SimpleMath::Vector3 a;
 			DirectX::SimpleMath::Vector3 b;
 			DirectX::SimpleMath::Color lineColor;
 
-			constexpr LineSegment(
+			constexpr LineSegmentData(
 				const DirectX::SimpleMath::Vector3& a,
 				const DirectX::SimpleMath::Vector3& b,
 				DirectX::SimpleMath::Color lineColor) noexcept
 				: a(a), b(b), lineColor(lineColor) {}
 		};
 
-		std::vector<Sphere> m_spheres;
+		std::vector<SphereData> m_spheres;
 
-		std::vector<Box> m_boxes;
+		std::vector<AABBData> m_aabb;
 
-		std::vector<Mesh> m_meshes;
+		std::vector<OBBData> m_obb;
 
-		std::vector<LineSegment> m_lineSegments;
+		std::vector<MeshData> m_meshes;
+
+		std::vector<LineSegmentData> m_lineSegments;
 		
 	    std::unique_ptr<DirectX::GeometricPrimitive> m_modelSphere;
 
@@ -133,12 +157,13 @@ namespace HEIN
     public:
 
 		DebugCollisionRenderer(
-			ID3D11Device* device,
-			ID3D11DeviceContext* context,
 			bool modelActive = true,
 			bool lineActive = true,
 			uint32_t collisionMax = DISPLAY_COLLISION_MAX
 		);
+
+		void Initialize(ID3D11Device* device,
+			ID3D11DeviceContext* context);
 
 		void RenderAndFlush(
 			ID3D11DeviceContext* context,
@@ -156,7 +181,7 @@ namespace HEIN
 		)
 		{
 			DirectX::XMFLOAT3 center = sphere.Center;
-			m_spheres.push_back(Sphere(center, sphere.Radius, lineColor));
+			m_spheres.push_back(SphereData(center, sphere.Radius, lineColor));
 		}
 
 		void QueueAABB(
@@ -164,7 +189,7 @@ namespace HEIN
 			DirectX::FXMVECTOR lineColor = DirectX::XMVECTORF32{ 0.0f, 0.0f, 0.0f, 0.0f }
 		)
 		{
-			m_boxes.push_back(Box(box.Center, box.Extents, DirectX::SimpleMath::Quaternion(), lineColor));
+			m_aabb.push_back(AABBData(box.Center, box.Extents, lineColor));
 		}
 
 		void QueueOBB(
@@ -172,7 +197,7 @@ namespace HEIN
 			DirectX::FXMVECTOR lineColor = DirectX::XMVECTORF32{ 0.0f, 0.0f, 0.0f, 0.0f }
 		)
 		{
-			m_boxes.push_back(Box(obb.Center, obb.Extents, DirectX::SimpleMath::Quaternion(obb.Orientation), lineColor));
+			m_obb.push_back(OBBData(obb.Center, obb.Extents, DirectX::SimpleMath::Quaternion(obb.Orientation), lineColor));
 		}
 
 		void QueueMesh(
@@ -183,7 +208,7 @@ namespace HEIN
 			DirectX::FXMVECTOR lineColor = DirectX::XMVECTORF32{ 0.0f, 0.0f, 0.0f, 0.0f }
 		)
 		{
-			m_meshes.push_back(Mesh(vertexes, indexes, position, rotate, lineColor));
+			m_meshes.push_back(MeshData(vertexes, indexes, position, rotate, lineColor));
 		}
 
 		void QueueLine(
@@ -192,7 +217,7 @@ namespace HEIN
 			DirectX::FXMVECTOR lineColor = DirectX::XMVECTORF32{ 0.0f, 0.0f, 0.0f, 0.0f }
 		)
 		{
-			m_lineSegments.push_back(LineSegment(a, b, lineColor));
+			m_lineSegments.push_back(LineSegmentData(a, b, lineColor));
 		}
 
 		void SetSolidRenderingEnable(bool active) { m_modelActive = active; }

@@ -89,7 +89,7 @@ void HEIN::DebugCameraMode::ProcessInput(const CameraInputState& input)
         DirectX::SimpleMath::Vector3 worldMovement =
             DirectX::SimpleMath::Vector3::Transform(input.movementIntent, rotation);
 
-        float panSpeed = 1.0f;
+        float panSpeed = 0.5f;
 
         m_target += worldMovement * panSpeed;
     }

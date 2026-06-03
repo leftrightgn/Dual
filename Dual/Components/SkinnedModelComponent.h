@@ -58,6 +58,8 @@ namespace HEIN
 			const DirectX::SimpleMath::Matrix& actorWorldMatrix
 		);
 
+		int GetBoneIndex(const std::wstring boneName);
+
 		void LoadAnimation(const std::string& name, const wchar_t* animPath);
 		void ChangeAnimation(const std::string& name);
 

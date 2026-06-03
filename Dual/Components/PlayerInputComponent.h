@@ -3,7 +3,7 @@
 
 namespace HEIN
 {
-	class CombatBlackBoard;
+	struct CombatBlackBoard;
 	class Actor;
 	class CameraController;
 

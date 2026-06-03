@@ -17,7 +17,10 @@ namespace HEIN
 	{
 		m_debugcameraController = std::make_unique<CameraController>();
 
-		m_debugcameraController->RegisterCamera(HEIN::CameraType::Debug, []() { return std::make_unique<HEIN::DebugCameraMode>(); });
+		m_debugcameraController->RegisterCamera(
+			HEIN::CameraType::Debug,
+			[]() { return std::make_unique<HEIN::DebugCameraMode>(); }
+		);
 
 		m_debugcameraController->SetFirstCamera(CameraType::Debug);
 	}
@@ -35,8 +38,8 @@ namespace HEIN
 		{
 			CameraInputState debugInput;
 			
-			std::pair<int, int> mouseDelta = gameContext.inputManager.GetMouseDelta();
-			bool isHeld = gameContext.inputManager.IsDebugDrugHeld(gameContext);
+			std::pair<int, int> mouseDelta = gameContext.inputManager->GetMouseDelta();
+			bool isHeld = gameContext.inputManager->IsDebugDrugHeld(gameContext);
 
 		
 			if (isHeld)
@@ -47,7 +50,7 @@ namespace HEIN
 
 			debugInput.mouseX = m_virtualMouseX;
 			debugInput.mouseY = m_virtualMouseY;
-			debugInput.movementIntent = gameContext.inputManager.GetDebugMoveIntent(gameContext);
+			debugInput.movementIntent = gameContext.inputManager->GetDebugMoveIntent(gameContext);
 			debugInput.isLeftMouseDown = isHeld;
 			debugInput.scrollWheelDelta = gameContext.mouseState.scrollWheelValue;
 
@@ -105,16 +108,15 @@ namespace HEIN
 
 		if (skybox && m_isMagnified) skybox->Draw(gameContext, view, m_projMatrix);
 		for (const auto& actor : actors) actor->Draw(gameContext, view, m_projMatrix);
-		gameContext.myDebugRenderer.Initialize(gameContext.deviceResources.GetD3DDevice(), gameContext.deviceResources.GetD3DDeviceContext());
 		DirectX::BoundingFrustum mainCamFrustum(mainProj, false);
 		DirectX::SimpleMath::Matrix mainCamWorld = mainView.Invert();
 		mainCamFrustum.Transform(mainCamFrustum, mainCamWorld);
-		gameContext.myDebugRenderer.Begin(view, m_projMatrix);
-		gameContext.myDebugRenderer.DrawFrustum(mainCamFrustum, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+		gameContext.m_debugRenderer->Begin(view, m_projMatrix);
+		gameContext.m_debugRenderer->DrawFrustum(mainCamFrustum, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
 		DirectX::BoundingSphere camEye(mainCamWorld.Translation(), 0.3f);
-		gameContext.myDebugRenderer.DrawSphere(camEye, DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f));
+		gameContext.m_debugRenderer->DrawSphere(camEye, DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f));
 
-		gameContext.myDebugRenderer.End();
+		gameContext.m_debugRenderer->End();
 
 		context->RSSetViewports(1, &fullscreen);
 	}

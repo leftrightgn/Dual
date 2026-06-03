@@ -38,7 +38,7 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 
 		// Handle Camera Switching cleanly
 		HEIN::CameraType targetCameraType;
-		if (gameContext.inputManager.WasCameraSwitchPressed(gameContext, targetCameraType))
+		if (gameContext.inputManager->WasCameraSwitchPressed(gameContext, targetCameraType))
 		{
 			cameraController->RequestSwitch(targetCameraType);
 		}
@@ -47,7 +47,7 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 	if (m_blackboard != nullptr)
 	{
 		// Get logical movement directly from the manager
-		DirectX::SimpleMath::Vector3 localInput = gameContext.inputManager.GetMoveIntent(gameContext);
+		DirectX::SimpleMath::Vector3 localInput = gameContext.inputManager->GetMoveIntent(gameContext);
 		DirectX::SimpleMath::Vector3 worldIntent = DirectX::SimpleMath::Vector3::Zero;
 
 		if (cameraController != nullptr)
@@ -86,7 +86,7 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 		m_blackboard->moveIntent = worldIntent;
 
 		// Get combat logic cleanly
-		m_blackboard->isAttackingIntent = gameContext.inputManager.IsAttacking(gameContext);
+		m_blackboard->isAttackingIntent = gameContext.inputManager->IsAttacking(gameContext);
 	}
 }
 

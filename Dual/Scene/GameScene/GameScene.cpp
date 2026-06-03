@@ -20,7 +20,6 @@ using namespace DirectX;
 // 更新
 void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, GameContext& gameContext)
 {
-    gameContext.inputManager.Update(gameContext);
 
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
@@ -83,7 +82,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(
             m_cameraController->GetFov(),
             aspectRatio,
-            0.01f,
+            0.001f,
             1000.0f
         );
     }
@@ -272,7 +271,6 @@ void GameScene::OnEnter(GameContext& gameContext)
     //
     m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
     m_debugDisplay->Initialize();
-    gameContext.myDebugRenderer.Initialize(gameContext.deviceResources.GetD3DDevice(), gameContext.deviceResources.GetD3DDeviceContext());
     // Connect
     playerActor->AddComponent<HEIN::CombatBlackBoard>();
     playerActor->AddComponent<HEIN::PlayerInputComponent>(m_cameraController.get()); // Requires the camera controller

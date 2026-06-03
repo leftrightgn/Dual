@@ -14,6 +14,7 @@
 #include "ImaseLib/GridFloor.h"
 #include "Common/DebugRenderer.h"
 #include "Common/InputManager.h"
+#include "Common/DebugCollisionRenderer.h"
 
 // 各シーンに渡す共通リソースを記述してください
 struct GameContext
@@ -38,9 +39,11 @@ struct GameContext
 
 	DirectX::Keyboard::State keyboardState;
 	
-	HEIN::DebugRenderer myDebugRenderer;
+	HEIN::DebugRenderer* m_debugRenderer = nullptr;
 
-	HEIN::InputManager inputManager;
+	HEIN::InputManager* inputManager = nullptr;
+
+	HEIN::DebugCollisionRenderer* m_debugCollisionRenderer = nullptr;
 
 };
 
