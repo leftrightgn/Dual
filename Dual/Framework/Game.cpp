@@ -61,6 +61,10 @@ void Game::Initialize(HWND window, int width, int height)
         *m_states               // <- CommonStates
     );
 
+    m_gameContext->inputManager = &m_inputManager;
+    m_gameContext->m_debugRenderer = &m_debugRenderer;
+    m_gameContext->m_debugCollisionRenderer = &m_debugCollisionRenderer;
+
     // 起動シーンの設定
     m_sceneManager.SetFirstScene(SceneId::GameScene, *m_gameContext);
 }
@@ -96,6 +100,7 @@ void Game::Update(DX::StepTimer const& timer)
     m_gameContext->mouseState = mouse ;
     m_gameContext->keyboardState = keyboard;
 
+    m_inputManager.Update(*m_gameContext);
     if (keyboard.Escape)
     {
         ExitGame();
@@ -222,6 +227,10 @@ void Game::CreateDeviceDependentResources()
   
     // コモンステートの作成
     m_states = std::make_unique<CommonStates>(device);
+
+    m_debugRenderer.Initialize(device, context);
+    m_debugCollisionRenderer.Initialize(device, context);
+
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.

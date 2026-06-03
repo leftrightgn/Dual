@@ -16,7 +16,7 @@ namespace HEIN
         static constexpr float SCROLLVALUE = 0.0f;
         static constexpr float DEFAULT_STARTDIS = 40.0f;
         static constexpr float SCROLL_WHEEL_DELTA = 120.0f;
-        static constexpr float MIN_DISTANCE = 0.1f;
+        static constexpr float MIN_DISTANCE = 0.01f;
         static constexpr float PITCH_LIMIT_OFFSET = 0.01f;
         static constexpr float DEBUG_CAM_FOV = 50.0f;
         static constexpr float HEIGHT_OFFSET = 15.0f;

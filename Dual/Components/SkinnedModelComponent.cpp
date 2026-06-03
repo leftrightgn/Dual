@@ -128,7 +128,7 @@ namespace HEIN
 	{
 		if (!m_model) return DirectX::SimpleMath::Matrix::Identity;
 
-		if (boneNum < 0 && static_cast<size_t>(boneNum) >= m_model->bones.size())
+		if (boneNum < 0 || static_cast<size_t>(boneNum) >= m_model->bones.size())
 		{
 			return DirectX::SimpleMath::Matrix::Identity;
 		}
@@ -136,6 +136,19 @@ namespace HEIN
 		DirectX::SimpleMath::Matrix finalWorldMatrix = boneMatrix * actorWorldMatrix;
 
 		return finalWorldMatrix;
+	}
+
+	int SkinnedModelComponent::GetBoneIndex(const std::wstring boneName)
+	{
+		if (!m_model) 
+		for (size_t i = 0; i < m_model->bones.size(); i++)
+		{
+			if (m_model->bones[i].name.find(boneName) != std::wstring::npos)
+			{
+				return static_cast<int>(i);
+			}
+		}
+		return -1;
 	}
 
 	void SkinnedModelComponent::LoadAnimation(const std::string& name, const wchar_t* animPath)

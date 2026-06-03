@@ -92,7 +92,12 @@
     <ClCompile Include="Common\InputManager.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="DebugCollisionRenderer.cpp" />
+    <ClCompile Include="Common\DebugCollisionRenderer.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\ColliderComponent\ColliderComponent.cpp">
+      <Filter>Components\ColliderComponent</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -210,7 +215,12 @@
     <ClInclude Include="Common\InputManager.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="DebugCollisionRenderer.h" />
+    <ClInclude Include="Common\DebugCollisionRenderer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\ColliderComponent\ColliderComponent.h">
+      <Filter>Components\ColliderComponent</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -269,6 +279,9 @@
     </Filter>
     <Filter Include="Framework">
       <UniqueIdentifier>{ff47a537-cbd8-4b0c-b57b-e1562a993356}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\ColliderComponent">
+      <UniqueIdentifier>{97b6bd58-ac24-430f-8eee-8d43fa6bdb6f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

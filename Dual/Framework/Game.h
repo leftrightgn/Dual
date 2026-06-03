@@ -11,6 +11,9 @@
 #include <optional>
 
 #include "ImaseLib/SceneManager.h"
+#include "Common/DebugRenderer.h"
+#include "Common/InputManager.h"
+#include "Common/DebugCollisionRenderer.h"
 #include "GameContext.h"
 #include "Scene/SceneId.h"
 
@@ -87,6 +90,8 @@ private:
     // シーンマネージャー
     Imase::SceneManager<SceneId, GameContext> m_sceneManager;
 
-
+    HEIN::InputManager m_inputManager;
+    HEIN::DebugRenderer m_debugRenderer;
+    HEIN::DebugCollisionRenderer m_debugCollisionRenderer;
 
 };
