@@ -30,6 +30,8 @@ namespace HEIN
 		if (gameContext.keyboardTracker.pressed.F2) m_isMagnified = !m_isMagnified;
 		if (gameContext.keyboardTracker.pressed.F3) m_isVisible = !m_isVisible;
 
+		m_debugUI.Update(gameContext);
+
 		const float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
 		m_debugcameraController->Update(deltaTime);
@@ -118,7 +120,23 @@ namespace HEIN
 
 		gameContext.m_debugRenderer->End();
 
+		if (gameContext.m_debugCollisionRenderer != nullptr)
+		{
+			gameContext.m_debugCollisionRenderer->RenderAndFlush(
+				context,
+				gameContext.commonStates,
+				view,          // The debug camera's view matrix
+				m_projMatrix   // The debug camera's projection matrix
+			);
+		}
 		context->RSSetViewports(1, &fullscreen);
+
+		if (m_isMagnified)
+		{
+			m_debugUI.Draw(m_debugPlayer, m_debugSword);
+		}
+
+		
 	}
 	const DirectX::SimpleMath::Matrix DebugDisplayController::GetViewMatrix() const
 	{
@@ -128,6 +146,12 @@ namespace HEIN
 	const DirectX::SimpleMath::Matrix DebugDisplayController::GetProjMatrix() const
 	{
 		return m_projMatrix;
+	}
+
+	void DebugDisplayController::SetDebugTargets(Actor* player, Actor* sword)
+	{
+		m_debugPlayer = player;
+		m_debugSword = sword;
 	}
 
 }

@@ -13,6 +13,7 @@
 #include <Components/SocketComponent.h>
 #include <Components/StaticModelComponent.h>
 #include <Camera/SpringCameraMode.h>
+#include <Components/ColliderComponent/OBBColliderComponent.h>
 
 
 using namespace DirectX;
@@ -36,30 +37,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
     {
         actor->Update(deltaTime);
     }
-    // [LOGIC: DEBUG TOOL]
-    // Real-time socket tweaking. (Delete or comment out before shipping the game!)
-    /*HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
-    if (pSocketComp != nullptr)
-    {
-        HEIN::Socket* weaponSocket = pSocketComp->GetSocket(L"WeaponSocket");
-        if (weaponSocket != nullptr)
-        {
-            float moveSpeed = 0.05f;
-            if (gameContext.keyboardState.Up)    weaponSocket->localPosition.x += moveSpeed;
-            if (gameContext.keyboardState.Down)  weaponSocket->localPosition.x -= moveSpeed;
-            if (gameContext.keyboardState.Left)  weaponSocket->localPosition.y += moveSpeed;
-            if (gameContext.keyboardState.Right) weaponSocket->localPosition.y -= moveSpeed;
-
-            if (gameContext.keyboardState.F1)
-            {
-                wchar_t debugMsg[256];
-                swprintf_s(debugMsg, L"PERFECT SOCKET: Pos(%.3f, %.3f, %.3f), Rot(%.3f, %.3f, %.3f)\n",
-                    weaponSocket->localPosition.x, weaponSocket->localPosition.y, weaponSocket->localPosition.z,
-                    weaponSocket->localRotation.x, weaponSocket->localRotation.y, weaponSocket->localRotation.z);
-                OutputDebugString(debugMsg);
-            }
-        }
-    }*/
+    
     // [LOGIC: CAMERA TRACKING]
     // Read the bone position safely to update the camera target
     if (m_player != nullptr)
@@ -198,8 +176,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     HEIN::Socket weaponSocket(
         L"WeaponSocket",
         L"mixamorig:RightHandThumb4",
-        DirectX::SimpleMath::Vector3(-1.100f, -0.900f, 0.000f),
-        DirectX::SimpleMath::Vector3(2.892f, 1.300f, 1.600f)
+        DirectX::SimpleMath::Vector3(-0.770f, -1.280f, -0.550f),
+        DirectX::SimpleMath::Vector3(2.172f, 0.670f, 1.280f)
     );
     socketComp->AddSocket(weaponSocket);
 
@@ -213,6 +191,19 @@ void GameScene::OnEnter(GameContext& gameContext)
         gameContext, 
         L"Resources/Models/knight/sword.sdkmesh", 
         L"Resources/Models/knight"
+    );
+
+   
+    HEIN::OBBColliderComponent* swordHitBox = sword->AddComponent<HEIN::OBBColliderComponent>();
+
+    swordHitBox->Initialize(DirectX::SimpleMath::Vector3(0.3f, 0.1f, 2.5f));
+    swordHitBox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, -3.3f));
+    swordHitBox->SetRotationOffset(
+        DirectX::SimpleMath::Vector3(
+            0.0f,
+            0.0f,
+            0.0f
+        )
     );
 
     sword->Start();
@@ -285,4 +276,6 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_actors.push_back(std::move(sword));
     m_actors.push_back(std::move(stageActor));
    
+
+    m_debugDisplay->SetDebugTargets(m_player, m_swordActor);
 }

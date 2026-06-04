@@ -39,3 +39,20 @@ void HEIN::StaticModelComponent::Draw(
 
     m_model->Draw(context, states, world, view, proj);
 }
+
+DirectX::BoundingBox HEIN::StaticModelComponent::GetBoundingBox() const
+{
+    DirectX::BoundingBox totalBox;
+
+    if (m_model != nullptr && !m_model->meshes.empty())
+    {
+        totalBox = m_model->meshes[0]->boundingBox;
+
+        for (size_t i = 1; i < m_model->meshes.size(); i++) 
+        {
+            DirectX::BoundingBox::CreateMerged(totalBox, totalBox, m_model->meshes[i]->boundingBox);
+        }
+    }
+
+    return totalBox;
+}

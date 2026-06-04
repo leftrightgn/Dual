@@ -98,6 +98,33 @@
     <ClCompile Include="Components\ColliderComponent\ColliderComponent.cpp">
       <Filter>Components\ColliderComponent</Filter>
     </ClCompile>
+    <ClCompile Include="Components\ColliderComponent\OBBColliderComponent.cpp">
+      <Filter>Components\ColliderComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_demo.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_draw.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_impl_dx11.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_impl_win32.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_tables.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_widgets.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\DebugUIManager.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -221,6 +248,36 @@
     <ClInclude Include="Components\ColliderComponent\ColliderComponent.h">
       <Filter>Components\ColliderComponent</Filter>
     </ClInclude>
+    <ClInclude Include="Components\ColliderComponent\OBBColliderComponent.h">
+      <Filter>Components\ColliderComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imconfig.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui_impl_dx11.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui_impl_win32.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui_internal.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imstb_rectpack.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imstb_textedit.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imstb_truetype.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DebugUIManager.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -253,9 +310,6 @@
     <Filter Include="Scene\GameScene">
       <UniqueIdentifier>{0d9d6f68-4a02-4f44-994a-620e016fcc76}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Scene\GameScene\Task">
-      <UniqueIdentifier>{0dc1f8c7-9c1c-4833-a773-5ca7f3d164a9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Effect">
       <UniqueIdentifier>{5915fa9b-369f-46a7-b832-10067f3f5875}</UniqueIdentifier>
     </Filter>
@@ -282,6 +336,9 @@
     </Filter>
     <Filter Include="Components\ColliderComponent">
       <UniqueIdentifier>{97b6bd58-ac24-430f-8eee-8d43fa6bdb6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ImGui">
+      <UniqueIdentifier>{645f9198-81cc-4177-9663-39b3d0ec71ab}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -13,14 +13,19 @@ namespace HEIN
 
 	class SkinnedModelComponent;
 
+	class TransformComponent;
+
 	class ColliderComponent : public IComponent
 	{
 	protected:
 		
 		DirectX::SimpleMath::Vector3 m_offset;
+		DirectX::SimpleMath::Vector3 m_rotationEuler;
+		DirectX::SimpleMath::Quaternion m_rotationOffset;
 		ColliderShape m_shape;
 		bool m_isTrigger;
 
+		TransformComponent* m_transform = nullptr;
 		SkinnedModelComponent* m_skinnedModel = nullptr;
 		std::wstring m_targetBoneName = L"";
 		int m_targetBoneNum = -1;
@@ -30,8 +35,14 @@ namespace HEIN
 		ColliderComponent(Actor* owner, ColliderShape shape);
 		virtual ~ColliderComponent() = default;
 
+		void Start() override;
 		virtual void Update(float deltaTime) override = 0;
-		virtual void DrawDebug(GameContext& gameContext) = 0;
+		virtual void Draw(
+			GameContext& gameContext,
+			const DirectX::SimpleMath::Matrix& world,
+			const DirectX::SimpleMath::Matrix& view,
+			const DirectX::SimpleMath::Matrix& proj
+		) override = 0;
 
 		void AttachToBone(SkinnedModelComponent* model, const std::wstring& boneName);
 		void AttachToBone(SkinnedModelComponent* model, const int boneNum);
@@ -39,6 +50,15 @@ namespace HEIN
 		ColliderShape GetShape() { return m_shape; }
 		void SetTrigger(bool active) { m_isTrigger = active; }
 		bool IsTrigger() const { return m_isTrigger; }
-
+		void SetOffset(const DirectX::SimpleMath::Vector3& offset) { m_offset = offset; }
+		DirectX::SimpleMath::Vector3 GetOffset() const { return m_offset; }
+		void SetRotationOffset(const DirectX::SimpleMath::Vector3& rotation)
+		{
+			m_rotationEuler = rotation;
+			m_rotationOffset = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(rotation.y, rotation.x, rotation.z);
+		}
+		DirectX::SimpleMath::Vector3 GetRotationOffset() const { return m_rotationEuler; }
+	protected:
+		DirectX::SimpleMath::Matrix CalculateWorldMatrix();
 	};
 }
