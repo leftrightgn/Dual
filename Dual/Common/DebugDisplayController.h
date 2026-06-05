@@ -2,6 +2,7 @@
 #include "Camera/CameraController.h"
 #include "Entities/Actor.h"
 #include "Framework/GameContext.h"
+#include "DebugUIManager.h"
 
 namespace HEIN
 {
@@ -20,6 +21,10 @@ namespace HEIN
 
 		float m_virtualMouseX = 0.0f;
 		float m_virtualMouseY = 0.0f;
+
+		DebugUIManager m_debugUI;
+		Actor* m_debugPlayer = nullptr;
+		Actor* m_debugSword = nullptr;
 	public:
 
 		DebugDisplayController();
@@ -42,6 +47,8 @@ namespace HEIN
 
 		const DirectX::SimpleMath::Matrix GetViewMatrix() const;
 		const DirectX::SimpleMath::Matrix GetProjMatrix() const;
+
+		void SetDebugTargets(Actor* player, Actor* sword);
 	};
 }
 

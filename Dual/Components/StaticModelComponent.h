@@ -30,6 +30,8 @@ namespace HEIN
             const DirectX::SimpleMath::Matrix& proj
         );
 
+        DirectX::BoundingBox GetBoundingBox() const;
+
         void SetVisible(bool visible) { m_isVisible = visible; }
         bool IsVisible() const { return m_isVisible; }
 	};

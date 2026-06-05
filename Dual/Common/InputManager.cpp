@@ -77,6 +77,11 @@ namespace HEIN
 			outType = HEIN::CameraType::Spring;
 			return true;
 		}
+		if (gameContext.keyboardTracker.pressed.Q)
+		{
+			outType = HEIN::CameraType::Debug;
+			return true;
+		}
 		return false;
 	}
 	bool InputManager::WasDebugMagnifyPressed(const GameContext& gameContext)

@@ -19,7 +19,6 @@
 #include "Common/DebugDisplayController.h"
 
 
-
 class GameScene : public Imase::SceneBase<SceneId, GameContext>
 {
 public:

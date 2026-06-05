@@ -7,7 +7,9 @@
 #include "Scene/SceneId.h"
 #include "Scene/BaseScene/BaseScene.h"
 #include "Scene/GameScene/GameScene.h"
-
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_win32.h"
+#include "ImGui/imgui_impl_dx11.h"
 
 extern void ExitGame() noexcept;
 
@@ -27,6 +29,13 @@ Game::Game() noexcept(false)
     //   Add DX::DeviceResources::c_AllowTearing to opt-in to variable rate displays.
     //   Add DX::DeviceResources::c_EnableHDR for HDR10 display.
     m_deviceResources->RegisterDeviceNotify(this);
+}
+
+Game::~Game()
+{
+    ImGui_ImplDX11_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
 }
 
 // Initialize the Direct3D resources required to run.
@@ -67,6 +76,21 @@ void Game::Initialize(HWND window, int width, int height)
 
     // 起動シーンの設定
     m_sceneManager.SetFirstScene(SceneId::GameScene, *m_gameContext);
+
+    // --- SETUP IMGUI ---
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplWin32_Init(window);
+
+    // Explicitly grab the pointers to pass to the backend
+    ID3D11Device* device = m_deviceResources->GetD3DDevice();
+    ID3D11DeviceContext* context = m_deviceResources->GetD3DDeviceContext();
+    ImGui_ImplDX11_Init(device, context);
 }
 
 #pragma region Frame Update
@@ -84,6 +108,11 @@ void Game::Tick()
 // Updates the world.
 void Game::Update(DX::StepTimer const& timer)
 {
+    ImGui_ImplDX11_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+
     float elapsedTime = float(timer.GetElapsedSeconds());
 
     // TODO: Add your game logic here.
@@ -108,8 +137,6 @@ void Game::Update(DX::StepTimer const& timer)
 
     // シーンの更新
     m_sceneManager.Update(*m_gameContext);
-
-  
 }
 #pragma endregion
 
@@ -134,7 +161,10 @@ void Game::Render()
     // シーンの描画
     m_sceneManager.Render(*m_gameContext);
 
-     m_deviceResources->PIXEndEvent();
+    ImGui::Render();
+    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+    m_deviceResources->PIXEndEvent();
 
     // Show the new frame.
     m_deviceResources->Present();
