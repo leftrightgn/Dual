@@ -140,7 +140,7 @@ namespace HEIN
 
 	int SkinnedModelComponent::GetBoneIndex(const std::wstring boneName)
 	{
-		if (!m_model) 
+		if (!m_model) return -1;
 		for (size_t i = 0; i < m_model->bones.size(); i++)
 		{
 			if (m_model->bones[i].name.find(boneName) != std::wstring::npos)

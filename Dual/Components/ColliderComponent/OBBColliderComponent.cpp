@@ -37,7 +37,7 @@ void HEIN::OBBColliderComponent::Draw(
     const DirectX::SimpleMath::Matrix& proj
 )
 {
-    if (gameContext.m_debugCollisionRenderer == nullptr) return;
+    if (gameContext.debugCollisionRenderer == nullptr) return;
 
     DirectX::SimpleMath::Matrix worldMatrix = CalculateWorldMatrix();
 
@@ -69,5 +69,5 @@ void HEIN::OBBColliderComponent::Draw(
         debugColor = DirectX::Colors::Yellow;
     }
 
-    gameContext.m_debugCollisionRenderer->QueueOBB(obb, debugColor);
+    gameContext.debugCollisionRenderer->QueueOBB(obb, debugColor);
 }

@@ -25,7 +25,12 @@ namespace HEIN
 
 		virtual void Start() {}
 
-		virtual void Draw(GameContext& /*gameContext*/, const DirectX::SimpleMath::Matrix& /*world*/, const DirectX::SimpleMath::Matrix& /*view*/, const DirectX::SimpleMath::Matrix& /*proj*/) {}
+		virtual void Draw(
+			GameContext& /*gameContext*/, 
+			const DirectX::SimpleMath::Matrix& /*world*/, 
+			const DirectX::SimpleMath::Matrix& /*view*/, 
+			const DirectX::SimpleMath::Matrix& /*proj*/
+		) {}
 
 		Actor* GetOwner() const { return m_owner; }
 	};

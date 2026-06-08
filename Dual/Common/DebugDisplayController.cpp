@@ -113,16 +113,16 @@ namespace HEIN
 		DirectX::BoundingFrustum mainCamFrustum(mainProj, false);
 		DirectX::SimpleMath::Matrix mainCamWorld = mainView.Invert();
 		mainCamFrustum.Transform(mainCamFrustum, mainCamWorld);
-		gameContext.m_debugRenderer->Begin(view, m_projMatrix);
-		gameContext.m_debugRenderer->DrawFrustum(mainCamFrustum, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+		gameContext.debugRenderer->Begin(view, m_projMatrix);
+		gameContext.debugRenderer->DrawFrustum(mainCamFrustum, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
 		DirectX::BoundingSphere camEye(mainCamWorld.Translation(), 0.3f);
-		gameContext.m_debugRenderer->DrawSphere(camEye, DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f));
+		gameContext.debugRenderer->DrawSphere(camEye, DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f));
 
-		gameContext.m_debugRenderer->End();
+		gameContext.debugRenderer->End();
 
-		if (gameContext.m_debugCollisionRenderer != nullptr)
+		if (gameContext.debugCollisionRenderer != nullptr)
 		{
-			gameContext.m_debugCollisionRenderer->RenderAndFlush(
+			gameContext.debugCollisionRenderer->RenderAndFlush(
 				context,
 				gameContext.commonStates,
 				view,          // The debug camera's view matrix
