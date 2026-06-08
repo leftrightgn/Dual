@@ -181,7 +181,10 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Components\BoneLinkComponent.h" />
+    <ClInclude Include="Components\ColliderComponent\AABBColliderComponent.h" />
     <ClInclude Include="BlackBoard\CombatBlackBoard.h" />
+    <ClInclude Include="Components\ColliderComponent\CapsuleColliderComponent.h" />
     <ClInclude Include="Components\ColliderComponent\ColliderComponent.h" />
     <ClInclude Include="Common\DebugCollisionRenderer.h" />
     <ClInclude Include="Common\DebugDisplayController.h" />
@@ -195,6 +198,7 @@
     <ClInclude Include="Components\StaticModelComponent.h" />
     <ClInclude Include="Components\TransformComponent.h" />
     <ClInclude Include="Common\DebugUIManager.h" />
+    <ClInclude Include="Components\TwoBoneLinkComponent.h" />
     <ClInclude Include="Entities\Actor.h" />
     <ClInclude Include="Camera\CameraController.h" />
     <ClInclude Include="Camera\DebugCameraMode.h" />
@@ -238,11 +242,14 @@
     <ClInclude Include="States\ICombatState.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Components\BoneLinkComponent.cpp" />
+    <ClCompile Include="Components\ColliderComponent\AABBColliderComponent.cpp" />
     <ClCompile Include="Camera\CinematicMode.cpp" />
     <ClCompile Include="Camera\DebugCameraMode.cpp" />
     <ClCompile Include="Camera\FirstPersonMode.cpp" />
     <ClCompile Include="Camera\SpringCameraMode.cpp" />
     <ClCompile Include="Camera\ThirdPersonMode.cpp" />
+    <ClCompile Include="Components\ColliderComponent\CapsuleColliderComponent.cpp" />
     <ClCompile Include="Components\ColliderComponent\ColliderComponent.cpp" />
     <ClCompile Include="Common\DebugCollisionRenderer.cpp" />
     <ClCompile Include="Common\DebugDisplayController.cpp" />
@@ -257,6 +264,7 @@
     <ClCompile Include="Components\StaticModelComponent.cpp" />
     <ClCompile Include="Components\TransformComponent.cpp" />
     <ClCompile Include="Common\DebugUIManager.cpp" />
+    <ClCompile Include="Components\TwoBoneLinkComponent.cpp" />
     <ClCompile Include="DirectXTK_Utilities\Animation.cpp" />
     <ClCompile Include="DirectXTK_Utilities\DebugDraw.cpp" />
     <ClCompile Include="Effect\SkyboxEffect.cpp" />

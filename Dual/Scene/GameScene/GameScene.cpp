@@ -1,5 +1,4 @@
-﻿
-#include "pch.h"
+﻿#include "pch.h"
 #include "GameScene.h"
 #include <Camera/DebugCameraMode.h>
 #include <Components/TransformComponent.h>
@@ -14,6 +13,9 @@
 #include <Components/StaticModelComponent.h>
 #include <Camera/SpringCameraMode.h>
 #include <Components/ColliderComponent/OBBColliderComponent.h>
+#include <Components/ColliderComponent/CapsuleColliderComponent.h>
+#include <Components/BoneLinkComponent.h>
+#include <Components/TwoBoneLinkComponent.h>
 
 
 using namespace DirectX;
@@ -150,9 +152,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     ptransform->SetScale(SimpleMath::Vector3(0.1f));
    
     //SimpleMath::Vector3 pos = SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+     // ThirdPersonCamera model
     HEIN::SkinnedModelComponent* m_tpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
-    
-    // ThirdPersonCamera model
     m_tpsModel->Initialize(gameContext,
         L"Resources/Models/knight/knight.sdkmesh", // normal model
         L"Resources/Models/knight");
@@ -169,7 +170,27 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_fpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
     m_fpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
 
-  
+    HEIN::CapsuleColliderComponent* RightarmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
+    RightarmCapsule->Initialize(1.0f, 1.0f);
+    HEIN::TwoBoneLinkComponent* RightarmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
+    RightarmLink->Initialize(m_tpsModel, L"mixamorig:RightArm", L"mixamorig:RightForeArm");
+    RightarmLink->LinkTo(RightarmCapsule);
+    HEIN::CapsuleColliderComponent* RightforearmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
+    RightforearmCapsule->Initialize(0.6f, 1.0f);
+    HEIN::TwoBoneLinkComponent* RightforearmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
+    RightforearmLink->Initialize(m_tpsModel, L"mixamorig:RightForeArm", L"mixamorig:RightHand");
+    RightforearmLink->LinkTo(RightforearmCapsule);
+
+    HEIN::CapsuleColliderComponent* LeftarmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
+    LeftarmCapsule->Initialize(1.0f, 1.0f);
+    HEIN::TwoBoneLinkComponent* LeftarmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
+    LeftarmLink->Initialize(m_tpsModel, L"mixamorig:LeftArm", L"mixamorig:LeftForeArm");
+    LeftarmLink->LinkTo(LeftarmCapsule);
+    HEIN::CapsuleColliderComponent* LeftforearmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
+    LeftforearmCapsule->Initialize(0.6f, 1.0f);
+    HEIN::TwoBoneLinkComponent* LeftforearmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
+    LeftforearmLink->Initialize(m_tpsModel, L"mixamorig:LeftForeArm", L"mixamorig:LeftHand");
+    LeftforearmLink->LinkTo(LeftforearmCapsule);
     //Sword
 
     HEIN::SocketComponent* socketComp = playerActor->AddComponent<HEIN::SocketComponent>();

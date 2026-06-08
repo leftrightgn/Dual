@@ -8,7 +8,8 @@ namespace HEIN
 	{
 		Sphere,
 		AABB,
-		OBB
+		OBB,
+		Capsule
 	};
 
 	class SkinnedModelComponent;
@@ -26,9 +27,9 @@ namespace HEIN
 		bool m_isTrigger;
 
 		TransformComponent* m_transform = nullptr;
-		SkinnedModelComponent* m_skinnedModel = nullptr;
-		std::wstring m_targetBoneName = L"";
-		int m_targetBoneNum = -1;
+		
+		DirectX::SimpleMath::Matrix m_manualMatrix;
+		bool m_useManualMatrix = false;
 
 	public:
 
@@ -44,8 +45,11 @@ namespace HEIN
 			const DirectX::SimpleMath::Matrix& proj
 		) override = 0;
 
-		void AttachToBone(SkinnedModelComponent* model, const std::wstring& boneName);
-		void AttachToBone(SkinnedModelComponent* model, const int boneNum);
+		void SetManualMatrix(const DirectX::SimpleMath::Matrix& matirx)
+		{
+			m_manualMatrix = matirx;
+			m_useManualMatrix = true;
+		}
 
 		ColliderShape GetShape() { return m_shape; }
 		void SetTrigger(bool active) { m_isTrigger = active; }

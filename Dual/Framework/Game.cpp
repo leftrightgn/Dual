@@ -71,8 +71,8 @@ void Game::Initialize(HWND window, int width, int height)
     );
 
     m_gameContext->inputManager = &m_inputManager;
-    m_gameContext->m_debugRenderer = &m_debugRenderer;
-    m_gameContext->m_debugCollisionRenderer = &m_debugCollisionRenderer;
+    m_gameContext->debugRenderer = &m_debugRenderer;
+    m_gameContext->debugCollisionRenderer = &m_debugCollisionRenderer;
 
     // 起動シーンの設定
     m_sceneManager.SetFirstScene(SceneId::GameScene, *m_gameContext);

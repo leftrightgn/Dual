@@ -1,12 +1,11 @@
 #pragma once
 #include "ColliderComponent.h"
-#include <Framework/GameContext.h>
 
 namespace HEIN
 {
 	class StaticModelComponent;
 
-	class OBBColliderComponent : public ColliderComponent
+	class AABBColliderComponent : public ColliderComponent
 	{
 	private:
 
@@ -14,8 +13,8 @@ namespace HEIN
 
 	public:
 
-		OBBColliderComponent(Actor* owner);
-
+		AABBColliderComponent(Actor* owner);
+	
 		void Initialize(const DirectX::SimpleMath::Vector3 extents);
 		void InitializeFromModel(StaticModelComponent* staticModel);
 
@@ -26,7 +25,10 @@ namespace HEIN
 			const DirectX::SimpleMath::Matrix& view,
 			const DirectX::SimpleMath::Matrix& proj
 		) override;
-		DirectX::SimpleMath::Vector3 GetExtents() const  { return m_extents; }
 
+		DirectX::SimpleMath::Vector3 GetExtents() const { return m_extents; }
 	};
+
+
 }
+

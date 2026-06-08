@@ -125,6 +125,18 @@
     <ClCompile Include="Common\DebugUIManager.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="Components\ColliderComponent\AABBColliderComponent.cpp">
+      <Filter>Components\ColliderComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\ColliderComponent\CapsuleColliderComponent.cpp">
+      <Filter>Components\ColliderComponent</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\BoneLinkComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\TwoBoneLinkComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -277,6 +289,18 @@
     </ClInclude>
     <ClInclude Include="Common\DebugUIManager.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\ColliderComponent\AABBColliderComponent.h">
+      <Filter>Components\ColliderComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\ColliderComponent\CapsuleColliderComponent.h">
+      <Filter>Components\ColliderComponent</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\BoneLinkComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\TwoBoneLinkComponent.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

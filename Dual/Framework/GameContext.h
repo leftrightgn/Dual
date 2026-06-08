@@ -39,11 +39,11 @@ struct GameContext
 
 	DirectX::Keyboard::State keyboardState;
 	
-	HEIN::DebugRenderer* m_debugRenderer = nullptr;
+	HEIN::DebugRenderer* debugRenderer = nullptr;
 
 	HEIN::InputManager* inputManager = nullptr;
 
-	HEIN::DebugCollisionRenderer* m_debugCollisionRenderer = nullptr;
+	HEIN::DebugCollisionRenderer* debugCollisionRenderer = nullptr;
 
 };
 
