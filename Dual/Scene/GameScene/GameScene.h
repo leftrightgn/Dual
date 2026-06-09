@@ -44,9 +44,7 @@ private:
 
 	DirectX::SimpleMath::Matrix m_world;
 
-
 	std::unique_ptr<HEIN::CameraController> m_cameraController;
-
 
 	DirectX::SimpleMath::Vector3 m_targetPos;
 	DirectX::SimpleMath::Vector3 m_springEyePos;

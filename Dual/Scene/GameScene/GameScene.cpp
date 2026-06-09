@@ -5,17 +5,12 @@
 #include <Components/SkinnedModelComponent.h>
 #include <Camera/ThirdPersonMode.h>
 #include <Camera/FirstPersonMode.h>
-#include <BlackBoard/CombatBlackBoard.h>
 #include <Components/PlayerInputComponent.h>
-#include <Components/CharacterMovementComponent.h>
-#include <Components/CombatStateMachineComponent.h>
 #include <Components/SocketComponent.h>
 #include <Components/StaticModelComponent.h>
 #include <Camera/SpringCameraMode.h>
 #include <Components/ColliderComponent/OBBColliderComponent.h>
-#include <Components/ColliderComponent/CapsuleColliderComponent.h>
-#include <Components/BoneLinkComponent.h>
-#include <Components/TwoBoneLinkComponent.h>
+#include <Factory/ActorFactory.h>
 
 
 using namespace DirectX;
@@ -53,6 +48,13 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
             m_targetPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End", worldMatrix);
         }
     }
+   
+    //  Update Environment
+    if (m_water)
+    {
+        m_water->Update(deltaTime);
+    }
+
     if (m_cameraController)
     {
         m_cameraController->Update(deltaTime);
@@ -66,28 +68,6 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
             1000.0f
         );
     }
-
-    //  Update Environment
-    if (m_water)
-    {
-        m_water->Update(deltaTime);
-    }
-
-    if (m_swordActor != nullptr && m_player != nullptr)
-    {
-        HEIN::SocketComponent* pSocketComp = m_player->GetComponent<HEIN::SocketComponent>();
-        HEIN::TransformComponent* swordTrans = m_swordActor->GetComponent<HEIN::TransformComponent>();
-
-        if (pSocketComp != nullptr && pSocketComp->HasSocket(L"WeaponSocket") && swordTrans != nullptr)
-        {
-           
-            SimpleMath::Matrix socketWorld = pSocketComp->GetSocketWorldMatrix(L"WeaponSocket");
-
-            swordTrans->SetParentMatrix(socketWorld);
-        }
-    }
-  
-    
 }
 
 // 描画
@@ -143,125 +123,62 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     // Water
     m_water = std::make_unique<Water>();
-    m_water->Initialize(gameContext, L"Resources/Textures/water.dds", L"Resources/Textures/waternormal.dds", L"Resources/Textures/waternoise.dds");
-
-    std::unique_ptr<HEIN::Actor> playerActor = std::make_unique<HEIN::Actor>(L"Player");
-
-    HEIN::TransformComponent* ptransform = playerActor->AddComponent<HEIN::TransformComponent>();
-    ptransform->SetPosition(SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
-    ptransform->SetScale(SimpleMath::Vector3(0.1f));
-   
-    //SimpleMath::Vector3 pos = SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
-     // ThirdPersonCamera model
-    HEIN::SkinnedModelComponent* m_tpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
-    m_tpsModel->Initialize(gameContext,
-        L"Resources/Models/knight/knight.sdkmesh", // normal model
-        L"Resources/Models/knight");
-    m_tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/idle.sdkmesh_anim");
-    m_tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
-    m_tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
-
-    // FirstPersonCamera model
-    HEIN::SkinnedModelComponent* m_fpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
-    m_fpsModel->Initialize(gameContext,
-        L"Resources/Models/knight/knight.sdkmesh", // headless/arms model
-        L"Resources/Models/knight");
-    m_fpsModel->LoadAnimation("Idle", L"Resources/Models/knight/idle.sdkmesh_anim");
-    m_fpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
-    m_fpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
-
-    HEIN::CapsuleColliderComponent* RightarmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightarmCapsule->Initialize(1.0f, 1.0f);
-    HEIN::TwoBoneLinkComponent* RightarmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    RightarmLink->Initialize(m_tpsModel, L"mixamorig:RightArm", L"mixamorig:RightForeArm");
-    RightarmLink->LinkTo(RightarmCapsule);
-    HEIN::CapsuleColliderComponent* RightforearmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightforearmCapsule->Initialize(0.6f, 1.0f);
-    HEIN::TwoBoneLinkComponent* RightforearmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    RightforearmLink->Initialize(m_tpsModel, L"mixamorig:RightForeArm", L"mixamorig:RightHand");
-    RightforearmLink->LinkTo(RightforearmCapsule);
-
-    HEIN::CapsuleColliderComponent* LeftarmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftarmCapsule->Initialize(1.0f, 1.0f);
-    HEIN::TwoBoneLinkComponent* LeftarmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    LeftarmLink->Initialize(m_tpsModel, L"mixamorig:LeftArm", L"mixamorig:LeftForeArm");
-    LeftarmLink->LinkTo(LeftarmCapsule);
-    HEIN::CapsuleColliderComponent* LeftforearmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftforearmCapsule->Initialize(0.6f, 1.0f);
-    HEIN::TwoBoneLinkComponent* LeftforearmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    LeftforearmLink->Initialize(m_tpsModel, L"mixamorig:LeftForeArm", L"mixamorig:LeftHand");
-    LeftforearmLink->LinkTo(LeftforearmCapsule);
-    //Sword
-
-    HEIN::SocketComponent* socketComp = playerActor->AddComponent<HEIN::SocketComponent>();
-    HEIN::Socket weaponSocket(
-        L"WeaponSocket",
-        L"mixamorig:RightHandThumb4",
-        DirectX::SimpleMath::Vector3(-0.770f, -1.280f, -0.550f),
-        DirectX::SimpleMath::Vector3(2.172f, 0.670f, 1.280f)
+    m_water->Initialize(
+        gameContext,
+        L"Resources/Textures/water.dds",
+        L"Resources/Textures/waternormal.dds",
+        L"Resources/Textures/waternoise.dds"
     );
-    socketComp->AddSocket(weaponSocket);
-
-    std::unique_ptr<HEIN::Actor> sword = std::make_unique<HEIN::Actor>(L"Sword");
-    HEIN::TransformComponent* swordTransform = sword->AddComponent<HEIN::TransformComponent>();
-
-    swordTransform->SetScale(DirectX::SimpleMath::Vector3(2.0f));
-
-    HEIN::StaticModelComponent* swordModel = sword->AddComponent<HEIN::StaticModelComponent>();
-    swordModel->Initialize(
-        gameContext, 
-        L"Resources/Models/knight/sword.sdkmesh", 
-        L"Resources/Models/knight"
-    );
-
-   
-    HEIN::OBBColliderComponent* swordHitBox = sword->AddComponent<HEIN::OBBColliderComponent>();
-
-    swordHitBox->Initialize(DirectX::SimpleMath::Vector3(0.3f, 0.1f, 2.5f));
-    swordHitBox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, -3.3f));
-    swordHitBox->SetRotationOffset(
-        DirectX::SimpleMath::Vector3(
-            0.0f,
-            0.0f,
-            0.0f
-        )
-    );
-
-    sword->Start();
 
     // Camera
     m_cameraController = std::make_unique<HEIN::CameraController>();
 
+    // Player
+    HEIN::PlayerSpawnData playerData = HEIN::ActorFactory::CreateKnight(
+        gameContext,
+        m_cameraController.get(),
+        &m_targetPos
+        );
+
+    m_player = playerData.playerActor.get();
+    HEIN::SkinnedModelComponent* fpsModelPointer = playerData.fpsModel;
+    HEIN::SkinnedModelComponent* tpsModelPointer = playerData.tpsModel;
+    
+    // Sword
+    HEIN::SocketComponent* playerSocket = m_player->GetComponent<HEIN::SocketComponent>();
+    std::unique_ptr<HEIN::Actor> sword = HEIN::ActorFactory::CreateSword(gameContext, playerSocket);
+    m_swordActor = sword.get();
+    
     // Debug Camera Registration
     m_cameraController->RegisterCamera(
         HEIN::CameraType::Debug, 
         []() 
         { return std::make_unique<HEIN::DebugCameraMode>(); }
     );
+    HEIN::TransformComponent* playerTransform = m_player->GetComponent<HEIN::TransformComponent>();
+    DirectX::SimpleMath::Matrix worldMatrix = playerTransform->GetWorldMatrix();
 
-    DirectX::SimpleMath::Matrix worldMatrix = ptransform->GetWorldMatrix();
-
-    m_targetPos = m_fpsModel->GetBoneWorldPosition(L"mixamorig:Head", worldMatrix);
+    m_targetPos = fpsModelPointer->GetBoneWorldPosition(L"mixamorig:Head", worldMatrix);
 
     // First Person Camera Registration
     m_cameraController->RegisterCamera(
         HEIN::CameraType::FirstPerson, 
-        [this, m_fpsModel, m_tpsModel]() 
-        { return std::make_unique<HEIN::FirstPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); }
+        [this, fpsModelPointer, tpsModelPointer]() 
+        { return std::make_unique<HEIN::FirstPersonMode>(&m_targetPos, fpsModelPointer, tpsModelPointer); }
     );
 
     // Third Person Camera Registration
     m_cameraController->RegisterCamera(
         HEIN::CameraType::ThirdPerson,
-        [this, m_fpsModel, m_tpsModel]() 
-        { return std::make_unique<HEIN::ThirdPersonMode>(&m_targetPos, m_fpsModel, m_tpsModel); }
+        [this, fpsModelPointer, tpsModelPointer]()
+        { return std::make_unique<HEIN::ThirdPersonMode>(&m_targetPos, fpsModelPointer, tpsModelPointer); }
     );
 
     // Spring Camera Registration
     m_cameraController->RegisterCamera(
         HEIN::CameraType::Spring,
-        [this, ptransform]()
-        { return std::make_unique<HEIN::SpringCameraMode>(ptransform, &m_targetPos); }
+        [this, playerTransform]()
+        { return std::make_unique<HEIN::SpringCameraMode>(playerTransform, &m_targetPos); }
     );
 
     // Set the Default Camera 
@@ -271,8 +188,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     std::unique_ptr<HEIN::Actor> stageActor = std::make_unique<HEIN::Actor>(L"Stage");
     HEIN::TransformComponent* tranStage = stageActor->AddComponent<HEIN::TransformComponent>();
 
-    tranStage->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 2.0f, 0.0f));
-    tranStage->SetScale(DirectX::SimpleMath::Vector3(8.0f));
+    tranStage->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 1.0f, 0.0f));
+    tranStage->SetScale(DirectX::SimpleMath::Vector3(10.0f));
 
     HEIN::StaticModelComponent* stageModel = stageActor->AddComponent<HEIN::StaticModelComponent>();
 
@@ -283,17 +200,10 @@ void GameScene::OnEnter(GameContext& gameContext)
     //
     m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
     m_debugDisplay->Initialize();
-    // Connect
-    playerActor->AddComponent<HEIN::CombatBlackBoard>();
-    playerActor->AddComponent<HEIN::PlayerInputComponent>(m_cameraController.get()); // Requires the camera controller
-    playerActor->AddComponent<HEIN::CharacterMovementComponent>();
-    playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
    
-    playerActor->Start();
-    m_player = playerActor.get();
-    m_swordActor = sword.get();
+
     m_stageActor = stageActor.get();
-    m_actors.push_back(std::move(playerActor));
+    m_actors.push_back(std::move(playerData.playerActor));
     m_actors.push_back(std::move(sword));
     m_actors.push_back(std::move(stageActor));
    
