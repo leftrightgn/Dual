@@ -137,6 +137,12 @@
     <ClCompile Include="Components\TwoBoneLinkComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="Factory\ActorFactory.cpp">
+      <Filter>Factory</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\SocketAttachmentComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -302,6 +308,12 @@
     <ClInclude Include="Components\TwoBoneLinkComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="Factory\ActorFactory.h">
+      <Filter>Factory</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\SocketAttachmentComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -363,6 +375,9 @@
     </Filter>
     <Filter Include="ImGui">
       <UniqueIdentifier>{645f9198-81cc-4177-9663-39b3d0ec71ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Factory">
+      <UniqueIdentifier>{0b41e055-baed-449d-8b94-87d6031a8b88}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -181,6 +181,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Factory\ActorFactory.h" />
     <ClInclude Include="Components\BoneLinkComponent.h" />
     <ClInclude Include="Components\ColliderComponent\AABBColliderComponent.h" />
     <ClInclude Include="BlackBoard\CombatBlackBoard.h" />
@@ -238,10 +239,12 @@
     <ClInclude Include="Scene\SceneId.h" />
     <ClInclude Include="Components\SkinnedModelComponent.h" />
     <ClInclude Include="Effect\Skybox.h" />
+    <ClInclude Include="Components\SocketAttachmentComponent.h" />
     <ClInclude Include="States\CombatStates.h" />
     <ClInclude Include="States\ICombatState.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Factory\ActorFactory.cpp" />
     <ClCompile Include="Components\BoneLinkComponent.cpp" />
     <ClCompile Include="Components\ColliderComponent\AABBColliderComponent.cpp" />
     <ClCompile Include="Camera\CinematicMode.cpp" />
@@ -307,6 +310,7 @@
     <ClCompile Include="Scene\GameScene\GameScene.cpp" />
     <ClCompile Include="Components\SkinnedModelComponent.cpp" />
     <ClCompile Include="Effect\Skybox.cpp" />
+    <ClCompile Include="Components\SocketAttachmentComponent.cpp" />
     <ClCompile Include="States\CombatStates.cpp" />
   </ItemGroup>
   <ItemGroup>
