@@ -29,6 +29,10 @@ namespace HEIN
 			HEIN::SocketComponent* targetPlayerSocket
 		);
 
+		static std::unique_ptr<HEIN::Actor> CreateStage(
+			GameContext& gameContext
+		);
+
 	};
 
 }

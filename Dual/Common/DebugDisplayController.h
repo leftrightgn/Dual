@@ -25,6 +25,7 @@ namespace HEIN
 		DebugUIManager m_debugUI;
 		Actor* m_debugPlayer = nullptr;
 		Actor* m_debugSword = nullptr;
+		Actor* m_debugStage = nullptr;
 	public:
 
 		DebugDisplayController();
@@ -48,7 +49,7 @@ namespace HEIN
 		const DirectX::SimpleMath::Matrix GetViewMatrix() const;
 		const DirectX::SimpleMath::Matrix GetProjMatrix() const;
 
-		void SetDebugTargets(Actor* player, Actor* sword);
+		void SetDebugTargets(Actor* player, Actor* sword, Actor* stage);
 	};
 }
 

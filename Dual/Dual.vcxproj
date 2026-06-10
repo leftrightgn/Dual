@@ -181,6 +181,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Components\ColliderComponent\SphereColliderComponent.h" />
     <ClInclude Include="Factory\ActorFactory.h" />
     <ClInclude Include="Components\BoneLinkComponent.h" />
     <ClInclude Include="Components\ColliderComponent\AABBColliderComponent.h" />
@@ -244,6 +245,7 @@
     <ClInclude Include="States\ICombatState.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Components\ColliderComponent\SphereColliderComponent.cpp" />
     <ClCompile Include="Factory\ActorFactory.cpp" />
     <ClCompile Include="Components\BoneLinkComponent.cpp" />
     <ClCompile Include="Components\ColliderComponent\AABBColliderComponent.cpp" />

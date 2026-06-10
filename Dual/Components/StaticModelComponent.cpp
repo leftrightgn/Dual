@@ -56,3 +56,18 @@ DirectX::BoundingBox HEIN::StaticModelComponent::GetBoundingBox() const
 
     return totalBox;
 }
+
+DirectX::BoundingSphere HEIN::StaticModelComponent::GetBoundingSphere() const
+{
+    DirectX::BoundingSphere totalSphere;
+    if (m_model != nullptr && !m_model->meshes.empty())
+    {
+        totalSphere = m_model->meshes[0]->boundingSphere;
+
+        for (size_t i = 1; i < m_model->meshes.size(); i++)
+        {
+            DirectX::BoundingSphere::CreateMerged(totalSphere, totalSphere, m_model->meshes[i]->boundingSphere);
+        }
+    }
+    return totalSphere;
+}

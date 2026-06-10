@@ -12,6 +12,7 @@
 #include <Components/ColliderComponent/OBBColliderComponent.h>
 #include <Components/SocketAttachmentComponent.h>
 #include <Components/BoneLinkComponent.h>
+#include <Components/ColliderComponent/AABBColliderComponent.h>
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     GameContext& gameContext, 
@@ -86,8 +87,44 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     LeftforearmLink->LinkTo(LeftforearmCapsule);
 
     // Right Leg Collider
+    HEIN::CapsuleColliderComponent* RightupLegCapsule = spawnData.playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
+    RightupLegCapsule->Initialize(1.0f, 0.0f);
+    HEIN::TwoBoneLinkComponent* RightupLegLink = spawnData.playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
+    RightupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightUpLeg", L"RightLeg");
+    RightupLegLink->LinkTo(RightupLegCapsule);
+    HEIN::CapsuleColliderComponent* RightLegCapsule = spawnData.playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
+    RightLegCapsule->Initialize(0.7f, 0.0f);
+    HEIN::TwoBoneLinkComponent* RightLegLink = spawnData.playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
+    RightLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightLeg", L"mixamorig:RightFoot");
+    RightLegLink->LinkTo(RightLegCapsule);
+    HEIN::OBBColliderComponent* RightFoot = spawnData.playerActor->AddComponent<HEIN::OBBColliderComponent>();
+    RightFoot->Initialize(DirectX::SimpleMath::Vector3(6.0f, 12.0f, 3.0f));
+    RightFoot->SetOffset(DirectX::SimpleMath::Vector3(0.0f, -6.0f, -3.0f));
+    RightFoot->SetColliderTag(L"RightFoot");
+    HEIN::BoneLinkComponent* RightFootLink = spawnData.playerActor->AddComponent<HEIN::BoneLinkComponent>();
+    RightFootLink->Initialize(spawnData.tpsModel, L"mixamorig:RightToeBase");
+    RightFootLink->LinkTo(RightFoot);
 
     // Left Leg Collider
+    HEIN::CapsuleColliderComponent* LeftupLegCapsule = spawnData.playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
+    LeftupLegCapsule->Initialize(1.0f, 0.0f);
+    HEIN::TwoBoneLinkComponent* LeftupLegLink = spawnData.playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
+    LeftupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftUpLeg", L"mixamorig:LeftLeg");
+    LeftupLegLink->LinkTo(LeftupLegCapsule);
+    HEIN::CapsuleColliderComponent* LeftLegCapsule = spawnData.playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
+    LeftLegCapsule->Initialize(0.7f, 0.0f);
+    HEIN::TwoBoneLinkComponent* LeftLegLink = spawnData.playerActor->AddComponent < HEIN::TwoBoneLinkComponent>();
+    LeftLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftLeg", L"mixamorig:LeftFoot");
+    LeftLegLink->LinkTo(LeftLegCapsule);
+    HEIN::OBBColliderComponent* LeftFoot = spawnData.playerActor->AddComponent<HEIN::OBBColliderComponent>();
+    LeftFoot->Initialize(DirectX::SimpleMath::Vector3(6.0f, 12.0f, 3.0f));
+    LeftFoot->SetOffset(DirectX::SimpleMath::Vector3(0.0f, -6.0f, -3.0f));
+    LeftFoot->SetColliderTag(L"LeftFoot");
+    HEIN::BoneLinkComponent* LeftFootLink = spawnData.playerActor->AddComponent<HEIN::BoneLinkComponent>();
+    LeftFootLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftToeBase");
+    LeftFootLink->LinkTo(LeftFoot);
+
+
 
     // Socket
     HEIN::SocketComponent* socketComp = spawnData.playerActor->AddComponent<HEIN::SocketComponent>();
@@ -141,4 +178,23 @@ std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateSword(GameContext& gameCo
     }
     sword->Start();
     return sword;
+}
+
+std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateStage(GameContext& gameContext)
+{
+    std::unique_ptr<HEIN::Actor> stageActor = std::make_unique<HEIN::Actor>(L"Stage");
+    HEIN::TransformComponent* tranStage = stageActor->AddComponent<HEIN::TransformComponent>();
+
+    tranStage->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 1.0f, 0.0f));
+    tranStage->SetScale(DirectX::SimpleMath::Vector3(10.0f));
+
+    HEIN::StaticModelComponent* stageModel = stageActor->AddComponent<HEIN::StaticModelComponent>();
+
+    stageModel->Initialize(gameContext, L"Resources/Models/stage/stage.sdkmesh", L"Resources/Models/stage");
+
+    HEIN::AABBColliderComponent* floor = stageActor->AddComponent<HEIN::AABBColliderComponent>();
+    floor->InitializeFromModel(stageModel);
+
+    stageActor->Start();
+    return stageActor;
 }

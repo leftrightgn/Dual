@@ -143,6 +143,9 @@
     <ClCompile Include="Components\SocketAttachmentComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="Components\ColliderComponent\SphereColliderComponent.cpp">
+      <Filter>Components\ColliderComponent</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -313,6 +316,9 @@
     </ClInclude>
     <ClInclude Include="Components\SocketAttachmentComponent.h">
       <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\ColliderComponent\SphereColliderComponent.h">
+      <Filter>Components\ColliderComponent</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

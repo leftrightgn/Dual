@@ -133,7 +133,7 @@ namespace HEIN
 
 		if (m_isMagnified)
 		{
-			m_debugUI.Draw(m_debugPlayer, m_debugSword);
+			m_debugUI.Draw(m_debugPlayer, m_debugSword, m_debugStage);
 		}
 
 		
@@ -148,10 +148,11 @@ namespace HEIN
 		return m_projMatrix;
 	}
 
-	void DebugDisplayController::SetDebugTargets(Actor* player, Actor* sword)
+	void DebugDisplayController::SetDebugTargets(Actor* player, Actor* sword, Actor* stage)
 	{
 		m_debugPlayer = player;
 		m_debugSword = sword;
+		m_debugStage = stage;
 	}
 
 }

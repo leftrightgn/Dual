@@ -28,5 +28,9 @@ namespace HEIN
 		) override;
 		DirectX::SimpleMath::Vector3 GetExtents() const  { return m_extents; }
 
+		void SetExtents(DirectX::SimpleMath::Vector3 extents)
+		{
+			m_extents = extents;
+		}
 	};
 }
