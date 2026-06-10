@@ -3,6 +3,7 @@
 #include "Components/SocketComponent.h"
 #include "Components/ColliderComponent/OBBColliderComponent.h"
 #include <ImGui/imgui.h>
+#include <Components/ColliderComponent/AABBColliderComponent.h>
 
 namespace HEIN
 {
@@ -14,12 +15,13 @@ namespace HEIN
 		}
 	}
 
-	void DebugUIManager::Draw(Actor* player, Actor* sword)
+	void DebugUIManager::Draw(Actor* player, Actor* sword, Actor* stage)
 	{
 		if (!m_isVisible) return;
 
 		ImGui::Begin("Engine Debug Tools");
 
+		// Player Socket
 		if (ImGui::CollapsingHeader("Player Sockets", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			if (player != nullptr)
@@ -39,9 +41,7 @@ namespace HEIN
 			}
 		}
 
-		// ---------------------------------------------------------
-		// 2. SWORD HITBOX TWEAKER
-		// ---------------------------------------------------------
+		// Sword HitBox
 		if (ImGui::CollapsingHeader("Weapon Hitboxes", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			if (sword != nullptr)
@@ -51,14 +51,14 @@ namespace HEIN
 				{
 					ImGui::Text("Sword Hitbox Tuning");
 
-					// --- 1. TWEAK OFFSET ---
+					// TWEAK OFFSET ---
 					DirectX::SimpleMath::Vector3 currentOffset = swordHitBox->GetOffset();
 					if (ImGui::DragFloat3("Offset (XYZ)", &currentOffset.x, 0.01f))
 					{
 						swordHitBox->SetOffset(currentOffset);
 					}
 
-					// --- 2. TWEAK ROTATION ---
+					// TWEAK ROTATION ---
 					DirectX::SimpleMath::Vector3 currentRot = swordHitBox->GetRotationOffset();
 
 					// Convert radians to degrees for the UI slider
@@ -76,6 +76,75 @@ namespace HEIN
 
 						swordHitBox->SetRotationOffset(currentRot);
 					}
+				}
+			}
+		}
+
+		if (ImGui::CollapsingHeader("Foot Hitbox", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			if (player != nullptr)
+			{
+				std::vector<HEIN::OBBColliderComponent*> obbColliders = player->GetComponents<HEIN::OBBColliderComponent>();
+				for (HEIN::OBBColliderComponent* currentBox : obbColliders)
+				{
+					if (currentBox->GetColliderTag() == L"RightFoot")
+					{
+						ImGui::Text("Right Foot Tuning");
+
+						DirectX::SimpleMath::Vector3 currentOffset = currentBox->GetOffset();
+						if (ImGui::DragFloat3("Right Offset XYZ", &currentOffset.x, 0.01f))
+						{
+							currentBox->SetOffset(currentOffset);
+						}
+
+						DirectX::SimpleMath::Vector3 currentExtents = currentBox->GetExtents();
+						if (ImGui::DragFloat3("Right Extents", &currentExtents.x, 0.01f))
+						{
+							currentBox->SetExtents(currentExtents);
+						}
+					}
+					else if (currentBox->GetColliderTag() == L"LeftFoot")
+					{
+						ImGui::Text("Left Foot Tuning");
+
+						DirectX::SimpleMath::Vector3 currentOffset = currentBox->GetOffset();
+						if (ImGui::DragFloat3("Left Offset XYZ", &currentOffset.x, 0.01f))
+						{
+							currentBox->SetOffset(currentOffset);
+						}
+
+						DirectX::SimpleMath::Vector3 currentExtents = currentBox->GetExtents();
+						if (ImGui::DragFloat3("Left Extents", &currentExtents.x, 0.01f))
+						{
+							currentBox->SetExtents(currentExtents);
+						}
+					}
+				} 
+			}
+		}
+		if (ImGui::CollapsingHeader("Floor", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			if (stage != nullptr)
+			{
+				HEIN::AABBColliderComponent* floor = stage->GetComponent<HEIN::AABBColliderComponent>();
+				if (floor != nullptr)
+				{
+					ImGui::Text("floor tunning");
+
+					// TWEAK OFFSET
+					DirectX::SimpleMath::Vector3 currentOffset = floor->GetOffset();
+					if (ImGui::DragFloat3("Offset(XYZ)##floor", &currentOffset.x, 0.01f))
+					{
+						floor->SetOffset(currentOffset);
+					}
+
+					// TWEAK EXTENTS 
+					DirectX::SimpleMath::Vector3 currentExtents = floor->GetExtents();
+					if (ImGui::DragFloat3("Extents (XYZ)", &currentExtents.x, 0.01f))
+					{
+						floor->SetExtents(currentExtents);
+					}
+				
 				}
 			}
 		}

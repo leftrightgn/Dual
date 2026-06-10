@@ -17,6 +17,6 @@ namespace HEIN
 
 		void Update(const GameContext& gameContext);
 
-		void Draw(Actor* player, Actor* sword);
+		void Draw(Actor* player, Actor* sword, Actor* stage);
 	};
 }

@@ -5,17 +5,17 @@ namespace HEIN
 {
 	class StaticModelComponent;
 
-	class AABBColliderComponent : public ColliderComponent
+	class SphereColliderComponent : public ColliderComponent
 	{
 	private:
 
-		DirectX::SimpleMath::Vector3 m_extents;
+		float m_radius;
 
 	public:
 
-		AABBColliderComponent(Actor* owner);
+		SphereColliderComponent(Actor* owner);
 	
-		void Initialize(const DirectX::SimpleMath::Vector3 extents);
+		void Initialize(const float radius);
 		void InitializeFromModel(StaticModelComponent* staticModel);
 
 		void Update(float deltaTime) override {};
@@ -26,8 +26,7 @@ namespace HEIN
 			const DirectX::SimpleMath::Matrix& proj
 		) override;
 
-		DirectX::SimpleMath::Vector3 GetExtents() const { return m_extents; }
-		void SetExtents(DirectX::SimpleMath::Vector3 extents) { m_extents = extents; }
+		float GetRadius() const { return m_radius; }
 	};
 
 

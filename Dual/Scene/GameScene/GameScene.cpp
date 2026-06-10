@@ -104,7 +104,7 @@ void GameScene::Render(GameContext& gameContext)
     context->RSSetState(gameContext.commonStates.CullCounterClockwise());
     context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
-
+   
     m_debugDisplay->Render(gameContext, m_actors, m_skybox.get(), view, m_proj);
 }
 
@@ -185,28 +185,18 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
 
     // Stage
-    std::unique_ptr<HEIN::Actor> stageActor = std::make_unique<HEIN::Actor>(L"Stage");
-    HEIN::TransformComponent* tranStage = stageActor->AddComponent<HEIN::TransformComponent>();
-
-    tranStage->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 1.0f, 0.0f));
-    tranStage->SetScale(DirectX::SimpleMath::Vector3(10.0f));
-
-    HEIN::StaticModelComponent* stageModel = stageActor->AddComponent<HEIN::StaticModelComponent>();
-
-    stageModel->Initialize(gameContext, L"Resources/Models/stage/stage.sdkmesh", L"Resources/Models/stage");
-
-    stageActor->Start();
-
+    std::unique_ptr<HEIN::Actor> stage = HEIN::ActorFactory::CreateStage(gameContext);
+    m_stageActor = stage.get();
     //
     m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
     m_debugDisplay->Initialize();
    
 
-    m_stageActor = stageActor.get();
+   
     m_actors.push_back(std::move(playerData.playerActor));
     m_actors.push_back(std::move(sword));
-    m_actors.push_back(std::move(stageActor));
+    m_actors.push_back(std::move(stage));
    
 
-    m_debugDisplay->SetDebugTargets(m_player, m_swordActor);
+    m_debugDisplay->SetDebugTargets(m_player, m_swordActor, m_stageActor);
 }

@@ -26,9 +26,6 @@ void HEIN::AABBColliderComponent::InitializeFromModel(StaticModelComponent* stat
     }
 }
 
-void HEIN::AABBColliderComponent::Update(float deltaTime)
-{
-}
 
 void HEIN::AABBColliderComponent::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj)
 {

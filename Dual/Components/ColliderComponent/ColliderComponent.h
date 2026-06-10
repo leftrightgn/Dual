@@ -31,6 +31,8 @@ namespace HEIN
 		DirectX::SimpleMath::Matrix m_manualMatrix;
 		bool m_useManualMatrix = false;
 
+		std::wstring m_colliderTag = L"";
+
 	public:
 
 		ColliderComponent(Actor* owner, ColliderShape shape);
@@ -62,6 +64,9 @@ namespace HEIN
 			m_rotationOffset = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(rotation.y, rotation.x, rotation.z);
 		}
 		DirectX::SimpleMath::Vector3 GetRotationOffset() const { return m_rotationEuler; }
+
+		std::wstring GetColliderTag() const { return m_colliderTag; }
+		void SetColliderTag(std::wstring tag) { m_colliderTag = tag; }
 	protected:
 		DirectX::SimpleMath::Matrix CalculateWorldMatrix();
 	};
