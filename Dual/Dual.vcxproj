@@ -181,7 +181,12 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Common\CollisionDispatcher.h" />
+    <ClInclude Include="Common\CollisionMath.h" />
+    <ClInclude Include="Common\Event.h" />
+    <ClInclude Include="Common\PhysicsSystem.h" />
     <ClInclude Include="Components\ColliderComponent\SphereColliderComponent.h" />
+    <ClInclude Include="Common\EventManager.h" />
     <ClInclude Include="Factory\ActorFactory.h" />
     <ClInclude Include="Components\BoneLinkComponent.h" />
     <ClInclude Include="Components\ColliderComponent\AABBColliderComponent.h" />
@@ -235,6 +240,7 @@
     <ClInclude Include="ImGui\imstb_textedit.h" />
     <ClInclude Include="ImGui\imstb_truetype.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Components\RigidBodyComponent.h" />
     <ClInclude Include="Scene\BaseScene\BaseScene.h" />
     <ClInclude Include="Scene\GameScene\GameScene.h" />
     <ClInclude Include="Scene\SceneId.h" />
@@ -245,7 +251,11 @@
     <ClInclude Include="States\ICombatState.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Common\CollisionDispatcher.cpp" />
+    <ClCompile Include="Common\CollisionMath.cpp" />
+    <ClCompile Include="Common\PhysicsSystem.cpp" />
     <ClCompile Include="Components\ColliderComponent\SphereColliderComponent.cpp" />
+    <ClCompile Include="Common\EventManager.cpp" />
     <ClCompile Include="Factory\ActorFactory.cpp" />
     <ClCompile Include="Components\BoneLinkComponent.cpp" />
     <ClCompile Include="Components\ColliderComponent\AABBColliderComponent.cpp" />
@@ -308,6 +318,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Components\RigidBodyComponent.cpp" />
     <ClCompile Include="Scene\BaseScene\BaseScene.cpp" />
     <ClCompile Include="Scene\GameScene\GameScene.cpp" />
     <ClCompile Include="Components\SkinnedModelComponent.cpp" />

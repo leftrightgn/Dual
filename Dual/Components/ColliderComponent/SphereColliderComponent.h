@@ -11,6 +11,7 @@ namespace HEIN
 
 		float m_radius;
 
+
 	public:
 
 		SphereColliderComponent(Actor* owner);

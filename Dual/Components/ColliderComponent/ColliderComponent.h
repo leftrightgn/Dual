@@ -67,6 +67,8 @@ namespace HEIN
 
 		std::wstring GetColliderTag() const { return m_colliderTag; }
 		void SetColliderTag(std::wstring tag) { m_colliderTag = tag; }
+
+		DirectX::SimpleMath::Matrix GetCalculateWorldMatrix() { return CalculateWorldMatrix(); }
 	protected:
 		DirectX::SimpleMath::Matrix CalculateWorldMatrix();
 	};
