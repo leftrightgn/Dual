@@ -14,6 +14,7 @@
 #include "Common/DebugRenderer.h"
 #include "Common/InputManager.h"
 #include "Common/DebugCollisionRenderer.h"
+#include "Common/EventManager.h"
 #include "GameContext.h"
 #include "Scene/SceneId.h"
 
@@ -93,5 +94,6 @@ private:
     HEIN::InputManager m_inputManager;
     HEIN::DebugRenderer m_debugRenderer;
     HEIN::DebugCollisionRenderer m_debugCollisionRenderer;
+    HEIN::EventManager m_eventManager;
 
 };

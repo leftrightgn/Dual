@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "CombatStateMachineComponent.h"
 #include <States/ICombatState.h>
+#include <Entities/Actor.h>
+#include <Components/ColliderComponent/ColliderComponent.h>
 #include "IComponent.h"
 #include <memory>
 
@@ -53,3 +55,31 @@ void HEIN::CombatStateMachineComponent::ApplyPendingState()
 		m_currentState->OnEnter(m_owner, this);
 	}
 }
+
+void HEIN::CombatStateMachineComponent::OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad)
+{
+	if (payLoad.triggerA->GetOwner() != GetOwner() && payLoad.triggerB->GetOwner() != GetOwner())
+	{
+		return;
+	}
+
+	HEIN::ColliderComponent* myHurtBox = nullptr;
+	HEIN::ColliderComponent* enemyHitBox = nullptr;
+
+	if (payLoad.triggerA->GetOwner() == GetOwner())
+	{
+		myHurtBox = payLoad.triggerA;
+		enemyHitBox = payLoad.triggerB;
+	}
+	else
+	{
+		myHurtBox = payLoad.triggerB;
+		enemyHitBox = payLoad.triggerA;
+	}
+
+	if (enemyHitBox->GetColliderTag() == L"SwordHitbox")
+	{
+		// Process damage, change to flinch state, subtract HP!
+	}
+}
+

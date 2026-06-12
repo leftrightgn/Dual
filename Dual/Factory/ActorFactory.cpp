@@ -13,6 +13,7 @@
 #include <Components/SocketAttachmentComponent.h>
 #include <Components/BoneLinkComponent.h>
 #include <Components/ColliderComponent/AABBColliderComponent.h>
+#include <Components/RigidBodyComponent.h>
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     GameContext& gameContext, 
@@ -25,7 +26,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     spawnData.playerActor = std::make_unique<HEIN::Actor>(L"Player");
 
     HEIN::TransformComponent* ptransform = spawnData.playerActor->AddComponent<HEIN::TransformComponent>();
-    ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
+    ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 4.0f, 0.0f));
     ptransform->SetScale(DirectX::SimpleMath::Vector3(0.1f));
 
     // ThirdPersonCamera model
@@ -136,11 +137,37 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     );
     socketComp->AddSocket(weaponSocket);
 
+    HEIN::RigidBodyComponent* rigidBody = spawnData.playerActor->AddComponent<HEIN::RigidBodyComponent>();
+    rigidBody->Initialize(80.0f, true, false);
+    HEIN::CapsuleColliderComponent* rootPushbox = spawnData.playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
+    rootPushbox->Initialize(3.0f, 12.0f); // Adjust height to match your Knight
+    rootPushbox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
+    rootPushbox->SetTrigger(false);      // This one physically hits the floor
+    rootPushbox->SetColliderTag(L"PlayerRoot");
+    HEIN::BoneLinkComponent* RootLink = spawnData.playerActor->AddComponent<HEIN::BoneLinkComponent>();
+    RootLink->Initialize(spawnData.tpsModel, L"mixamorig:Hips");
+    RootLink->LinkTo(rootPushbox);
+
+    // SET BONES TO TRIGGERS (So they don't push the floor)
+    HeadCapsule->SetTrigger(true);
+    BodyCapsule->SetTrigger(true);
+    RightarmCapsule->SetTrigger(true);
+    RightforearmCapsule->SetTrigger(true);
+    LeftarmCapsule->SetTrigger(true);
+    LeftforearmCapsule->SetTrigger(true);
+    RightupLegCapsule->SetTrigger(true);
+    RightLegCapsule->SetTrigger(true);
+    RightFoot->SetTrigger(true);
+    LeftupLegCapsule->SetTrigger(true);
+    LeftLegCapsule->SetTrigger(true);
+    LeftFoot->SetTrigger(true);
+
     // Connect
     spawnData.playerActor->AddComponent<HEIN::CombatBlackBoard>();
     spawnData.playerActor->AddComponent<HEIN::PlayerInputComponent>(cameraController); // Requires the camera controller
     spawnData.playerActor->AddComponent<HEIN::CharacterMovementComponent>();
     spawnData.playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
+   
 
     spawnData.playerActor->Start();
     return spawnData;
@@ -185,7 +212,7 @@ std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateStage(GameContext& gameCo
     std::unique_ptr<HEIN::Actor> stageActor = std::make_unique<HEIN::Actor>(L"Stage");
     HEIN::TransformComponent* tranStage = stageActor->AddComponent<HEIN::TransformComponent>();
 
-    tranStage->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 1.0f, 0.0f));
+    tranStage->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     tranStage->SetScale(DirectX::SimpleMath::Vector3(10.0f));
 
     HEIN::StaticModelComponent* stageModel = stageActor->AddComponent<HEIN::StaticModelComponent>();
@@ -194,6 +221,12 @@ std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateStage(GameContext& gameCo
 
     HEIN::AABBColliderComponent* floor = stageActor->AddComponent<HEIN::AABBColliderComponent>();
     floor->InitializeFromModel(stageModel);
+    floor->SetExtents(DirectX::SimpleMath::Vector3(10.4f, 0.1f, 10.4f));
+    floor->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
+    floor->SetTrigger(false);
+
+    HEIN::RigidBodyComponent* stageBody = stageActor->AddComponent<HEIN::RigidBodyComponent>();
+    stageBody->Initialize(0.0f, false, true);
 
     stageActor->Start();
     return stageActor;

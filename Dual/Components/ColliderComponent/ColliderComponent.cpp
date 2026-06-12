@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "ColliderComponent.h"
 #include "Components/TransformComponent.h"
-#include "Components/SkinnedModelComponent.h"
 #include "Entities/Actor.h"
 
 HEIN::ColliderComponent::ColliderComponent(

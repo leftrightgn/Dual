@@ -1,5 +1,6 @@
 #pragma once
 #include <States/CombatStates.h>
+#include "Common/Event.h"
 
 namespace HEIN
 {
@@ -33,6 +34,9 @@ namespace HEIN
 		WalkState* GetWalkState() { return m_walkState.get(); }
 		OneHandAttackState* GetOneHandAtkState() { return m_oneHandAtkState.get(); }
 
+	private:
+
+		void OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad);
 	};
 
 }

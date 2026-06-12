@@ -17,6 +17,8 @@
 #include "Camera/CameraController.h"
 #include <Entities/Actor.h>
 #include "Common/DebugDisplayController.h"
+#include <Common/PhysicsSystem.h>
+
 
 
 class GameScene : public Imase::SceneBase<SceneId, GameContext>
@@ -46,6 +48,8 @@ private:
 
 	std::unique_ptr<HEIN::CameraController> m_cameraController;
 
+	std::unique_ptr<HEIN::PhysicsSystem> m_physicsSystem;
+
 	DirectX::SimpleMath::Vector3 m_targetPos;
 	DirectX::SimpleMath::Vector3 m_springEyePos;
 
@@ -57,6 +61,8 @@ private:
 	std::unique_ptr<DirectX::GeometricPrimitive> m_debugSphere;
 
 	std::unique_ptr<HEIN::DebugDisplayController> m_debugDisplay;
+
+
 };
 
 
