@@ -27,6 +27,11 @@ namespace HEIN
         void SetScale(const DirectX::SimpleMath::Vector3& scale) { m_scale = scale; }
         const DirectX::SimpleMath::Vector3& GetScale() const { return m_scale; }
 
+        DirectX::SimpleMath::Vector3 GetForward() const
+        {
+            return DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Forward, m_rotation);
+        }
+   
         void SetRotationEuler(const DirectX::SimpleMath::Vector3& eulerAngles);
 
         void SetParentMatrix(const DirectX::SimpleMath::Matrix& parent) { m_parentMatrix = parent; }

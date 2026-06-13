@@ -64,7 +64,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(
             m_cameraController->GetFov(),
             aspectRatio,
-            0.001f,
+            0.1f,
             1000.0f
         );
     }

@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "ActorFactory.h"
 #include <Components/TransformComponent.h>
 #include <Components/ColliderComponent/CapsuleColliderComponent.h>
@@ -27,7 +27,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
 
     HEIN::TransformComponent* ptransform = spawnData.playerActor->AddComponent<HEIN::TransformComponent>();
     ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 4.0f, 0.0f));
-    ptransform->SetScale(DirectX::SimpleMath::Vector3(0.1f));
+    ptransform->SetScale(DirectX::SimpleMath::Vector3(0.10f));
 
     // ThirdPersonCamera model
     spawnData.tpsModel = spawnData.playerActor->AddComponent<HEIN::SkinnedModelComponent>();
@@ -140,13 +140,11 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     HEIN::RigidBodyComponent* rigidBody = spawnData.playerActor->AddComponent<HEIN::RigidBodyComponent>();
     rigidBody->Initialize(80.0f, true, false);
     HEIN::CapsuleColliderComponent* rootPushbox = spawnData.playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    rootPushbox->Initialize(3.0f, 12.0f); // Adjust height to match your Knight
+    rootPushbox->Initialize(1.0f, 1.0f); // Adjust height to match your Knight
     rootPushbox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     rootPushbox->SetTrigger(false);      // This one physically hits the floor
     rootPushbox->SetColliderTag(L"PlayerRoot");
-    HEIN::BoneLinkComponent* RootLink = spawnData.playerActor->AddComponent<HEIN::BoneLinkComponent>();
-    RootLink->Initialize(spawnData.tpsModel, L"mixamorig:Hips");
-    RootLink->LinkTo(rootPushbox);
+  
 
     // SET BONES TO TRIGGERS (So they don't push the floor)
     HeadCapsule->SetTrigger(true);
