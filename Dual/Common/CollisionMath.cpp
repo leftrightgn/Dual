@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "CollisionMath.h"
 #include <Components/ColliderComponent/AABBColliderComponent.h>
 #include <Components/ColliderComponent/ColliderComponent.h>
@@ -85,7 +85,7 @@ HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsAABB(HEIN::CapsuleCol
         }
         else
         {
-            manifold.normal = DirectX::SimpleMath::Vector3(0.0f, 1.0f, 0.0f);
+            manifold.normal = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
         }
     }
 

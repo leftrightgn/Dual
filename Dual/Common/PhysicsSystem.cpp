@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "PhysicsSystem.h"
 #include "Entities/Actor.h"
 #include "Components/RigidBodyComponent.h"
@@ -101,12 +101,12 @@ void HEIN::PhysicsSystem::ResolvePhysicalOverlap(HEIN::ColliderComponent* colA, 
     // ---------------------------------------------------------
     if (rbA != nullptr && !rbA->isKinematic() && transformA != nullptr)
     {
-        // 1. Push the Transform UP out of the floor
+        // Push the Transform UP out of the floor
         DirectX::SimpleMath::Vector3 currentPos = transformA->GetPosition();
         currentPos += (manifold.normal * manifold.penetrationDepth);
         transformA->SetPosition(currentPos);
 
-        // 2. Stop gravity from pulling them down further
+        // Stop gravity from pulling them down further
         DirectX::SimpleMath::Vector3 currentVelocity = rbA->GetVelocity();
         float velocityIntoWall = currentVelocity.Dot(manifold.normal);
 
@@ -124,18 +124,17 @@ void HEIN::PhysicsSystem::ResolvePhysicalOverlap(HEIN::ColliderComponent* colA, 
     // ---------------------------------------------------------
     else if (rbB != nullptr && !rbB->isKinematic() && transformB != nullptr)
     {
-        // 1. Push the Transform UP out of the floor
-        DirectX::SimpleMath::Vector3 currentPos = transformB->GetPosition();
+        
+        DirectX::SimpleMath::Vector3 flippedNormal = manifold.normal * -1.0f;
 
-        // Notice we multiply the normal by -1.0f here because the normal points from A to B!
-        currentPos += (manifold.normal * -1.0f * manifold.penetrationDepth);
-        transformB->SetPosition(currentPos);
+        DirectX::SimpleMath::Vector3 position = transformB->GetPosition();
 
-        // 2. Stop gravity from pulling them down further
+        position += flippedNormal * manifold.penetrationDepth;
+
+        transformB->SetPosition(position);
+
         DirectX::SimpleMath::Vector3 currentVelocity = rbB->GetVelocity();
 
-        // Use the flipped normal for velocity calculation too
-        DirectX::SimpleMath::Vector3 flippedNormal = manifold.normal * -1.0f;
         float velocityIntoWall = currentVelocity.Dot(flippedNormal);
 
         if (velocityIntoWall < 0.0f)
