@@ -230,13 +230,7 @@ std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateStage(GameContext& gameCo
     wall1->SetRotationOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     wall1->SetTrigger(false);
     wall1->SetColliderTag(L"Wall1");
-    HEIN::AABBColliderComponent* wall2 = stageActor->AddComponent<HEIN::AABBColliderComponent>();
-    wall2->Initialize(DirectX::SimpleMath::Vector3(0.3f, 1.0f, 5.0f));
-    wall2->SetOffset(DirectX::SimpleMath::Vector3(9.5f, 1.0f, 0.0f));
-    wall2->SetRotationOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
-    wall2->SetTrigger(false);
-    wall2->SetColliderTag(L"Wall2");
-
+   
     
     HEIN::RigidBodyComponent* stageBody = stageActor->AddComponent<HEIN::RigidBodyComponent>();
     stageBody->Initialize(0.0f, false, true);
