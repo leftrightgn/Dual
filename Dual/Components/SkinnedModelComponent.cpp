@@ -30,6 +30,7 @@ namespace HEIN
 
 		m_drawBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 		m_skinBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
+		m_targetBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 
 		// bone name checker
 		/*OutputDebugStringW(L"--- BONE LIST START ---\n");
@@ -46,11 +47,73 @@ namespace HEIN
 
 	void SkinnedModelComponent::Update(float deltaTime)
 	{
-		if (m_currentAnimation && m_model)
+		if (!m_model) return;
+
+		if (m_isBlending && m_currentAnimation != nullptr &&
+			m_targetAnimation != nullptr)
+		{
+			m_blendTimer += deltaTime;
+			float blendFactor = m_blendTimer / m_blendDuration;
+
+			if (blendFactor >= 1.0f)
+			{
+				m_currentAnimation = m_targetAnimation;
+				m_targetAnimation = nullptr;
+				m_isBlending = false;
+
+				m_currentAnimation->Update(deltaTime);
+				m_currentAnimation->Apply(*m_model, m_model->bones.size(), m_drawBones.get());
+			}
+			else
+			{
+				m_currentAnimation->Update(deltaTime);
+				m_targetAnimation->Update(deltaTime);
+
+				m_currentAnimation->Apply(*m_model, m_model->bones.size(), m_drawBones.get());
+				m_targetAnimation->Apply(*m_model, m_model->bones.size(), m_targetBones.get());
+
+				for (size_t i = 0; i < m_model->bones.size(); ++i)
+				{
+
+					// 1. LOW-LEVEL TRANSLATION
+					DirectX::SimpleMath::Vector3 posA = m_drawBones[i].r[3];
+					DirectX::SimpleMath::Vector3 posB = m_targetBones[i].r[3];
+
+					// 2. ROTATION
+					DirectX::SimpleMath::Quaternion rotA = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_drawBones[i]);
+					DirectX::SimpleMath::Quaternion rotB = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_targetBones[i]);
+
+					// 3. FAST SCALE EXTRACTION (Extract the length of the X, Y, and Z axis rows)
+					DirectX::SimpleMath::Vector3 scaleA(
+						DirectX::SimpleMath::Vector3(m_drawBones[i].r[0]).Length(),
+						DirectX::SimpleMath::Vector3(m_drawBones[i].r[1]).Length(),
+						DirectX::SimpleMath::Vector3(m_drawBones[i].r[2]).Length()
+					);
+					DirectX::SimpleMath::Vector3 scaleB(
+						DirectX::SimpleMath::Vector3(m_targetBones[i].r[0]).Length(),
+						DirectX::SimpleMath::Vector3(m_targetBones[i].r[1]).Length(),
+						DirectX::SimpleMath::Vector3(m_targetBones[i].r[2]).Length()
+					);
+
+					// 4. BLEND EVERYTHING
+					DirectX::SimpleMath::Vector3 blendedPos = DirectX::SimpleMath::Vector3::Lerp(posA, posB, blendFactor);
+					DirectX::SimpleMath::Quaternion blendedRot = DirectX::SimpleMath::Quaternion::Slerp(rotA, rotB, blendFactor);
+					DirectX::SimpleMath::Vector3 blendedScale = DirectX::SimpleMath::Vector3::Lerp(scaleA, scaleB, blendFactor);
+
+					// 5. REBUILD
+					m_drawBones[i] = DirectX::SimpleMath::Matrix::CreateScale(blendedScale) * DirectX::SimpleMath::Matrix::CreateFromQuaternion(blendedRot) * DirectX::SimpleMath::Matrix::CreateTranslation(blendedPos);
+				}
+
+			}
+		}
+		else if (m_currentAnimation != nullptr)
 		{
 			m_currentAnimation->Update(deltaTime);
 			m_currentAnimation->Apply(*m_model, m_model->bones.size(), m_drawBones.get());
-			for (size_t i = 0; i < m_model->bones.size(); ++i)
+		}
+		if (m_currentAnimation != nullptr)
+		{
+			for (size_t i = 0; i < m_model->bones.size(); i++)
 			{
 				m_skinBones[i] = m_drawBones[i];
 			}
@@ -155,7 +218,7 @@ namespace HEIN
 	{
 		if (!m_model) return;
 
-		auto newAnim = std::make_unique<DX::AnimationSDKMESH>();
+		std::unique_ptr<DX::AnimationSDKMESH> newAnim = std::make_unique<DX::AnimationSDKMESH>();
 		DX::ThrowIfFailed(newAnim->Load(animPath));
 		newAnim->Bind(*m_model);
 
@@ -173,6 +236,38 @@ namespace HEIN
 		if (it != m_animations.end())
 		{
 			m_currentAnimation = it->second.get();
+		}
+	}
+
+	void SkinnedModelComponent::CrossfadeAnimation(const std::string& name, float duration)
+	{
+		std::unordered_map<std::string, std::unique_ptr<DX::AnimationSDKMESH>>::iterator it =
+			m_animations.find(name);
+
+		if (it != m_animations.end())
+		{
+			if (m_currentAnimation == nullptr)
+			{
+				m_currentAnimation = it->second.get();
+				return;
+			}
+
+			if (m_isBlending && m_targetAnimation == it->second.get()) return;
+			
+			if (m_currentAnimation == it->second.get())
+			{
+				if (m_isBlending)
+				{
+					m_isBlending = false;
+					m_targetAnimation = nullptr;
+				}
+				return;
+			}
+
+			m_targetAnimation = it->second.get();
+			m_blendDuration = duration;
+			m_blendTimer = 0.0f;
+			m_isBlending = true;
 		}
 	}
 

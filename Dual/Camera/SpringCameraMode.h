@@ -12,7 +12,7 @@ namespace HEIN
 	private:
 
 		static constexpr float DEFAULT_MOUSE_SENSITIVITY = 0.005f;
-		static constexpr float DEFAULT_FOLLOW_DISTANCE = 60.0f;
+		static constexpr float DEFAULT_FOLLOW_DISTANCE = 40.0f;
 		static constexpr float DEFAULT_HEIGHT_OFFSET = 10.0f;
 		static constexpr float DEFAULT_FRE = 8.0f;
 		static constexpr float YAW = 0.0f;
@@ -63,7 +63,7 @@ namespace HEIN
 		void SetFrequency(float freq);
 	
 		bool RequiresRelativeMouse() const override { return true; }
-		bool LocksPlayerRotation() const override { return true; }
+		bool LocksPlayerRotation() const override { return false; }
 	private:
 
 		void UpdateSpring(

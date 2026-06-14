@@ -33,7 +33,7 @@ namespace HEIN
 	{
 	private:
 		float m_timer = 0.0f;
-		const float WINDUP_DURATION = 4.5f;
+		const float WINDUP_DURATION = 4.1f;
 	public:
 		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
 
