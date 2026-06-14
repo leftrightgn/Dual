@@ -12,7 +12,7 @@ void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*state
 	auto models = owner->GetComponents<SkinnedModelComponent>();
 	for (auto* model : models)
 	{
-		model->ChangeAnimation("Idle");
+		model->CrossfadeAnimation("Idle", 0.5f);
 	}
 }
 
@@ -45,7 +45,7 @@ void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*state
 	auto models = owner->GetComponents<SkinnedModelComponent>();
 	for (auto* model : models)
 	{
-		model->ChangeAnimation("Walk");
+		model->CrossfadeAnimation("Walk", 0.05f);
 	}
 }
 
@@ -81,7 +81,7 @@ void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent
 	auto models = owner->GetComponents<SkinnedModelComponent>();
 	for (auto* model : models)
 	{
-		model->ChangeAnimation("OneHand");
+		model->CrossfadeAnimation("OneHand", 0.3f);
 	}
 	m_timer = 0.0f;
 }

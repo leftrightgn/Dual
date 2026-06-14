@@ -140,8 +140,8 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     HEIN::RigidBodyComponent* rigidBody = spawnData.playerActor->AddComponent<HEIN::RigidBodyComponent>();
     rigidBody->Initialize(80.0f, true, false);
     HEIN::CapsuleColliderComponent* rootPushbox = spawnData.playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    rootPushbox->Initialize(1.0f, 1.0f); // Adjust height to match your Knight
-    rootPushbox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
+    rootPushbox->Initialize(3.0f, 12.0f); // Adjust height to match your Knight
+    rootPushbox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
     rootPushbox->SetTrigger(false);      // This one physically hits the floor
     rootPushbox->SetColliderTag(L"PlayerRoot");
   
@@ -222,7 +222,22 @@ std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateStage(GameContext& gameCo
     floor->SetExtents(DirectX::SimpleMath::Vector3(10.4f, 0.1f, 10.4f));
     floor->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     floor->SetTrigger(false);
+    floor->SetColliderTag(L"Floor");
 
+    HEIN::AABBColliderComponent* wall1 = stageActor->AddComponent<HEIN::AABBColliderComponent>();
+    wall1->Initialize(DirectX::SimpleMath::Vector3(0.3f, 1.0f, 5.0f));
+    wall1->SetOffset(DirectX::SimpleMath::Vector3(9.5f, 1.0f, 0.0f));
+    wall1->SetRotationOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
+    wall1->SetTrigger(false);
+    wall1->SetColliderTag(L"Wall1");
+    HEIN::AABBColliderComponent* wall2 = stageActor->AddComponent<HEIN::AABBColliderComponent>();
+    wall2->Initialize(DirectX::SimpleMath::Vector3(0.3f, 1.0f, 5.0f));
+    wall2->SetOffset(DirectX::SimpleMath::Vector3(9.5f, 1.0f, 0.0f));
+    wall2->SetRotationOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
+    wall2->SetTrigger(false);
+    wall2->SetColliderTag(L"Wall2");
+
+    
     HEIN::RigidBodyComponent* stageBody = stageActor->AddComponent<HEIN::RigidBodyComponent>();
     stageBody->Initialize(0.0f, false, true);
 
