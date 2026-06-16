@@ -154,6 +154,11 @@ void GameScene::OnEnter(GameContext& gameContext)
     std::unique_ptr<HEIN::Actor> sword = HEIN::ActorFactory::CreateSword(gameContext, playerSocket);
     m_swordActor = sword.get();
     
+    HEIN::EnemySpawnData enemyData = HEIN::ActorFactory::CreateEnemy(gameContext);
+
+    m_enemy = enemyData.enemyActor.get();
+    
+
     // Debug Camera Registration
     m_cameraController->RegisterCamera(
         HEIN::CameraType::Debug, 
@@ -199,6 +204,7 @@ void GameScene::OnEnter(GameContext& gameContext)
 
    
     m_actors.push_back(std::move(playerData.playerActor));
+    m_actors.push_back(std::move(enemyData.enemyActor));
     m_actors.push_back(std::move(sword));
     m_actors.push_back(std::move(stage));
    

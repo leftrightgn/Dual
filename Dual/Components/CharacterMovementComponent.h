@@ -11,7 +11,7 @@ namespace HEIN
 	{
 	private:
 
-		static constexpr float DEFAULT_ACCELERATION = 40.0f;
+		static constexpr float DEFAULT_ACCELERATION = 20.0f;
 		static constexpr float DEFAULT_FRICTION = 8.0f;
 
 	private:

@@ -10,8 +10,14 @@ namespace HEIN
 	struct PlayerSpawnData
 	{
 		std::unique_ptr<HEIN::Actor> playerActor;
-		HEIN::SkinnedModelComponent* tpsModel;
-		HEIN::SkinnedModelComponent* fpsModel;
+		HEIN::SkinnedModelComponent* tpsModel = nullptr;
+		HEIN::SkinnedModelComponent* fpsModel = nullptr;
+	};
+
+	struct EnemySpawnData
+	{
+		std::unique_ptr<HEIN::Actor> enemyActor;
+		HEIN::SkinnedModelComponent* tpsModel = nullptr;
 	};
 
 	class ActorFactory
@@ -30,6 +36,10 @@ namespace HEIN
 		);
 
 		static std::unique_ptr<HEIN::Actor> CreateStage(
+			GameContext& gameContext
+		);
+
+		static EnemySpawnData CreateEnemy(
 			GameContext& gameContext
 		);
 

@@ -75,15 +75,15 @@ namespace HEIN
 				for (size_t i = 0; i < m_model->bones.size(); ++i)
 				{
 
-					// 1. LOW-LEVEL TRANSLATION
+					// LOW-LEVEL TRANSLATION
 					DirectX::SimpleMath::Vector3 posA = m_drawBones[i].r[3];
 					DirectX::SimpleMath::Vector3 posB = m_targetBones[i].r[3];
 
-					// 2. ROTATION
+					// ROTATION
 					DirectX::SimpleMath::Quaternion rotA = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_drawBones[i]);
 					DirectX::SimpleMath::Quaternion rotB = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_targetBones[i]);
 
-					// 3. FAST SCALE EXTRACTION (Extract the length of the X, Y, and Z axis rows)
+					// FAST SCALE EXTRACTION (Extract the length of the X, Y, and Z axis rows)
 					DirectX::SimpleMath::Vector3 scaleA(
 						DirectX::SimpleMath::Vector3(m_drawBones[i].r[0]).Length(),
 						DirectX::SimpleMath::Vector3(m_drawBones[i].r[1]).Length(),
@@ -95,12 +95,12 @@ namespace HEIN
 						DirectX::SimpleMath::Vector3(m_targetBones[i].r[2]).Length()
 					);
 
-					// 4. BLEND EVERYTHING
+					// BLEND EVERYTHING
 					DirectX::SimpleMath::Vector3 blendedPos = DirectX::SimpleMath::Vector3::Lerp(posA, posB, blendFactor);
 					DirectX::SimpleMath::Quaternion blendedRot = DirectX::SimpleMath::Quaternion::Slerp(rotA, rotB, blendFactor);
 					DirectX::SimpleMath::Vector3 blendedScale = DirectX::SimpleMath::Vector3::Lerp(scaleA, scaleB, blendFactor);
 
-					// 5. REBUILD
+					// REBUILD
 					m_drawBones[i] = DirectX::SimpleMath::Matrix::CreateScale(blendedScale) * DirectX::SimpleMath::Matrix::CreateFromQuaternion(blendedRot) * DirectX::SimpleMath::Matrix::CreateTranslation(blendedPos);
 				}
 
