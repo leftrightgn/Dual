@@ -33,6 +33,23 @@ HEIN::CollisionManifold HEIN::CollisionDispatcher::CheckCollision(HEIN::Collider
         resultManifold.normal = resultManifold.normal * -1.0f;
         return resultManifold;
     }
+    else if (shapeA == HEIN::ColliderShape::Capsule && shapeB == HEIN::ColliderShape::OBB)
+    {
+        HEIN::CapsuleColliderComponent* capsule = dynamic_cast<HEIN::CapsuleColliderComponent*>(colA);
+        HEIN::OBBColliderComponent* obb = dynamic_cast<HEIN::OBBColliderComponent*>(colB);
+        return HEIN::CollisionMath::CheckCapsuleVsOBB(capsule, obb);
+    }
+    else if (shapeA == HEIN::ColliderShape::OBB && shapeB == HEIN::ColliderShape::Capsule)
+    {
+        HEIN::CapsuleColliderComponent* capsule = dynamic_cast<HEIN::CapsuleColliderComponent*>(colB);
+        HEIN::OBBColliderComponent* obb = dynamic_cast<HEIN::OBBColliderComponent*>(colA);
+
+        resultManifold = HEIN::CollisionMath::CheckCapsuleVsOBB(capsule, obb);
+
+        resultManifold.normal = resultManifold.normal * -1.0f;
+
+        return resultManifold;
+    }
 
     return resultManifold;
 

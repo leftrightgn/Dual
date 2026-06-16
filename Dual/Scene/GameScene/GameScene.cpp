@@ -104,12 +104,12 @@ void GameScene::Render(GameContext& gameContext)
     context->RSSetState(gameContext.commonStates.CullCounterClockwise());
     context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
-    //gameContext.debugCollisionRenderer->RenderAndFlush(
-    //    context,
-    //    gameContext.commonStates,
-    //    view,          // The debug camera's view matrix
-    //    m_proj   // The debug camera's projection matrix
-    //);
+    gameContext.debugCollisionRenderer->RenderAndFlush(
+        context,
+        gameContext.commonStates,
+        view,          // The debug camera's view matrix
+        m_proj   // The debug camera's projection matrix
+    );
     m_debugDisplay->Render(gameContext, m_actors, m_skybox.get(), view, m_proj);
 }
 

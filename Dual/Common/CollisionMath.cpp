@@ -24,14 +24,17 @@ HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsOBB(HEIN::CapsuleColl
     float halfHeight = capsule->GetHeight() * 0.5f;
     DirectX::SimpleMath::Vector3 capPos = capsule->GetCalculateWorldMatrix().Translation();
 
-    DirectX::SimpleMath::Matrix obbInverse = obbWorld.Invert();
-
     DirectX::SimpleMath::Vector3 SegTop(capPos.x, capPos.y + halfHeight, capPos.z);
     DirectX::SimpleMath::Vector3 SegBottom(capPos.x, capPos.y - halfHeight, capPos.z);
-    DirectX::SimpleMath::Vector3 d = SegTop - SegBottom;
+
+    DirectX::SimpleMath::Matrix obbInverse = obbWorld.Invert();
+
+    DirectX::SimpleMath::Vector3 localSegTop = DirectX::SimpleMath::Vector3::Transform(SegTop, obbInverse);
+    DirectX::SimpleMath::Vector3 localSegBottom = DirectX::SimpleMath::Vector3::Transform(SegBottom, obbInverse);
+    DirectX::SimpleMath::Vector3 d = localSegTop - localSegBottom;
     float len = d.Length();
 
-    std::function<DirectX::SimpleMath::Vector3(const DirectX::SimpleMath::Vector3&)> clampToObb =
+    std::function<DirectX::SimpleMath::Vector3(const DirectX::SimpleMath::Vector3&)> clampToAABB =
         [&Obbextents](const DirectX::SimpleMath::Vector3& p) -> DirectX::SimpleMath::Vector3
         {
             return DirectX::SimpleMath::Vector3(
@@ -41,20 +44,20 @@ HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsOBB(HEIN::CapsuleColl
             );
         };
 
-    DirectX::SimpleMath::Vector3 closestOnSeg = capPos;
-    DirectX::SimpleMath::Vector3 closestOnObb = clampToObb(closestOnSeg);
+    DirectX::SimpleMath::Vector3 localClosestOnSeg = DirectX::SimpleMath::Vector3::Transform(obbPos, obbInverse);
+    DirectX::SimpleMath::Vector3 localClosestOnObb = clampToAABB(localClosestOnSeg);
 
     for (int i = 0; i < 3; ++i)
     {
-        DirectX::SimpleMath::Vector3 toObb = closestOnObb - SegBottom;
+        DirectX::SimpleMath::Vector3 toObb = localClosestOnObb - SegBottom;
         float t = (len > 0.0001f) ? toObb.Dot(d) / (len * len) : 0.5f;
         t = std::fmax(0.0f, std::fmin(1.0f, t));
-        closestOnSeg = SegBottom + d * t;
+        localClosestOnSeg = localSegBottom + d * t;
 
-        closestOnObb = clampToObb(closestOnSeg);
+        localClosestOnObb = clampToAABB(localClosestOnSeg);
     }
 
-    DirectX::SimpleMath::Vector3 localDiff = closestOnSeg - closestOnObb;
+    DirectX::SimpleMath::Vector3 localDiff = localClosestOnSeg - localClosestOnObb;
     float distance = localDiff.Length();
 
     if (distance < capsule->GetRadius())

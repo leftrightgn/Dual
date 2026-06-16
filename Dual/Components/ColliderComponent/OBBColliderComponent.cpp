@@ -64,7 +64,7 @@ void HEIN::OBBColliderComponent::Draw(
     DirectX::BoundingOrientedBox obb(center, scaledExtents, rotation);
 
     DirectX::SimpleMath::Color debugColor = DirectX::SimpleMath::Color(DirectX::Colors::Red);
-    if (m_isTrigger)
+    if (m_isCollidingThisFrame)
     {
         debugColor = DirectX::Colors::Yellow;
     }
