@@ -10,7 +10,12 @@ void HEIN::PhysicsSystem::Update(GameContext& gameContext, std::vector<std::uniq
     for (auto& actor : actors)
     {
         HEIN::RigidBodyComponent* rb = actor->GetComponent<HEIN::RigidBodyComponent>();
-        if (rb) rb->m_isGrounded = false;   
+        if (rb) rb->m_isGrounded = false;  
+        std::vector<HEIN::ColliderComponent*> actorColliders = actor->GetComponents<HEIN::ColliderComponent>();
+        for (HEIN::ColliderComponent* col : actorColliders)
+        {
+            col->SetCollidingThisFrame(false);
+        }
     }
     // (Apply Gravity and Velocity)
     for (std::unique_ptr<HEIN::Actor>& actor : actors)
@@ -55,8 +60,16 @@ void HEIN::PhysicsSystem::Update(GameContext& gameContext, std::vector<std::uniq
         {
             HEIN::ColliderComponent* colA = allColliders[i];
             HEIN::ColliderComponent* colB = allColliders[j];
-
+            
             if (colA->GetOwner() == colB->GetOwner())
+            {
+                continue;
+            }
+
+            bool aCanHitB = (colA->GetCollisionMask() & colB->GetCollisionLayer()) != 0;
+            bool bCanHitA = (colB->GetCollisionMask() & colA->GetCollisionLayer()) != 0;
+
+            if (!aCanHitB || !bCanHitA)
             {
                 continue;
             }
@@ -66,6 +79,9 @@ void HEIN::PhysicsSystem::Update(GameContext& gameContext, std::vector<std::uniq
             {
                 bool isATrigger = colA->IsTrigger();
                 bool isBTrigger = colB->IsTrigger();
+
+                colA->SetCollidingThisFrame(true);
+                colB->SetCollidingThisFrame(true);
 
                 if (isATrigger == false && isBTrigger == false)
                 {

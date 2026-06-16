@@ -1,6 +1,7 @@
 #pragma once
 #include "Components/IComponent.h"
 #include <string>
+#include <cstdint>
 
 namespace HEIN
 {
@@ -10,6 +11,19 @@ namespace HEIN
 		AABB,
 		OBB,
 		Capsule
+	};
+
+	// Collision Filtering Layers(using BitWise Shifts)
+	namespace CollisionLayer 
+	{
+		constexpr uint32_t Layer_None = 0;
+		constexpr uint32_t Layer_Default = 1 << 0;
+		constexpr uint32_t Layer_Environment = 1 << 1;
+		constexpr uint32_t Layer_Player = 1 << 2;
+		constexpr uint32_t Layer_Enemy = 1 << 3;
+		constexpr uint32_t Layer_PlayerWeapon = 1 << 4;
+		constexpr uint32_t Layer_EnemyWeapon = 1 << 5;
+		constexpr uint32_t Layer_All = ~0u; // Everything all Set to 1
 	};
 
 	class SkinnedModelComponent;
@@ -30,8 +44,12 @@ namespace HEIN
 		
 		DirectX::SimpleMath::Matrix m_manualMatrix;
 		bool m_useManualMatrix = false;
+		bool m_isCollidingThisFrame = false;
 
 		std::wstring m_colliderTag = L"";
+
+		uint32_t m_layer = CollisionLayer::Layer_Default;
+		uint32_t m_mask = CollisionLayer::Layer_All;
 
 	public:
 
@@ -67,6 +85,15 @@ namespace HEIN
 
 		std::wstring GetColliderTag() const { return m_colliderTag; }
 		void SetColliderTag(std::wstring tag) { m_colliderTag = tag; }
+
+		void SetCollidingThisFrame(bool isColliding) { m_isCollidingThisFrame = isColliding; }
+		bool IsCollidingThisFrame() const { return m_isCollidingThisFrame; }
+
+		void SetCollisionLayer(uint32_t layer) { m_layer = layer; }
+		uint32_t GetCollisionLayer() const  { return m_layer; }
+
+		void SetCollisionMask(uint32_t mask) { m_mask = mask; }
+		uint32_t GetCollisionMask() const { return m_mask; }
 
 		DirectX::SimpleMath::Matrix GetCalculateWorldMatrix() { return CalculateWorldMatrix(); }
 	protected:

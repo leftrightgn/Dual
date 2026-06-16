@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "CapsuleColliderComponent.h"
-#include "Components/StaticModelComponent.h"
 #include <DirectXColors.h>
 
 HEIN::CapsuleColliderComponent::CapsuleColliderComponent(Actor* owner)
@@ -41,7 +40,7 @@ void HEIN::CapsuleColliderComponent::Draw(GameContext& gameContext, const Direct
 	DirectX::SimpleMath::Vector3 bottomSphereCenter = center - (upDir * (m_height * 0.5f));
 
 	DirectX::SimpleMath::Color debugColor = DirectX::SimpleMath::Color(DirectX::Colors::Red);
-	if (m_isTrigger)
+	if (m_isCollidingThisFrame)
 	{
 		debugColor = DirectX::Colors::Yellow;
 	}

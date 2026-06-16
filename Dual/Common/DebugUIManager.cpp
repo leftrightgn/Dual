@@ -165,24 +165,44 @@ namespace HEIN
 							currentBox->SetExtents(currentExtents);
 						}
 
-						// TWEAK ROTATION ---
-						DirectX::SimpleMath::Vector3 currentRot = currentBox->GetRotationOffset();
+						//// TWEAK ROTATION ---
+						//DirectX::SimpleMath::Vector3 currentRot = currentBox->GetRotationOffset();
 
-						// Convert radians to degrees for the UI slider
-						currentRot.x = DirectX::XMConvertToDegrees(currentRot.x);
-						currentRot.y = DirectX::XMConvertToDegrees(currentRot.y);
-						currentRot.z = DirectX::XMConvertToDegrees(currentRot.z);
+						//// Convert radians to degrees for the UI slider
+						//currentRot.x = DirectX::XMConvertToDegrees(currentRot.x);
+						//currentRot.y = DirectX::XMConvertToDegrees(currentRot.y);
+						//currentRot.z = DirectX::XMConvertToDegrees(currentRot.z);
 
-						// DragFloat3 speed is 1.0f because degrees are whole numbers
-						if (ImGui::DragFloat3("wall1Rotation", &currentRot.x, 1.0f))
+						//// DragFloat3 speed is 1.0f because degrees are whole numbers
+						//if (ImGui::DragFloat3("wall1Rotation", &currentRot.x, 1.0f))
+						//{
+						//	// Convert back to radians before giving it to the engine!
+						//	currentRot.x = DirectX::XMConvertToRadians(currentRot.x);
+						//	currentRot.y = DirectX::XMConvertToRadians(currentRot.y);
+						//	currentRot.z = DirectX::XMConvertToRadians(currentRot.z);
+
+						//	currentBox->SetRotationOffset(currentRot);
+						//}
+					}
+					else if (currentBox->GetColliderTag() == L"Wall2")
+					{
+						ImGui::Text("wall2 tunning");
+
+						// TWEAK OFFSET
+						DirectX::SimpleMath::Vector3 currentOffset = currentBox->GetOffset();
+						if (ImGui::DragFloat3("wall2Offset", &currentOffset.x, 0.01f))
 						{
-							// Convert back to radians before giving it to the engine!
-							currentRot.x = DirectX::XMConvertToRadians(currentRot.x);
-							currentRot.y = DirectX::XMConvertToRadians(currentRot.y);
-							currentRot.z = DirectX::XMConvertToRadians(currentRot.z);
-
-							currentBox->SetRotationOffset(currentRot);
+							currentBox->SetOffset(currentOffset);
 						}
+
+						// TWEAK EXTENTS 
+						DirectX::SimpleMath::Vector3 currentExtents = currentBox->GetExtents();
+						if (ImGui::DragFloat3("wall2Extents", &currentExtents.x, 0.01f))
+						{
+							currentBox->SetExtents(currentExtents);
+						}
+
+						
 					}
 					
 				
