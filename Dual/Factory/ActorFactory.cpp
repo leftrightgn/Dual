@@ -164,7 +164,8 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     rootPushbox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
     rootPushbox->SetTrigger(false);      // This one physically hits the floor
     rootPushbox->SetColliderTag(L"PlayerRoot");
-   
+    rootPushbox->SetCollisionLayer(CollisionLayer::Layer_Player);
+    rootPushbox->SetCollisionMask(CollisionLayer::Layer_Environment | CollisionLayer::Layer_Enemy);
   
 
     // SET BONES TO TRIGGERS (So they don't push the floor)
@@ -220,8 +221,7 @@ std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateSword(GameContext& gameCo
     swordHitBox->SetCollisionLayer(CollisionLayer::Layer_PlayerWeapon);
     swordHitBox->SetCollisionMask(
         CollisionLayer::Layer_Enemy |
-        CollisionLayer::Layer_EnemyWeapon |
-        CollisionLayer::Layer_Environment
+        CollisionLayer::Layer_EnemyWeapon
     );
     if (targetPlayerSocket != nullptr)
     {
@@ -250,6 +250,8 @@ std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateStage(GameContext& gameCo
     floor->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     floor->SetTrigger(false);
     floor->SetColliderTag(L"Floor");
+    floor->SetCollisionLayer(CollisionLayer::Layer_Environment);
+    floor->SetCollisionMask(CollisionLayer::Layer_Player | CollisionLayer::Layer_Enemy);
    
 
     HEIN::AABBColliderComponent* wall1 = stageActor->AddComponent<HEIN::AABBColliderComponent>();
@@ -258,6 +260,8 @@ std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateStage(GameContext& gameCo
     wall1->SetRotationOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     wall1->SetTrigger(false);
     wall1->SetColliderTag(L"Wall1");
+    wall1->SetCollisionLayer(CollisionLayer::Layer_Environment);
+    wall1->SetCollisionMask(CollisionLayer::Layer_Player | CollisionLayer::Layer_Enemy);
    
     HEIN::AABBColliderComponent* wall2 = stageActor->AddComponent<HEIN::AABBColliderComponent>();
     wall2->Initialize(DirectX::SimpleMath::Vector3(10.0f, 1.0f, 0.08f));
@@ -265,14 +269,18 @@ std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateStage(GameContext& gameCo
     wall2->SetRotationOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     wall2->SetTrigger(false);
     wall2->SetColliderTag(L"Wall2");
-   
+    wall2->SetCollisionLayer(CollisionLayer::Layer_Environment);
+    wall2->SetCollisionMask(CollisionLayer::Layer_Player | CollisionLayer::Layer_Enemy);
+
     HEIN::AABBColliderComponent* wall3 = stageActor->AddComponent<HEIN::AABBColliderComponent>();
     wall3->Initialize(DirectX::SimpleMath::Vector3(0.08f, 1.0f, 10.4f));
     wall3->SetOffset(DirectX::SimpleMath::Vector3(-10.0f, 1.0f, 0.0f));
     wall3->SetRotationOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     wall3->SetTrigger(false);
     wall3->SetColliderTag(L"Wall3");
-  
+    wall3->SetCollisionLayer(CollisionLayer::Layer_Environment);
+    wall3->SetCollisionMask(CollisionLayer::Layer_Player | CollisionLayer::Layer_Enemy);
+
     HEIN::RigidBodyComponent* stageBody = stageActor->AddComponent<HEIN::RigidBodyComponent>();
     stageBody->Initialize(0.0f, false, true);
 
@@ -406,6 +414,8 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(GameContext& gameContext)
     rootPushbox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
     rootPushbox->SetTrigger(false);      // This one physically hits the floor
     rootPushbox->SetColliderTag(L"EnemyRoot");
+    rootPushbox->SetCollisionLayer(CollisionLayer::Layer_Enemy);
+    rootPushbox->SetCollisionMask(CollisionLayer::Layer_Environment | CollisionLayer::Layer_Player);
     
 
     // SET BONES TO TRIGGERS (So they don't push the floor)

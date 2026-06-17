@@ -57,7 +57,10 @@ namespace HEIN
 		virtual ~ColliderComponent() = default;
 
 		void Start() override;
-		virtual void Update(float deltaTime) override = 0;
+		void Update(float deltaTime) override {}
+
+		virtual void SyncColliderState() = 0;
+
 		virtual void Draw(
 			GameContext& gameContext,
 			const DirectX::SimpleMath::Matrix& world,

@@ -7,9 +7,7 @@
 #include <Camera/FirstPersonMode.h>
 #include <Components/PlayerInputComponent.h>
 #include <Components/SocketComponent.h>
-#include <Components/StaticModelComponent.h>
 #include <Camera/SpringCameraMode.h>
-#include <Components/ColliderComponent/OBBColliderComponent.h>
 #include <Factory/ActorFactory.h>
 
 
@@ -34,7 +32,12 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
     {
         actor->Update(deltaTime);
     }
-    m_physicsSystem->Update(gameContext, m_actors, deltaTime);
+    m_physicsSystem->UpdateMovement(gameContext, m_actors, deltaTime);
+    for (std::unique_ptr<HEIN::Actor>& actor : m_actors)
+    {
+        actor->LateUpdate(deltaTime);
+    }
+    m_physicsSystem->UpdateCollisions(gameContext, m_actors, deltaTime);
     // [LOGIC: CAMERA TRACKING]
     // Read the bone position safely to update the camera target
     if (m_player != nullptr)

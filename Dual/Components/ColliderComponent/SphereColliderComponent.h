@@ -11,6 +11,7 @@ namespace HEIN
 
 		float m_radius;
 
+		DirectX::BoundingSphere m_worldSphere;
 
 	public:
 
@@ -19,7 +20,7 @@ namespace HEIN
 		void Initialize(const float radius);
 		void InitializeFromModel(StaticModelComponent* staticModel);
 
-		void Update(float deltaTime) override {};
+		void SyncColliderState() override;
 		void Draw(
 			GameContext& gameContext,
 			const DirectX::SimpleMath::Matrix& world,
@@ -28,6 +29,8 @@ namespace HEIN
 		) override;
 
 		float GetRadius() const { return m_radius; }
+
+		DirectX::BoundingSphere GetWorldSphere() const { return m_worldSphere; }
 	};
 
 

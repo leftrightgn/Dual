@@ -12,6 +12,8 @@ namespace HEIN
 
 		DirectX::SimpleMath::Vector3 m_extents;
 
+		DirectX::BoundingOrientedBox m_worldOBB;
+
 	public:
 
 		OBBColliderComponent(Actor* owner);
@@ -19,7 +21,8 @@ namespace HEIN
 		void Initialize(const DirectX::SimpleMath::Vector3 extents);
 		void InitializeFromModel(StaticModelComponent* staticModel);
 
-		void Update(float deltaTime) override;
+		void SyncColliderState() override;
+
 		void Draw(
 			GameContext& gameContext,
 			const DirectX::SimpleMath::Matrix& world,
@@ -32,5 +35,7 @@ namespace HEIN
 		{
 			m_extents = extents;
 		}
+
+		DirectX::BoundingOrientedBox GetWorldOBB() const { return m_worldOBB; }
 	};
 }

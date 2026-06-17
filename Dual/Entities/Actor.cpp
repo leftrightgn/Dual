@@ -17,6 +17,16 @@ void HEIN::Actor::Update(float deltaTime)
 	}
 }
 
+void HEIN::Actor::LateUpdate(float deltaTime)
+{
+	for (auto& comp : m_components)
+	{
+		comp->LateUpdate(deltaTime);
+	}
+}
+
+
+
 void HEIN::Actor::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj)
 {
 	TransformComponent* transform = GetComponent<TransformComponent>();

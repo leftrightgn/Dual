@@ -12,8 +12,8 @@ namespace HEIN
     class PhysicsSystem
 	{
 	public:
-		void Update(GameContext& gameContext, std::vector<std::unique_ptr<HEIN::Actor>>& actors, float deltaTime);
-
+		void UpdateMovement(GameContext& gameContext, std::vector<std::unique_ptr<HEIN::Actor>>& actors, float deltaTime);
+		void UpdateCollisions(GameContext& gameContext, std::vector<std::unique_ptr<HEIN::Actor>>& actors, float deltaTime);
 	private:
 		void ResolvePhysicalOverlap(HEIN::ColliderComponent* colA, HEIN::ColliderComponent* colB, const HEIN::CollisionManifold& mainfold);
 	};

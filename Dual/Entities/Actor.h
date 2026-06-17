@@ -28,6 +28,8 @@ namespace HEIN
 
 		void Update(float deltaTime);
 
+		void LateUpdate(float deltaTime);
+
 		void Draw(
 			GameContext& gameContext,
 			const DirectX::SimpleMath::Matrix& view,
