@@ -175,6 +175,8 @@ namespace HEIN
 			float alpha = 0.5f
 		);
 
+		void Clear();
+
 		void QueueSphere(
 			DirectX::BoundingSphere sphere,
 			DirectX::FXMVECTOR lineColor = DirectX::XMVECTORF32{ 0.0f, 0.0f, 0.0f, 0.0f }

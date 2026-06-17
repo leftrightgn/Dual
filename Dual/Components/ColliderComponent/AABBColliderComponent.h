@@ -20,6 +20,8 @@ namespace HEIN
 		void Initialize(const DirectX::SimpleMath::Vector3 extents);
 		void InitializeFromModel(StaticModelComponent* staticModel);
 
+		void Update(float deltaTime) override {}
+
 		void SyncColliderState() override;
 
 		void Draw(

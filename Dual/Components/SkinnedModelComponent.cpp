@@ -268,6 +268,8 @@ namespace HEIN
 			m_blendDuration = duration;
 			m_blendTimer = 0.0f;
 			m_isBlending = true;
+
+			m_targetAnimation->SetAnimTime(0.0f);
 		}
 	}
 

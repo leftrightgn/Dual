@@ -20,7 +20,7 @@ namespace
     std::unique_ptr<Game> g_game;
 }
 
-LPCWSTR g_szAppName = L"SampleProject2026";
+LPCWSTR g_szAppName = L"Dual";
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void ExitGame() noexcept;
@@ -174,29 +174,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
 
-    //case WM_SIZE:
-    //    if (wParam == SIZE_MINIMIZED)
-    //    {
-    //        if (!s_minimized)
-    //        {
-    //            s_minimized = true;
-    //            if (!s_in_suspend && game)
-    //                game->OnSuspending();
-    //            s_in_suspend = true;
-    //        }
-    //    }
-    //    else if (s_minimized)
-    //    {
-    //        s_minimized = false;
-    //        if (s_in_suspend && game)
-    //            game->OnResuming();
-    //        s_in_suspend = false;
-    //    }
-    //    else if (!s_in_sizemove && game)
-    //    {
-    //        game->OnWindowSizeChanged(LOWORD(lParam), HIWORD(lParam));
-    //    }
-    //    break;
+    case WM_SIZE:
+        if (wParam == SIZE_MINIMIZED)
+        {
+            if (!s_minimized)
+            {
+                s_minimized = true;
+                if (!s_in_suspend && game)
+                    game->OnSuspending();
+                s_in_suspend = true;
+            }
+        }
+        else if (s_minimized)
+        {
+            s_minimized = false;
+            if (s_in_suspend && game)
+                game->OnResuming();
+            s_in_suspend = false;
+        }
+        else if (!s_in_sizemove && game)
+        {
+            game->OnWindowSizeChanged(LOWORD(lParam), HIWORD(lParam));
+        }
+        break;
 
     case WM_ENTERSIZEMOVE:
         s_in_sizemove = true;

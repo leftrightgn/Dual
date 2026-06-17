@@ -38,7 +38,7 @@ private:
 
 	std::unique_ptr<HEIN::Skybox> m_skybox;
 
-	std::unique_ptr<Water> m_water;
+	//std::unique_ptr<Water> m_water;
 
 	std::unique_ptr<Imase::DebugCamera> m_debugCamera;
 

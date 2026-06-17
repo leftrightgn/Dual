@@ -118,6 +118,14 @@ void HEIN::DebugCollisionRenderer::RenderAndFlush(
 	m_meshes.clear();
 	m_lineSegments.clear();
 }
+void HEIN::DebugCollisionRenderer::Clear()
+{
+	m_spheres.clear();
+	m_aabb.clear();
+	m_obb.clear();
+	m_meshes.clear();
+	m_lineSegments.clear();
+}
 void HEIN::DebugCollisionRenderer::DrawSolidShapes(
 	ID3D11DeviceContext* context,
 	const DirectX::CommonStates& states,

@@ -50,6 +50,7 @@ namespace HEIN
 		const DirectX::SimpleMath::Matrix GetProjMatrix() const;
 
 		void SetDebugTargets(Actor* player, Actor* sword, Actor* stage);
+
 	};
 }
 
