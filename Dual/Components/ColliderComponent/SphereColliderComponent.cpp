@@ -24,16 +24,19 @@ void HEIN::SphereColliderComponent::InitializeFromModel(StaticModelComponent* st
     }
 }
 
+void HEIN::SphereColliderComponent::SyncColliderState()
+{
+    DirectX::SimpleMath::Matrix worldMatrix = CalculateWorldMatrix();
+
+    DirectX::BoundingSphere localSphere(DirectX::SimpleMath::Vector3::Zero, m_radius);
+
+    localSphere.Transform(m_worldSphere, worldMatrix);
+}
+
 void HEIN::SphereColliderComponent::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj)
 {
     if (gameContext.debugCollisionRenderer == nullptr) return;
 
-    DirectX::SimpleMath::Matrix worldMatrix = CalculateWorldMatrix();
-
-    DirectX::BoundingSphere localSphere(DirectX::SimpleMath::Vector3::Zero, m_radius);
-    DirectX::BoundingSphere worldSphere;
-
-    localSphere.Transform(worldSphere, worldMatrix);
 
     DirectX::SimpleMath::Color debugColor = DirectX::SimpleMath::Color(DirectX::Colors::Red);
     if (m_isTrigger)
@@ -41,5 +44,5 @@ void HEIN::SphereColliderComponent::Draw(GameContext& gameContext, const DirectX
         debugColor = DirectX::Colors::Yellow;
     }
 
-    gameContext.debugCollisionRenderer->QueueSphere(worldSphere, debugColor);
+    gameContext.debugCollisionRenderer->QueueSphere(m_worldSphere, debugColor);
 }

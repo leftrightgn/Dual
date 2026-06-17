@@ -26,8 +26,31 @@ void HEIN::OBBColliderComponent::InitializeFromModel(StaticModelComponent* stati
     }
 }
 
-void HEIN::OBBColliderComponent::Update(float deltaTime)
+void HEIN::OBBColliderComponent::SyncColliderState()
 {
+    DirectX::SimpleMath::Matrix worldMatrix = CalculateWorldMatrix();
+
+    DirectX::SimpleMath::Vector3 center = worldMatrix.Translation();
+
+    DirectX::SimpleMath::Vector3 right(worldMatrix._11, worldMatrix._12, worldMatrix._13);
+    DirectX::SimpleMath::Vector3 up(worldMatrix._21, worldMatrix._22, worldMatrix._23);
+    DirectX::SimpleMath::Vector3 forward(worldMatrix._31, worldMatrix._32, worldMatrix._33);
+
+    DirectX::SimpleMath::Vector3 scale(right.Length(), up.Length(), forward.Length());
+
+    if (scale.x > 0.0001f) right /= scale.x;
+    if (scale.y > 0.0001f) up /= scale.y;
+    if (scale.z > 0.0001f) forward /= scale.z;
+
+    worldMatrix._11 = right.x; worldMatrix._12 = right.y; worldMatrix._13 = right.z;
+    worldMatrix._21 = up.x;    worldMatrix._22 = up.y;    worldMatrix._23 = up.z;
+    worldMatrix._31 = forward.x; worldMatrix._32 = forward.y; worldMatrix._33 = forward.z;
+
+    DirectX::SimpleMath::Quaternion rotation = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(worldMatrix);
+
+    DirectX::SimpleMath::Vector3 scaledExtents = m_extents * scale;
+
+    m_worldOBB = DirectX::BoundingOrientedBox(center, scaledExtents, rotation);
 }
 
 void HEIN::OBBColliderComponent::Draw(
@@ -39,35 +62,11 @@ void HEIN::OBBColliderComponent::Draw(
 {
     if (gameContext.debugCollisionRenderer == nullptr) return;
 
-    DirectX::SimpleMath::Matrix worldMatrix = CalculateWorldMatrix();
-
-    DirectX::SimpleMath::Vector3 center = worldMatrix.Translation();
-
-    DirectX::SimpleMath::Vector3 right(worldMatrix._11, worldMatrix._12, worldMatrix._13);
-    DirectX::SimpleMath::Vector3 up(worldMatrix._21, worldMatrix._22, worldMatrix._23);
-    DirectX::SimpleMath::Vector3 forward(worldMatrix._31, worldMatrix._32, worldMatrix._33);
-
-    DirectX::SimpleMath::Vector3 scale(right.Length(), up.Length(), forward.Length());
-
-    right.Normalize();
-    up.Normalize();
-    forward.Normalize();
-
-    worldMatrix._11 = right.x; worldMatrix._12 = right.y; worldMatrix._13 = right.z;
-    worldMatrix._21 = up.x;    worldMatrix._22 = up.y;    worldMatrix._23 = up.z;
-    worldMatrix._31 = forward.x; worldMatrix._32 = forward.y; worldMatrix._33 = forward.z;
-
-    DirectX::SimpleMath::Quaternion rotation = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(worldMatrix);
-
-    DirectX::SimpleMath::Vector3 scaledExtents = m_extents * scale;
-
-    DirectX::BoundingOrientedBox obb(center, scaledExtents, rotation);
-
     DirectX::SimpleMath::Color debugColor = DirectX::SimpleMath::Color(DirectX::Colors::Red);
     if (m_isCollidingThisFrame)
     {
         debugColor = DirectX::Colors::Yellow;
     }
 
-    gameContext.debugCollisionRenderer->QueueOBB(obb, debugColor);
+    gameContext.debugCollisionRenderer->QueueOBB(m_worldOBB, debugColor);
 }

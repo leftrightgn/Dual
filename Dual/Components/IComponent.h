@@ -23,6 +23,8 @@ namespace HEIN
 
 		virtual void Update(float deltaTime) = 0;
 
+		virtual void LateUpdate(float deltaTime) {}
+
 		virtual void Start() {}
 
 		virtual void Draw(

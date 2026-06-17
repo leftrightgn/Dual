@@ -68,7 +68,15 @@ namespace HEIN
 		DirectX::SimpleMath::Matrix mainProj
 		)
 	{
-		if (!m_isVisible) return;
+
+		if (!m_isVisible)
+		{
+			if (gameContext.debugCollisionRenderer != nullptr)
+			{
+				gameContext.debugCollisionRenderer->Clear();
+			}
+			return;
+		}
 
 		ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
 		ID3D11DepthStencilView* dsv = gameContext.deviceResources.GetDepthStencilView();
@@ -136,6 +144,7 @@ namespace HEIN
 			m_debugUI.Draw(m_debugPlayer, m_debugSword, m_debugStage);
 		}
 
+	
 		
 	}
 	const DirectX::SimpleMath::Matrix DebugDisplayController::GetViewMatrix() const
@@ -154,5 +163,6 @@ namespace HEIN
 		m_debugSword = sword;
 		m_debugStage = stage;
 	}
+
 
 }

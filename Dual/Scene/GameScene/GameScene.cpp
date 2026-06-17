@@ -7,9 +7,7 @@
 #include <Camera/FirstPersonMode.h>
 #include <Components/PlayerInputComponent.h>
 #include <Components/SocketComponent.h>
-#include <Components/StaticModelComponent.h>
 #include <Camera/SpringCameraMode.h>
-#include <Components/ColliderComponent/OBBColliderComponent.h>
 #include <Factory/ActorFactory.h>
 
 
@@ -34,7 +32,12 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
     {
         actor->Update(deltaTime);
     }
-    m_physicsSystem->Update(gameContext, m_actors, deltaTime);
+    m_physicsSystem->UpdateMovement(gameContext, m_actors, deltaTime);
+    for (std::unique_ptr<HEIN::Actor>& actor : m_actors)
+    {
+        actor->LateUpdate(deltaTime);
+    }
+    m_physicsSystem->UpdateCollisions(gameContext, m_actors, deltaTime);
     // [LOGIC: CAMERA TRACKING]
     // Read the bone position safely to update the camera target
     if (m_player != nullptr)
@@ -49,11 +52,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         }
     }
    
-    //  Update Environment
-    if (m_water)
-    {
-        m_water->Update(deltaTime);
-    }
+   
 
     if (m_cameraController)
     {
@@ -95,21 +94,18 @@ void GameScene::Render(GameContext& gameContext)
     context->OMSetBlendState(gameContext.commonStates.AlphaBlend(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthRead(), 0); 
 
-    if (m_water)
-    {
-        //m_water->Draw(gameContext, view, m_proj, camPos);
-    }
+   
 
     // Cleanup and reset states back to normal for the next frame
     context->RSSetState(gameContext.commonStates.CullCounterClockwise());
     context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
-    gameContext.debugCollisionRenderer->RenderAndFlush(
-        context,
-        gameContext.commonStates,
-        view,          // The debug camera's view matrix
-        m_proj   // The debug camera's projection matrix
-    );
+    //gameContext.debugCollisionRenderer->RenderAndFlush(
+    //    context,
+    //    gameContext.commonStates,
+    //    view,          // The debug camera's view matrix
+    //    m_proj   // The debug camera's projection matrix
+    //);
     m_debugDisplay->Render(gameContext, m_actors, m_skybox.get(), view, m_proj);
 }
 
@@ -126,14 +122,14 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(
         DirectX::XM_PI / 4.0f, aspectRatio, 0.01f, 1000.0f);
 
-    // Water
-    m_water = std::make_unique<Water>();
-    m_water->Initialize(
-        gameContext,
-        L"Resources/Textures/water.dds",
-        L"Resources/Textures/waternormal.dds",
-        L"Resources/Textures/waternoise.dds"
-    );
+    //// Water
+    //m_water = std::make_unique<Water>();
+    //m_water->Initialize(
+    //    gameContext,
+    //    L"Resources/Textures/water.dds",
+    //    L"Resources/Textures/waternormal.dds",
+    //    L"Resources/Textures/waternoise.dds"
+    //);
 
     // Camera
     m_cameraController = std::make_unique<HEIN::CameraController>();

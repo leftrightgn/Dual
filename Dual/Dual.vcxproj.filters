@@ -154,7 +154,9 @@
     </ClCompile>
     <ClCompile Include="Common\CollisionMath.cpp" />
     <ClCompile Include="Common\CollisionDispatcher.cpp" />
-    <ClCompile Include="Common\PhysicsSystem.cpp" />
+    <ClCompile Include="Common\PhysicsSystem.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

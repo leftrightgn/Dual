@@ -5,12 +5,13 @@
 #include "Components/TransformComponent.h"
 #include "Components/ColliderComponent/ColliderComponent.h"
 
-void HEIN::PhysicsSystem::Update(GameContext& gameContext, std::vector<std::unique_ptr<HEIN::Actor>>& actors, float deltaTime)
+
+void HEIN::PhysicsSystem::UpdateMovement(GameContext& gameContext, std::vector<std::unique_ptr<HEIN::Actor>>& actors, float deltaTime)
 {
     for (auto& actor : actors)
     {
         HEIN::RigidBodyComponent* rb = actor->GetComponent<HEIN::RigidBodyComponent>();
-        if (rb) rb->m_isGrounded = false;  
+        if (rb) rb->m_isGrounded = false;
         std::vector<HEIN::ColliderComponent*> actorColliders = actor->GetComponents<HEIN::ColliderComponent>();
         for (HEIN::ColliderComponent* col : actorColliders)
         {
@@ -23,7 +24,7 @@ void HEIN::PhysicsSystem::Update(GameContext& gameContext, std::vector<std::uniq
         HEIN::RigidBodyComponent* rigidBody = actor->GetComponent<HEIN::RigidBodyComponent>();
         HEIN::TransformComponent* transform = actor->GetComponent<HEIN::TransformComponent>();
 
-       
+
         if (rigidBody != nullptr && !rigidBody->isKinematic() && transform != nullptr)
         {
             if (rigidBody->UsesGravity() && !rigidBody->m_isGrounded)
@@ -42,6 +43,10 @@ void HEIN::PhysicsSystem::Update(GameContext& gameContext, std::vector<std::uniq
         }
     }
 
+}
+
+void HEIN::PhysicsSystem::UpdateCollisions(GameContext& gameContext, std::vector<std::unique_ptr<HEIN::Actor>>& actors, float deltaTime)
+{
     // GATHER ALL COLLIDERS
     std::vector<HEIN::ColliderComponent*> allColliders;
     for (std::unique_ptr<HEIN::Actor>& actor : actors)
@@ -49,6 +54,7 @@ void HEIN::PhysicsSystem::Update(GameContext& gameContext, std::vector<std::uniq
         std::vector<HEIN::ColliderComponent*> actorColliders = actor->GetComponents<HEIN::ColliderComponent>();
         for (HEIN::ColliderComponent* col : actorColliders)
         {
+            col->SyncColliderState();
             allColliders.push_back(col);
         }
     }
@@ -60,7 +66,7 @@ void HEIN::PhysicsSystem::Update(GameContext& gameContext, std::vector<std::uniq
         {
             HEIN::ColliderComponent* colA = allColliders[i];
             HEIN::ColliderComponent* colB = allColliders[j];
-            
+
             if (colA->GetOwner() == colB->GetOwner())
             {
                 continue;

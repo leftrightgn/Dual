@@ -41,7 +41,7 @@ void HEIN::TwoBoneLinkComponent::Start()
 	}
 }
 
-void HEIN::TwoBoneLinkComponent::Update(float deltaTime)
+void HEIN::TwoBoneLinkComponent::LateUpdate(float deltaTime)
 {
 	if (m_targetModel == nullptr || m_boneAIndex == -1 || m_boneBIndex == -1 || m_linkedCapsule == nullptr) return;
 

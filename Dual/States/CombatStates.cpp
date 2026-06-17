@@ -54,7 +54,7 @@ void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	auto blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
 
-	if (blackboard->isAttackingIntent && blackboard->currentStamina >= 15.0f) {
+	if (blackboard->isAttackingIntent ) {
 		stateMachine->ChangeState(stateMachine->GetOneHandAtkState());
 		return;
 	}
@@ -76,7 +76,6 @@ void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent
 	if (blackboard)
 	{
 		blackboard->currentStance = CombatStance::OneHand;
-		blackboard->currentStamina -= 1.0f;
 	}
 	auto models = owner->GetComponents<SkinnedModelComponent>();
 	for (auto* model : models)
@@ -93,6 +92,7 @@ void HEIN::OneHandAttackState::Update(Actor* /*owner*/, CombatStateMachineCompon
 	if (m_timer >= WINDUP_DURATION)
 	{
 		stateMachine->ChangeState(stateMachine->GetIdleState());
+		m_timer = 0.0f;
 	}
 }
 

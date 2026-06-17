@@ -11,45 +11,43 @@ HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsOBB(HEIN::CapsuleColl
     manifold.isColliding = false;
 
     if (capsule == nullptr || obb == nullptr) return manifold;
-    
-    DirectX::SimpleMath::Matrix obbWorld = obb->GetCalculateWorldMatrix();
-    DirectX::SimpleMath::Vector3 obbPos = obbWorld.Translation();
-    DirectX::SimpleMath::Vector3 scale(
-        DirectX::SimpleMath::Vector3(obbWorld._11, obbWorld._12, obbWorld._13).Length(),
-        DirectX::SimpleMath::Vector3(obbWorld._21, obbWorld._22, obbWorld._23).Length(),
-        DirectX::SimpleMath::Vector3(obbWorld._31, obbWorld._32, obbWorld._33).Length()
-    );
-    
-    DirectX::SimpleMath::Vector3 Obbextents = obb->GetExtents() * scale;
-    float halfHeight = capsule->GetHeight() * 0.5f;
-    DirectX::SimpleMath::Vector3 capPos = capsule->GetCalculateWorldMatrix().Translation();
+   
+    DirectX::SimpleMath::Vector3 SegTop = capsule->GetWorldTopCenter();
+    DirectX::SimpleMath::Vector3 SegBottom = capsule->GetWorldBottomCenter();
 
-    DirectX::SimpleMath::Vector3 SegTop(capPos.x, capPos.y + halfHeight, capPos.z);
-    DirectX::SimpleMath::Vector3 SegBottom(capPos.x, capPos.y - halfHeight, capPos.z);
+    DirectX::BoundingOrientedBox worldBox = obb->GetWorldOBB();
+    DirectX::SimpleMath::Vector3 extents = worldBox.Extents;
 
-    DirectX::SimpleMath::Matrix obbInverse = obbWorld.Invert();
+    DirectX::SimpleMath::Quaternion boxRotation(worldBox.Orientation);
 
-    DirectX::SimpleMath::Vector3 localSegTop = DirectX::SimpleMath::Vector3::Transform(SegTop, obbInverse);
-    DirectX::SimpleMath::Vector3 localSegBottom = DirectX::SimpleMath::Vector3::Transform(SegBottom, obbInverse);
+    DirectX::SimpleMath::Matrix cleanTransform =
+        DirectX::SimpleMath::Matrix::CreateFromQuaternion(boxRotation) * DirectX::SimpleMath::Matrix::CreateTranslation(worldBox.Center);
+
+    DirectX::SimpleMath::Matrix inverseTransform = cleanTransform.Invert();
+
+    DirectX::SimpleMath::Vector3 localSegTop = DirectX::SimpleMath::Vector3::Transform(SegTop, inverseTransform);
+    DirectX::SimpleMath::Vector3 localSegBottom = DirectX::SimpleMath::Vector3::Transform(SegBottom, inverseTransform);
+
     DirectX::SimpleMath::Vector3 d = localSegTop - localSegBottom;
     float len = d.Length();
 
     std::function<DirectX::SimpleMath::Vector3(const DirectX::SimpleMath::Vector3&)> clampToAABB =
-        [&Obbextents](const DirectX::SimpleMath::Vector3& p) -> DirectX::SimpleMath::Vector3
+        [&extents](const DirectX::SimpleMath::Vector3& p) -> DirectX::SimpleMath::Vector3
         {
             return DirectX::SimpleMath::Vector3(
-                std::fmax(-Obbextents.x, std::min(p.x, Obbextents.x)),
-                std::fmax(-Obbextents.y, std::min(p.y, Obbextents.y)),
-                std::fmax(-Obbextents.z, std::min(p.z, Obbextents.z))
+                std::fmax(-extents.x, std::min(p.x, extents.x)),
+                std::fmax(-extents.y, std::min(p.y, extents.y)),
+                std::fmax(-extents.z, std::min(p.z, extents.z))
             );
         };
 
-    DirectX::SimpleMath::Vector3 localClosestOnSeg = DirectX::SimpleMath::Vector3::Transform(obbPos, obbInverse);
+    DirectX::SimpleMath::Vector3 localClosestOnSeg = DirectX::SimpleMath::Vector3::Zero;
     DirectX::SimpleMath::Vector3 localClosestOnObb = clampToAABB(localClosestOnSeg);
 
     for (int i = 0; i < 3; ++i)
     {
-        DirectX::SimpleMath::Vector3 toObb = localClosestOnObb - SegBottom;
+        //Use localSegBottom instead of SegBottom!
+        DirectX::SimpleMath::Vector3 toObb = localClosestOnObb - localSegBottom;
         float t = (len > 0.0001f) ? toObb.Dot(d) / (len * len) : 0.5f;
         t = std::fmax(0.0f, std::fmin(1.0f, t));
         localClosestOnSeg = localSegBottom + d * t;
@@ -65,21 +63,19 @@ HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsOBB(HEIN::CapsuleColl
         manifold.isColliding = true;
         manifold.penetrationDepth = capsule->GetRadius() - distance;
 
+        // Rotate the normal back to world space using our clean matrix!
         if (distance > 0.001f)
         {
             localDiff.Normalize();
-            manifold.normal = DirectX::SimpleMath::Vector3::TransformNormal(localDiff, obbWorld);
-            manifold.normal.Normalize();
+            manifold.normal = DirectX::SimpleMath::Vector3::TransformNormal(localDiff, cleanTransform);
         }
         else
         {
-            manifold.normal = DirectX::SimpleMath::Vector3::TransformNormal(DirectX::SimpleMath::Vector3(0.0f, 1.0f, 0.0f), obbWorld);
-            manifold.normal.Normalize();
+            manifold.normal = DirectX::SimpleMath::Vector3::TransformNormal(DirectX::SimpleMath::Vector3(0.0f, 1.0f, 0.0f), cleanTransform);
         }
     }
 
     return manifold;
-    
 }
 
 HEIN::CollisionManifold HEIN::CollisionMath::CheckOBBvsOBB(HEIN::OBBColliderComponent* obbA, HEIN::OBBColliderComponent* obbB)
@@ -110,8 +106,8 @@ HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsAABB(HEIN::CapsuleCol
     DirectX::SimpleMath::Vector3 capPos = capsule->GetCalculateWorldMatrix().Translation();
 
     // Capsule segment
-    DirectX::SimpleMath::Vector3 SegTop(capPos.x, capPos.y + halfHeight, capPos.z);
-    DirectX::SimpleMath::Vector3 SegBottom(capPos.x, capPos.y - halfHeight, capPos.z);
+    DirectX::SimpleMath::Vector3 SegTop = capsule->GetWorldTopCenter();
+    DirectX::SimpleMath::Vector3 SegBottom = capsule->GetWorldBottomCenter();
     DirectX::SimpleMath::Vector3 d = SegTop - SegBottom;
     float len = d.Length();
     

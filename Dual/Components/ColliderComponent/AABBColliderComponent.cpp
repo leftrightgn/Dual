@@ -26,18 +26,19 @@ void HEIN::AABBColliderComponent::InitializeFromModel(StaticModelComponent* stat
     }
 }
 
+void HEIN::AABBColliderComponent::SyncColliderState()
+{
+    DirectX::SimpleMath::Matrix worldMatrix = CalculateWorldMatrix();
+
+    DirectX::BoundingBox localBox(DirectX::SimpleMath::Vector3::Zero, m_extents);
+
+    localBox.Transform(m_worldAABB, worldMatrix);
+}
 
 void HEIN::AABBColliderComponent::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj)
 {
     if (gameContext.debugCollisionRenderer == nullptr) return;
 
-    DirectX::SimpleMath::Matrix worldMatrix = CalculateWorldMatrix();
-
-    DirectX::BoundingBox localBox(DirectX::SimpleMath::Vector3::Zero, m_extents);
-
-    DirectX::BoundingBox worldBox;
-
-    localBox.Transform(worldBox, worldMatrix);
 
     DirectX::SimpleMath::Color debugColor = DirectX::SimpleMath::Color(DirectX::Colors::Red);
     if (m_isTrigger)
@@ -45,5 +46,5 @@ void HEIN::AABBColliderComponent::Draw(GameContext& gameContext, const DirectX::
         debugColor = DirectX::Colors::Yellow;
     }
 
-    gameContext.debugCollisionRenderer->QueueAABB(worldBox, debugColor);
+    gameContext.debugCollisionRenderer->QueueAABB(m_worldAABB, debugColor);
 }
