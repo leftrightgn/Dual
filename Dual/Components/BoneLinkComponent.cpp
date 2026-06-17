@@ -53,7 +53,7 @@ void HEIN::BoneLinkComponent::Start()
 	}
 }
 
-void HEIN::BoneLinkComponent::Update(float deltaTime)
+void HEIN::BoneLinkComponent::LateUpdate(float deltaTime)
 {
 	if (m_targetModel == nullptr || m_targetBoneIndex == -1) return;
 

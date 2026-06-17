@@ -31,7 +31,8 @@ namespace HEIN
 		void LinkTo(DirectX::SimpleMath::Vector3* position);
 
 		void Start() override;
-		void Update(float deltaTime) override;
+		void Update(float deltaTime) override {}
+		void LateUpdate(float deltaTime) override;
 
 		void Draw(
 			GameContext& gameContext,
