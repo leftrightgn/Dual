@@ -14,6 +14,7 @@ namespace HEIN
 		DirectX::ModelBone::TransformArray m_drawBones;
 		DirectX::ModelBone::TransformArray m_skinBones;
 		DirectX::ModelBone::TransformArray m_targetBones;
+		DirectX::ModelBone::TransformArray m_shapShotBones;
 		//DX::AnimationSDKMESH m_animation;
 		std::unordered_map < std::string, std::unique_ptr<DX::AnimationSDKMESH>> m_animations;
 

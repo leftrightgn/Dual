@@ -73,7 +73,9 @@ AnimationSDKMESH::AnimationSDKMESH() noexcept
     m_boneToTrack{},                // Bone to track conversion
     m_animBones{},                  // Animation bones
     m_boneNumber{},                 // Bone number
-    m_boneTransforms{}              // Bone transform matrices
+    m_boneTransforms{},             // Bone transform matrices
+    m_blendFactor{}
+
 {
 }
 

@@ -6,17 +6,18 @@
 namespace HEIN
 {
 	class SocketComponent;
+	class ActorManager;
 	// Data
 	struct PlayerSpawnData
 	{
-		std::unique_ptr<HEIN::Actor> playerActor;
+		HEIN::ActorID playerID = HEIN::INVALID_USER_ID;
 		HEIN::SkinnedModelComponent* tpsModel = nullptr;
 		HEIN::SkinnedModelComponent* fpsModel = nullptr;
 	};
 
 	struct EnemySpawnData
 	{
-		std::unique_ptr<HEIN::Actor> enemyActor;
+		HEIN::ActorID enemyID = HEIN::INVALID_USER_ID;
 		HEIN::SkinnedModelComponent* tpsModel = nullptr;
 	};
 
@@ -25,21 +26,25 @@ namespace HEIN
 	public:
 
 		static PlayerSpawnData CreateKnight(
+			ActorManager& actorManager,
 			GameContext& gameContext,
 			CameraController* cameraController,
 			DirectX::SimpleMath::Vector3* targetCameraOut
 		);
 
 		static std::unique_ptr<HEIN::Actor> CreateSword(
+			ActorManager& actorManager,
 			GameContext& gameContext,
 			HEIN::SocketComponent* targetPlayerSocket
 		);
 
 		static std::unique_ptr<HEIN::Actor> CreateStage(
+			ActorManager& actorManager,
 			GameContext& gameContext
 		);
 
 		static EnemySpawnData CreateEnemy(
+			ActorManager& actorManager,
 			GameContext& gameContext
 		);
 

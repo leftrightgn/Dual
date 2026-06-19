@@ -12,7 +12,7 @@ void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*state
 	auto models = owner->GetComponents<SkinnedModelComponent>();
 	for (auto* model : models)
 	{
-		model->CrossfadeAnimation("Idle", 0.5f);
+		model->CrossfadeAnimation("Idle", 0.2f);
 	}
 }
 
