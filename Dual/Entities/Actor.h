@@ -9,20 +9,28 @@
 
 namespace HEIN
 {
+
+	using ActorID = uint32_t;
+	constexpr ActorID INVALID_USER_ID = 0;
+
 	class IComponent;
 
 	class Actor
 	{
 	private:
 
+		ActorID m_id;
+		ActorID m_ownerID = INVALID_USER_ID;
+		ActorID m_parentID = INVALID_USER_ID;
+		std::vector<ActorID> m_childrensID;
+
 		// Memory safe Array of Components
 		std::vector<std::unique_ptr<HEIN::IComponent>> m_components;
-
 		std::wstring m_tag;
 
 	public:
 
-		Actor(const std::wstring& tag = L"Actor");
+		Actor(ActorID id, const std::wstring& tag = L"Actor");
 
 		~Actor() = default;
 
@@ -38,7 +46,18 @@ namespace HEIN
 
 		void Start();
 
+		ActorID GetID() const { return m_id; }
+		std::wstring GetTag() const { return m_tag; }
 
+		void SetParentID(ActorID id) { m_parentID = id; }
+		ActorID GetParentID() const { return m_parentID; }
+		
+		void SetOwnerID(ActorID id) { m_ownerID = id; }
+		ActorID GetOwnerID() const { return m_ownerID; }
+
+		void AddChild(ActorID id) { m_childrensID.push_back(id); }
+		const std::vector<ActorID>& GetChildren() const { return m_childrensID; }
+		
 		// Template  Components
 		// Creates a component, adds it to the Actor, and returns a pointer to it
 		template <typename T, typename... TArgs>

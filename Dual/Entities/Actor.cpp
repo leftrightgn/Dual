@@ -4,8 +4,9 @@
 #include <Components/TransformComponent.h>
 
 
-HEIN::Actor::Actor(const std::wstring& tag)
-	: m_tag(tag)
+HEIN::Actor::Actor(ActorID id, const std::wstring& tag)
+	: m_id(id)
+	, m_tag(tag)
 {
 }
 

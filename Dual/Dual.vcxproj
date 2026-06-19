@@ -187,6 +187,7 @@
     <ClInclude Include="Common\PhysicsSystem.h" />
     <ClInclude Include="Components\ColliderComponent\SphereColliderComponent.h" />
     <ClInclude Include="Common\EventManager.h" />
+    <ClInclude Include="Entities\ActorManager.h" />
     <ClInclude Include="Factory\ActorFactory.h" />
     <ClInclude Include="Components\BoneLinkComponent.h" />
     <ClInclude Include="Components\ColliderComponent\AABBColliderComponent.h" />
@@ -256,6 +257,7 @@
     <ClCompile Include="Common\PhysicsSystem.cpp" />
     <ClCompile Include="Components\ColliderComponent\SphereColliderComponent.cpp" />
     <ClCompile Include="Common\EventManager.cpp" />
+    <ClCompile Include="Entities\ActorManager.cpp" />
     <ClCompile Include="Factory\ActorFactory.cpp" />
     <ClCompile Include="Components\BoneLinkComponent.cpp" />
     <ClCompile Include="Components\ColliderComponent\AABBColliderComponent.cpp" />

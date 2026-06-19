@@ -31,6 +31,9 @@ namespace HEIN
 		m_drawBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 		m_skinBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 		m_targetBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
+		m_shapShotBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
+
+
 
 		// bone name checker
 		/*OutputDebugStringW(L"--- BONE LIST START ---\n");
@@ -66,28 +69,26 @@ namespace HEIN
 			}
 			else
 			{
-				m_currentAnimation->Update(deltaTime);
 				m_targetAnimation->Update(deltaTime);
-
-				m_currentAnimation->Apply(*m_model, m_model->bones.size(), m_drawBones.get());
+;
 				m_targetAnimation->Apply(*m_model, m_model->bones.size(), m_targetBones.get());
 
 				for (size_t i = 0; i < m_model->bones.size(); ++i)
 				{
 
 					// LOW-LEVEL TRANSLATION
-					DirectX::SimpleMath::Vector3 posA = m_drawBones[i].r[3];
+					DirectX::SimpleMath::Vector3 posA = m_shapShotBones[i].r[3];
 					DirectX::SimpleMath::Vector3 posB = m_targetBones[i].r[3];
 
 					// ROTATION
-					DirectX::SimpleMath::Quaternion rotA = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_drawBones[i]);
+					DirectX::SimpleMath::Quaternion rotA = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_shapShotBones[i]);
 					DirectX::SimpleMath::Quaternion rotB = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_targetBones[i]);
 
 					// FAST SCALE EXTRACTION (Extract the length of the X, Y, and Z axis rows)
 					DirectX::SimpleMath::Vector3 scaleA(
-						DirectX::SimpleMath::Vector3(m_drawBones[i].r[0]).Length(),
-						DirectX::SimpleMath::Vector3(m_drawBones[i].r[1]).Length(),
-						DirectX::SimpleMath::Vector3(m_drawBones[i].r[2]).Length()
+						DirectX::SimpleMath::Vector3(m_shapShotBones[i].r[0]).Length(),
+						DirectX::SimpleMath::Vector3(m_shapShotBones[i].r[1]).Length(),
+						DirectX::SimpleMath::Vector3(m_shapShotBones[i].r[2]).Length()
 					);
 					DirectX::SimpleMath::Vector3 scaleB(
 						DirectX::SimpleMath::Vector3(m_targetBones[i].r[0]).Length(),
@@ -253,15 +254,12 @@ namespace HEIN
 			}
 
 			if (m_isBlending && m_targetAnimation == it->second.get()) return;
-			
-			if (m_currentAnimation == it->second.get())
+
+			if (!m_isBlending && m_currentAnimation == it->second.get()) return;
+		
+			for (size_t i = 0; i < m_model->bones.size(); ++i)
 			{
-				if (m_isBlending)
-				{
-					m_isBlending = false;
-					m_targetAnimation = nullptr;
-				}
-				return;
+				m_shapShotBones[i] = m_drawBones[i];
 			}
 
 			m_targetAnimation = it->second.get();
