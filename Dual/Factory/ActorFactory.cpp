@@ -172,7 +172,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     rootPushbox->SetCollisionMask(CollisionLayer::Layer_Environment | CollisionLayer::Layer_Enemy);
   
 
-    // SET BONES TO TRIGGERS (So they don't push the floor)
+    // SET BONES TO TRIGGERS 
     HeadCapsule->SetTrigger(true);
     BodyCapsule->SetTrigger(true);
     RightarmCapsule->SetTrigger(true);
@@ -234,7 +234,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
     );
    
 
-    HEIN::SocketAttachmentComponent* socketAttachment = sword->AddComponent<HEIN::SocketAttachmentComponent>();
+    HEIN::SocketAttachmentComponent* socketAttachment = sword->AddComponent<HEIN::SocketAttachmentComponent>(&actorManager);
     socketAttachment->Initialize(wielderID, L"WeaponSocket");
 
     sword->Start();
@@ -243,13 +243,13 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
 
 HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameContext& gameContext)
 {
-    // --- 1. STAGE ROOT ---
+    // STAGE ROOT
     HEIN::Actor* stageRoot = actorManager.CreateActor(L"StageRoot");
     HEIN::TransformComponent* rootTran = stageRoot->AddComponent<HEIN::TransformComponent>();
     rootTran->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
     rootTran->SetScale(DirectX::SimpleMath::Vector3(10.0f));
 
-    // --- 2. FLOOR CHILD ---
+    // FLOOR CHILD 
     HEIN::Actor* floorActor = actorManager.CreateActor(L"StageFloor");
     HEIN::TransformComponent* floorTran = floorActor->AddComponent<HEIN::TransformComponent>();
 
@@ -265,7 +265,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
     floorActor->SetParent(stageRoot->GetID());
     stageRoot->AddChild(floorActor->GetID());
 
-    // --- 3. WALL CHILD ---
+    // WALL CHILD 
     HEIN::Actor* wall1Actor = actorManager.CreateActor(L"StageWall1");
     HEIN::TransformComponent* wall1Tran = wall1Actor->AddComponent<HEIN::TransformComponent>();
     wall1Tran->SetPosition(DirectX::SimpleMath::Vector3(10.0f, 1.0f, 0.0f));

@@ -17,10 +17,11 @@ namespace HEIN
 	{
 		m_debugcameraController = std::make_unique<CameraController>();
 
-		m_debugcameraController->RegisterCamera(
-			HEIN::CameraType::Debug,
-			[]() { return std::make_unique<HEIN::DebugCameraMode>(); }
-		);
+        m_debugcameraController->RegisterCamera(
+            HEIN::CameraType::Debug,
+            []()
+            { return std::make_unique<HEIN::DebugCameraMode>(); }
+        );
 
 		m_debugcameraController->SetFirstCamera(CameraType::Debug);
 	}
@@ -60,93 +61,78 @@ namespace HEIN
 		}
 	}
 
-	void DebugDisplayController::Render(
-		GameContext& gameContext,
-		const std::vector<std::unique_ptr<Actor>>& actors,
-		Skybox* skybox,
-		DirectX::SimpleMath::Matrix mainView,
-		DirectX::SimpleMath::Matrix mainProj
-		)
-	{
+    void DebugDisplayController::Render(
+        GameContext& gameContext,
+        HEIN::ActorManager& actorManager, 
+        Skybox* skybox,
+        DirectX::SimpleMath::Matrix mainView,
+        DirectX::SimpleMath::Matrix mainProj
+    )
+    {
+        if (!m_isVisible)
+        {
+            if (gameContext.debugCollisionRenderer != nullptr) gameContext.debugCollisionRenderer->Clear();
+            return;
+        }
 
-		if (!m_isVisible)
-		{
-			if (gameContext.debugCollisionRenderer != nullptr)
-			{
-				gameContext.debugCollisionRenderer->Clear();
-			}
-			return;
-		}
+        ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
+        ID3D11DepthStencilView* dsv = gameContext.deviceResources.GetDepthStencilView();
+        D3D11_VIEWPORT fullscreen = gameContext.deviceResources.GetScreenViewport();
+        D3D11_VIEWPORT debugViewport;
 
-		ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
-		ID3D11DepthStencilView* dsv = gameContext.deviceResources.GetDepthStencilView();
-		D3D11_VIEWPORT fullscreen = gameContext.deviceResources.GetScreenViewport();
-		D3D11_VIEWPORT debugViewport;
+        if (m_isMagnified)
+        {
+            debugViewport = fullscreen;
+            ID3D11RenderTargetView* rtv = gameContext.deviceResources.GetRenderTargetView();
+            const float clearColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
+            context->ClearRenderTargetView(rtv, clearColor);
+        }
+        else
+        {
+            debugViewport.Width = 400.0f;
+            debugViewport.Height = 225.0f;
+            debugViewport.TopLeftX = fullscreen.Width - debugViewport.Width - 20.0f;
+            debugViewport.TopLeftY = 20.0f;
+            debugViewport.MinDepth = 0.0f;
+            debugViewport.MaxDepth = 1.0f;
+        }
 
-		if (m_isMagnified)
-		{
-			debugViewport = fullscreen;
-			ID3D11RenderTargetView* rtv = gameContext.deviceResources.GetRenderTargetView();
-			const float clearColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f }; 
-			context->ClearRenderTargetView(rtv, clearColor);
+        context->RSSetViewports(1, &debugViewport);
+        context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-			
-		}
-		else
-		{
-			debugViewport.Width = 400.0f;
-			debugViewport.Height = 225.0f;
-			debugViewport.TopLeftX = fullscreen.Width - debugViewport.Width - 20.0f;
-			debugViewport.TopLeftY = 20.0f;
-			debugViewport.MinDepth = 0.0f;
-			debugViewport.MaxDepth = 1.0f;
-		}
-		context->RSSetViewports(1, &debugViewport);
+        float aspect = debugViewport.Width / debugViewport.Height;
+        m_projMatrix = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(m_debugcameraController->GetFov(), aspect, 0.01f, 1000.0f);
+        DirectX::SimpleMath::Matrix view = m_debugcameraController->GetView();
 
-		context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+        if (skybox && m_isMagnified) skybox->Draw(gameContext, view, m_projMatrix);
 
-		float aspect = debugViewport.Width / debugViewport.Height;
+        actorManager.DrawAll(gameContext, view, m_projMatrix);
 
-		m_projMatrix =
-			DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
-				m_debugcameraController->GetFov(),
-				aspect,
-				0.01f,
-				1000.0f
-			);
-		DirectX::SimpleMath::Matrix view = m_debugcameraController->GetView();
+        DirectX::BoundingFrustum mainCamFrustum(mainProj, false);
+        DirectX::SimpleMath::Matrix mainCamWorld = mainView.Invert();
+        mainCamFrustum.Transform(mainCamFrustum, mainCamWorld);
+        gameContext.debugRenderer->Begin(view, m_projMatrix);
+        gameContext.debugRenderer->DrawFrustum(mainCamFrustum, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+        DirectX::BoundingSphere camEye(mainCamWorld.Translation(), 0.3f);
+        gameContext.debugRenderer->DrawSphere(camEye, DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f));
+        gameContext.debugRenderer->End();
 
-		if (skybox && m_isMagnified) skybox->Draw(gameContext, view, m_projMatrix);
-		for (const auto& actor : actors) actor->Draw(gameContext, view, m_projMatrix);
-		DirectX::BoundingFrustum mainCamFrustum(mainProj, false);
-		DirectX::SimpleMath::Matrix mainCamWorld = mainView.Invert();
-		mainCamFrustum.Transform(mainCamFrustum, mainCamWorld);
-		gameContext.debugRenderer->Begin(view, m_projMatrix);
-		gameContext.debugRenderer->DrawFrustum(mainCamFrustum, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
-		DirectX::BoundingSphere camEye(mainCamWorld.Translation(), 0.3f);
-		gameContext.debugRenderer->DrawSphere(camEye, DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f));
+        if (gameContext.debugCollisionRenderer != nullptr)
+        {
+            gameContext.debugCollisionRenderer->RenderAndFlush(context, gameContext.commonStates, view, m_projMatrix);
+        }
+        context->RSSetViewports(1, &fullscreen);
 
-		gameContext.debugRenderer->End();
+        if (m_isMagnified)
+        {
+            // Safely grab the pointers for the UI
+            HEIN::Actor* pPlayer = actorManager.GetActor(m_debugPlayerID);
+            HEIN::Actor* pSword = actorManager.GetActor(m_debugSwordID);
+            HEIN::Actor* pStage = actorManager.GetActor(m_debugStageID);
 
-		if (gameContext.debugCollisionRenderer != nullptr)
-		{
-			gameContext.debugCollisionRenderer->RenderAndFlush(
-				context,
-				gameContext.commonStates,
-				view,          // The debug camera's view matrix
-				m_projMatrix   // The debug camera's projection matrix
-			);
-		}
-		context->RSSetViewports(1, &fullscreen);
-
-		if (m_isMagnified)
-		{
-			m_debugUI.Draw(m_debugPlayer, m_debugSword, m_debugStage);
-		}
-
-	
-		
-	}
+            m_debugUI.Draw(pPlayer, pSword, pStage);
+        }
+    }
 	const DirectX::SimpleMath::Matrix DebugDisplayController::GetViewMatrix() const
 	{
 		return m_debugcameraController->GetView();
@@ -157,12 +143,12 @@ namespace HEIN
 		return m_projMatrix;
 	}
 
-	void DebugDisplayController::SetDebugTargets(Actor* player, Actor* sword, Actor* stage)
-	{
-		m_debugPlayer = player;
-		m_debugSword = sword;
-		m_debugStage = stage;
-	}
+    void DebugDisplayController::SetDebugTargets(HEIN::ActorID playerID, HEIN::ActorID swordID, HEIN::ActorID stageID)
+    {
+        m_debugPlayerID = playerID;
+        m_debugSwordID = swordID;
+        m_debugStageID = stageID;
+    }
 
 
 }

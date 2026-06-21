@@ -99,7 +99,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     // Debug Mode
     m_cameraController->RegisterCamera(
         HEIN::CameraType::Debug,
-        []() { return std::make_unique<HEIN::DebugCameraMode>(); }
+        []() 
+        { return std::make_unique<HEIN::DebugCameraMode>(); }
     );
 
     m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
@@ -110,9 +111,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
     m_debugDisplay->Initialize();
 
-    HEIN::Actor* sword = m_actorManager.GetActor(m_swordID);
-    HEIN::Actor* stage = m_actorManager.GetActor(m_stageID);
-    m_debugDisplay->SetDebugTargets(player, sword, stage);
+    
+    m_debugDisplay->SetDebugTargets(m_playerID, m_swordID, m_stageID);
 }
 
 

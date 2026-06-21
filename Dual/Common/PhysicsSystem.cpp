@@ -1,56 +1,56 @@
 ﻿#include "pch.h"
 #include "PhysicsSystem.h"
 #include "Entities/Actor.h"
+#include "Entities/ActorManager.h"
 #include "Components/RigidBodyComponent.h"
 #include "Components/TransformComponent.h"
 #include "Components/ColliderComponent/ColliderComponent.h"
 
 
-void HEIN::PhysicsSystem::UpdateMovement(GameContext& gameContext, std::vector<std::unique_ptr<HEIN::Actor>>& actors, float deltaTime)
+void HEIN::PhysicsSystem::UpdateMovement(GameContext& gameContext, HEIN::ActorManager& actorManager, float deltaTime)
 {
-    for (auto& actor : actors)
+    // Loop through the manager's map
+    for (auto& pair : actorManager.GetAllActors())
     {
+        HEIN::Actor* actor = pair.second.get();
         HEIN::RigidBodyComponent* rb = actor->GetComponent<HEIN::RigidBodyComponent>();
         if (rb) rb->m_isGrounded = false;
+
         std::vector<HEIN::ColliderComponent*> actorColliders = actor->GetComponents<HEIN::ColliderComponent>();
         for (HEIN::ColliderComponent* col : actorColliders)
         {
             col->SetCollidingThisFrame(false);
         }
-    }
-    // (Apply Gravity and Velocity)
-    for (std::unique_ptr<HEIN::Actor>& actor : actors)
-    {
-        HEIN::RigidBodyComponent* rigidBody = actor->GetComponent<HEIN::RigidBodyComponent>();
+
+        // Apply Gravity and Velocity
         HEIN::TransformComponent* transform = actor->GetComponent<HEIN::TransformComponent>();
-
-
-        if (rigidBody != nullptr && !rigidBody->isKinematic() && transform != nullptr)
+        if (rb != nullptr && !rb->isKinematic() && transform != nullptr)
         {
-            if (rigidBody->UsesGravity() && !rigidBody->m_isGrounded)
+            if (rb->UsesGravity() && !rb->m_isGrounded)
             {
-                DirectX::SimpleMath::Vector3 gravityForce(0.0f, rigidBody->GRAVITY_FORCE, 0.0f);
-                rigidBody->m_acceleration += gravityForce;
+                DirectX::SimpleMath::Vector3 gravityForce(0.0f, rb->GRAVITY_FORCE, 0.0f);
+                rb->m_acceleration += gravityForce;
             }
 
-            rigidBody->m_velocity += (rigidBody->m_acceleration * deltaTime);
+            rb->m_velocity += (rb->m_acceleration * deltaTime);
 
             DirectX::SimpleMath::Vector3 currentPosition = transform->GetPosition();
-            currentPosition += (rigidBody->m_velocity * deltaTime);
+            currentPosition += (rb->m_velocity * deltaTime);
             transform->SetPosition(currentPosition);
 
-            rigidBody->m_acceleration = DirectX::SimpleMath::Vector3::Zero;
+            rb->m_acceleration = DirectX::SimpleMath::Vector3::Zero;
         }
     }
-
 }
 
-void HEIN::PhysicsSystem::UpdateCollisions(GameContext& gameContext, std::vector<std::unique_ptr<HEIN::Actor>>& actors, float deltaTime)
+void HEIN::PhysicsSystem::UpdateCollisions(GameContext& gameContext, HEIN::ActorManager& actorManager, float deltaTime)
 {
-    // GATHER ALL COLLIDERS
     std::vector<HEIN::ColliderComponent*> allColliders;
-    for (std::unique_ptr<HEIN::Actor>& actor : actors)
+
+    // Gather all colliders from the manager
+    for (auto& pair : actorManager.GetAllActors())
     {
+        HEIN::Actor* actor = pair.second.get();
         std::vector<HEIN::ColliderComponent*> actorColliders = actor->GetComponents<HEIN::ColliderComponent>();
         for (HEIN::ColliderComponent* col : actorColliders)
         {
@@ -59,7 +59,7 @@ void HEIN::PhysicsSystem::UpdateCollisions(GameContext& gameContext, std::vector
         }
     }
 
-    // COLLISION DETECTION & RESOLUTION
+    // (The rest of your exact collision resolution code stays exactly the same here!)
     for (size_t i = 0; i < allColliders.size(); ++i)
     {
         for (size_t j = i + 1; j < allColliders.size(); ++j)
@@ -67,18 +67,12 @@ void HEIN::PhysicsSystem::UpdateCollisions(GameContext& gameContext, std::vector
             HEIN::ColliderComponent* colA = allColliders[i];
             HEIN::ColliderComponent* colB = allColliders[j];
 
-            if (colA->GetOwner() == colB->GetOwner())
-            {
-                continue;
-            }
+            if (colA->GetOwner() == colB->GetOwner()) continue;
 
             bool aCanHitB = (colA->GetCollisionMask() & colB->GetCollisionLayer()) != 0;
             bool bCanHitA = (colB->GetCollisionMask() & colA->GetCollisionLayer()) != 0;
 
-            if (!aCanHitB || !bCanHitA)
-            {
-                continue;
-            }
+            if (!aCanHitB || !bCanHitA) continue;
 
             HEIN::CollisionManifold mainfold = HEIN::CollisionDispatcher::CheckCollision(colA, colB);
             if (mainfold.isColliding)
@@ -98,7 +92,6 @@ void HEIN::PhysicsSystem::UpdateCollisions(GameContext& gameContext, std::vector
                     HEIN::TriggerEventPayLoad payload;
                     payload.triggerA = colA;
                     payload.triggerB = colB;
-
                     gameContext.eventManager->DispatchTriggerEvent(payload);
                 }
             }

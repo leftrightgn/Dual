@@ -10,14 +10,14 @@ namespace HEIN
 	// Data
 	struct PlayerSpawnData
 	{
-		HEIN::ActorID playerID = HEIN::INVALID_USER_ID;
+		HEIN::ActorID playerID = HEIN::INVALID_ACTOR_ID;
 		HEIN::SkinnedModelComponent* tpsModel = nullptr;
 		HEIN::SkinnedModelComponent* fpsModel = nullptr;
 	};
 
 	struct EnemySpawnData
 	{
-		HEIN::ActorID enemyID = HEIN::INVALID_USER_ID;
+		HEIN::ActorID enemyID = HEIN::INVALID_ACTOR_ID;
 		HEIN::SkinnedModelComponent* tpsModel = nullptr;
 	};
 

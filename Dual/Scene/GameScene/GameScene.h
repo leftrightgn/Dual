@@ -43,10 +43,10 @@ private:
 	DirectX::SimpleMath::Vector3 m_springEyePos;
 
 	// --- Handle-Based Entity Memory System ---
-	HEIN::ActorID m_playerID = HEIN::INVALID_USER_ID;
-	HEIN::ActorID m_swordID = HEIN::INVALID_USER_ID;
-	HEIN::ActorID m_stageID = HEIN::INVALID_USER_ID;
-	HEIN::ActorID m_enemyID = HEIN::INVALID_USER_ID;
+	HEIN::ActorID m_playerID = HEIN::INVALID_ACTOR_ID;
+	HEIN::ActorID m_swordID = HEIN::INVALID_ACTOR_ID;
+	HEIN::ActorID m_stageID = HEIN::INVALID_ACTOR_ID;
+	HEIN::ActorID m_enemyID = HEIN::INVALID_ACTOR_ID;
 
 	HEIN::ActorManager m_actorManager;
 

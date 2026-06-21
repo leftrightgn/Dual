@@ -54,10 +54,22 @@ void HEIN::ActorManager::UpdateAllHierarchies()
     {
         Actor* actor = pair.second.get();
 
-        if (actor->GetParentID() == HEIN::INVALID_USER_ID)
+        if (actor->GetParentID() == HEIN::INVALID_ACTOR_ID)
         {
             CascadeTransforms(actor->GetID());
         }
+    }
+}
+
+void HEIN::ActorManager::DrawAll(
+    GameContext& gameContext,
+    const DirectX::SimpleMath::Matrix& view, 
+    const DirectX::SimpleMath::Matrix& proj
+)
+{
+    for (std::pair<const HEIN::ActorID, std::unique_ptr<HEIN::Actor>>& pair : m_actors)
+    {
+        pair.second->Draw(gameContext, view, proj);
     }
 }
 

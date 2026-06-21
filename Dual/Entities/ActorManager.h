@@ -30,8 +30,15 @@ namespace HEIN
 
 		void UpdateAllHierarchies();
 
+		void DrawAll(
+			GameContext& gameContext,
+			const DirectX::SimpleMath::Matrix& view,
+			const DirectX::SimpleMath::Matrix& proj
+		);
+
 		void CleanUpDestroyedActors();
 
+		const std::unordered_map<ActorID, std::unique_ptr<Actor>>& GetAllActors() const { return m_actors; }
 	private:
 
 		// internal helper for scene graph map

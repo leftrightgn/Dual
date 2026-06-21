@@ -1,11 +1,9 @@
 #pragma once
 #include "ICameraMode.h"
 #include <SimpleMath.h>
-#include <Entities/Actor.h>
 
 namespace HEIN
 {
-    class ActorManager;
 
     class DebugCameraMode : public ICameraMode
     {
@@ -26,9 +24,6 @@ namespace HEIN
 
     private:
 
-        HEIN::ActorManager* m_manager;
-        HEIN::ActorID m_targetID;
-
         DirectX::SimpleMath::Vector3 m_target;
         float m_yaw;
         float m_pitch;
@@ -45,8 +40,6 @@ namespace HEIN
     public:
 
         DebugCameraMode(
-            HEIN::ActorManager* manager,
-            HEIN::ActorID targetID,
             float startDistance = DEFAULT_STARTDIS,
             DirectX::SimpleMath::Vector3 target = DirectX::SimpleMath::Vector3::Up * HEIGHT_OFFSET
         );

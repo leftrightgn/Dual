@@ -8,7 +8,7 @@
 HEIN::SocketAttachmentComponent::SocketAttachmentComponent(Actor* owner, ActorManager* manager)
 	: IComponent(owner)
 	, m_manager(manager)
-	, m_targetActorID(HEIN::INVALID_USER_ID)
+	, m_targetActorID(HEIN::INVALID_ACTOR_ID)
 	, m_socketName(L"")
 {
 }
@@ -19,9 +19,9 @@ void HEIN::SocketAttachmentComponent::Initialize(HEIN::ActorID targetActorID, co
 	m_socketName = socketName;
 }
 
-void HEIN::SocketAttachmentComponent::Update(float deltaTime)
+void HEIN::SocketAttachmentComponent::LateUpdate(float deltaTime)
 {
-	if (m_manager == nullptr || m_targetActorID == HEIN::INVALID_USER_ID) return;
+	if (m_manager == nullptr || m_targetActorID == HEIN::INVALID_ACTOR_ID) return;
 
 	HEIN::Actor* targetActor = m_manager->GetActor(m_targetActorID);
 

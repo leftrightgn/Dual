@@ -3,6 +3,7 @@
 #include "Entities/Actor.h"
 #include "Framework/GameContext.h"
 #include "DebugUIManager.h"
+#include <Entities/ActorManager.h>
 
 namespace HEIN
 {
@@ -23,9 +24,9 @@ namespace HEIN
 		float m_virtualMouseY = 0.0f;
 
 		DebugUIManager m_debugUI;
-		Actor* m_debugPlayer = nullptr;
-		Actor* m_debugSword = nullptr;
-		Actor* m_debugStage = nullptr;
+		HEIN::ActorID m_debugPlayerID = HEIN::INVALID_ACTOR_ID;
+		HEIN::ActorID m_debugSwordID = HEIN::INVALID_ACTOR_ID;
+		HEIN::ActorID m_debugStageID = HEIN::INVALID_ACTOR_ID;
 	public:
 
 		DebugDisplayController();
@@ -37,7 +38,7 @@ namespace HEIN
 
 		void Render(
 			GameContext& gameContext,
-			const std::vector<std::unique_ptr<Actor>>& actors, 
+			HEIN::ActorManager& actorManager,
 			Skybox* skybox,
 			DirectX::SimpleMath::Matrix mainView,
 			DirectX::SimpleMath::Matrix mainProj);
@@ -49,7 +50,7 @@ namespace HEIN
 		const DirectX::SimpleMath::Matrix GetViewMatrix() const;
 		const DirectX::SimpleMath::Matrix GetProjMatrix() const;
 
-		void SetDebugTargets(Actor* player, Actor* sword, Actor* stage);
+		void SetDebugTargets(HEIN::ActorID playerID, HEIN::ActorID swordID, HEIN::ActorID stageID);
 
 	};
 }
