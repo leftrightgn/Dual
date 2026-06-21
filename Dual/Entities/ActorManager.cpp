@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "ActorManager.h"
+#include <Components/TransformComponent.h>
 
+
+// LifeCycle
 HEIN::Actor* HEIN::ActorManager::CreateActor(const std::wstring& tag)
 {
     ActorID newID = m_nextID++;
@@ -14,7 +17,8 @@ HEIN::Actor* HEIN::ActorManager::CreateActor(const std::wstring& tag)
 
 void HEIN::ActorManager::DestroyID(ActorID id)
 {
-    m_actors.erase(id);
+    // Don't destory immediately Put in the pending lists
+    m_pendingDestorys.push_back(id);
 }
 
 HEIN::Actor* HEIN::ActorManager::GetActor(ActorID id)
@@ -27,10 +31,71 @@ HEIN::Actor* HEIN::ActorManager::GetActor(ActorID id)
     return nullptr;
 }
 
+// Game Loop
 void HEIN::ActorManager::UpdateAll(float deltaTime)
 {
     for (auto& pair : m_actors)
     {
         pair.second->Update(deltaTime);
+    }
+}
+
+void HEIN::ActorManager::LateUpdateAll(float deltaTime)
+{
+    for (auto& pair : m_actors)
+    {
+        pair.second->LateUpdate(deltaTime);
+    }
+}
+
+void HEIN::ActorManager::UpdateAllHierarchies()
+{
+    for (auto& pair : m_actors)
+    {
+        Actor* actor = pair.second.get();
+
+        if (actor->GetParentID() == HEIN::INVALID_USER_ID)
+        {
+            CascadeTransforms(actor->GetID());
+        }
+    }
+}
+
+void HEIN::ActorManager::CleanUpDestroyedActors()
+{
+    for (ActorID deadID : m_pendingDestorys)
+    {
+        m_actors.erase(deadID);
+    }
+    m_pendingDestorys.clear();
+}
+
+void HEIN::ActorManager::CascadeTransforms(ActorID parentID)
+{
+    Actor* parent = GetActor(parentID);
+    if (parent == nullptr) return;
+
+    HEIN::TransformComponent* parentTransform = parent->GetComponent<HEIN::TransformComponent>();
+    if (parentTransform == nullptr) return;
+
+    // Get the parent Final world Matrix
+    DirectX::SimpleMath::Matrix parentWorld = parentTransform->GetWorldMatrix();
+
+    const std::vector<ActorID>& children = parent->GetChildren();
+    // Give the matrix to every child 
+    for (size_t i = 0; i < children.size(); ++i)
+    {
+        Actor* child = GetActor(children[i]);
+        if (child != nullptr)
+        {
+            HEIN::TransformComponent* childTransform = child->GetComponent<HEIN::TransformComponent>();
+
+            if (childTransform != nullptr)
+            {
+                childTransform->SetParentMatrix(parentWorld);
+            }
+
+            CascadeTransforms(child->GetID());
+        }
     }
 }

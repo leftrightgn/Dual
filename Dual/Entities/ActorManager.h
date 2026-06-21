@@ -15,6 +15,9 @@ namespace HEIN
 
 	public:
 
+		ActorManager() = default;
+		~ActorManager() = default;
+
 		Actor* CreateActor(const std::wstring& tag);
 
 		void DestroyID(ActorID id);
@@ -22,5 +25,16 @@ namespace HEIN
 		Actor* GetActor(ActorID id);
 
 		void UpdateAll(float deltaTime);
+
+		void LateUpdateAll(float deltaTime);
+
+		void UpdateAllHierarchies();
+
+		void CleanUpDestroyedActors();
+
+	private:
+
+		// internal helper for scene graph map
+		void CascadeTransforms(ActorID parentID);
 	};
 }

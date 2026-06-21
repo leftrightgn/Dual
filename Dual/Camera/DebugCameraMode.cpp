@@ -1,11 +1,16 @@
 #include "pch.h"
 #include "DebugCameraMode.h"
+#include <Entities/ActorManager.h>
 
 HEIN::DebugCameraMode::DebugCameraMode(
-	  float startDistance, 
-	  DirectX::SimpleMath::Vector3 target
+    HEIN::ActorManager* manager,
+    HEIN::ActorID targetID,
+	float startDistance, 
+	DirectX::SimpleMath::Vector3 target
 )
-    : m_target(target)
+    : m_manager(manager)
+    , m_targetID(targetID)
+    , m_target(target)
     , m_yaw(YAW)
     , m_pitch(PITCH)
     , m_roll(ROLL)
@@ -97,6 +102,10 @@ void HEIN::DebugCameraMode::ProcessInput(const CameraInputState& input)
 
 void HEIN::DebugCameraMode::Update(CameraData& outData, float /*deltaTime*/, ICameraController& /*controller*/)
 {
+    HEIN::Actor* targetActor = m_manager->GetActor(m_targetID);
+
+    if (targetActor == nullptr) return;
+
     DirectX::SimpleMath::Quaternion rotation = 
         DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(m_yaw, m_pitch, m_roll);
 

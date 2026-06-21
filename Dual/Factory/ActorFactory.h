@@ -32,13 +32,13 @@ namespace HEIN
 			DirectX::SimpleMath::Vector3* targetCameraOut
 		);
 
-		static std::unique_ptr<HEIN::Actor> CreateSword(
+		static HEIN::ActorID CreateSword(
 			ActorManager& actorManager,
 			GameContext& gameContext,
-			HEIN::SocketComponent* targetPlayerSocket
+			HEIN::ActorID wielderID
 		);
 
-		static std::unique_ptr<HEIN::Actor> CreateStage(
+		static HEIN::ActorID CreateStage(
 			ActorManager& actorManager,
 			GameContext& gameContext
 		);

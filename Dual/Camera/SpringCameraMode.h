@@ -1,9 +1,12 @@
 #pragma once
 #include "ICameraMode.h"
 #include <SimpleMath.h>
+#include <Entities/Actor.h>
 
 namespace HEIN
 {
+	class ActorManager;
+
 	class TransformComponent;
 
 	class SpringCameraMode : public ICameraMode
@@ -25,6 +28,9 @@ namespace HEIN
 		static constexpr float DAMPING = 2.0f;
 	private:
 
+		HEIN::ActorManager* m_manager;
+		HEIN::ActorID m_targetID;
+
 		const TransformComponent* m_targetTransform;
 		const DirectX::SimpleMath::Vector3* m_desiredTarget;
 		DirectX::SimpleMath::Vector3 m_currentPosition;
@@ -43,6 +49,8 @@ namespace HEIN
 	public:
 
 		SpringCameraMode(
+			HEIN::ActorManager* manager,
+			HEIN::ActorID targetID,
 			const TransformComponent* targetTransform,
 			const DirectX::SimpleMath::Vector3* desiredTarget,
 			float followDistance = DEFAULT_FOLLOW_DISTANCE,

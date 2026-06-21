@@ -1,13 +1,18 @@
 #include "pch.h"
 #include "CinematicMode.h"
+#include <Entities/ActorManager.h>
 
 HEIN::CinematicMode::CinematicMode(
-	  DirectX::SimpleMath::Vector3 centerPoint,
-	  float radius, float currentAngle,
-	  float orbitSpeed,
-	  float cameraHeight
+	HEIN::ActorManager* manager,
+	HEIN::ActorID targetID,
+    DirectX::SimpleMath::Vector3 centerPoint,
+    float radius, float currentAngle,
+    float orbitSpeed,
+    float cameraHeight
 )
-	: m_centerofStage(centerPoint)
+	: m_manager(manager)
+	, m_targetID(targetID)
+	, m_centerofStage(centerPoint)
 	, m_radius(radius)
 	, m_currentAngle(currentAngle)
 	, m_orbitSpeed(orbitSpeed)
@@ -17,6 +22,10 @@ HEIN::CinematicMode::CinematicMode(
 
 void HEIN::CinematicMode::Update(CameraData& outData, float deltaTime, ICameraController& /*controller*/)
 {
+	HEIN::Actor* targetActor = m_manager->GetActor(m_targetID);
+
+	if (targetActor == nullptr) return;
+
 	// Advance the angle over time
 	m_currentAngle += m_orbitSpeed * deltaTime;
 

@@ -49,7 +49,7 @@ namespace HEIN
 		ActorID GetID() const { return m_id; }
 		std::wstring GetTag() const { return m_tag; }
 
-		void SetParentID(ActorID id) { m_parentID = id; }
+		void SetParent(ActorID id) { m_parentID = id; }
 		ActorID GetParentID() const { return m_parentID; }
 		
 		void SetOwnerID(ActorID id) { m_ownerID = id; }

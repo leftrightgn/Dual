@@ -4,6 +4,9 @@
 
 namespace HEIN
 {
+
+	class ActorManager;
+
 	class FirstPersonMode : public ICameraMode
 	{
 	private:
@@ -19,6 +22,9 @@ namespace HEIN
 		static constexpr float FPS_CAM_FOV = 60.0f;
 
 	private:
+
+		HEIN::ActorManager* m_manager;
+		HEIN::ActorID m_targetID;
 
 		const DirectX::SimpleMath::Vector3* m_playerHeadPosition;
 
@@ -37,9 +43,11 @@ namespace HEIN
 	public:
 
 		FirstPersonMode(
-			  const DirectX::SimpleMath::Vector3* headPos,
-			  SkinnedModelComponent* fpsModel,
-			  SkinnedModelComponent* tpsModel
+			HEIN::ActorManager* manager,
+			HEIN::ActorID targetID,
+			const DirectX::SimpleMath::Vector3* headPos,
+			SkinnedModelComponent* fpsModel,
+			SkinnedModelComponent* tpsModel
 		);
 	
 		void OnEnter(CameraData& data) override;

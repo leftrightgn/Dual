@@ -197,15 +197,16 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     return spawnData;
 }
 
-std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateSword(
+HEIN::ActorID HEIN::ActorFactory::CreateSword(
     ActorManager& actorManager,
     GameContext& gameContext, 
-    HEIN::SocketComponent* targetPlayerSocket
+    HEIN::ActorID wielderID
 )
 {
     HEIN::Actor* sword = actorManager.CreateActor(L"Sword");
-    HEIN::TransformComponent* swordTransform = sword->AddComponent<HEIN::TransformComponent>();
+    sword->SetOwnerID(wielderID);
 
+    HEIN::TransformComponent* swordTransform = sword->AddComponent<HEIN::TransformComponent>();
     swordTransform->SetScale(DirectX::SimpleMath::Vector3(2.0f));
 
     HEIN::StaticModelComponent* swordModel = sword->AddComponent<HEIN::StaticModelComponent>();
@@ -231,69 +232,57 @@ std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateSword(
         CollisionLayer::Layer_Enemy |
         CollisionLayer::Layer_EnemyWeapon
     );
-    if (targetPlayerSocket != nullptr)
-    {
-        HEIN::SocketAttachmentComponent* socketAttachment = sword->AddComponent<HEIN::SocketAttachmentComponent>();
-        socketAttachment->Initialize(targetPlayerSocket, L"WeaponSocket");
-    }
+   
+
+    HEIN::SocketAttachmentComponent* socketAttachment = sword->AddComponent<HEIN::SocketAttachmentComponent>();
+    socketAttachment->Initialize(wielderID, L"WeaponSocket");
+
     sword->Start();
-    return sword;
+    return sword->GetID();
 }
 
-std::unique_ptr<HEIN::Actor> HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameContext& gameContext)
+HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameContext& gameContext)
 {
-    std::unique_ptr<HEIN::Actor> stageActor = std::make_unique<HEIN::Actor>(L"Stage");
-    HEIN::TransformComponent* tranStage = stageActor->AddComponent<HEIN::TransformComponent>();
+    // --- 1. STAGE ROOT ---
+    HEIN::Actor* stageRoot = actorManager.CreateActor(L"StageRoot");
+    HEIN::TransformComponent* rootTran = stageRoot->AddComponent<HEIN::TransformComponent>();
+    rootTran->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
+    rootTran->SetScale(DirectX::SimpleMath::Vector3(10.0f));
 
-    tranStage->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
-    tranStage->SetScale(DirectX::SimpleMath::Vector3(10.0f));
+    // --- 2. FLOOR CHILD ---
+    HEIN::Actor* floorActor = actorManager.CreateActor(L"StageFloor");
+    HEIN::TransformComponent* floorTran = floorActor->AddComponent<HEIN::TransformComponent>();
 
-    HEIN::StaticModelComponent* stageModel = stageActor->AddComponent<HEIN::StaticModelComponent>();
+    HEIN::StaticModelComponent* floorModel = floorActor->AddComponent<HEIN::StaticModelComponent>();
+    floorModel->Initialize(gameContext, L"Resources/Models/stage/tile1.sdkmesh", L"Resources/Models/stage");
 
-    stageModel->Initialize(gameContext, L"Resources/Models/stage/tile1.sdkmesh", L"Resources/Models/stage");
+    HEIN::AABBColliderComponent* floorCol = floorActor->AddComponent<HEIN::AABBColliderComponent>();
+    floorCol->InitializeFromModel(floorModel);
+    floorCol->SetExtents(DirectX::SimpleMath::Vector3(10.4f, 0.06f, 10.4f));
+    floorCol->SetCollisionLayer(CollisionLayer::Layer_Environment);
 
-    HEIN::AABBColliderComponent* floor = stageActor->AddComponent<HEIN::AABBColliderComponent>();
-    floor->InitializeFromModel(stageModel);
-    floor->SetExtents(DirectX::SimpleMath::Vector3(10.4f, 0.06f, 10.4f));
-    floor->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
-    floor->SetTrigger(false);
-    floor->SetColliderTag(L"Floor");
-    floor->SetCollisionLayer(CollisionLayer::Layer_Environment);
-    floor->SetCollisionMask(CollisionLayer::Layer_Player | CollisionLayer::Layer_Enemy);
-   
+    // Link Floor to Root
+    floorActor->SetParent(stageRoot->GetID());
+    stageRoot->AddChild(floorActor->GetID());
 
-    HEIN::AABBColliderComponent* wall1 = stageActor->AddComponent<HEIN::AABBColliderComponent>();
-    wall1->Initialize(DirectX::SimpleMath::Vector3(0.08f, 1.0f, 10.0f));
-    wall1->SetOffset(DirectX::SimpleMath::Vector3(10.0f, 1.0f, 0.0f));
-    wall1->SetRotationOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
-    wall1->SetTrigger(false);
-    wall1->SetColliderTag(L"Wall1");
-    wall1->SetCollisionLayer(CollisionLayer::Layer_Environment);
-    wall1->SetCollisionMask(CollisionLayer::Layer_Player | CollisionLayer::Layer_Enemy);
-   
-    HEIN::AABBColliderComponent* wall2 = stageActor->AddComponent<HEIN::AABBColliderComponent>();
-    wall2->Initialize(DirectX::SimpleMath::Vector3(10.0f, 1.0f, 0.08f));
-    wall2->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 1.0f, 10.0f));
-    wall2->SetRotationOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
-    wall2->SetTrigger(false);
-    wall2->SetColliderTag(L"Wall2");
-    wall2->SetCollisionLayer(CollisionLayer::Layer_Environment);
-    wall2->SetCollisionMask(CollisionLayer::Layer_Player | CollisionLayer::Layer_Enemy);
+    // --- 3. WALL CHILD ---
+    HEIN::Actor* wall1Actor = actorManager.CreateActor(L"StageWall1");
+    HEIN::TransformComponent* wall1Tran = wall1Actor->AddComponent<HEIN::TransformComponent>();
+    wall1Tran->SetPosition(DirectX::SimpleMath::Vector3(10.0f, 1.0f, 0.0f));
 
-    HEIN::AABBColliderComponent* wall3 = stageActor->AddComponent<HEIN::AABBColliderComponent>();
-    wall3->Initialize(DirectX::SimpleMath::Vector3(0.08f, 1.0f, 10.4f));
-    wall3->SetOffset(DirectX::SimpleMath::Vector3(-10.0f, 1.0f, 0.0f));
-    wall3->SetRotationOffset(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
-    wall3->SetTrigger(false);
-    wall3->SetColliderTag(L"Wall3");
-    wall3->SetCollisionLayer(CollisionLayer::Layer_Environment);
-    wall3->SetCollisionMask(CollisionLayer::Layer_Player | CollisionLayer::Layer_Enemy);
+    HEIN::AABBColliderComponent* wall1Col = wall1Actor->AddComponent<HEIN::AABBColliderComponent>();
+    wall1Col->Initialize(DirectX::SimpleMath::Vector3(0.08f, 1.0f, 10.0f));
+    wall1Col->SetCollisionLayer(CollisionLayer::Layer_Environment);
 
-    HEIN::RigidBodyComponent* stageBody = stageActor->AddComponent<HEIN::RigidBodyComponent>();
-    stageBody->Initialize(0.0f, false, true);
+    // Link Wall to Root
+    wall1Actor->SetParent(stageRoot->GetID());
+    stageRoot->AddChild(wall1Actor->GetID());
 
-    stageActor->Start();
-    return stageActor;
+    stageRoot->Start();
+    floorActor->Start();
+    wall1Actor->Start();
+
+    return stageRoot->GetID();
 }
 
 HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(ActorManager& actorManager, GameContext& gameContext)

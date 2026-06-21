@@ -1,10 +1,6 @@
 //--------------------------------------------------------------------------------------
 // File: GameScene.h
-//
-// 新規シーン作成時の元にするファイル
-//
-// Date: 2026.4.13
-// Author: Hideyasu Imase
+// Author: HEIN SOE KHANT
 //--------------------------------------------------------------------------------------
 #pragma once
 #include "pch.h"
@@ -15,11 +11,9 @@
 #include "Effect/Skybox.h"
 #include "ImaseLib/DebugCamera.h"
 #include "Camera/CameraController.h"
-#include <Entities/Actor.h>
 #include "Common/DebugDisplayController.h"
-#include <Common/PhysicsSystem.h>
-
-
+#include "Common/PhysicsSystem.h"
+#include "Entities/ActorManager.h"
 
 class GameScene : public Imase::SceneBase<SceneId, GameContext>
 {
@@ -37,33 +31,25 @@ public:
 private:
 
 	std::unique_ptr<HEIN::Skybox> m_skybox;
-
-	//std::unique_ptr<Water> m_water;
-
 	std::unique_ptr<Imase::DebugCamera> m_debugCamera;
 
 	DirectX::SimpleMath::Matrix m_proj;
-
 	DirectX::SimpleMath::Matrix m_world;
 
 	std::unique_ptr<HEIN::CameraController> m_cameraController;
-
 	std::unique_ptr<HEIN::PhysicsSystem> m_physicsSystem;
 
 	DirectX::SimpleMath::Vector3 m_targetPos;
 	DirectX::SimpleMath::Vector3 m_springEyePos;
 
-	HEIN::Actor* m_player = nullptr;
-	HEIN::Actor* m_swordActor = nullptr;
-	HEIN::Actor* m_stageActor = nullptr;
-	HEIN::Actor* m_enemy = nullptr;
-	std::vector<std::unique_ptr<HEIN::Actor>> m_actors;
+	// --- Handle-Based Entity Memory System ---
+	HEIN::ActorID m_playerID = HEIN::INVALID_USER_ID;
+	HEIN::ActorID m_swordID = HEIN::INVALID_USER_ID;
+	HEIN::ActorID m_stageID = HEIN::INVALID_USER_ID;
+	HEIN::ActorID m_enemyID = HEIN::INVALID_USER_ID;
+
+	HEIN::ActorManager m_actorManager;
 
 	std::unique_ptr<DirectX::GeometricPrimitive> m_debugSphere;
-
 	std::unique_ptr<HEIN::DebugDisplayController> m_debugDisplay;
-
-
 };
-
-

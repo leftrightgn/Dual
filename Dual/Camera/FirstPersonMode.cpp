@@ -1,12 +1,18 @@
 #include "pch.h"
 #include "FirstPersonMode.h"
+#include <Entities/Actor.h>
+#include <Entities/ActorManager.h>
 
 HEIN::FirstPersonMode::FirstPersonMode(
-	  const DirectX::SimpleMath::Vector3* headPos,
-	  SkinnedModelComponent* fpsModel,
-	  SkinnedModelComponent* tpsModel
+	HEIN::ActorManager* manager,
+	HEIN::ActorID targetID, 
+	const DirectX::SimpleMath::Vector3* headPos, 
+	SkinnedModelComponent* fpsModel, 
+	SkinnedModelComponent* tpsModel
 )
-	: m_playerHeadPosition(headPos)
+	: m_manager(manager)
+	, m_targetID(targetID)
+	, m_playerHeadPosition(headPos)
 	, m_fpsModel(fpsModel)
 	, m_tpsModel(tpsModel)
 	, m_yaw(YAW)
@@ -48,6 +54,14 @@ void HEIN::FirstPersonMode::ProcessInput(const CameraInputState& input)
 
 void HEIN::FirstPersonMode::Update(CameraData& outData, float /*deltaTime*/, ICameraController& /*controller*/)
 {
+	HEIN::Actor* targetActor = m_manager->GetActor(m_targetID);
+
+	if (targetActor == nullptr) return;
+
+	m_fpsModel->SetVisible(true);
+	m_tpsModel->SetVisible(false);
+
+
 	outData.position = *m_playerHeadPosition;
 	outData.position.y += m_targetHeight;
 

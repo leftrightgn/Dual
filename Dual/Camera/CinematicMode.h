@@ -1,8 +1,12 @@
 #pragma once
 #include "ICameraMode.h"
+#include <Entities/Actor.h>
 
 namespace HEIN
 {
+
+	class ActorManager;
+
 	class CinematicMode : public ICameraMode
 	{
 	private:
@@ -13,6 +17,9 @@ namespace HEIN
 		static constexpr float DEFAULT_CAMERAHEIGHT = 1.5f;
 	private:
 
+		HEIN::ActorManager* m_manager;
+		HEIN::ActorID m_targetID;
+
 		DirectX::SimpleMath::Vector3 m_centerofStage;
 		float m_radius;
 		float m_currentAngle;
@@ -22,11 +29,13 @@ namespace HEIN
 	public:
 
 		CinematicMode(
-			  DirectX::SimpleMath::Vector3 centerPoint,
-			  float radius = DEFAULT_RADIUS,
-			  float currentAngle = DEFAULT_CURRENTANGLE,
-			  float orbitSpeed = DEFAULT_ORBITSPEED,
-			  float cameraHeight = DEFAULT_CAMERAHEIGHT
+			HEIN::ActorManager* manager,
+			HEIN::ActorID targetID,
+			DirectX::SimpleMath::Vector3 centerPoint,
+			float radius = DEFAULT_RADIUS,
+			float currentAngle = DEFAULT_CURRENTANGLE,
+			float orbitSpeed = DEFAULT_ORBITSPEED,
+			float cameraHeight = DEFAULT_CAMERAHEIGHT
 		);
 	
 		// Cinematic mode ignores player input
