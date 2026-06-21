@@ -4,6 +4,7 @@
 
 namespace HEIN
 {
+
     class DebugCameraMode : public ICameraMode
     {
     private:

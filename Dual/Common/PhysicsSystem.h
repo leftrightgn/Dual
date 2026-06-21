@@ -6,16 +6,16 @@
 
 namespace HEIN
 {
-	class Actor;
-	class ColliderComponent;
-    
-    class PhysicsSystem
-	{
-	public:
-		void UpdateMovement(GameContext& gameContext, std::vector<std::unique_ptr<HEIN::Actor>>& actors, float deltaTime);
-		void UpdateCollisions(GameContext& gameContext, std::vector<std::unique_ptr<HEIN::Actor>>& actors, float deltaTime);
-	private:
-		void ResolvePhysicalOverlap(HEIN::ColliderComponent* colA, HEIN::ColliderComponent* colB, const HEIN::CollisionManifold& mainfold);
-	};
-}
+    class ActorManager; 
+    class ColliderComponent;
 
+    class PhysicsSystem
+    {
+    public:
+        // Pass ActorManager by reference
+        void UpdateMovement(GameContext& gameContext, HEIN::ActorManager& actorManager, float deltaTime);
+        void UpdateCollisions(GameContext& gameContext, HEIN::ActorManager& actorManager, float deltaTime);
+    private:
+        void ResolvePhysicalOverlap(HEIN::ColliderComponent* colA, HEIN::ColliderComponent* colB, const HEIN::CollisionManifold& mainfold);
+    };
+}

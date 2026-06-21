@@ -1,26 +1,30 @@
 #pragma once
 #include <Components/IComponent.h>
 #include <string>
+#include <Entities/Actor.h>
 
 namespace HEIN
 {
 	class SocketComponent;
+	class ActorManager;
 
 	class SocketAttachmentComponent : public IComponent
 	{
 	private:
 
-		HEIN::SocketComponent* m_targetSocket;
+		HEIN::ActorManager* m_manager;
+		HEIN::ActorID m_targetActorID;
 		std::wstring m_socketName;
 
 	public:
 
-		SocketAttachmentComponent(Actor* owner);
+		SocketAttachmentComponent(Actor* owner, ActorManager* manager);
 
-		void Initialize(SocketComponent* targetSocket, const std::wstring& socketName);
+		void Initialize(HEIN::ActorID targetActorID, const std::wstring& socketName);
 
 		void Start() override {}
-		void Update(float deltaTime) override;
+		void Update(float deltaTime) override {}
+		void LateUpdate(float deltaTime) override;
 		void Draw(
 			GameContext& gameContext,
 			const DirectX::SimpleMath::Matrix& world,

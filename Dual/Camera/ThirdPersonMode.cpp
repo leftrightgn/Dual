@@ -1,12 +1,17 @@
 #include "pch.h"
 #include "ThirdPersonMode.h"
+#include <Entities/ActorManager.h>
 
 HEIN::ThirdPersonMode::ThirdPersonMode(
-	  DirectX::SimpleMath::Vector3* playerTarget,
-	  SkinnedModelComponent* fpsModel,
-	  SkinnedModelComponent* tpsModel
+	HEIN::ActorManager* manager,
+	HEIN::ActorID targetID,
+	DirectX::SimpleMath::Vector3* playerTarget,
+	SkinnedModelComponent* fpsModel,
+	SkinnedModelComponent* tpsModel
 )
-	: m_playerTarget(playerTarget)
+	: m_manager(manager)
+	, m_targetID(targetID)
+	, m_playerTarget(playerTarget)
 	, m_fpsModel(fpsModel)
 	, m_tpsModel(tpsModel)
 	, m_yaw(YAW)
@@ -48,6 +53,14 @@ void HEIN::ThirdPersonMode::ProcessInput(const CameraInputState& input)
 
 void HEIN::ThirdPersonMode::Update(CameraData& outData, float /*deltaTime*/, ICameraController& /*controller*/)
 {
+	HEIN::Actor* targetActor = m_manager->GetActor(m_targetID);
+
+	if (targetActor == nullptr) return;
+
+	m_fpsModel->SetVisible(false);
+	m_tpsModel->SetVisible(true);
+
+
 	DirectX::SimpleMath::Vector3 focalPoint = *m_playerTarget;
 	focalPoint.y += m_targetHeight;
 

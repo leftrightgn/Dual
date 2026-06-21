@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "SocketComponent.h"
 #include "Components/SkinnedModelComponent.h"
-#include "TransformComponent.h" 
-#include <Entities/Actor.h>
+#include "Components/TransformComponent.h" // Fixed Include Path
+#include "Entities/Actor.h"
 
 HEIN::SocketComponent::SocketComponent(Actor* owner)
     : IComponent(owner)
@@ -18,8 +18,8 @@ void HEIN::SocketComponent::Start()
 }
 
 void HEIN::SocketComponent::UpdateSocketOffset(
-    const std::wstring& socketName, 
-    const DirectX::SimpleMath::Vector3& newPos, 
+    const std::wstring& socketName,
+    const DirectX::SimpleMath::Vector3& newPos,
     const DirectX::SimpleMath::Vector3& newRot
 )
 {
@@ -51,22 +51,20 @@ HEIN::Socket* HEIN::SocketComponent::GetSocket(const std::wstring& socketName)
 
 DirectX::SimpleMath::Matrix HEIN::SocketComponent::GetSocketWorldMatrix(const std::wstring& socketName)
 {
-    SkinnedModelComponent* model = m_owner->GetComponent<SkinnedModelComponent>();
-    TransformComponent* transform = m_owner->GetComponent<TransformComponent>();
 
-    if (!HasSocket(socketName) || model == nullptr || transform == nullptr)
+    if (!HasSocket(socketName) || m_model == nullptr || m_transform == nullptr)
     {
-        if (transform != nullptr)
+        if (m_transform != nullptr)
         {
-            return transform->GetWorldMatrix();
+            return m_transform->GetWorldMatrix();
         }
         return DirectX::SimpleMath::Matrix::Identity;
     }
 
     const Socket& socket = m_sockets[socketName];
 
-    DirectX::SimpleMath::Matrix ownerWorld = transform->GetWorldMatrix();
-    DirectX::SimpleMath::Matrix boneWorld = model->GetBoneWorldMatrix(socket.boneName.c_str(), ownerWorld);
+    DirectX::SimpleMath::Matrix ownerWorld = m_transform->GetWorldMatrix();
+    DirectX::SimpleMath::Matrix boneWorld = m_model->GetBoneWorldMatrix(socket.boneName.c_str(), ownerWorld);
 
     DirectX::SimpleMath::Vector3 extractedScale;
     DirectX::SimpleMath::Quaternion extractedRotation;
@@ -87,4 +85,3 @@ DirectX::SimpleMath::Matrix HEIN::SocketComponent::GetSocketWorldMatrix(const st
 
     return ownerWorld;
 }
-

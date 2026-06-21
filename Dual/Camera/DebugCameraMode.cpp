@@ -2,8 +2,8 @@
 #include "DebugCameraMode.h"
 
 HEIN::DebugCameraMode::DebugCameraMode(
-	  float startDistance, 
-	  DirectX::SimpleMath::Vector3 target
+    float startDistance, 
+	DirectX::SimpleMath::Vector3 target
 )
     : m_target(target)
     , m_yaw(YAW)

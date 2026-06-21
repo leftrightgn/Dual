@@ -1,16 +1,21 @@
 #include "pch.h"
 #include "SpringCameraMode.h"
 #include "Components/TransformComponent.h"
+#include <Entities/ActorManager.h>
 
 
 HEIN::SpringCameraMode::SpringCameraMode(
-	  const TransformComponent* targetTransform,
-	  const DirectX::SimpleMath::Vector3* desiredTarget, 
-	  float followDistance, 
-	  float heightOffset, 
-	  float freq
+	HEIN::ActorManager* manager,
+	HEIN::ActorID targetID,
+	const TransformComponent* targetTransform,
+	const DirectX::SimpleMath::Vector3* desiredTarget, 
+	float followDistance, 
+	float heightOffset, 
+	float freq
 )
-	: m_targetTransform(targetTransform)
+	: m_manager(manager)
+	, m_targetID(targetID)
+	, m_targetTransform(targetTransform)
 	, m_desiredTarget(desiredTarget)
 	, m_currentPosition(DirectX::SimpleMath::Vector3::Zero)
 	, m_currentLookAt(DirectX::SimpleMath::Vector3::Zero)
@@ -53,6 +58,12 @@ void HEIN::SpringCameraMode::ProcessInput(const CameraInputState& input)
 
 void HEIN::SpringCameraMode::Update(CameraData& outData, float deltaTime, ICameraController& /*controller*/)
 {
+
+	HEIN::Actor* targetActor = m_manager->GetActor(m_targetID);
+
+	if (targetActor == nullptr) return;
+
+
 	if (!m_targetTransform || !m_desiredTarget) return;
 
 	DirectX::SimpleMath::Vector3 targetLookAt = *m_desiredTarget;

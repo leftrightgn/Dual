@@ -2,9 +2,11 @@
 #include "ICameraMode.h"
 #include <SimpleMath.h>
 #include <Components/SkinnedModelComponent.h>
+#include <Entities/Actor.h>
 
 namespace HEIN
 {
+	class ActorManager;
 
 	class ThirdPersonMode : public ICameraMode
 	{
@@ -23,6 +25,9 @@ namespace HEIN
 
 	private:
 
+		HEIN::ActorManager* m_manager;
+		HEIN::ActorID m_targetID;
+
 		const DirectX::SimpleMath::Vector3* m_playerTarget;
 
 		SkinnedModelComponent* m_fpsModel;
@@ -38,9 +43,11 @@ namespace HEIN
 	public:
 
 		ThirdPersonMode(
-			  DirectX::SimpleMath::Vector3* playerTarget,
-			  SkinnedModelComponent* fpsModel,
-			  SkinnedModelComponent* tpsModel
+			HEIN::ActorManager* manager,
+			HEIN::ActorID targetID,
+			DirectX::SimpleMath::Vector3* playerTarget,
+			SkinnedModelComponent* fpsModel,
+			SkinnedModelComponent* tpsModel
 		);
 
 		void OnEnter(CameraData& data) override;
