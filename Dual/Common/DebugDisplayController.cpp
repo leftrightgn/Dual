@@ -130,7 +130,7 @@ namespace HEIN
             HEIN::Actor* pSword = actorManager.GetActor(m_debugSwordID);
             HEIN::Actor* pStage = actorManager.GetActor(m_debugStageID);
 
-            m_debugUI.Draw(pPlayer, pSword, pStage);
+            m_debugUI.Draw(actorManager, pPlayer, pSword, pStage);
         }
     }
 	const DirectX::SimpleMath::Matrix DebugDisplayController::GetViewMatrix() const

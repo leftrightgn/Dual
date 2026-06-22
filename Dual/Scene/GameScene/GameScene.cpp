@@ -7,7 +7,6 @@
 #include <Components/TransformComponent.h>
 #include <Components/SkinnedModelComponent.h>
 #include <Components/PlayerInputComponent.h>
-#include <Components/SocketComponent.h>
 #include <Factory/ActorFactory.h>
 
 using namespace DirectX;
@@ -127,7 +126,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
 
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
 
-    // 1. INPUT PHASE
+    // INPUT PHASE
     if (player != nullptr && !m_debugDisplay->isMagnified())
     {
         HEIN::PlayerInputComponent* inputComp = player->GetComponent<HEIN::PlayerInputComponent>();
@@ -137,14 +136,14 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         }
     }
 
-    // 2. CORE ENGINE LOOP (Data-Oriented Math Pipeline)
+    // CORE ENGINE LOOP (Data-Oriented Math Pipeline)
     m_actorManager.UpdateAll(deltaTime);
     m_physicsSystem->UpdateMovement(gameContext, m_actorManager, deltaTime);
     m_actorManager.UpdateAllHierarchies(); // <--- Math Cascades Downwards
     m_actorManager.LateUpdateAll(deltaTime);
     m_physicsSystem->UpdateCollisions(gameContext, m_actorManager, deltaTime);
 
-    // 3. CAMERA TRACKING
+    // CAMERA TRACKING
     if (player != nullptr)
     {
         HEIN::TransformComponent* pTransform = player->GetComponent<HEIN::TransformComponent>();
@@ -166,7 +165,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(m_cameraController->GetFov(), aspectRatio, 0.1f, 1000.0f);
     }
 
-    // 4. MEMORY CLEANUP
+    // MEMORY CLEANUP
     // Delete any Actors whose health dropped to 0 this frame.
     m_actorManager.CleanUpDestroyedActors();
 }

@@ -118,14 +118,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     HEIN::TwoBoneLinkComponent* RightLegLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightLeg", L"mixamorig:RightFoot");
     RightLegLink->LinkTo(RightLegCapsule);
-    /*HEIN::OBBColliderComponent* RightFoot = spawnData.playerActor->AddComponent<HEIN::OBBColliderComponent>();
-    RightFoot->Initialize(DirectX::SimpleMath::Vector3(6.0f, 12.0f, 3.0f));
-    RightFoot->SetOffset(DirectX::SimpleMath::Vector3(0.0f, -6.0f, -3.0f));
-    RightFoot->SetColliderTag(L"RightFoot");
-    HEIN::BoneLinkComponent* RightFootLink = spawnData.playerActor->AddComponent<HEIN::BoneLinkComponent>();
-    RightFootLink->Initialize(spawnData.tpsModel, L"mixamorig:RightToeBase");
-    RightFootLink->LinkTo(RightFoot);*/
-
+   
     // Left Leg Collider
     HEIN::CapsuleColliderComponent* LeftupLegCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
     LeftupLegCapsule->Initialize(1.0f, 0.0f);
@@ -141,16 +134,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     HEIN::TwoBoneLinkComponent* LeftLegLink = playerActor->AddComponent < HEIN::TwoBoneLinkComponent>();
     LeftLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftLeg", L"mixamorig:LeftFoot");
     LeftLegLink->LinkTo(LeftLegCapsule);
-    /*HEIN::OBBColliderComponent* LeftFoot = spawnData.playerActor->AddComponent<HEIN::OBBColliderComponent>();
-    LeftFoot->Initialize(DirectX::SimpleMath::Vector3(6.0f, 12.0f, 3.0f));
-    LeftFoot->SetOffset(DirectX::SimpleMath::Vector3(0.0f, -6.0f, -3.0f));
-    LeftFoot->SetColliderTag(L"LeftFoot");
-    HEIN::BoneLinkComponent* LeftFootLink = spawnData.playerActor->AddComponent<HEIN::BoneLinkComponent>();
-    LeftFootLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftToeBase");
-    LeftFootLink->LinkTo(LeftFoot);*/
-
-
-
+    
     // Socket
     HEIN::SocketComponent* socketComp = playerActor->AddComponent<HEIN::SocketComponent>();
     HEIN::Socket weaponSocket(
@@ -250,7 +234,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
     rootTran->SetScale(DirectX::SimpleMath::Vector3(10.0f));
 
     // FLOOR CHILD 
-    HEIN::Actor* floorActor = actorManager.CreateActor(L"StageFloor");
+    HEIN::Actor* floorActor = actorManager.CreateActor(L"Floor");
     HEIN::TransformComponent* floorTran = floorActor->AddComponent<HEIN::TransformComponent>();
 
     HEIN::StaticModelComponent* floorModel = floorActor->AddComponent<HEIN::StaticModelComponent>();
@@ -258,7 +242,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
 
     HEIN::AABBColliderComponent* floorCol = floorActor->AddComponent<HEIN::AABBColliderComponent>();
     floorCol->InitializeFromModel(floorModel);
-    floorCol->SetExtents(DirectX::SimpleMath::Vector3(10.4f, 0.06f, 10.4f));
+    floorCol->SetExtents(DirectX::SimpleMath::Vector3(10.4f, 0.14f, 10.4f));
     floorCol->SetCollisionLayer(CollisionLayer::Layer_Environment);
 
     // Link Floor to Root
@@ -266,21 +250,93 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
     stageRoot->AddChild(floorActor->GetID());
 
     // WALL CHILD 
-    HEIN::Actor* wall1Actor = actorManager.CreateActor(L"StageWall1");
-    HEIN::TransformComponent* wall1Tran = wall1Actor->AddComponent<HEIN::TransformComponent>();
-    wall1Tran->SetPosition(DirectX::SimpleMath::Vector3(10.0f, 1.0f, 0.0f));
+    DirectX::SimpleMath::Vector3 wallPosition[] =
+    {
+        DirectX::SimpleMath::Vector3(9.0f, 1.0f, 0.0f),
+        DirectX::SimpleMath::Vector3(0.0f, 1.0f, 9.0f),
+        DirectX::SimpleMath::Vector3(-9.0f, 1.0f, 0.0f),
+        DirectX::SimpleMath::Vector3(0.0f, 1.0f, -9.0f),
+    };
+    DirectX::SimpleMath::Vector3 wallColPos[] =
+    {
+        DirectX::SimpleMath::Vector3(0.08f, 1.0f, 10.0f),
+        DirectX::SimpleMath::Vector3(10.0f, 1.0f, 0.08f),
+        DirectX::SimpleMath::Vector3(0.08f, 1.0f, 10.4f),
+        DirectX::SimpleMath::Vector3(10.0f, 1.0f, 0.08f)
+    };
+    for (int i = 0; i < 4; ++i)
+    {
+        std::wstring wallName = L"StageWall" + std::to_wstring(i);
+        HEIN::Actor* wallActor = actorManager.CreateActor(wallName);
+        HEIN::TransformComponent* wallTrans = wallActor->AddComponent<HEIN::TransformComponent>();
+        wallTrans->SetPosition(wallPosition[i]);
+        HEIN::AABBColliderComponent* wallCol = wallActor->AddComponent<HEIN::AABBColliderComponent>();
+        wallCol->Initialize(wallColPos[i]);
+        wallCol->SetCollisionLayer(CollisionLayer::Layer_Environment);
+        wallActor->SetParent(stageRoot->GetID());
+        stageRoot->AddChild(wallActor->GetID());
 
-    HEIN::AABBColliderComponent* wall1Col = wall1Actor->AddComponent<HEIN::AABBColliderComponent>();
-    wall1Col->Initialize(DirectX::SimpleMath::Vector3(0.08f, 1.0f, 10.0f));
-    wall1Col->SetCollisionLayer(CollisionLayer::Layer_Environment);
+        wallActor->Start();
+    }
+    
 
-    // Link Wall to Root
-    wall1Actor->SetParent(stageRoot->GetID());
-    stageRoot->AddChild(wall1Actor->GetID());
+    // PILLAR
+    DirectX::SimpleMath::Vector3 pillarPosition[] =
+    {
+        DirectX::SimpleMath::Vector3(10.0f, 0.0f, 10.0f),
+        DirectX::SimpleMath::Vector3(10.0f, 0.0f, -10.0f),
+        DirectX::SimpleMath::Vector3(-10.0f, 0.0f, 10.0f),
+        DirectX::SimpleMath::Vector3(-10.0f, 0.0f, -10.0f)
+    };
+    
+    for (int i = 0; i < 4; ++i)
+    {
+        std::wstring pillarName = L"Pillar" + std::to_wstring(i);
+        HEIN::Actor* pillarActor = actorManager.CreateActor(pillarName);
+        HEIN::TransformComponent* pillarTrans = pillarActor->AddComponent<HEIN::TransformComponent>();
+        pillarTrans->SetPosition(pillarPosition[i]);
+        HEIN::StaticModelComponent* pillarModel = pillarActor->AddComponent<HEIN::StaticModelComponent>();
+        pillarModel->Initialize(gameContext, L"Resources/Models/stage/pillar.sdkmesh", L"Resources/Models/stage");
+
+        pillarActor->SetParent(stageRoot->GetID());
+        stageRoot->AddChild(pillarActor->GetID());
+
+        pillarActor->Start();
+    }
+    // Bridge
+    DirectX::SimpleMath::Vector3 bridgePosition[] =
+    {
+        DirectX::SimpleMath::Vector3(10.0f, 0.0f, 10.0f),
+        DirectX::SimpleMath::Vector3(-10.0f, 0.0f, 10.0f),
+        DirectX::SimpleMath::Vector3(-10.0f, 0.0f, 10.0f),
+        DirectX::SimpleMath::Vector3(-10.0f, 0.0f, -10.0f)
+    };
+    DirectX::SimpleMath::Vector3 bridgeRotation[] =
+    {
+        DirectX::SimpleMath::Vector3(0.0f, DirectX::XMConvertToRadians(90.0f), 0.0f),
+        DirectX::SimpleMath::Vector3(0.0f, DirectX::XMConvertToRadians(0.0f), 0.0f),
+        DirectX::SimpleMath::Vector3(0.0f, DirectX::XMConvertToRadians(90.0f), 0.0f),
+        DirectX::SimpleMath::Vector3(0.0f, DirectX::XMConvertToRadians(0.0f), 0.0f)
+    };
+
+    for (int i = 0; i < 4; ++i)
+    {
+        std::wstring bridgeName = L"Bridge" + std::to_wstring(i);
+        HEIN::Actor* bridgeActor = actorManager.CreateActor(bridgeName);
+        HEIN::TransformComponent* bridgeTrans = bridgeActor->AddComponent<HEIN::TransformComponent>();
+        bridgeTrans->SetPosition(bridgePosition[i]);
+        bridgeTrans->SetRotationEuler(bridgeRotation[i]);
+        HEIN::StaticModelComponent* bridModel = bridgeActor->AddComponent<HEIN::StaticModelComponent>();
+        bridModel->Initialize(gameContext, L"Resources/Models/stage/bridge.sdkmesh", L"Resources/Models/stage");
+        bridgeActor->SetParent(stageRoot->GetID());
+        stageRoot->AddChild(bridgeActor->GetID());
+
+        bridgeActor->Start();
+    }
+   
 
     stageRoot->Start();
     floorActor->Start();
-    wall1Actor->Start();
 
     return stageRoot->GetID();
 }
@@ -365,14 +421,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(ActorManager& actorManager,
     HEIN::TwoBoneLinkComponent* RightLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightLeg", L"mixamorig:RightFoot");
     RightLegLink->LinkTo(RightLegCapsule);
-   /* HEIN::OBBColliderComponent* RightFoot = spawnData.enemyActor->AddComponent<HEIN::OBBColliderComponent>();
-    RightFoot->Initialize(DirectX::SimpleMath::Vector3(6.0f, 12.0f, 3.0f));
-    RightFoot->SetOffset(DirectX::SimpleMath::Vector3(0.0f, -6.0f, -3.0f));
-    RightFoot->SetColliderTag(L"eRightFoot");
-    HEIN::BoneLinkComponent* RightFootLink = spawnData.enemyActor->AddComponent<HEIN::BoneLinkComponent>();
-    RightFootLink->Initialize(spawnData.tpsModel, L"mixamorig:RightToeBase");
-    RightFootLink->LinkTo(RightFoot);*/
-
+  
     // Left Leg Collider
     HEIN::CapsuleColliderComponent* LeftupLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     LeftupLegCapsule->Initialize(1.0f, 0.0f);
@@ -386,14 +435,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(ActorManager& actorManager,
     HEIN::TwoBoneLinkComponent* LeftLegLink = enemyActor->AddComponent < HEIN::TwoBoneLinkComponent>();
     LeftLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftLeg", L"mixamorig:LeftFoot");
     LeftLegLink->LinkTo(LeftLegCapsule);
-    /*HEIN::OBBColliderComponent* LeftFoot = spawnData.enemyActor->AddComponent<HEIN::OBBColliderComponent>();
-    LeftFoot->Initialize(DirectX::SimpleMath::Vector3(6.0f, 12.0f, 3.0f));
-    LeftFoot->SetOffset(DirectX::SimpleMath::Vector3(0.0f, -6.0f, -3.0f));
-    LeftFoot->SetColliderTag(L"eLeftFoot");
-    HEIN::BoneLinkComponent* LeftFootLink = spawnData.enemyActor->AddComponent<HEIN::BoneLinkComponent>();
-    LeftFootLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftToeBase");
-    LeftFootLink->LinkTo(LeftFoot);*/
-
+   
 
 
     // Socket
