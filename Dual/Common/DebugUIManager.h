@@ -6,6 +6,8 @@
 
 namespace HEIN
 {
+	class ActorManager;
+
 	class DebugUIManager
 	{
 	private:
@@ -17,6 +19,6 @@ namespace HEIN
 
 		void Update(const GameContext& gameContext);
 
-		void Draw(Actor* player, Actor* sword, Actor* stage);
+		void Draw(HEIN::ActorManager& manager, Actor* player, Actor* sword, Actor* stageRoot);
 	};
 }

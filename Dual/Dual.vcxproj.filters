@@ -152,12 +152,22 @@
     <ClCompile Include="Common\EventManager.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="Common\CollisionMath.cpp" />
-    <ClCompile Include="Common\CollisionDispatcher.cpp" />
     <ClCompile Include="Common\PhysicsSystem.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="Entities\ActorManager.cpp" />
+    <ClCompile Include="Components\DamageDealerComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Entities\ActorManager.cpp">
+      <Filter>Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\CollisionMath.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\CollisionDispatcher.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\HealthComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -352,6 +362,12 @@
     </ClInclude>
     <ClInclude Include="Entities\ActorManager.h">
       <Filter>Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\DamageDealerComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\HealthComponent.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

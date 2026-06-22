@@ -1,9 +1,11 @@
 #include "pch.h"
 #include "DebugUIManager.h"
 #include "Components/SocketComponent.h"
+#include <Components/TransformComponent.h>
 #include "Components/ColliderComponent/OBBColliderComponent.h"
 #include <ImGui/imgui.h>
 #include <Components/ColliderComponent/AABBColliderComponent.h>
+#include <Entities/ActorManager.h>
 
 namespace HEIN
 {
@@ -15,7 +17,7 @@ namespace HEIN
 		}
 	}
 
-	void DebugUIManager::Draw(Actor* player, Actor* sword, Actor* stage)
+	void DebugUIManager::Draw(HEIN::ActorManager& manager, Actor* player, Actor* sword, Actor* stage)
 	{
 		if (!m_isVisible) return;
 
@@ -126,88 +128,52 @@ namespace HEIN
 		{
 			if (stage != nullptr)
 			{
-				std::vector<HEIN::AABBColliderComponent*> aabb = stage->GetComponents<HEIN::AABBColliderComponent>();
-				for (HEIN::AABBColliderComponent* currentBox : aabb)
+				for (HEIN::ActorID childID : stage->GetChildren())
 				{
-					if (currentBox->GetColliderTag() == L"Floor")
+					HEIN::Actor* childActor = manager.GetActor(childID);
+					if (childActor == nullptr) continue;
+
+					if (childActor->GetTag() == L"Floor")
 					{
-						ImGui::Text("floor tunning");
-
-						// TWEAK OFFSET
-						DirectX::SimpleMath::Vector3 currentOffset = currentBox->GetOffset();
-						if (ImGui::DragFloat3("Offset(XYZ)##floor", &currentOffset.x, 0.01f))
+						HEIN::AABBColliderComponent* aabb = childActor->GetComponent<HEIN::AABBColliderComponent>();
+						if (aabb != nullptr)
 						{
-							currentBox->SetOffset(currentOffset);
+							ImGui::Text("floor tunning");
+
+							// TWEAK OFFSET
+							DirectX::SimpleMath::Vector3 currentOffset = aabb->GetOffset();
+							if (ImGui::DragFloat3("Offset(XYZ)##floor", &currentOffset.x, 0.01f))
+							{
+								aabb->SetOffset(currentOffset);
+							}
+
+							// TWEAK EXTENTS 
+							DirectX::SimpleMath::Vector3 currentExtents = aabb->GetExtents();
+							if (ImGui::DragFloat3("Extents (XYZ)", &currentExtents.x, 0.01f))
+							{
+								aabb->SetExtents(currentExtents);
+							}
 						}
-
-						// TWEAK EXTENTS 
-						DirectX::SimpleMath::Vector3 currentExtents = currentBox->GetExtents();
-						if (ImGui::DragFloat3("Extents (XYZ)", &currentExtents.x, 0.01f))
-						{
-							currentBox->SetExtents(currentExtents);
-						}
-					}
-					else if (currentBox->GetColliderTag() == L"Wall1")
-					{
-						ImGui::Text("wall tunning");
-
-						// TWEAK OFFSET
-						DirectX::SimpleMath::Vector3 currentOffset = currentBox->GetOffset();
-						if (ImGui::DragFloat3("wall1Offset", &currentOffset.x, 0.01f))
-						{
-							currentBox->SetOffset(currentOffset);
-						}
-
-						// TWEAK EXTENTS 
-						DirectX::SimpleMath::Vector3 currentExtents = currentBox->GetExtents();
-						if (ImGui::DragFloat3("wall1Extents", &currentExtents.x, 0.01f))
-						{
-							currentBox->SetExtents(currentExtents);
-						}
-
-						//// TWEAK ROTATION ---
-						//DirectX::SimpleMath::Vector3 currentRot = currentBox->GetRotationOffset();
-
-						//// Convert radians to degrees for the UI slider
-						//currentRot.x = DirectX::XMConvertToDegrees(currentRot.x);
-						//currentRot.y = DirectX::XMConvertToDegrees(currentRot.y);
-						//currentRot.z = DirectX::XMConvertToDegrees(currentRot.z);
-
-						//// DragFloat3 speed is 1.0f because degrees are whole numbers
-						//if (ImGui::DragFloat3("wall1Rotation", &currentRot.x, 1.0f))
-						//{
-						//	// Convert back to radians before giving it to the engine!
-						//	currentRot.x = DirectX::XMConvertToRadians(currentRot.x);
-						//	currentRot.y = DirectX::XMConvertToRadians(currentRot.y);
-						//	currentRot.z = DirectX::XMConvertToRadians(currentRot.z);
-
-						//	currentBox->SetRotationOffset(currentRot);
-						//}
-					}
-					else if (currentBox->GetColliderTag() == L"Wall2")
-					{
-						ImGui::Text("wall2 tunning");
-
-						// TWEAK OFFSET
-						DirectX::SimpleMath::Vector3 currentOffset = currentBox->GetOffset();
-						if (ImGui::DragFloat3("wall2Offset", &currentOffset.x, 0.01f))
-						{
-							currentBox->SetOffset(currentOffset);
-						}
-
-						// TWEAK EXTENTS 
-						DirectX::SimpleMath::Vector3 currentExtents = currentBox->GetExtents();
-						if (ImGui::DragFloat3("wall2Extents", &currentExtents.x, 0.01f))
-						{
-							currentBox->SetExtents(currentExtents);
-						}
-
 						
 					}
-					
-				
-				
+
+					else if (childActor->GetTag() == L"Pillar1")
+					{
+						ImGui::Text("Pillar1 Tunning");
+						HEIN::TransformComponent* trans = childActor->GetComponent<HEIN::TransformComponent>();
+						if (trans != nullptr)
+						{
+							DirectX::SimpleMath::Vector3 currentPosition = trans->GetPosition();
+							if (ImGui::DragFloat3("PositionXYZ#Pillar", &currentPosition.x, 0.01f))
+							{
+								trans->SetPosition(currentPosition);
+							}
+						}
+						
+					}
+
 				}
+
 			}
 		}
 
