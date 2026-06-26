@@ -183,6 +183,7 @@
   <ItemGroup>
     <ClInclude Include="Common\CollisionDispatcher.h" />
     <ClInclude Include="Common\CollisionMath.h" />
+    <ClInclude Include="Common\DamageSystem.h" />
     <ClInclude Include="Common\Event.h" />
     <ClInclude Include="Common\PhysicsSystem.h" />
     <ClInclude Include="Components\ColliderComponent\SphereColliderComponent.h" />
@@ -256,6 +257,7 @@
   <ItemGroup>
     <ClCompile Include="Common\CollisionDispatcher.cpp" />
     <ClCompile Include="Common\CollisionMath.cpp" />
+    <ClCompile Include="Common\DamageSystem.cpp" />
     <ClCompile Include="Common\PhysicsSystem.cpp" />
     <ClCompile Include="Components\ColliderComponent\SphereColliderComponent.cpp" />
     <ClCompile Include="Common\EventManager.cpp" />

@@ -167,7 +167,10 @@
     <ClCompile Include="Common\CollisionDispatcher.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="Components\HealthComponent.cpp" />
+    <ClCompile Include="Components\HealthComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\DamageSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -368,6 +371,9 @@
     </ClInclude>
     <ClInclude Include="Components\HealthComponent.h">
       <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DamageSystem.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

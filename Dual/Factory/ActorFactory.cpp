@@ -15,6 +15,8 @@
 #include <Components/ColliderComponent/AABBColliderComponent.h>
 #include <Components/RigidBodyComponent.h>
 #include <Entities/ActorManager.h>
+#include <Components/DamageDealerComponent.h>
+#include <Components/HealthComponent.h>
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ActorManager& actorManager,
@@ -190,6 +192,9 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
     HEIN::Actor* sword = actorManager.CreateActor(L"Sword");
     sword->SetOwnerID(wielderID);
 
+    HEIN::DamageDealerComponent* swordDamage = sword->AddComponent<HEIN::DamageDealerComponent>();
+    swordDamage->Initialize(5, DamageType::Physical);
+
     HEIN::TransformComponent* swordTransform = sword->AddComponent<HEIN::TransformComponent>();
     swordTransform->SetScale(DirectX::SimpleMath::Vector3(2.0f));
 
@@ -348,6 +353,9 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(ActorManager& actorManager,
     Actor* enemyActor = actorManager.CreateActor(L"Enemy");
 
     spawnData.enemyID = enemyActor->GetID();
+
+    HEIN::HealthComponent* enemyHealth = enemyActor->AddComponent<HEIN::HealthComponent>();
+    enemyHealth->Initialize(100);
 
     HEIN::TransformComponent* ptransform = enemyActor->AddComponent<HEIN::TransformComponent>();
     ptransform->SetPosition(DirectX::SimpleMath::Vector3(25.0f, 4.0f, 0.0f));
