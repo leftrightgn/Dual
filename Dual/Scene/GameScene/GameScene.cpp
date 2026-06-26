@@ -8,6 +8,8 @@
 #include <Components/SkinnedModelComponent.h>
 #include <Components/PlayerInputComponent.h>
 #include <Factory/ActorFactory.h>
+#include <Components/HealthComponent.h>
+#include <ImGui/imgui.h>
 
 using namespace DirectX;
 
@@ -17,10 +19,11 @@ using namespace DirectX;
 void GameScene::OnEnter(GameContext& gameContext)
 {
     m_physicsSystem = std::make_unique<HEIN::PhysicsSystem>();
+    m_damageSystem = std::make_unique<HEIN::DamageSystem>();
 
     // Skybox
     m_skybox = std::make_unique<HEIN::Skybox>();
-    m_skybox->Initialize(gameContext, L"Resources/Textures/sky.dds");
+    m_skybox->Initialize(gameContext, L"Resources/Textures/skybox.dds");
 
     // Default Projection
     D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
@@ -111,7 +114,14 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_debugDisplay->Initialize();
 
     
-    m_debugDisplay->SetDebugTargets(m_playerID, m_swordID, m_stageID);
+    m_debugDisplay->SetDebugTargets(m_playerID, m_swordID, m_stageID, m_enemyID);
+
+    gameContext.eventManager->AddTriggerListener(
+        [this](const HEIN::TriggerEventPayLoad& payLoad)
+        {
+            m_damageSystem->HandlTriggerHit(payLoad);
+        }
+    );
 }
 
 
@@ -139,7 +149,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
     // CORE ENGINE LOOP (Data-Oriented Math Pipeline)
     m_actorManager.UpdateAll(deltaTime);
     m_physicsSystem->UpdateMovement(gameContext, m_actorManager, deltaTime);
-    m_actorManager.UpdateAllHierarchies(); // <--- Math Cascades Downwards
+    m_actorManager.UpdateAllHierarchies(); //  Math Cascades Downwards
     m_actorManager.LateUpdateAll(deltaTime);
     m_physicsSystem->UpdateCollisions(gameContext, m_actorManager, deltaTime);
 
@@ -165,7 +175,23 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(m_cameraController->GetFov(), aspectRatio, 0.1f, 1000.0f);
     }
 
-    // MEMORY CLEANUP
+    // // ---------------------------------------------------------
+    // MEMORY CLEANUP (Garbage Collection)
+    // ---------------------------------------------------------
+    
+    // Loop through every actor safely
+    for (const std::pair<const HEIN::ActorID, std::unique_ptr<HEIN::Actor>>& pair : m_actorManager.GetAllActors())
+    {
+        HEIN::Actor* currentActor = pair.second.get();
+        HEIN::HealthComponent* health = currentActor->GetComponent<HEIN::HealthComponent>();
+
+        // If the actor has a HealthComponent AND its health is 0 or less
+        if (health != nullptr && health->isDead())
+        {
+            // Tell the manager to queue this actor for destruction!
+            m_actorManager.DestroyID(currentActor->GetID());
+        }
+    }
     // Delete any Actors whose health dropped to 0 this frame.
     m_actorManager.CleanUpDestroyedActors();
 }
@@ -186,7 +212,34 @@ void GameScene::Render(GameContext& gameContext)
 
     // Tell the Manager to draw all active entities
     m_actorManager.DrawAll(gameContext, view, m_proj);
+    HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
+    HEIN::Actor* enemy = m_actorManager.GetActor(m_enemyID);
+    // --- COMBAT UI ---
+    ImGui::Begin("Combat Status");
+    if (player != nullptr)
+    {
+        HEIN::HealthComponent* pHealth = player->GetComponent<HEIN::HealthComponent>();
+        if (pHealth != nullptr)
+        {
+            ImGui::Text("Player Health");
+            ImGui::ProgressBar(pHealth->GetCurrentHealth() / pHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
+        }
+    }
+    else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "PLAYER DEAD");
 
+    ImGui::Separator();
+
+    if (enemy != nullptr)
+    {
+        HEIN::HealthComponent* eHealth = enemy->GetComponent<HEIN::HealthComponent>();
+        if (eHealth != nullptr)
+        {
+            ImGui::Text("Enemy Health");
+            ImGui::ProgressBar(eHealth->GetCurrentHealth() / eHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
+        }
+    }
+    else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "ENEMY DEAD");
+    ImGui::End();
     // Transparent Pipeline Setup
     ID3D11SamplerState* wrapSampler = gameContext.commonStates.LinearWrap();
     context->RSSetState(gameContext.commonStates.CullNone());

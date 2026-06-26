@@ -5,6 +5,7 @@
 #include "Effect/Skybox.h"
 #include <Entities/Actor.h>
 
+
 namespace HEIN
 {
 	DebugDisplayController::DebugDisplayController()
@@ -129,6 +130,9 @@ namespace HEIN
             HEIN::Actor* pPlayer = actorManager.GetActor(m_debugPlayerID);
             HEIN::Actor* pSword = actorManager.GetActor(m_debugSwordID);
             HEIN::Actor* pStage = actorManager.GetActor(m_debugStageID);
+            HEIN::Actor* pEnemy = actorManager.GetActor(m_debugEnemyID);
+
+           
 
             m_debugUI.Draw(actorManager, pPlayer, pSword, pStage);
         }
@@ -143,11 +147,12 @@ namespace HEIN
 		return m_projMatrix;
 	}
 
-    void DebugDisplayController::SetDebugTargets(HEIN::ActorID playerID, HEIN::ActorID swordID, HEIN::ActorID stageID)
+    void DebugDisplayController::SetDebugTargets(HEIN::ActorID playerID, HEIN::ActorID swordID, HEIN::ActorID stageID, HEIN::ActorID enemyID)
     {
         m_debugPlayerID = playerID;
         m_debugSwordID = swordID;
         m_debugStageID = stageID;
+        m_debugEnemyID = enemyID;
     }
 
 

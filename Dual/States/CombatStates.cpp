@@ -6,11 +6,11 @@
 
 void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/)
 {
-	auto blackboard = owner->GetComponent<CombatBlackBoard>();
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (blackboard) blackboard->currentStance = CombatStance::Idle;
 
-	auto models = owner->GetComponents<SkinnedModelComponent>();
-	for (auto* model : models)
+	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+	for (HEIN::SkinnedModelComponent* model : models)
 	{
 		model->CrossfadeAnimation("Idle", 0.2f);
 	}
@@ -18,7 +18,7 @@ void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*state
 
 void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float /*deltaTime*/)
 {
-	auto blackboard = owner->GetComponent<CombatBlackBoard>();
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
 
 	if (blackboard->isAttackingIntent && blackboard->currentStamina >= 15.0f) {
@@ -39,11 +39,11 @@ void HEIN::IdleState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*st
 
 void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/)
 {
-	auto blackboard = owner->GetComponent<CombatBlackBoard>();
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (blackboard) blackboard->currentStance = CombatStance::Walking;
 
-	auto models = owner->GetComponents<SkinnedModelComponent>();
-	for (auto* model : models)
+	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+	for (HEIN::SkinnedModelComponent* model : models)
 	{
 		model->CrossfadeAnimation("Walk", 0.05f);
 	}
@@ -51,7 +51,7 @@ void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*state
 
 void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float /*deltaTime*/)
 {
-	auto blackboard = owner->GetComponent<CombatBlackBoard>();
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
 
 	if (blackboard->isAttackingIntent ) {
@@ -72,13 +72,13 @@ void HEIN::WalkState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*st
 
 void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/)
 {
-	auto blackboard = owner->GetComponent<CombatBlackBoard>();
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (blackboard)
 	{
 		blackboard->currentStance = CombatStance::OneHand;
 	}
-	auto models = owner->GetComponents<SkinnedModelComponent>();
-	for (auto* model : models)
+	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+	for (HEIN::SkinnedModelComponent* model : models)
 	{
 		model->CrossfadeAnimation("OneHand", 0.3f);
 	}
