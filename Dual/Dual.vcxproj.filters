@@ -170,7 +170,24 @@
     <ClCompile Include="Components\HealthComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="Common\DamageSystem.cpp" />
+    <ClCompile Include="Common\DamageSystem.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTSelector.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTChaseNode.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTSequence.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\BehaviourTreeComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTStrafeNode.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -375,6 +392,24 @@
     <ClInclude Include="Common\DamageSystem.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="BehaviourTree\BTNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTSelector.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTSequence.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTChaseNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\BehaviourTreeComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTStrafeNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -439,6 +474,9 @@
     </Filter>
     <Filter Include="Factory">
       <UniqueIdentifier>{0b41e055-baed-449d-8b94-87d6031a8b88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BehaviourTree">
+      <UniqueIdentifier>{f9777594-de78-4196-9ffd-6d28381a3228}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

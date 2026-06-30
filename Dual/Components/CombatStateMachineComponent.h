@@ -13,26 +13,19 @@ namespace HEIN
 		ICombatState* m_currentState = nullptr;
 		ICombatState* m_pendingState = nullptr;
 
-		std::unique_ptr<IdleState> m_idleState;
-		std::unique_ptr<WalkState> m_walkState;
-		std::unique_ptr<OneHandAttackState> m_oneHandAtkState;
+		std::unordered_map<std::string, std::unique_ptr<ICombatState>> m_states;
 
 	public:
 
 		CombatStateMachineComponent(Actor* owner);
-		
-		void Start();
 	
 		void Update(float deltaTime) override;
 
-		void ChangeState(ICombatState* newState);
+		void ChangeState(const std::string& stateName);
 
 		void ApplyPendingState();
 		
-		// Getter for transitions
-		IdleState* GetIdleState() { return m_idleState.get(); }
-		WalkState* GetWalkState() { return m_walkState.get(); }
-		OneHandAttackState* GetOneHandAtkState() { return m_oneHandAtkState.get(); }
+		void AddState(const std::string& stateName, std::unique_ptr<ICombatState> state);
 
 	private:
 

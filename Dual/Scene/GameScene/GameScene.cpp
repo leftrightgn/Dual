@@ -49,7 +49,7 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_swordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID);
 
     // Build Enemy
-    HEIN::EnemySpawnData enemyData = HEIN::ActorFactory::CreateEnemy(m_actorManager, gameContext);
+    HEIN::EnemySpawnData enemyData = HEIN::ActorFactory::CreateEnemy(m_actorManager, gameContext, m_playerID);
     m_enemyID = enemyData.enemyID;
 
     // Build Stage
@@ -58,32 +58,32 @@ void GameScene::OnEnter(GameContext& gameContext)
     // -------------------------------------------------------
     // Camera Registration
     // -------------------------------------------------------
-    HEIN::SkinnedModelComponent* fpsModelPointer = playerData.fpsModel;
-    HEIN::SkinnedModelComponent* tpsModelPointer = playerData.tpsModel;
+    //HEIN::SkinnedModelComponent* fpsModelPointer = playerData.fpsModel;
+    HEIN::SkinnedModelComponent* ModelPointer = playerData.tpsModel;
 
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
     if (player != nullptr)
     {
         HEIN::TransformComponent* playerTransform = player->GetComponent<HEIN::TransformComponent>();
-        m_targetPos = fpsModelPointer->GetBoneWorldPosition(L"mixamorig:Head", playerTransform->GetWorldMatrix());
+        m_targetPos = ModelPointer->GetBoneWorldPosition(L"mixamorig:Head", playerTransform->GetWorldMatrix());
 
         // First Person Mode
         m_cameraController->RegisterCamera(
             HEIN::CameraType::FirstPerson,
-            [this, fpsModelPointer, tpsModelPointer]()
+            [this, ModelPointer]()
             {
                 return std::make_unique<HEIN::FirstPersonMode>(
-                    &m_actorManager, m_playerID, &m_targetPos, fpsModelPointer, tpsModelPointer);
+                    &m_actorManager, m_playerID, &m_targetPos, ModelPointer, ModelPointer);
             }
         );
 
         // Third Person Mode
         m_cameraController->RegisterCamera(
             HEIN::CameraType::ThirdPerson,
-            [this, fpsModelPointer, tpsModelPointer]()
+            [this, ModelPointer]()
             {
                 return std::make_unique<HEIN::ThirdPersonMode>(
-                    &m_actorManager, m_playerID, &m_targetPos, fpsModelPointer, tpsModelPointer);
+                    &m_actorManager, m_playerID, &m_targetPos, ModelPointer, ModelPointer);
             }
         );
 

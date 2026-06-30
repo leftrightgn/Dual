@@ -12,7 +12,7 @@ namespace HEIN
 	{
 		HEIN::ActorID playerID = HEIN::INVALID_ACTOR_ID;
 		HEIN::SkinnedModelComponent* tpsModel = nullptr;
-		HEIN::SkinnedModelComponent* fpsModel = nullptr;
+		//HEIN::SkinnedModelComponent* fpsModel = nullptr;
 	};
 
 	struct EnemySpawnData
@@ -45,7 +45,8 @@ namespace HEIN
 
 		static EnemySpawnData CreateEnemy(
 			ActorManager& actorManager,
-			GameContext& gameContext
+			GameContext& gameContext,
+			HEIN::ActorID targetID
 		);
 
 	};

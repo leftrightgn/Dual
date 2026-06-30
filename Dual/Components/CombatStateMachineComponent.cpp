@@ -10,15 +10,8 @@
 HEIN::CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner)
 	: IComponent(owner)
 {
-	m_idleState = std::make_unique<IdleState>();
-	m_walkState = std::make_unique<WalkState>();
-	m_oneHandAtkState = std::make_unique<OneHandAttackState>();
 }
 
-void HEIN::CombatStateMachineComponent::Start()
-{
-	ChangeState(m_idleState.get());
-}
 
 void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 {
@@ -30,16 +23,22 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 	}
 }
 
-void HEIN::CombatStateMachineComponent::ChangeState(ICombatState* newState)
+void HEIN::CombatStateMachineComponent::ChangeState(const std::string& stateName)
 {
-	m_pendingState = newState;
+	std::unordered_map<std::string, std::unique_ptr<ICombatState>>::iterator it = m_states.find(stateName);
+
+	if (it != m_states.end())
+	{
+		m_pendingState = it->second.get();
+	}
 }
+
 
 void HEIN::CombatStateMachineComponent::ApplyPendingState()
 {
 	// if there is nothing waiting do nothing and leave
 	if (m_pendingState == nullptr) return;
-	// safely exit the olddstate
+	// safely exit the oldstate
 	if (m_currentState != nullptr)
 	{
 		m_currentState->OnExit(m_owner, this);
@@ -53,6 +52,16 @@ void HEIN::CombatStateMachineComponent::ApplyPendingState()
 	if (m_currentState != nullptr)
 	{
 		m_currentState->OnEnter(m_owner, this);
+	}
+}
+
+void HEIN::CombatStateMachineComponent::AddState(const std::string& stateName, std::unique_ptr<ICombatState> state)
+{
+	m_states[stateName] = std::move(state);
+
+	if (m_currentState == nullptr && m_pendingState == nullptr)
+	{
+		ChangeState(stateName);
 	}
 }
 

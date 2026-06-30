@@ -41,6 +41,7 @@ namespace HEIN
 
 		void AddForce(const DirectX::SimpleMath::Vector3& force);
 		void SetVelocity(const DirectX::SimpleMath::Vector3& velocity);
+		void SetHorizontalVelocity(const DirectX::SimpleMath::Vector3& velocity);
 		DirectX::SimpleMath::Vector3 GetVelocity() const;
 		 
 		bool isKinematic() const { return m_isKinematic; }

@@ -4,6 +4,12 @@
 #include <BlackBoard/CombatBlackBoard.h>
 #include <Components/SkinnedModelComponent.h>
 
+
+HEIN::IdleState::IdleState(const HEIN::StateConfig& config)
+	: m_config(config)
+{
+}
+
 void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/)
 {
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
@@ -12,7 +18,7 @@ void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*state
 	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
 	for (HEIN::SkinnedModelComponent* model : models)
 	{
-		model->CrossfadeAnimation("Idle", 0.2f);
+		model->CrossfadeAnimation(m_config.animationName, 0.2f);
 	}
 }
 
@@ -22,18 +28,23 @@ void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	if (!blackboard) return;
 
 	if (blackboard->isAttackingIntent && blackboard->currentStamina >= 15.0f) {
-		stateMachine->ChangeState(stateMachine->GetOneHandAtkState());
+		stateMachine->ChangeState(m_config.transitions["OnAttack"]);
 		return;
 	}
 	if (blackboard->moveIntent.LengthSquared() > 0.1f)
 	{
-		stateMachine->ChangeState(stateMachine->GetWalkState());
+		stateMachine->ChangeState(m_config.transitions["OnMove"]);
 		return;
 	}
 
 }
 
 void HEIN::IdleState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/)
+{
+}
+
+HEIN::WalkState::WalkState(const HEIN::StateConfig& config)
+	: m_config(config)
 {
 }
 
@@ -45,7 +56,7 @@ void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*state
 	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
 	for (HEIN::SkinnedModelComponent* model : models)
 	{
-		model->CrossfadeAnimation("Walk", 0.05f);
+		model->CrossfadeAnimation(m_config.animationName, 0.05f);
 	}
 }
 
@@ -55,18 +66,23 @@ void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	if (!blackboard) return;
 
 	if (blackboard->isAttackingIntent ) {
-		stateMachine->ChangeState(stateMachine->GetOneHandAtkState());
+		stateMachine->ChangeState(m_config.transitions["OnAttack"]);
 		return;
 	}
 
 	if (blackboard->moveIntent.LengthSquared() <= 0.1f)
 	{
-		stateMachine->ChangeState(stateMachine->GetIdleState());
+		stateMachine->ChangeState(m_config.transitions["OnStop"]);
 		return;
 	}
 }
 
 void HEIN::WalkState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/)
+{
+}
+
+HEIN::OneHandAttackState::OneHandAttackState(const StateConfig& config)
+	: m_config(config)
 {
 }
 
@@ -80,19 +96,31 @@ void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent
 	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
 	for (HEIN::SkinnedModelComponent* model : models)
 	{
-		model->CrossfadeAnimation("OneHand", 0.3f);
+		model->CrossfadeAnimation(m_config.animationName, 0.3f);
 	}
 	m_timer = 0.0f;
 }
 
-void HEIN::OneHandAttackState::Update(Actor* /*owner*/, CombatStateMachineComponent* stateMachine, float deltaTime)
+void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
 {
 	m_timer += deltaTime;
-
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (m_timer >= WINDUP_DURATION)
 	{
-		stateMachine->ChangeState(stateMachine->GetIdleState());
+		if (blackboard != nullptr)
+		{
+			blackboard->isAttackingIntent = false;
+		}
+		if (blackboard != nullptr && blackboard->moveIntent.LengthSquared() > 0.1f)
+		{
+			stateMachine->ChangeState(m_config.transitions["OnMove"]);
+		}
+		else
+		{
+			stateMachine->ChangeState(m_config.transitions["OnStop"]);
+		}
 		m_timer = 0.0f;
+		
 	}
 }
 

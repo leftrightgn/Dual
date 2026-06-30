@@ -33,6 +33,7 @@ namespace HEIN
         }
    
         void SetRotationEuler(const DirectX::SimpleMath::Vector3& eulerAngles);
+        DirectX::SimpleMath::Vector3 GetRotationEuler() const;
 
         void SetParentMatrix(const DirectX::SimpleMath::Matrix& parent) { m_parentMatrix = parent; }
 

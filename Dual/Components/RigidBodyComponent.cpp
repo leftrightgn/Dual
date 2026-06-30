@@ -28,6 +28,7 @@ void HEIN::RigidBodyComponent::Start()
 
 void HEIN::RigidBodyComponent::Update(float deltaTime)
 {
+	
 }
 
 void HEIN::RigidBodyComponent::AddForce(const DirectX::SimpleMath::Vector3& force)
@@ -41,6 +42,12 @@ void HEIN::RigidBodyComponent::AddForce(const DirectX::SimpleMath::Vector3& forc
 void HEIN::RigidBodyComponent::SetVelocity(const DirectX::SimpleMath::Vector3& velocity)
 {
 	m_velocity = velocity;
+}
+
+void HEIN::RigidBodyComponent::SetHorizontalVelocity(const DirectX::SimpleMath::Vector3& velocity)
+{
+	m_velocity.x = velocity.x;
+	m_velocity.z = velocity.z;
 }
 
 DirectX::SimpleMath::Vector3 HEIN::RigidBodyComponent::GetVelocity() const
