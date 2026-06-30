@@ -55,6 +55,10 @@ namespace HEIN
 
 		return intent;
 	}
+	bool InputManager::IsDodging(const GameContext& gameContext)
+	{
+		return gameContext.keyboardState.Space;
+	}
 	bool InputManager::IsAttacking(const GameContext& gameContext)
 	{
 		return gameContext.mouseState.leftButton;

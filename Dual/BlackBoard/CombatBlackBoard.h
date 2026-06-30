@@ -13,7 +13,8 @@ namespace HEIN
 		AttackRelese,
 		AttackRecovery,
 		Parrying,
-		Staggered
+		Staggered,
+		Dodging
 	};
 
 	// Only holds Data contains zero logic
@@ -24,6 +25,7 @@ namespace HEIN
 		float currentSpeed = 30.0f;
 		bool isAttackingIntent = false;
 		bool isParryingIntent = false;
+		bool isDodgingIntent = false;
 
 		// Physical Reality
 		DirectX::SimpleMath::Vector3 currentVelocity = DirectX::SimpleMath::Vector3::Zero;

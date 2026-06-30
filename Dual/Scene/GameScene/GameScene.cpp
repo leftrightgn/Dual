@@ -51,6 +51,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     // Build Enemy
     HEIN::EnemySpawnData enemyData = HEIN::ActorFactory::CreateEnemy(m_actorManager, gameContext, m_playerID);
     m_enemyID = enemyData.enemyID;
+   
+
 
     // Build Stage
     m_stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);

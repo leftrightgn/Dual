@@ -3,6 +3,7 @@
 #include "Components/CombatStateMachineComponent.h"
 #include <BlackBoard/CombatBlackBoard.h>
 #include <Components/SkinnedModelComponent.h>
+#include <Components/TransformComponent.h>
 
 
 HEIN::IdleState::IdleState(const HEIN::StateConfig& config)
@@ -34,6 +35,11 @@ void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	if (blackboard->moveIntent.LengthSquared() > 0.1f)
 	{
 		stateMachine->ChangeState(m_config.transitions["OnMove"]);
+		return;
+	}
+	if (blackboard->isDodgingIntent)
+	{
+		stateMachine->ChangeState(m_config.transitions["OnDodge"]);
 		return;
 	}
 
@@ -105,7 +111,7 @@ void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent*
 {
 	m_timer += deltaTime;
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-	if (m_timer >= WINDUP_DURATION)
+	if (m_timer >= m_config.stateDuration)
 	{
 		if (blackboard != nullptr)
 		{
@@ -125,5 +131,58 @@ void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent*
 }
 
 void HEIN::OneHandAttackState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/)
+{
+}
+
+HEIN::DodgeState::DodgeState(const StateConfig& config)
+	: m_config(config)
+{
+}
+
+void HEIN::DodgeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine)
+{
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+	if (blackboard)
+	{
+		blackboard->currentStance = CombatStance::Dodging;
+		if (blackboard->moveIntent.LengthSquared() > 0.01f)
+		{
+			m_lockedDirection = blackboard->moveIntent;
+		}
+		else
+		{
+			HEIN::TransformComponent* trans = owner->GetComponent<HEIN::TransformComponent>();
+			m_lockedDirection = trans->GetForward() * -1.0f; // Backstep!
+		}
+	}
+	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+	for (HEIN::SkinnedModelComponent* model : models)
+	{
+		model->CrossfadeAnimation(m_config.animationName, 0.3f);
+	}
+	m_timer = 0.0f;
+}
+
+void HEIN::DodgeState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
+{
+	m_timer += deltaTime;
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
+
+	if (blackboard)
+	{
+		blackboard->currentSpeed = m_config.moveSpeed;
+		blackboard->moveIntent = m_lockedDirection;
+
+	}
+	if (m_timer >= m_config.stateDuration)
+	{
+		if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+			stateMachine->ChangeState(m_config.transitions["OnMove"]);
+		else
+			stateMachine->ChangeState(m_config.transitions["OnStop"]);
+	}
+}
+
+void HEIN::DodgeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine)
 {
 }

@@ -47,6 +47,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     spawnData.tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/idle.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Dodge", L"Resources/Models/knight/Dodge.sdkmesh_anim");
 
     // FirstPersonCamera model
     //spawnData.fpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
@@ -189,6 +190,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     idleConfig.animationName = "Idle";
     idleConfig.transitions["OnMove"] = "Walk";
     idleConfig.transitions["OnAttack"] = "OneHand";
+    idleConfig.transitions["OnDodge"] = "Dodge";
     fsm->AddState("Idle", std::make_unique<HEIN::IdleState>(idleConfig));
 
     // WalkConfig
@@ -201,10 +203,19 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     // AttackConfig
     HEIN::StateConfig attackConfig;
     attackConfig.animationName = "OneHand";
+    attackConfig.stateDuration = 4.1f;
     attackConfig.transitions["OnStop"] = "Idle";
     attackConfig.transitions["OnMove"] = "Walk";
     fsm->AddState("OneHand", std::make_unique<HEIN::OneHandAttackState>(attackConfig));
 
+    // DodgeConfig
+    HEIN::StateConfig dodgeConfig;
+    dodgeConfig.animationName = "Dodge";
+    dodgeConfig.moveSpeed = 10.0f;
+    dodgeConfig.stateDuration = 1.5f;
+    dodgeConfig.transitions["OnStop"] = "Idle";
+    dodgeConfig.transitions["OnMove"] = "Walk";
+    fsm->AddState("Dodge", std::make_unique<HEIN::DodgeState>(dodgeConfig));
 
     playerActor->Start();
     return spawnData;
@@ -389,7 +400,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     enemyHealth->Initialize(100);
 
     HEIN::TransformComponent* ptransform = enemyActor->AddComponent<HEIN::TransformComponent>();
-    ptransform->SetPosition(DirectX::SimpleMath::Vector3(50.0f, 4.0f, 0.0f));
+    ptransform->SetPosition(DirectX::SimpleMath::Vector3(50.0f, 4.0f, 3.0f));
     ptransform->SetScale(DirectX::SimpleMath::Vector3(0.10f));
 
     // ThirdPersonCamera model

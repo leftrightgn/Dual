@@ -5,7 +5,6 @@
 #include "Camera/CameraController.h"
 #include "Entities/Actor.h"
 #include <Mouse.h>
-#include <Keyboard.h>
 #include "Framework/GameContext.h"
 
 HEIN::PlayerInputComponent::PlayerInputComponent(Actor* owner, HEIN::CameraController* cameraController)
@@ -72,6 +71,7 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 
 		// Get combat logic cleanly
 		m_blackboard->isAttackingIntent = gameContext.inputManager->IsAttacking(gameContext);
+		m_blackboard->isDodgingIntent = gameContext.inputManager->IsDodging(gameContext);
 	}
 }
 

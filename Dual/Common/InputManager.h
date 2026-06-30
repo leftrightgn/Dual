@@ -29,8 +29,9 @@ namespace HEIN
 		static DirectX::SimpleMath::Vector3 GetMoveIntent(const GameContext& gameContext);
 
 		static DirectX::SimpleMath::Vector3 GetDebugMoveIntent(const GameContext& gameContext);
-
-		static bool IsAttacking(const GameContext& context);
+ 
+		static bool IsDodging(const GameContext& gameContext);
+		static bool IsAttacking(const GameContext& gameContext);
 
 		static bool WasCameraSwitchPressed(const GameContext& gameContext, HEIN::CameraType& outType);
 		static bool WasDebugMagnifyPressed(const GameContext& gameContext);

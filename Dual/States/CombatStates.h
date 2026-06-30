@@ -9,6 +9,9 @@ namespace HEIN
 		std::string animationName;
 
 		std::unordered_map<std::string, std::string> transitions;
+
+		float moveSpeed = 0.0f;
+		float stateDuration = 1.0f;
 	};
 
 	class CombatStateMachineComponent;
@@ -51,7 +54,7 @@ namespace HEIN
 	private:
 		HEIN::StateConfig m_config;
 		float m_timer = 0.0f;
-		const float WINDUP_DURATION = 4.1f;
+
 	public:
 		OneHandAttackState(const StateConfig& config);
 
@@ -61,5 +64,22 @@ namespace HEIN
 
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
 
+	};
+
+	class DodgeState : public ICombatState
+	{
+	private:
+		HEIN::StateConfig m_config;
+		float m_timer = 0.0f;
+		DirectX::SimpleMath::Vector3 m_lockedDirection;
+
+	public:
+		DodgeState(const StateConfig& config);
+
+		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+
+		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
+
+		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
 	};
 }
