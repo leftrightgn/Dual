@@ -13,7 +13,8 @@ namespace HEIN
 		AttackRelese,
 		AttackRecovery,
 		Parrying,
-		Staggered
+		Staggered,
+		Dodging
 	};
 
 	// Only holds Data contains zero logic
@@ -21,12 +22,16 @@ namespace HEIN
 	{
 		// Intentions 
 		DirectX::SimpleMath::Vector3 moveIntent = DirectX::SimpleMath::Vector3::Zero;
+		float currentSpeed = 30.0f;
 		bool isAttackingIntent = false;
 		bool isParryingIntent = false;
+		bool isDodgingIntent = false;
 
 		// Physical Reality
 		DirectX::SimpleMath::Vector3 currentVelocity = DirectX::SimpleMath::Vector3::Zero;
 		bool isGrounded = true;
+		DirectX::SimpleMath::Vector3 dirToTarget = DirectX::SimpleMath::Vector3::Zero;
+		float distanceToTarget = 0.0f;
 
 		// Combat Stats
 		float currentStamina = 100.0f;

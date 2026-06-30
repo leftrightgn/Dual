@@ -50,6 +50,7 @@ private:
 	HEIN::ActorID m_stageID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_enemyID = HEIN::INVALID_ACTOR_ID;
 
+
 	HEIN::ActorManager m_actorManager;
 
 	std::unique_ptr<DirectX::GeometricPrimitive> m_debugSphere;

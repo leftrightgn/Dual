@@ -2,6 +2,8 @@
 #include "SkinnedModelComponent.h"
 #include "Entities/Actor.h"
 
+std::shared_ptr<DirectX::EffectFactory> HEIN::SkinnedModelComponent::s_fxFactory = nullptr;
+std::unordered_map<std::wstring, std::weak_ptr<DirectX::Model>> HEIN::SkinnedModelComponent::s_modelCache;
 
 namespace HEIN
 {
@@ -14,19 +16,34 @@ namespace HEIN
 	{
 		ID3D11Device* device = gameContext.deviceResources.GetD3DDevice();
 
-		m_fxFactory = std::make_unique<DirectX::EffectFactory>(device);
-		static_cast<DirectX::EffectFactory*>(m_fxFactory.get())->SetDirectory(textureDir);
+		if (s_fxFactory == nullptr)
+		{
+			s_fxFactory = std::make_shared<DirectX::EffectFactory>(device);
+			static_cast<DirectX::EffectFactory*>(s_fxFactory.get())->SetDirectory(textureDir);
+		}
+	
+		std::wstring key = modelPath;
 
-		m_model = DirectX::Model::CreateFromSDKMESH(
-			device,
-			modelPath,
-			*m_fxFactory,
-			static_cast<DirectX::ModelLoaderFlags>
-			(
-				DirectX::ModelLoader_Clockwise |
-				DirectX::ModelLoader_IncludeBones
-		    )
-		);
+		std::shared_ptr<DirectX::Model> cachedModel = s_modelCache[key].lock();
+
+		if (cachedModel != nullptr)
+		{
+			m_model = cachedModel;
+		}
+		else
+		{
+			m_model = DirectX::Model::CreateFromSDKMESH(
+				device,
+				modelPath,
+				*s_fxFactory,
+				static_cast<DirectX::ModelLoaderFlags>
+				(
+					DirectX::ModelLoader_Clockwise |
+					DirectX::ModelLoader_IncludeBones
+					)
+			);
+			s_modelCache[key] = m_model;
+		}
 
 		m_drawBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 		m_skinBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
