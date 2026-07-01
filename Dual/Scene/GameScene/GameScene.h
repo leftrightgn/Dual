@@ -37,7 +37,6 @@ private:
 	DirectX::SimpleMath::Matrix m_proj;
 	DirectX::SimpleMath::Matrix m_world;
 
-	std::unique_ptr<HEIN::CameraController> m_cameraController;
 	std::unique_ptr<HEIN::PhysicsSystem> m_physicsSystem;
 	std::unique_ptr<HEIN::DamageSystem> m_damageSystem;
 
@@ -49,6 +48,7 @@ private:
 	HEIN::ActorID m_swordID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_stageID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_enemyID = HEIN::INVALID_ACTOR_ID;
+	HEIN::ActorID m_cameraID = HEIN::INVALID_ACTOR_ID;
 
 
 	HEIN::ActorManager m_actorManager;

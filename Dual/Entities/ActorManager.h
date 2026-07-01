@@ -23,6 +23,7 @@ namespace HEIN
 		void DestroyID(ActorID id);
 
 		Actor* GetActor(ActorID id);
+		Actor* GetActorByName(const std::wstring& name);
 
 		void UpdateAll(float deltaTime);
 

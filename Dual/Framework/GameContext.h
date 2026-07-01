@@ -10,12 +10,12 @@
 
 #include "Common/StepTimer.h"
 #include "Common/DeviceResources.h"
-#include "ImaseLib/DebugCamera.h"
-#include "ImaseLib/GridFloor.h"
 #include "Common/DebugRenderer.h"
 #include "Common/InputManager.h"
 #include "Common/DebugCollisionRenderer.h"
 #include "Common/EventManager.h"
+
+namespace HEIN { class CameraController; }
 
 // 各シーンに渡す共通リソースを記述してください
 struct GameContext
@@ -47,5 +47,7 @@ struct GameContext
 	HEIN::DebugCollisionRenderer* debugCollisionRenderer = nullptr;
 
 	HEIN::EventManager* eventManager = nullptr;
+
+	HEIN::CameraController* mainCamera = nullptr;
 };
 

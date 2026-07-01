@@ -82,4 +82,22 @@ namespace HEIN
 
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
 	};
+
+	class StrafeState : public ICombatState
+	{
+	private:
+
+		HEIN::StateConfig m_config;
+		DirectX::SimpleMath::Vector3 m_lockedDirection;
+
+	public:
+
+		StrafeState(const StateConfig& config);
+
+		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+
+		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
+
+		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+	};
 }

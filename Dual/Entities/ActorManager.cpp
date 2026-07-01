@@ -31,6 +31,19 @@ HEIN::Actor* HEIN::ActorManager::GetActor(ActorID id)
     return nullptr;
 }
 
+HEIN::Actor* HEIN::ActorManager::GetActorByName(const std::wstring& name)
+{
+    for (const std::pair<const HEIN::ActorID, std::unique_ptr<HEIN::Actor>>& pair : m_actors)
+    {
+        
+        if (pair.second->GetTag() == name)
+        {
+            return pair.second.get();
+        }
+    }
+    return nullptr;
+}
+
 // Game Loop
 void HEIN::ActorManager::UpdateAll(float deltaTime)
 {

@@ -101,62 +101,72 @@ void HEIN::PhysicsSystem::UpdateCollisions(GameContext& gameContext, HEIN::Actor
 
 void HEIN::PhysicsSystem::ResolvePhysicalOverlap(HEIN::ColliderComponent* colA, HEIN::ColliderComponent* colB, const HEIN::CollisionManifold& manifold)
 {
-    // Try to get the components for Actor A
     HEIN::Actor* actorA = colA->GetOwner();
     HEIN::RigidBodyComponent* rbA = actorA->GetComponent<HEIN::RigidBodyComponent>();
     HEIN::TransformComponent* transformA = actorA->GetComponent<HEIN::TransformComponent>();
 
-    // Try to get the components for Actor B
     HEIN::Actor* actorB = colB->GetOwner();
     HEIN::RigidBodyComponent* rbB = actorB->GetComponent<HEIN::RigidBodyComponent>();
     HEIN::TransformComponent* transformB = actorB->GetComponent<HEIN::TransformComponent>();
 
+    bool aIsDynamic = (rbA != nullptr && !rbA->isKinematic() && transformA != nullptr);
+    bool bIsDynamic = (rbB != nullptr && !rbB->isKinematic() && transformB != nullptr);
+
     // ---------------------------------------------------------
-    // If Actor A is the falling object (e.g., Player)
+    // SCENARIO 1: BOTH ARE DYNAMIC (Player hitting Enemy)
     // ---------------------------------------------------------
-    if (rbA != nullptr && !rbA->isKinematic() && transformA != nullptr)
+    if (aIsDynamic && bIsDynamic)
     {
-        // Push the Transform UP out of the floor
+        // Split the displacement so they push EACH OTHER equally!
+        float halfDepth = manifold.penetrationDepth * 0.5f;
+
+        // Push A away
+        DirectX::SimpleMath::Vector3 posA = transformA->GetPosition();
+        posA += (manifold.normal * halfDepth);
+        transformA->SetPosition(posA);
+
+        // Push B away (in the exact opposite direction)
+        DirectX::SimpleMath::Vector3 posB = transformB->GetPosition();
+        posB -= (manifold.normal * halfDepth);
+        transformB->SetPosition(posB);
+    }
+    // ---------------------------------------------------------
+    // SCENARIO 2: ONLY 'A' IS DYNAMIC (Player hitting a Wall)
+    // ---------------------------------------------------------
+    else if (aIsDynamic)
+    {
         DirectX::SimpleMath::Vector3 currentPos = transformA->GetPosition();
         currentPos += (manifold.normal * manifold.penetrationDepth);
         transformA->SetPosition(currentPos);
 
-        // Stop gravity from pulling them down further
         DirectX::SimpleMath::Vector3 currentVelocity = rbA->GetVelocity();
         float velocityIntoWall = currentVelocity.Dot(manifold.normal);
 
-        if (velocityIntoWall < 0.0f) // Only remove velocity if falling INTO the floor
+        if (velocityIntoWall < 0.0f)
         {
             DirectX::SimpleMath::Vector3 fixedVelocity = currentVelocity - (manifold.normal * velocityIntoWall);
             rbA->SetVelocity(fixedVelocity);
             if (manifold.normal.y > 0.5f) rbA->m_isGrounded = true;
         }
     }
-    
-
     // ---------------------------------------------------------
-    // If Actor B is the falling object (e.g., Player)
+    // SCENARIO 3: ONLY 'B' IS DYNAMIC (Enemy hitting a Wall)
     // ---------------------------------------------------------
-    else if (rbB != nullptr && !rbB->isKinematic() && transformB != nullptr)
+    else if (bIsDynamic)
     {
-        
         DirectX::SimpleMath::Vector3 flippedNormal = manifold.normal * -1.0f;
 
-        DirectX::SimpleMath::Vector3 position = transformB->GetPosition();
-
-        position += flippedNormal * manifold.penetrationDepth;
-
-        transformB->SetPosition(position);
+        DirectX::SimpleMath::Vector3 currentPos = transformB->GetPosition();
+        currentPos += (flippedNormal * manifold.penetrationDepth);
+        transformB->SetPosition(currentPos);
 
         DirectX::SimpleMath::Vector3 currentVelocity = rbB->GetVelocity();
-
         float velocityIntoWall = currentVelocity.Dot(flippedNormal);
 
         if (velocityIntoWall < 0.0f)
         {
             DirectX::SimpleMath::Vector3 fixedVelocity = currentVelocity - (flippedNormal * velocityIntoWall);
             rbB->SetVelocity(fixedVelocity);
-
             if (flippedNormal.y > 0.5f) rbB->m_isGrounded = true;
         }
     }

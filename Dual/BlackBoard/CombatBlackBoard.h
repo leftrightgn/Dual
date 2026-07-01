@@ -26,6 +26,7 @@ namespace HEIN
 		bool isAttackingIntent = false;
 		bool isParryingIntent = false;
 		bool isDodgingIntent = false;
+		bool isStrafingIntent = false;
 
 		// Physical Reality
 		DirectX::SimpleMath::Vector3 currentVelocity = DirectX::SimpleMath::Vector3::Zero;

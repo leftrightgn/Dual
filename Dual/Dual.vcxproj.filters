@@ -188,6 +188,9 @@
     <ClCompile Include="BehaviourTree\BTStrafeNode.cpp">
       <Filter>BehaviourTree</Filter>
     </ClCompile>
+    <ClCompile Include="Camera\CameraController.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

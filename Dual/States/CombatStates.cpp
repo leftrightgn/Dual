@@ -152,7 +152,13 @@ void HEIN::DodgeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateM
 		else
 		{
 			HEIN::TransformComponent* trans = owner->GetComponent<HEIN::TransformComponent>();
-			m_lockedDirection = trans->GetForward() * -1.0f; // Backstep!
+			float currentMathematicalYaw = trans->GetRotationEuler().y;
+			float trueVisualYaw = currentMathematicalYaw - DirectX::XM_PI;
+			m_lockedDirection.x = sinf(trueVisualYaw);
+			m_lockedDirection.y = 0.0f;
+			m_lockedDirection.z = cosf(trueVisualYaw);
+
+			m_lockedDirection.Normalize();
 		}
 	}
 	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
@@ -184,5 +190,22 @@ void HEIN::DodgeState::Update(Actor* owner, CombatStateMachineComponent* stateMa
 }
 
 void HEIN::DodgeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine)
+{
+}
+
+HEIN::StrafeState::StrafeState(const StateConfig& config)
+	: m_config(config)
+{
+}
+
+void HEIN::StrafeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine)
+{
+}
+
+void HEIN::StrafeState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
+{
+}
+
+void HEIN::StrafeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine)
 {
 }

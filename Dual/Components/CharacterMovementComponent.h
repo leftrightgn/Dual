@@ -22,7 +22,7 @@ namespace HEIN
 	public:
 		CharacterMovementComponent(Actor* owner);
 	
-		void Start();
+		void Start() override;
 	
 		void Update(float deltaTime) override;
 		
