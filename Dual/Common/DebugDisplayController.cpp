@@ -3,6 +3,7 @@
 #include <Camera/DebugCameraMode.h>
 #include <Camera/CameraController.h>
 #include "Effect/Skybox.h"
+#include <Factory/ActorFactory.h>
 #include <Entities/Actor.h>
 
 
@@ -16,51 +17,85 @@ namespace HEIN
 
 	void DebugDisplayController::Initialize()
 	{
-		m_debugcameraController = std::make_unique<CameraController>();
-
-        m_debugcameraController->RegisterCamera(
+		m_debugCameraID = HEIN::ActorFactory::CreateMainCamera(m_actorManager);
+        HEIN::Actor* cameraActor = m_actorManager.GetActor(m_debugCameraID);
+        HEIN::CameraController* cameraComp = cameraActor->GetComponent<HEIN::CameraController>();
+        cameraComp->RegisterCamera(
             HEIN::CameraType::Debug,
             []()
             { return std::make_unique<HEIN::DebugCameraMode>(); }
         );
 
-		m_debugcameraController->SetFirstCamera(CameraType::Debug);
+        cameraComp->SetFirstCamera(CameraType::Debug);
 	}
 
-	void DebugDisplayController::Update(const GameContext& gameContext)
-	{
-		if (gameContext.keyboardTracker.pressed.F2) m_isMagnified = !m_isMagnified;
-		if (gameContext.keyboardTracker.pressed.F3) m_isVisible = !m_isVisible;
+    void DebugDisplayController::Update(const GameContext& gameContext)
+    {
+        if (gameContext.keyboardTracker.pressed.F2) m_isMagnified = !m_isMagnified;
+        if (gameContext.keyboardTracker.pressed.F3) m_isVisible = !m_isVisible;
 
-		m_debugUI.Update(gameContext);
+        m_debugUI.Update(gameContext);
 
-		const float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
+        const float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
-		m_debugcameraController->Update(deltaTime);
+        HEIN::Actor* cameraActor = m_actorManager.GetActor(m_debugCameraID);
+        HEIN::CameraController* cameraComp = nullptr;
+        if (cameraActor != nullptr)
+        {
+            cameraComp = cameraActor->GetComponent<HEIN::CameraController>();
+        }
 
-		if (m_isMagnified)
-		{
-			CameraInputState debugInput;
-			
-			std::pair<int, int> mouseDelta = gameContext.inputManager->GetMouseDelta();
-			bool isHeld = gameContext.inputManager->IsDebugDrugHeld(gameContext);
+        if (m_isMagnified && cameraComp != nullptr)
+        {
+            CameraInputState debugInput;
 
-		
-			if (isHeld)
-			{
-				m_virtualMouseX += static_cast<float>(mouseDelta.first);
-				m_virtualMouseY += static_cast<float>(mouseDelta.second);
-			}
+            std::pair<int, int> mouseDelta = gameContext.inputManager->GetMouseDelta();
+            bool isHeld = gameContext.inputManager->IsDebugDrugHeld(gameContext);
 
-			debugInput.mouseX = m_virtualMouseX;
-			debugInput.mouseY = m_virtualMouseY;
-			debugInput.movementIntent = gameContext.inputManager->GetDebugMoveIntent(gameContext);
-			debugInput.isLeftMouseDown = isHeld;
-			debugInput.scrollWheelDelta = gameContext.mouseState.scrollWheelValue;
+            if (isHeld)
+            {
+                m_virtualMouseX += static_cast<float>(mouseDelta.first);
+                m_virtualMouseY += static_cast<float>(mouseDelta.second);
+            }
 
-			m_debugcameraController->ProcessInput(debugInput);
-		}
-	}
+            debugInput.mouseX = m_virtualMouseX;
+            debugInput.mouseY = m_virtualMouseY;
+            debugInput.movementIntent = gameContext.inputManager->GetDebugMoveIntent(gameContext);
+            debugInput.isLeftMouseDown = isHeld;
+            debugInput.scrollWheelDelta = static_cast<float>(gameContext.mouseState.scrollWheelValue);
+
+            cameraComp->ProcessInput(debugInput);
+        }
+
+        m_actorManager.UpdateAll(deltaTime);
+
+        if (cameraComp != nullptr)
+        {
+            float aspectRatio;
+
+            if (m_isMagnified)
+            {
+                D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
+                aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
+                DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+            }
+            else
+            {
+                aspectRatio = 400.0f / 225.0f;
+                if (gameContext.mainCamera != nullptr)
+                {
+                    gameContext.mainCamera->UpdateMouseMode();
+                }
+            }
+
+            m_projMatrix = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
+                cameraComp->GetFov(),
+                aspectRatio,
+                0.1f,
+                1000.0f
+            );
+        }
+    }
 
     void DebugDisplayController::Render(
         GameContext& gameContext,
@@ -101,9 +136,13 @@ namespace HEIN
         context->RSSetViewports(1, &debugViewport);
         context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-        float aspect = debugViewport.Width / debugViewport.Height;
-        m_projMatrix = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(m_debugcameraController->GetFov(), aspect, 0.01f, 1000.0f);
-        DirectX::SimpleMath::Matrix view = m_debugcameraController->GetView();
+        DirectX::SimpleMath::Matrix view = DirectX::SimpleMath::Matrix::Identity;
+        HEIN::Actor* cameraActor = m_actorManager.GetActor(m_debugCameraID);
+        if (cameraActor != nullptr)
+        {
+            HEIN::CameraController* cameraComp = cameraActor->GetComponent<HEIN::CameraController>();
+            view = cameraComp->GetView();
+        }
 
         if (skybox && m_isMagnified) skybox->Draw(gameContext, view, m_projMatrix);
 
@@ -139,7 +178,16 @@ namespace HEIN
     }
 	const DirectX::SimpleMath::Matrix DebugDisplayController::GetViewMatrix() const
 	{
-		return m_debugcameraController->GetView();
+        HEIN::Actor* cameraActor = const_cast<HEIN::ActorManager&>(m_actorManager).GetActor(m_debugCameraID);
+        if (cameraActor != nullptr)
+        {
+            HEIN::CameraController* cameraComp = cameraActor->GetComponent<HEIN::CameraController>();
+            if (cameraComp != nullptr)
+            {
+                return cameraComp->GetView();
+            }
+        }
+        return DirectX::SimpleMath::Matrix::Identity;
 	}
 
 	const DirectX::SimpleMath::Matrix DebugDisplayController::GetProjMatrix() const

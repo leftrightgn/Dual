@@ -25,7 +25,6 @@
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ActorManager& actorManager,
     GameContext& gameContext, 
-    CameraController* cameraController,
     DirectX::SimpleMath::Vector3* targetCameraOut
 )
 {
@@ -48,6 +47,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     spawnData.tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("Dodge", L"Resources/Models/knight/Dodge.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Strafe", L"Resources/Models/knight/Strafe.sdkmesh_anim");
 
     // FirstPersonCamera model
     //spawnData.fpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
@@ -179,9 +179,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
 
     // Connect
     playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
-    playerActor->AddComponent<HEIN::CombatBlackBoard>();
-    playerActor->AddComponent<HEIN::PlayerInputComponent>(cameraController); // Requires the camera controller
-    playerActor->AddComponent<HEIN::CharacterMovementComponent>();
+  
    
     HEIN::CombatStateMachineComponent* fsm = playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
 
@@ -211,11 +209,15 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     // DodgeConfig
     HEIN::StateConfig dodgeConfig;
     dodgeConfig.animationName = "Dodge";
-    dodgeConfig.moveSpeed = 10.0f;
+    dodgeConfig.moveSpeed = 30.0f;
     dodgeConfig.stateDuration = 1.5f;
     dodgeConfig.transitions["OnStop"] = "Idle";
     dodgeConfig.transitions["OnMove"] = "Walk";
     fsm->AddState("Dodge", std::make_unique<HEIN::DodgeState>(dodgeConfig));
+
+    playerActor->AddComponent<HEIN::CombatBlackBoard>();
+    playerActor->AddComponent<HEIN::PlayerInputComponent>(&actorManager); 
+    playerActor->AddComponent<HEIN::CharacterMovementComponent>();
 
     playerActor->Start();
     return spawnData;
@@ -555,4 +557,14 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
     enemyActor->Start();
     return spawnData;
+}
+
+HEIN::ActorID HEIN::ActorFactory::CreateMainCamera(ActorManager& actorManager)
+{
+    HEIN::Actor* cameraActor = actorManager.CreateActor(L"MainCamera");
+
+    HEIN::CameraController* cameraComp = cameraActor->AddComponent<HEIN::CameraController>();
+
+    cameraActor->Start();
+    return cameraActor->GetID();
 }

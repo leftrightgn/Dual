@@ -30,8 +30,12 @@ void GameScene::OnEnter(GameContext& gameContext)
     float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
     m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.0f, aspectRatio, 0.01f, 1000.0f);
 
-    m_cameraController = std::make_unique<HEIN::CameraController>();
 
+    // -------------------------------------------------------
+   // Camera Registration
+   // -------------------------------------------------------
+
+    m_cameraID = HEIN::ActorFactory::CreateMainCamera(m_actorManager);
     // -------------------------------------------------------
     // Entity Spawn (Passing the ActorManager)
     // -------------------------------------------------------
@@ -40,7 +44,6 @@ void GameScene::OnEnter(GameContext& gameContext)
     HEIN::PlayerSpawnData playerData = HEIN::ActorFactory::CreateKnight(
         m_actorManager,
         gameContext,
-        m_cameraController.get(),
         &m_targetPos
     );
     m_playerID = playerData.playerID;
@@ -57,9 +60,12 @@ void GameScene::OnEnter(GameContext& gameContext)
     // Build Stage
     m_stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
 
-    // -------------------------------------------------------
-    // Camera Registration
-    // -------------------------------------------------------
+   
+
+    // Grab the Camera Component so we can register the modes
+    HEIN::Actor* cameraActor = m_actorManager.GetActor(m_cameraID);
+    HEIN::CameraController* cameraComp = cameraActor->GetComponent<HEIN::CameraController>();
+    gameContext.mainCamera = cameraComp;
     //HEIN::SkinnedModelComponent* fpsModelPointer = playerData.fpsModel;
     HEIN::SkinnedModelComponent* ModelPointer = playerData.tpsModel;
 
@@ -70,7 +76,7 @@ void GameScene::OnEnter(GameContext& gameContext)
         m_targetPos = ModelPointer->GetBoneWorldPosition(L"mixamorig:Head", playerTransform->GetWorldMatrix());
 
         // First Person Mode
-        m_cameraController->RegisterCamera(
+        cameraComp->RegisterCamera(
             HEIN::CameraType::FirstPerson,
             [this, ModelPointer]()
             {
@@ -80,7 +86,7 @@ void GameScene::OnEnter(GameContext& gameContext)
         );
 
         // Third Person Mode
-        m_cameraController->RegisterCamera(
+        cameraComp->RegisterCamera(
             HEIN::CameraType::ThirdPerson,
             [this, ModelPointer]()
             {
@@ -90,7 +96,7 @@ void GameScene::OnEnter(GameContext& gameContext)
         );
 
         // Spring Camera Mode
-        m_cameraController->RegisterCamera(
+        cameraComp->RegisterCamera(
             HEIN::CameraType::Spring,
             [this, playerTransform]()
             {
@@ -101,13 +107,13 @@ void GameScene::OnEnter(GameContext& gameContext)
     }
 
     // Debug Mode
-    m_cameraController->RegisterCamera(
+    cameraComp->RegisterCamera(
         HEIN::CameraType::Debug,
         []() 
         { return std::make_unique<HEIN::DebugCameraMode>(); }
     );
-
-    m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
+    cameraComp->SetFirstCamera(HEIN::CameraType::Debug);
+    
 
     // -------------------------------------------------------
     // UI Tools
@@ -168,13 +174,12 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
         }
     }
 
-    if (m_cameraController)
+    HEIN::CameraController* activeCamera = gameContext.mainCamera;
+    if (activeCamera != nullptr)
     {
-        m_cameraController->Update(deltaTime);
         D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
         float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
-
-        m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(m_cameraController->GetFov(), aspectRatio, 0.1f, 1000.0f);
+        m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(activeCamera->GetFov(), aspectRatio, 0.1f, 1000.0f);
     }
 
     // // ---------------------------------------------------------
@@ -205,8 +210,13 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
 void GameScene::Render(GameContext& gameContext)
 {
     ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
-    SimpleMath::Matrix view = m_cameraController->GetView();
-
+    DirectX::SimpleMath::Matrix view = DirectX::SimpleMath::Matrix::Identity;
+    
+    HEIN::CameraController* activeCamera = gameContext.mainCamera;
+    if (activeCamera != nullptr)
+    {
+        view = activeCamera->GetView();
+    }
     if (m_skybox)
     {
         m_skybox->Draw(gameContext, view, m_proj);

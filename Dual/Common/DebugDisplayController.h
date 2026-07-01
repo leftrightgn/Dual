@@ -1,5 +1,4 @@
 #pragma once
-#include "Camera/CameraController.h"
 #include "Entities/Actor.h"
 #include "Framework/GameContext.h"
 #include "DebugUIManager.h"
@@ -13,8 +12,7 @@ namespace HEIN
 	{
 	private:
 
-		std::unique_ptr<CameraController> m_debugcameraController;
-
+	
 		bool m_isVisible;
 		bool m_isMagnified;
 
@@ -23,11 +21,14 @@ namespace HEIN
 		float m_virtualMouseX = 0.0f;
 		float m_virtualMouseY = 0.0f;
 
+		HEIN::ActorManager m_actorManager;
+
 		DebugUIManager m_debugUI;
 		HEIN::ActorID m_debugPlayerID = HEIN::INVALID_ACTOR_ID;
 		HEIN::ActorID m_debugSwordID = HEIN::INVALID_ACTOR_ID;
 		HEIN::ActorID m_debugStageID = HEIN::INVALID_ACTOR_ID;
 		HEIN::ActorID m_debugEnemyID = HEIN::INVALID_ACTOR_ID;
+		HEIN::ActorID m_debugCameraID = HEIN::INVALID_ACTOR_ID;
 	public:
 
 		DebugDisplayController();

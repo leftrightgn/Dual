@@ -28,7 +28,6 @@ namespace HEIN
 		static PlayerSpawnData CreateKnight(
 			ActorManager& actorManager,
 			GameContext& gameContext,
-			CameraController* cameraController,
 			DirectX::SimpleMath::Vector3* targetCameraOut
 		);
 
@@ -47,6 +46,10 @@ namespace HEIN
 			ActorManager& actorManager,
 			GameContext& gameContext,
 			HEIN::ActorID targetID
+		);
+		
+		static HEIN::ActorID CreateMainCamera(
+			ActorManager& actorManager
 		);
 
 	};

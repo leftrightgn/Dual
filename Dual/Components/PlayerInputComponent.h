@@ -1,11 +1,12 @@
 #pragma once
 #include "Components/IComponent.h"
+#include <Entities/Actor.h>
 
 namespace HEIN
 {
 	struct CombatBlackBoard;
 	class Actor;
-	class CameraController;
+	class ActorManager;
 
 	class PlayerInputComponent : public HEIN::IComponent
 	{
@@ -17,13 +18,16 @@ namespace HEIN
 	private:
 
 		HEIN::CombatBlackBoard* m_blackboard = nullptr;
-		HEIN::CameraController* m_cameraController = nullptr; 
+		HEIN::ActorManager* m_actorManager = nullptr;
 
 	public:
 
-		PlayerInputComponent(Actor* owner, HEIN::CameraController* cameraController);
+		PlayerInputComponent(
+			Actor* owner, 
+			ActorManager* actorManager
+		);
 
-		void Start();
+		void Start() override;
 
 		void ProcessInput(const GameContext& gameContext);
 

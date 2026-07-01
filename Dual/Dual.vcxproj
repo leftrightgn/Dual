@@ -265,6 +265,7 @@
     <ClCompile Include="BehaviourTree\BTSelector.cpp" />
     <ClCompile Include="BehaviourTree\BTSequence.cpp" />
     <ClCompile Include="BehaviourTree\BTStrafeNode.cpp" />
+    <ClCompile Include="Camera\CameraController.cpp" />
     <ClCompile Include="Common\CollisionDispatcher.cpp" />
     <ClCompile Include="Common\CollisionMath.cpp" />
     <ClCompile Include="Common\DamageSystem.cpp" />
