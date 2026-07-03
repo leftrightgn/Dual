@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "ActorFactory.h"
 #include <Components/TransformComponent.h>
 #include <Components/ColliderComponent/CapsuleColliderComponent.h>
@@ -21,6 +21,8 @@
 #include <BehaviourTree/BTChaseNode.h>
 #include <Components/BehaviourTreeComponent.h>
 #include <BehaviourTree/BTStrafeNode.h>
+#include <Camera/CameraController.h>
+#include <Components/TargetTrackingComponent.h>
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ActorManager& actorManager,
@@ -47,7 +49,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     spawnData.tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("Dodge", L"Resources/Models/knight/Dodge.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("Strafe", L"Resources/Models/knight/Strafe.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Strafe", L"Resources/Models/knight/s.sdkmesh_anim");
 
     // FirstPersonCamera model
     //spawnData.fpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
@@ -189,17 +191,21 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     idleConfig.transitions["OnMove"] = "Walk";
     idleConfig.transitions["OnAttack"] = "OneHand";
     idleConfig.transitions["OnDodge"] = "Dodge";
+    idleConfig.transitions["OnStrafe"] = "Strafe";
     fsm->AddState("Idle", std::make_unique<HEIN::IdleState>(idleConfig));
 
     // WalkConfig
     HEIN::StateConfig walkConfig;
+    walkConfig.moveSpeed = 30.0f;
     walkConfig.animationName = "Walk";
     walkConfig.transitions["OnStop"] = "Idle";
     walkConfig.transitions["OnAttack"] = "OneHand";
+    walkConfig.transitions["OnStrafe"] = "Strafe";
     fsm->AddState("Walk", std::make_unique<HEIN::WalkState>(walkConfig));
 
     // AttackConfig
     HEIN::StateConfig attackConfig;
+    attackConfig.moveSpeed = 3.0f;
     attackConfig.animationName = "OneHand";
     attackConfig.stateDuration = 4.1f;
     attackConfig.transitions["OnStop"] = "Idle";
@@ -215,8 +221,19 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     dodgeConfig.transitions["OnMove"] = "Walk";
     fsm->AddState("Dodge", std::make_unique<HEIN::DodgeState>(dodgeConfig));
 
+    // StrafeConfig
+    HEIN::StateConfig strafeConfig;
+    strafeConfig.animationName = "Strafe";
+    strafeConfig.moveSpeed = 5.0f;
+    strafeConfig.transitions["OnStop"] = "Idle";
+    strafeConfig.transitions["OnMove"] = "Walk";
+    fsm->AddState("Strafe", std::make_unique<HEIN::StrafeState>(strafeConfig));
+
+
+
     playerActor->AddComponent<HEIN::CombatBlackBoard>();
     playerActor->AddComponent<HEIN::PlayerInputComponent>(&actorManager); 
+    playerActor->AddComponent<HEIN::TargetTrackingComponent>(&actorManager);
     playerActor->AddComponent<HEIN::CharacterMovementComponent>();
 
     playerActor->Start();
@@ -397,7 +414,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     Actor* enemyActor = actorManager.CreateActor(L"Enemy");
 
     spawnData.enemyID = enemyActor->GetID();
-
+    enemyActor->SetActorType(HEIN::ActorType::Enemy);
     HEIN::HealthComponent* enemyHealth = enemyActor->AddComponent<HEIN::HealthComponent>();
     enemyHealth->Initialize(100);
 
@@ -413,6 +430,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     spawnData.tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/eidle.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing1.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Strafe", L"Resources/Models/knight/Strafe.sdkmesh_anim");
 
     
     // Head Collider
@@ -528,12 +546,13 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     enemyActor->AddComponent<HEIN::CombatStateMachineComponent>();
     enemyActor->AddComponent<HEIN::CombatBlackBoard>();
     enemyActor->AddComponent<HEIN::CharacterMovementComponent>();
+    enemyActor->AddComponent<HEIN::TargetTrackingComponent>(&actorManager);
   
 
     std::unique_ptr<HEIN::BTSequence> aiBrain = std::make_unique<HEIN::BTSequence>();
 
-    aiBrain->AddChild(std::make_unique<HEIN::BTChaseNode>(30.0f, 20.0f));
-    aiBrain->AddChild(std::make_unique<HEIN::BTStrafeNode>(10.0f, 25.0f, 10.0f, true));
+    //aiBrain->AddChild(std::make_unique<HEIN::BTChaseNode>(30.0f, 20.0f));
+    //aiBrain->AddChild(std::make_unique<HEIN::BTStrafeNode>(10.0f, 25.0f, 10.0f, true));
 
     HEIN::BehaviourTreeComponent* btComp = enemyActor->AddComponent<HEIN::BehaviourTreeComponent>();
 
@@ -546,14 +565,26 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     idleConfig.animationName = "Idle";
     idleConfig.transitions["OnMove"] = "Walk";
     idleConfig.transitions["OnAttack"] = "OneHand";
+    idleConfig.transitions["OnStrafe"] = "Strafe";
     fsm->AddState("Idle", std::make_unique<HEIN::IdleState>(idleConfig));
 
     // WalkConfig
     HEIN::StateConfig walkConfig;
+    walkConfig.moveSpeed = 30.0f;
     walkConfig.animationName = "Walk";
     walkConfig.transitions["OnStop"] = "Idle";
     walkConfig.transitions["OnAttack"] = "OneHand";
+    walkConfig.transitions["OnStrafe"] = "Strafe";
     fsm->AddState("Walk", std::make_unique<HEIN::WalkState>(walkConfig));
+
+    // StrafeConfig
+    HEIN::StateConfig strafeConfig;
+    strafeConfig.moveSpeed = 5.0f;
+    strafeConfig.animationName = "Strafe";
+    strafeConfig.transitions["OnMove"] = "Walk";
+    strafeConfig.transitions["OnAttack"] = "OneHand";
+    fsm->AddState("Strafe", std::make_unique<HEIN::StrafeState>(strafeConfig));
+
 
     enemyActor->Start();
     return spawnData;

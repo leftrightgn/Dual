@@ -66,6 +66,13 @@ namespace HEIN
 		
 		void UpdateMouseMode();
 
+		std::optional<CameraType> GetCurrentCameraType() const
+		{
+			if (m_cameraStack.empty()) return std::nullopt;
+
+			return m_cameraStack.back()->GetType();
+		}
+
 	private:
 
 		void ApplyRequest();

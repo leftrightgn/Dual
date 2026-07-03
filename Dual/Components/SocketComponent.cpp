@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "SocketComponent.h"
 #include "Components/SkinnedModelComponent.h"
-#include "Components/TransformComponent.h" // Fixed Include Path
+#include "Components/TransformComponent.h"
 #include "Entities/Actor.h"
 
 HEIN::SocketComponent::SocketComponent(Actor* owner)

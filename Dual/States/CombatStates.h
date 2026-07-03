@@ -88,7 +88,7 @@ namespace HEIN
 	private:
 
 		HEIN::StateConfig m_config;
-		DirectX::SimpleMath::Vector3 m_lockedDirection;
+	
 
 	public:
 

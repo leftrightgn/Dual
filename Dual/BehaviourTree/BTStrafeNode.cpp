@@ -24,6 +24,7 @@ HEIN::BTNodeState HEIN::BTStrafeNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 	if (m_timer >= m_strafeDuration)
 	{
 		blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+		blackboard->isStrafingIntent = false;
 		m_timer = 0;
 		return BTNodeState::Success;
 	}

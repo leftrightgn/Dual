@@ -50,7 +50,12 @@ void HEIN::CapsuleColliderComponent::SyncColliderState()
 	m_worldBottomCenter = center - (m_worldupDir * (m_height * 0.5f));
 }
 
-void HEIN::CapsuleColliderComponent::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj)
+void HEIN::CapsuleColliderComponent::Draw(
+	GameContext& gameContext, 
+	const DirectX::SimpleMath::Matrix& world,
+	const DirectX::SimpleMath::Matrix& view,
+	const DirectX::SimpleMath::Matrix& proj
+)
 {
 	if (gameContext.debugCollisionRenderer == nullptr) return;
 

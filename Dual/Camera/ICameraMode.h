@@ -31,7 +31,8 @@ namespace HEIN
 		ThirdPerson,
 		Debug,
 		Cinematic,
-		Spring
+		Spring,
+		LockOn
 	};
 
 	// Controller interface
@@ -61,5 +62,7 @@ namespace HEIN
 		virtual void OnExit(CameraData& /*data*/) {};
 		virtual void OnSuspend(CameraData& /*data*/) {};
 		virtual void OnResume(CameraData& /*data*/) {};
+
+		virtual CameraType GetType() const = 0;
 	};
 }

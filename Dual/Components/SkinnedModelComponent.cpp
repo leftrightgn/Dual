@@ -12,7 +12,11 @@ namespace HEIN
 	{
 	}
 
-	void SkinnedModelComponent::Initialize(GameContext& gameContext, const wchar_t* modelPath, const wchar_t* textureDir)
+	void SkinnedModelComponent::Initialize(
+		GameContext& gameContext,
+		const wchar_t* modelPath,
+		const wchar_t* textureDir
+	)
 	{
 		ID3D11Device* device = gameContext.deviceResources.GetD3DDevice();
 
@@ -139,7 +143,12 @@ namespace HEIN
 		}
 	}
 
-	void SkinnedModelComponent::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj)
+	void SkinnedModelComponent::Draw(
+		GameContext& gameContext,
+		const DirectX::SimpleMath::Matrix& world,
+		const DirectX::SimpleMath::Matrix& view,
+		const DirectX::SimpleMath::Matrix& proj
+	)
 	{
 		if (!m_isVisible) return;
 

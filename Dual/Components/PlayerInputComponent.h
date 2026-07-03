@@ -31,6 +31,8 @@ namespace HEIN
 
 		void ProcessInput(const GameContext& gameContext);
 
-		void Update(float deltaTime) override;
+		void Update(float deltaTime) override {}
+
+
 	};
 }

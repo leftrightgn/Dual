@@ -32,6 +32,11 @@ void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 		stateMachine->ChangeState(m_config.transitions["OnAttack"]);
 		return;
 	}
+	if (blackboard->isStrafingIntent)
+	{
+		stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
+		return;
+	}
 	if (blackboard->moveIntent.LengthSquared() > 0.1f)
 	{
 		stateMachine->ChangeState(m_config.transitions["OnMove"]);
@@ -58,7 +63,10 @@ void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*state
 {
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (blackboard) blackboard->currentStance = CombatStance::Walking;
-
+	if (blackboard)
+	{
+		blackboard->currentSpeed = m_config.moveSpeed;
+	}
 	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
 	for (HEIN::SkinnedModelComponent* model : models)
 	{
@@ -71,8 +79,15 @@ void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
 
+	
+
 	if (blackboard->isAttackingIntent ) {
 		stateMachine->ChangeState(m_config.transitions["OnAttack"]);
+		return;
+	}
+
+	if (blackboard->isStrafingIntent) {
+		stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
 		return;
 	}
 
@@ -98,6 +113,7 @@ void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent
 	if (blackboard)
 	{
 		blackboard->currentStance = CombatStance::OneHand;
+		blackboard->currentSpeed = m_config.moveSpeed;
 	}
 	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
 	for (HEIN::SkinnedModelComponent* model : models)
@@ -111,6 +127,7 @@ void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent*
 {
 	m_timer += deltaTime;
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+	
 	if (m_timer >= m_config.stateDuration)
 	{
 		if (blackboard != nullptr)
@@ -200,10 +217,31 @@ HEIN::StrafeState::StrafeState(const StateConfig& config)
 
 void HEIN::StrafeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine)
 {
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+	if (blackboard) blackboard->currentStance = CombatStance::Strafing;
+	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+	for (HEIN::SkinnedModelComponent* model : models)
+	{
+		model->CrossfadeAnimation(m_config.animationName, 0.3f);
+	}
 }
 
 void HEIN::StrafeState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
 {
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
+
+	if (blackboard)
+	{
+		blackboard->currentSpeed = m_config.moveSpeed;
+		
+	}
+	if (blackboard && !blackboard->isStrafingIntent)
+	{
+		if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+			stateMachine->ChangeState(m_config.transitions["OnMove"]);
+		else
+			stateMachine->ChangeState(m_config.transitions["OnStop"]);
+	}
 }
 
 void HEIN::StrafeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine)

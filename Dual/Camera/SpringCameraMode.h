@@ -31,7 +31,6 @@ namespace HEIN
 		HEIN::ActorManager* m_manager;
 		HEIN::ActorID m_targetID;
 
-		const TransformComponent* m_targetTransform;
 		const DirectX::SimpleMath::Vector3* m_desiredTarget;
 		DirectX::SimpleMath::Vector3 m_currentPosition;
 		DirectX::SimpleMath::Vector3 m_currentLookAt;
@@ -51,7 +50,6 @@ namespace HEIN
 		SpringCameraMode(
 			HEIN::ActorManager* manager,
 			HEIN::ActorID targetID,
-			const TransformComponent* targetTransform,
 			const DirectX::SimpleMath::Vector3* desiredTarget,
 			float followDistance = DEFAULT_FOLLOW_DISTANCE,
 			float heightOffset = DEFAULT_HEIGHT_OFFSET,
@@ -72,6 +70,8 @@ namespace HEIN
 	
 		bool RequiresRelativeMouse() const override { return true; }
 		bool LocksPlayerRotation() const override { return false; }
+
+		CameraType GetType() const override { return CameraType::Spring; }
 	private:
 
 		void UpdateSpring(

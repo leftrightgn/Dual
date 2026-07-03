@@ -36,7 +36,6 @@ namespace HEIN
 		static bool WasCameraSwitchPressed(const GameContext& gameContext, HEIN::CameraType& outType);
 		static bool WasDebugMagnifyPressed(const GameContext& gameContext);
 		static bool WasDebugTogglePressed(const GameContext& gameContext);
-
-
+		
 	};
 }

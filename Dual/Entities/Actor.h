@@ -4,11 +4,20 @@
 #include <string>
 #include "Components/IComponent.h"
 #include <utility>
+#include <algorithm>
 
 
 
 namespace HEIN
 {
+	enum class ActorType
+	{
+		Default = 0,
+		Player = 1,
+		Enemy = 2,
+		Items = 3,
+		Enviroment = 4
+	};
 
 	using ActorID = uint32_t;
 	constexpr ActorID INVALID_ACTOR_ID = 0;
@@ -20,6 +29,7 @@ namespace HEIN
 	private:
 
 		ActorID m_id;
+		ActorType m_type;
 		ActorID m_ownerID = INVALID_ACTOR_ID;
 		ActorID m_parentID = INVALID_ACTOR_ID;
 		std::vector<ActorID> m_childrensID;
@@ -54,6 +64,9 @@ namespace HEIN
 		
 		void SetOwnerID(ActorID id) { m_ownerID = id; }
 		ActorID GetOwnerID() const { return m_ownerID; }
+
+		void SetActorType(ActorType type) { m_type = type; }
+		ActorType GetActorType() const { return m_type; }
 
 		void AddChild(ActorID id) { m_childrensID.push_back(id); }
 		const std::vector<ActorID>& GetChildren() const { return m_childrensID; }
