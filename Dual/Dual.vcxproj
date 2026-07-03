@@ -186,6 +186,7 @@
     <ClInclude Include="BehaviourTree\BTSelector.h" />
     <ClInclude Include="BehaviourTree\BTSequence.h" />
     <ClInclude Include="BehaviourTree\BTStrafeNode.h" />
+    <ClInclude Include="Camera\LockOnCameraMode.h" />
     <ClInclude Include="Common\CollisionDispatcher.h" />
     <ClInclude Include="Common\CollisionMath.h" />
     <ClInclude Include="Common\DamageSystem.h" />
@@ -196,6 +197,7 @@
     <ClInclude Include="Common\EventManager.h" />
     <ClInclude Include="Components\DamageDealerComponent.h" />
     <ClInclude Include="Components\HealthComponent.h" />
+    <ClInclude Include="Components\TargetTrackingComponent.h" />
     <ClInclude Include="Entities\ActorManager.h" />
     <ClInclude Include="Factory\ActorFactory.h" />
     <ClInclude Include="Components\BoneLinkComponent.h" />
@@ -266,6 +268,7 @@
     <ClCompile Include="BehaviourTree\BTSequence.cpp" />
     <ClCompile Include="BehaviourTree\BTStrafeNode.cpp" />
     <ClCompile Include="Camera\CameraController.cpp" />
+    <ClCompile Include="Camera\LockOnCameraMode.cpp" />
     <ClCompile Include="Common\CollisionDispatcher.cpp" />
     <ClCompile Include="Common\CollisionMath.cpp" />
     <ClCompile Include="Common\DamageSystem.cpp" />
@@ -275,6 +278,7 @@
     <ClCompile Include="Common\EventManager.cpp" />
     <ClCompile Include="Components\DamageDealerComponent.cpp" />
     <ClCompile Include="Components\HealthComponent.cpp" />
+    <ClCompile Include="Components\TargetTrackingComponent.cpp" />
     <ClCompile Include="Entities\ActorManager.cpp" />
     <ClCompile Include="Factory\ActorFactory.cpp" />
     <ClCompile Include="Components\BoneLinkComponent.cpp" />
@@ -368,12 +372,14 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Resources/Shaders/%(Filename).cso</ObjectFileOutput>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Shaders\SkyboxEffect_VS.hlsl">
       <ShaderType>Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Resources/Shaders/%(Filename).cso</ObjectFileOutput>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

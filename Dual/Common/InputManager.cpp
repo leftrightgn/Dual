@@ -86,6 +86,11 @@ namespace HEIN
 			outType = HEIN::CameraType::Debug;
 			return true;
 		}
+		if (gameContext.mouseButtonTracker.middleButton)
+		{
+			outType = HEIN::CameraType::LockOn;
+			return true;
+		}
 		return false;
 	}
 	bool InputManager::WasDebugMagnifyPressed(const GameContext& gameContext)
@@ -96,5 +101,6 @@ namespace HEIN
 	{
 		return gameContext.keyboardTracker.pressed.F3;
 	}
+	
 }
 

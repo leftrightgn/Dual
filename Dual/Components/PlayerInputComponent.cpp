@@ -45,6 +45,7 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 		if (gameContext.inputManager->WasCameraSwitchPressed(gameContext, targetCameraType))
 		{
 			cameraController->RequestSwitch(targetCameraType);
+			
 		}
 	}
 
@@ -74,12 +75,25 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 		if (worldIntent.LengthSquared() > 0) worldIntent.Normalize();
 		m_blackboard->moveIntent = worldIntent;
 
+		bool isCameraLocked = false;
+        if (cameraController != nullptr && cameraController->GetCurrentCameraType() == HEIN::CameraType::LockOn)
+        {
+            isCameraLocked = true;
+        }
+        
+        m_blackboard->lockOnIntent = isCameraLocked;
+
+        if (isCameraLocked && localInput.x != 0.0f)
+        {
+            m_blackboard->isStrafingIntent = true;
+        }
+        else
+        {
+            m_blackboard->isStrafingIntent = false;
+        }
+
 		// Get combat logic cleanly
 		m_blackboard->isAttackingIntent = gameContext.inputManager->IsAttacking(gameContext);
 		m_blackboard->isDodgingIntent = gameContext.inputManager->IsDodging(gameContext);
 	}
-}
-
-void HEIN::PlayerInputComponent::Update(float deltaTime)
-{
 }

@@ -7,7 +7,6 @@
 HEIN::SpringCameraMode::SpringCameraMode(
 	HEIN::ActorManager* manager,
 	HEIN::ActorID targetID,
-	const TransformComponent* targetTransform,
 	const DirectX::SimpleMath::Vector3* desiredTarget, 
 	float followDistance, 
 	float heightOffset, 
@@ -15,7 +14,6 @@ HEIN::SpringCameraMode::SpringCameraMode(
 )
 	: m_manager(manager)
 	, m_targetID(targetID)
-	, m_targetTransform(targetTransform)
 	, m_desiredTarget(desiredTarget)
 	, m_currentPosition(DirectX::SimpleMath::Vector3::Zero)
 	, m_currentLookAt(DirectX::SimpleMath::Vector3::Zero)
@@ -63,8 +61,9 @@ void HEIN::SpringCameraMode::Update(CameraData& outData, float deltaTime, ICamer
 
 	if (targetActor == nullptr) return;
 
+	HEIN::TransformComponent* playerTransform = targetActor->GetComponent<HEIN::TransformComponent>();
 
-	if (!m_targetTransform || !m_desiredTarget) return;
+	if (!playerTransform || !m_desiredTarget) return;
 
 	DirectX::SimpleMath::Vector3 targetLookAt = *m_desiredTarget;
 

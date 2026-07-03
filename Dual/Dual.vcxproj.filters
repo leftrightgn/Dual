@@ -191,6 +191,10 @@
     <ClCompile Include="Camera\CameraController.cpp">
       <Filter>Camera</Filter>
     </ClCompile>
+    <ClCompile Include="Camera\LockOnCameraMode.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\TargetTrackingComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -412,6 +416,12 @@
     </ClInclude>
     <ClInclude Include="BehaviourTree\BTStrafeNode.h">
       <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera\LockOnCameraMode.h">
+      <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\TargetTrackingComponent.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

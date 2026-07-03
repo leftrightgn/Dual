@@ -1,6 +1,7 @@
 #pragma once
 #include "Components/IComponent.h"
 #include <SimpleMath.h>
+#include <Entities/Actor.h>
 
 namespace HEIN
 {
@@ -14,7 +15,8 @@ namespace HEIN
 		AttackRecovery,
 		Parrying,
 		Staggered,
-		Dodging
+		Dodging,
+		Strafing
 	};
 
 	// Only holds Data contains zero logic
@@ -27,12 +29,16 @@ namespace HEIN
 		bool isParryingIntent = false;
 		bool isDodgingIntent = false;
 		bool isStrafingIntent = false;
+		bool lockOnIntent = false;
 
 		// Physical Reality
 		DirectX::SimpleMath::Vector3 currentVelocity = DirectX::SimpleMath::Vector3::Zero;
 		bool isGrounded = true;
 		DirectX::SimpleMath::Vector3 dirToTarget = DirectX::SimpleMath::Vector3::Zero;
 		float distanceToTarget = 0.0f;
+
+		bool isLockedOn = false;
+		HEIN::ActorID lockedTargetID = HEIN::INVALID_ACTOR_ID;
 
 		// Combat Stats
 		float currentStamina = 100.0f;

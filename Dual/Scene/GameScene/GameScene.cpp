@@ -3,6 +3,7 @@
 #include <Camera/DebugCameraMode.h>
 #include <Camera/ThirdPersonMode.h>
 #include <Camera/FirstPersonMode.h>
+#include <Camera/LockOnCameraMode.h>
 #include <Camera/SpringCameraMode.h>
 #include <Components/TransformComponent.h>
 #include <Components/SkinnedModelComponent.h>
@@ -98,10 +99,19 @@ void GameScene::OnEnter(GameContext& gameContext)
         // Spring Camera Mode
         cameraComp->RegisterCamera(
             HEIN::CameraType::Spring,
-            [this, playerTransform]()
+            [this]()
             {
                 return std::make_unique<HEIN::SpringCameraMode>(
-                    &m_actorManager, m_playerID, playerTransform, &m_targetPos);
+                    &m_actorManager, m_playerID, &m_targetPos);
+            }
+        );
+
+        cameraComp->RegisterCamera(
+            HEIN::CameraType::LockOn,
+            [this]()
+            {
+                return std::make_unique<HEIN::LockOnCameraMode>(
+                    &m_actorManager, m_playerID, m_enemyID);
             }
         );
     }

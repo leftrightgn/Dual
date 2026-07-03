@@ -51,6 +51,8 @@ namespace HEIN
         void ProcessInput(const CameraInputState& input) override;
 
         void Update(CameraData& outData, float deltaTime, ICameraController& controller) override;
+
+        CameraType GetType() const override { return CameraType::Debug; }
      
     };
 }

@@ -59,5 +59,7 @@ namespace HEIN
 		bool RequiresRelativeMouse() const override { return true; }
 		bool LocksPlayerRotation() const override { return true; }
 
+		CameraType GetType() const override { return CameraType::ThirdPerson; }
+
 	};
 }

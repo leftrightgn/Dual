@@ -35,7 +35,12 @@ void HEIN::AABBColliderComponent::SyncColliderState()
     localBox.Transform(m_worldAABB, worldMatrix);
 }
 
-void HEIN::AABBColliderComponent::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj)
+void HEIN::AABBColliderComponent::Draw(
+    GameContext& gameContext,
+    const DirectX::SimpleMath::Matrix& world, 
+    const DirectX::SimpleMath::Matrix& view, 
+    const DirectX::SimpleMath::Matrix& proj
+)
 {
     if (gameContext.debugCollisionRenderer == nullptr) return;
 

@@ -1,6 +1,5 @@
 #pragma once
 #include <Entities/Actor.h>
-#include <Camera/CameraController.h>
 #include <Components/SkinnedModelComponent.h>
 
 namespace HEIN
