@@ -28,7 +28,7 @@ void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
 
-	if (blackboard->isAttackingIntent && blackboard->currentStamina >= 15.0f) {
+	if (blackboard->isAttackingIntent) {
 		stateMachine->ChangeState(m_config.transitions["OnAttack"]);
 		return;
 	}
@@ -96,6 +96,11 @@ void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 		stateMachine->ChangeState(m_config.transitions["OnStop"]);
 		return;
 	}
+	if (blackboard->isDodgingIntent)
+	{
+		stateMachine->ChangeState(m_config.transitions["OnDodge"]);
+		return;
+	}
 }
 
 void HEIN::WalkState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/)
@@ -137,6 +142,10 @@ void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent*
 		if (blackboard != nullptr && blackboard->moveIntent.LengthSquared() > 0.1f)
 		{
 			stateMachine->ChangeState(m_config.transitions["OnMove"]);
+		}
+		else if (blackboard != nullptr && blackboard->isDodgingIntent) 
+		{
+			stateMachine->ChangeState(m_config.transitions["OnDodge"]);
 		}
 		else
 		{
@@ -200,9 +209,22 @@ void HEIN::DodgeState::Update(Actor* owner, CombatStateMachineComponent* stateMa
 	if (m_timer >= m_config.stateDuration)
 	{
 		if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+		{
 			stateMachine->ChangeState(m_config.transitions["OnMove"]);
-		else
-			stateMachine->ChangeState(m_config.transitions["OnStop"]);
+			return;
+		}
+		if (blackboard->isAttackingIntent) {
+			stateMachine->ChangeState(m_config.transitions["OnAttack"]);
+			return;
+		}
+
+		if (blackboard->isStrafingIntent) {
+			stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
+			return;
+		}
+		
+		stateMachine->ChangeState(m_config.transitions["OnStop"]);
+		return;
 	}
 }
 
@@ -212,17 +234,27 @@ void HEIN::DodgeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMa
 
 HEIN::StrafeState::StrafeState(const StateConfig& config)
 	: m_config(config)
+	, m_isRight(false)
 {
 }
 
 void HEIN::StrafeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine)
 {
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-	if (blackboard) blackboard->currentStance = CombatStance::Strafing;
+	if (blackboard)
+	{
+		blackboard->currentStance = CombatStance::Strafing;
+		// Calculate right Vector
+		DirectX::SimpleMath::Vector3 rightVector = blackboard->dirToTarget.Cross(DirectX::SimpleMath::Vector3::Up);
+		float dotProduct = rightVector.Dot(blackboard->moveIntent);
+		m_isRight = dotProduct >= 0.0f;
+	}
+
 	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
 	for (HEIN::SkinnedModelComponent* model : models)
 	{
-		model->CrossfadeAnimation(m_config.animationName, 0.3f);
+		if (m_isRight) model->CrossfadeAnimation(m_config.animationName, 0.3f);
+		else model->CrossfadeAnimation(m_config.secondaryAnimationName, 0.3f);
 	}
 }
 
@@ -233,14 +265,38 @@ void HEIN::StrafeState::Update(Actor* owner, CombatStateMachineComponent* stateM
 	if (blackboard)
 	{
 		blackboard->currentSpeed = m_config.moveSpeed;
-		
+		DirectX::SimpleMath::Vector3 rightVector = blackboard->dirToTarget.Cross(DirectX::SimpleMath::Vector3::Up);
+		float dotProduct = rightVector.Dot(blackboard->moveIntent);
+		bool isRight = dotProduct >= 0.0f;
+		if (isRight != m_isRight)
+		{
+			m_isRight = isRight;
+			std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+			for (HEIN::SkinnedModelComponent* model : models)
+			{
+				if (m_isRight) model->CrossfadeAnimation(m_config.animationName, 0.3f);
+				else model->CrossfadeAnimation(m_config.secondaryAnimationName, 0.3f);
+			}
+		}
 	}
 	if (blackboard && !blackboard->isStrafingIntent)
 	{
 		if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+		{
 			stateMachine->ChangeState(m_config.transitions["OnMove"]);
+			return;
+		}
+		
 		else
+		{
 			stateMachine->ChangeState(m_config.transitions["OnStop"]);
+			return;
+		}
+	}
+	if (blackboard && blackboard->isDodgingIntent)
+	{
+		stateMachine->ChangeState(m_config.transitions["OnDodge"]);
+		return;
 	}
 }
 

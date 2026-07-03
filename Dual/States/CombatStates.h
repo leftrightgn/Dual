@@ -7,6 +7,7 @@ namespace HEIN
 	struct StateConfig
 	{
 		std::string animationName;
+		std::string secondaryAnimationName;
 
 		std::unordered_map<std::string, std::string> transitions;
 
@@ -89,7 +90,7 @@ namespace HEIN
 
 		HEIN::StateConfig m_config;
 	
-
+		bool m_isRight;
 	public:
 
 		StrafeState(const StateConfig& config);

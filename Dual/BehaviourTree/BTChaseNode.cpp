@@ -15,17 +15,18 @@ HEIN::BTNodeState HEIN::BTChaseNode::Tick(
 	float deltaTime
 )
 {
-	HEIN::CombatBlackBoard* bb = self->GetComponent<HEIN::CombatBlackBoard>();
-	if (bb == nullptr) return BTNodeState::Failure;
-
-	if (bb->distanceToTarget <= m_attackRange)
+	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+	if (blackboard == nullptr) return BTNodeState::Failure;
+	blackboard->lockOnIntent = true;
+	blackboard->isStrafingIntent = false;
+	if (blackboard->distanceToTarget <= m_attackRange)
 	{
-		bb->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+		blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		return BTNodeState::Success;
 	}
 
-	bb->moveIntent = bb->dirToTarget;
-	bb->currentSpeed = m_walkSpeed;
+	blackboard->moveIntent = blackboard->dirToTarget;
+	blackboard->currentSpeed = m_walkSpeed;
 
 	return BTNodeState::Running;
 }

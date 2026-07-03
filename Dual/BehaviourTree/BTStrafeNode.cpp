@@ -19,7 +19,7 @@ HEIN::BTStrafeNode::BTStrafeNode(
 HEIN::BTNodeState HEIN::BTStrafeNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
 {
 	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
-
+	blackboard->lockOnIntent = true;
 	m_timer += deltaTime;
 	if (m_timer >= m_strafeDuration)
 	{
