@@ -45,8 +45,26 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 	{
 		rb->SetHorizontalVelocity(m_blackboard->currentVelocity);
 	}
+	if (m_blackboard->isLockedOn && m_blackboard->isStrafingIntent &&  m_blackboard->dirToTarget.LengthSquared() > 0.001f)
+	{
+		float targetYaw = atan2f(m_blackboard->dirToTarget.x, m_blackboard->dirToTarget.z);
+		float modelOffset = DirectX::XM_PI;
+		targetYaw += modelOffset;
+		DirectX::SimpleMath::Vector3 currentRot = m_transform->GetRotationEuler();
 
-	if (m_blackboard->moveIntent.LengthSquared() > 0.001f)
+		float difference = targetYaw - currentRot.y;
+		while (difference < -DirectX::XM_PI) difference += DirectX::XM_2PI;
+		while (difference > DirectX::XM_PI) difference -= DirectX::XM_2PI;
+
+		float turnSpeed = 10.0f;
+		currentRot.y += difference * turnSpeed * deltaTime;
+
+		currentRot.x = 0.0f;
+		currentRot.z = 0.0f;
+
+		m_transform->SetRotationEuler(currentRot);
+	}
+	else if (m_blackboard->moveIntent.LengthSquared() > 0.001f)
 	{
 		float targetYaw = atan2f(m_blackboard->moveIntent.x, m_blackboard->moveIntent.z);
 		float modelOffset = DirectX::XM_PI;

@@ -18,7 +18,7 @@ HEIN::ActorID HEIN::TargetTrackingComponent::FindBestTarget() const
 
 		if (actor == nullptr || actor == m_owner) continue;
 
-		if (actor->GetActorType() == HEIN::ActorType::Enemy)
+		if (actor->GetActorType() == m_targetTypeToFind)
 		{
 			HEIN::TransformComponent* targetTrans = actor->GetComponent<HEIN::TransformComponent>();
 
@@ -42,37 +42,42 @@ HEIN::ActorID HEIN::TargetTrackingComponent::FindBestTarget() const
 	return closestTargetID;
 }
 
-HEIN::TargetTrackingComponent::TargetTrackingComponent(Actor* owner, ActorManager* manager)
+HEIN::TargetTrackingComponent::TargetTrackingComponent(
+	Actor* owner,
+	ActorManager* manager,
+	HEIN::ActorType targetType
+)
 	: IComponent(owner)
 	, m_actorManager(manager)
+	, m_targetTypeToFind(targetType)
 {
 }
 
 void HEIN::TargetTrackingComponent::Start()
 {
-	m_blackBoard = m_owner->GetComponent<HEIN::CombatBlackBoard>();
+	m_blackboard = m_owner->GetComponent<HEIN::CombatBlackBoard>();
 	m_transform = m_owner->GetComponent<HEIN::TransformComponent>();
 }
 
 void HEIN::TargetTrackingComponent::Update(float deltaTime)
 {
-	if (!m_blackBoard || !m_transform || !m_actorManager) return;
+	if (!m_blackboard || !m_transform || !m_actorManager) return;
 
-	if (m_blackBoard->lockOnIntent && m_blackBoard->lockedTargetID == HEIN::INVALID_ACTOR_ID)
+	if (m_blackboard->lockOnIntent && m_blackboard->lockedTargetID == HEIN::INVALID_ACTOR_ID)
 	{
-		m_blackBoard->lockedTargetID = FindBestTarget();
+		m_blackboard->lockedTargetID = FindBestTarget();
 	}
-	else if (!m_blackBoard->lockOnIntent)
+	else if (!m_blackboard->lockOnIntent)
 	{
-		m_blackBoard->lockedTargetID = HEIN::INVALID_ACTOR_ID;
-		m_blackBoard->dirToTarget = DirectX::SimpleMath::Vector3::Zero;
-		m_blackBoard->distanceToTarget = 0.0f;
-		m_blackBoard->isLockedOn = false;
+		m_blackboard->lockedTargetID = HEIN::INVALID_ACTOR_ID;
+		m_blackboard->dirToTarget = DirectX::SimpleMath::Vector3::Zero;
+		m_blackboard->distanceToTarget = 0.0f;
+		m_blackboard->isLockedOn = false;
 	}
 
-	if (m_blackBoard->lockedTargetID != HEIN::INVALID_ACTOR_ID)
+	if (m_blackboard->lockedTargetID != HEIN::INVALID_ACTOR_ID)
 	{
-		HEIN::Actor* target = m_actorManager->GetActor(m_blackBoard->lockedTargetID);
+		HEIN::Actor* target = m_actorManager->GetActor(m_blackboard->lockedTargetID);
 
 		if (target != nullptr)
 		{
@@ -85,14 +90,14 @@ void HEIN::TargetTrackingComponent::Update(float deltaTime)
 
 				DirectX::SimpleMath::Vector3 dir = targetPos - myPos;
 
-				m_blackBoard->distanceToTarget = dir.Length();
+				m_blackboard->distanceToTarget = dir.Length();
 				dir.y = 0.0f;
 
 				if (dir.LengthSquared() > 0.001f)
 				{
 					dir.Normalize();
-					m_blackBoard->dirToTarget = dir;
-					m_blackBoard->isLockedOn = true;
+					m_blackboard->dirToTarget = dir;
+					m_blackboard->isLockedOn = true;
 				}
 			}
 		}
