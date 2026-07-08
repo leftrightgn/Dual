@@ -47,6 +47,11 @@ void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 		stateMachine->ChangeState(m_config.transitions["OnDodge"]);
 		return;
 	}
+	if (blackboard->isBlockingIntent)
+	{
+		stateMachine->ChangeState(m_config.transitions["OnBlock"]);
+		return;
+	}
 
 }
 
@@ -70,7 +75,7 @@ void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*state
 	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
 	for (HEIN::SkinnedModelComponent* model : models)
 	{
-		model->CrossfadeAnimation(m_config.animationName, 0.05f);
+		model->CrossfadeAnimation(m_config.animationName, 0.02f);
 	}
 }
 
@@ -79,7 +84,6 @@ void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
 
-	
 
 	if (blackboard->isAttackingIntent ) {
 		stateMachine->ChangeState(m_config.transitions["OnAttack"]);
@@ -126,6 +130,7 @@ void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent
 		model->CrossfadeAnimation(m_config.animationName, 0.3f);
 	}
 	m_timer = 0.0f;
+	m_comboStage = 0;
 }
 
 void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
@@ -133,26 +138,34 @@ void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent*
 	m_timer += deltaTime;
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	
-	if (m_timer >= m_config.stateDuration)
+	if (m_comboStage < m_config.comboEndTimes.size() - 1)
+	{
+		if (m_timer >= m_config.comboWindowStarts[m_comboStage] &&
+			m_timer < m_config.comboEndTimes[m_comboStage])
+		{
+			if (blackboard != nullptr && blackboard->isAttackingIntent)
+			{
+				blackboard->isAttackingIntent = false;
+				m_comboStage++;
+			}
+		}
+	}
+
+	if (m_timer >= m_config.comboEndTimes[m_comboStage])
 	{
 		if (blackboard != nullptr)
 		{
 			blackboard->isAttackingIntent = false;
 		}
+
 		if (blackboard != nullptr && blackboard->moveIntent.LengthSquared() > 0.1f)
 		{
 			stateMachine->ChangeState(m_config.transitions["OnMove"]);
-		}
-		else if (blackboard != nullptr && blackboard->isDodgingIntent) 
-		{
-			stateMachine->ChangeState(m_config.transitions["OnDodge"]);
 		}
 		else
 		{
 			stateMachine->ChangeState(m_config.transitions["OnStop"]);
 		}
-		m_timer = 0.0f;
-		
 	}
 }
 
@@ -202,29 +215,33 @@ void HEIN::DodgeState::Update(Actor* owner, CombatStateMachineComponent* stateMa
 
 	if (blackboard)
 	{
+		if (m_timer >= m_config.stateDuration)
+		{
+			// Check high-priority action buffers first
+			if (blackboard->isAttackingIntent) {
+				stateMachine->ChangeState(m_config.transitions["OnAttack"]);
+				return;
+			}
+
+			if (blackboard->isStrafingIntent) {
+				stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
+				return;
+			}
+
+			if (blackboard->moveIntent.LengthSquared() > 0.1f)
+			{
+				stateMachine->ChangeState(m_config.transitions["OnMove"]);
+				return;
+			}
+			else
+			{
+				stateMachine->ChangeState(m_config.transitions["OnStop"]);
+				return;
+			}
+		}
+
 		blackboard->currentSpeed = m_config.moveSpeed;
 		blackboard->moveIntent = m_lockedDirection;
-
-	}
-	if (m_timer >= m_config.stateDuration)
-	{
-		if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
-		{
-			stateMachine->ChangeState(m_config.transitions["OnMove"]);
-			return;
-		}
-		if (blackboard->isAttackingIntent) {
-			stateMachine->ChangeState(m_config.transitions["OnAttack"]);
-			return;
-		}
-
-		if (blackboard->isStrafingIntent) {
-			stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
-			return;
-		}
-		
-		stateMachine->ChangeState(m_config.transitions["OnStop"]);
-		return;
 	}
 }
 
@@ -301,5 +318,52 @@ void HEIN::StrafeState::Update(Actor* owner, CombatStateMachineComponent* stateM
 }
 
 void HEIN::StrafeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine)
+{
+}
+
+HEIN::BlockState::BlockState(const StateConfig& config)
+	: m_config(config)
+{
+}
+
+void HEIN::BlockState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine)
+{
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+	if (blackboard)
+	{
+		blackboard->currentStance = CombatStance::Blocking;
+		blackboard->currentSpeed = m_config.moveSpeed;
+	}
+	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+	for (HEIN::SkinnedModelComponent* model : models)
+	{
+		model->CrossfadeAnimation(m_config.animationName, 0.3f);
+	}
+}
+
+void HEIN::BlockState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
+{
+	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
+
+	if (blackboard)
+	{
+		if (!blackboard->isBlockingIntent)
+		{
+			if (blackboard->moveIntent.LengthSquared() > 0.1f)
+			{
+				stateMachine->ChangeState(m_config.transitions["OnMove"]);
+				return;
+			}
+
+			else
+			{
+				stateMachine->ChangeState(m_config.transitions["OnStop"]);
+				return;
+			}
+		}
+	}
+}
+
+void HEIN::BlockState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine)
 {
 }

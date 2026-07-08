@@ -11,6 +11,9 @@ namespace HEIN
 
 		std::unordered_map<std::string, std::string> transitions;
 
+		std::vector<float> comboEndTimes;
+		std::vector<float> comboWindowStarts;
+
 		float moveSpeed = 0.0f;
 		float stateDuration = 1.0f;
 	};
@@ -55,6 +58,7 @@ namespace HEIN
 	private:
 		HEIN::StateConfig m_config;
 		float m_timer = 0.0f;
+		int m_comboStage = 0;
 
 	public:
 		OneHandAttackState(const StateConfig& config);
@@ -94,6 +98,23 @@ namespace HEIN
 	public:
 
 		StrafeState(const StateConfig& config);
+
+		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+
+		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
+
+		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+	};
+
+	class BlockState : public ICombatState
+	{
+	private:
+
+		HEIN::StateConfig m_config;
+
+	public:
+
+		BlockState(const StateConfig& config);
 
 		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
 

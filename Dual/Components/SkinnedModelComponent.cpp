@@ -53,7 +53,7 @@ namespace HEIN
 		m_skinBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 		m_targetBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 		m_shapShotBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
-
+		m_blendedLocalBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 
 
 		// bone name checker
@@ -90,42 +90,44 @@ namespace HEIN
 			}
 			else
 			{
+				//Live Dynamic Blending
+				// Update Both Animation
+				m_currentAnimation->Update(deltaTime);
 				m_targetAnimation->Update(deltaTime);
-;
-				m_targetAnimation->Apply(*m_model, m_model->bones.size(), m_targetBones.get());
 
+				float stopTime = m_currentAnimation->GetEndTime() - 0.05f;
+
+				if (m_currentAnimation->GetAnimTime() >= stopTime)
+				{
+					m_currentAnimation->SetAnimTime(stopTime);
+				}
+
+				m_currentAnimation->Apply(*m_model, m_model->bones.size(), m_shapShotBones.get());
+				m_targetAnimation->Apply(*m_model, m_model->bones.size(), m_targetBones.get());
+				
+				// Get the Live raw Bones
+				const DirectX::XMMATRIX* sourceLocalBones = m_currentAnimation->GetLocalBones();
+				const DirectX::XMMATRIX* targetLocalBones = m_targetAnimation->GetLocalBones();
+
+				
 				for (size_t i = 0; i < m_model->bones.size(); ++i)
 				{
 
-					// LOW-LEVEL TRANSLATION
-					DirectX::SimpleMath::Vector3 posA = m_shapShotBones[i].r[3];
-					DirectX::SimpleMath::Vector3 posB = m_targetBones[i].r[3];
+					DirectX::XMVECTOR scaleA, rotA, transA;
+					DirectX::XMVECTOR scaleB, rotB, transB;
 
-					// ROTATION
-					DirectX::SimpleMath::Quaternion rotA = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_shapShotBones[i]);
-					DirectX::SimpleMath::Quaternion rotB = DirectX::SimpleMath::Quaternion::CreateFromRotationMatrix(m_targetBones[i]);
+					DirectX::XMMatrixDecompose(&scaleA, &rotA, &transA, sourceLocalBones[i]);
+					DirectX::XMMatrixDecompose(&scaleB, &rotB, &transB, targetLocalBones[i]);
 
-					// FAST SCALE EXTRACTION (Extract the length of the X, Y, and Z axis rows)
-					DirectX::SimpleMath::Vector3 scaleA(
-						DirectX::SimpleMath::Vector3(m_shapShotBones[i].r[0]).Length(),
-						DirectX::SimpleMath::Vector3(m_shapShotBones[i].r[1]).Length(),
-						DirectX::SimpleMath::Vector3(m_shapShotBones[i].r[2]).Length()
-					);
-					DirectX::SimpleMath::Vector3 scaleB(
-						DirectX::SimpleMath::Vector3(m_targetBones[i].r[0]).Length(),
-						DirectX::SimpleMath::Vector3(m_targetBones[i].r[1]).Length(),
-						DirectX::SimpleMath::Vector3(m_targetBones[i].r[2]).Length()
-					);
+					DirectX::XMVECTOR blendScale = DirectX::XMVectorLerp(scaleA, scaleB, blendFactor);
+					DirectX::XMVECTOR blendRot = DirectX::XMQuaternionSlerp(rotA, rotB, blendFactor);
+					DirectX::XMVECTOR blendTrans = DirectX::XMVectorLerp(transA, transB, blendFactor);
 
-					// BLEND EVERYTHING
-					DirectX::SimpleMath::Vector3 blendedPos = DirectX::SimpleMath::Vector3::Lerp(posA, posB, blendFactor);
-					DirectX::SimpleMath::Quaternion blendedRot = DirectX::SimpleMath::Quaternion::Slerp(rotA, rotB, blendFactor);
-					DirectX::SimpleMath::Vector3 blendedScale = DirectX::SimpleMath::Vector3::Lerp(scaleA, scaleB, blendFactor);
-
-					// REBUILD
-					m_drawBones[i] = DirectX::SimpleMath::Matrix::CreateScale(blendedScale) * DirectX::SimpleMath::Matrix::CreateFromQuaternion(blendedRot) * DirectX::SimpleMath::Matrix::CreateTranslation(blendedPos);
+					m_blendedLocalBones[i] = DirectX::XMMatrixScalingFromVector(blendScale) *
+						                     DirectX::XMMatrixRotationQuaternion(blendRot) *
+						                     DirectX::XMMatrixTranslationFromVector(blendTrans);
 				}
-
+				m_model->CopyAbsoluteBoneTransforms(m_model->bones.size(), m_blendedLocalBones.get(), m_drawBones.get());
 			}
 		}
 		else if (m_currentAnimation != nullptr)
@@ -266,7 +268,7 @@ namespace HEIN
 		}
 	}
 
-	void SkinnedModelComponent::CrossfadeAnimation(const std::string& name, float duration)
+	void SkinnedModelComponent::CrossfadeAnimation(const std::string& name, float duration, bool forceRestart)
 	{
 		std::unordered_map<std::string, std::unique_ptr<DX::AnimationSDKMESH>>::iterator it =
 			m_animations.find(name);
@@ -282,6 +284,7 @@ namespace HEIN
 			if (m_isBlending && m_targetAnimation == it->second.get()) return;
 
 			if (!m_isBlending && m_currentAnimation == it->second.get()) return;
+			
 		
 			for (size_t i = 0; i < m_model->bones.size(); ++i)
 			{

@@ -13,6 +13,8 @@ namespace HEIN
 		DirectX::ModelBone::TransformArray m_skinBones;
 		DirectX::ModelBone::TransformArray m_targetBones;
 		DirectX::ModelBone::TransformArray m_shapShotBones;
+
+		DirectX::ModelBone::TransformArray m_blendedLocalBones;
 		//DX::AnimationSDKMESH m_animation;
 		static std::shared_ptr<DirectX::EffectFactory> s_fxFactory;
 
@@ -72,7 +74,7 @@ namespace HEIN
 
 		void LoadAnimation(const std::string& name, const wchar_t* animPath);
 		void ChangeAnimation(const std::string& name);
-		void CrossfadeAnimation(const std::string& name, float duration);
+		void CrossfadeAnimation(const std::string& name, float duration, bool forceRestart = false);
 
 		void SetVisible(bool visible) { m_isVisible = visible; }
 		bool IsVisible() const { return m_isVisible; }

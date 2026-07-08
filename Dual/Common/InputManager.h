@@ -32,6 +32,7 @@ namespace HEIN
  
 		static bool IsDodging(const GameContext& gameContext);
 		static bool IsAttacking(const GameContext& gameContext);
+		static bool IsBlocking(const GameContext& gameContext);
 
 		static bool WasCameraSwitchPressed(const GameContext& gameContext, HEIN::CameraType& outType);
 		static bool WasDebugMagnifyPressed(const GameContext& gameContext);

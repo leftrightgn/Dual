@@ -95,5 +95,6 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 		// Get combat logic cleanly
 		m_blackboard->isAttackingIntent = gameContext.inputManager->IsAttacking(gameContext);
 		m_blackboard->isDodgingIntent = gameContext.inputManager->IsDodging(gameContext);
+		m_blackboard->isBlockingIntent = gameContext.inputManager->IsBlocking(gameContext);
 	}
 }

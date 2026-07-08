@@ -16,7 +16,8 @@ namespace HEIN
 		Parrying,
 		Staggered,
 		Dodging,
-		Strafing
+		Strafing,
+		Blocking
 	};
 
 	// Only holds Data contains zero logic
@@ -30,6 +31,7 @@ namespace HEIN
 		bool isDodgingIntent = false;
 		bool isStrafingIntent = false;
 		bool lockOnIntent = false;
+		bool isBlockingIntent = false;
 
 		// Physical Reality
 		DirectX::SimpleMath::Vector3 currentVelocity = DirectX::SimpleMath::Vector3::Zero;

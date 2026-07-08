@@ -63,6 +63,12 @@ namespace HEIN
 	{
 		return gameContext.mouseState.leftButton;
 	}
+
+	bool InputManager::IsBlocking(const GameContext& gameContext)
+	{
+		return gameContext.mouseState.rightButton;
+	}
+	
 	
 	bool InputManager::WasCameraSwitchPressed(const GameContext& gameContext, HEIN::CameraType& outType)
 	{
