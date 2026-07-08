@@ -1,4 +1,5 @@
-ï»¿#include "pch.h"
+#include "pch.h"
+#include "Common/InputManager.h"
 #include "GameScene.h"
 #include <Camera/DebugCameraMode.h>
 #include <Camera/ThirdPersonMode.h>
@@ -15,7 +16,7 @@
 using namespace DirectX;
 
 // --------------------------------------------------------------------------------------
-// ã‚·ãƒ¼ãƒ³åˆ‡ã‚Šæ›¿ãˆæ™‚ã«å‘¼ã³å‡ºã•ã‚Œã‚‹é–¢æ•° (OnEnter)
+// ƒV[ƒ“Ø‚è‘Ö‚¦‚ÉŒÄ‚Ño‚³‚ê‚éŠÖ” (OnEnter)
 // --------------------------------------------------------------------------------------
 void GameScene::OnEnter(GameContext& gameContext)
 {
@@ -144,7 +145,7 @@ void GameScene::OnEnter(GameContext& gameContext)
 
 
 // --------------------------------------------------------------------------------------
-// æ›´æ–° (Update)
+// XV (Update)
 // --------------------------------------------------------------------------------------
 void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, GameContext& gameContext)
 {
@@ -157,6 +158,8 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
     // INPUT PHASE
     if (player != nullptr && !m_debugDisplay->isMagnified())
     {
+        gameContext.inputManager->BroadCastPlayerInput(gameContext, m_playerID);
+
         HEIN::PlayerInputComponent* inputComp = player->GetComponent<HEIN::PlayerInputComponent>();
         if (inputComp)
         {
@@ -215,7 +218,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
 
 
 // --------------------------------------------------------------------------------------
-// æç”» (Render)
+// •`‰æ (Render)
 // --------------------------------------------------------------------------------------
 void GameScene::Render(GameContext& gameContext)
 {

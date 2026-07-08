@@ -52,6 +52,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     spawnData.tpsModel->LoadAnimation("Dodge", L"Resources/Models/knight/Dodge.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("StrafeL", L"Resources/Models/knight/strafeL.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("StrafeR", L"Resources/Models/knight/strafeR.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Block", L"Resources/Models/knight/block.sdkmesh_anim");
 
     // FirstPersonCamera model
     //spawnData.fpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
@@ -150,9 +151,9 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     HEIN::SocketComponent* socketComp = playerActor->AddComponent<HEIN::SocketComponent>();
     HEIN::Socket weaponSocket(
         L"WeaponSocket",
-        L"mixamorig:RightHandThumb4",
-        DirectX::SimpleMath::Vector3(-0.770f, -1.280f, -0.550f),
-        DirectX::SimpleMath::Vector3(2.172f, 0.670f, 1.280f)
+        L"mixamorig:RightHand",
+        DirectX::SimpleMath::Vector3(-1.73f, 0.38f, -0.19f),
+        DirectX::SimpleMath::Vector3(3.0f, 1.60f, 2.0f)
     );
     socketComp->AddSocket(weaponSocket);
 
@@ -194,6 +195,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     idleConfig.transitions["OnAttack"] = "OneHand";
     idleConfig.transitions["OnDodge"] = "Dodge";
     idleConfig.transitions["OnStrafe"] = "Strafe";
+    idleConfig.transitions["OnBlock"] = "Block";
     fsm->AddState("Idle", std::make_unique<HEIN::IdleState>(idleConfig));
 
     // WalkConfig
@@ -208,9 +210,11 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
 
     // AttackConfig
     HEIN::StateConfig attackConfig;
-    attackConfig.moveSpeed = 3.0f;
+    attackConfig.moveSpeed = 5.0f;
     attackConfig.animationName = "OneHand";
     attackConfig.stateDuration = 4.1f;
+    attackConfig.comboEndTimes = { 1.6f, 3.0f, 4.5f };
+    attackConfig.comboWindowStarts = { 1.2f, 2.7f, 4.2f };
     attackConfig.transitions["OnStop"] = "Idle";
     attackConfig.transitions["OnMove"] = "Walk";
     attackConfig.transitions["OnDodge"] = "Dodge";
@@ -221,7 +225,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     HEIN::StateConfig dodgeConfig;
     dodgeConfig.animationName = "Dodge";
     dodgeConfig.moveSpeed = 30.0f;
-    dodgeConfig.stateDuration = 1.5f;
+    dodgeConfig.stateDuration = 1.4f;
     dodgeConfig.transitions["OnStop"] = "Idle";
     dodgeConfig.transitions["OnMove"] = "Walk";
     dodgeConfig.transitions["OnAttack"] = "OneHand";
@@ -237,8 +241,13 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     strafeConfig.transitions["OnMove"] = "Walk";
     strafeConfig.transitions["OnDodge"] = "Dodge";
     fsm->AddState("Strafe", std::make_unique<HEIN::StrafeState>(strafeConfig));
-
-
+    
+    // BlockConfig
+    HEIN::StateConfig blockConfig;
+    blockConfig.animationName = "Block";
+    blockConfig.transitions["OnMove"] = "Walk";
+    blockConfig.transitions["OnStop"] = "Idle";
+    fsm->AddState("Block", std::make_unique<HEIN::BlockState>(blockConfig));
 
     playerActor->AddComponent<HEIN::CombatBlackBoard>();
     playerActor->AddComponent<HEIN::PlayerInputComponent>(&actorManager); 

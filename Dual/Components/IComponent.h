@@ -1,6 +1,6 @@
 #pragma once
-#include "Framework/GameContext.h"
 
+struct GameContext;
 
 namespace HEIN
 {

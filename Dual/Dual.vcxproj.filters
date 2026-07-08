@@ -194,7 +194,12 @@
     <ClCompile Include="Camera\LockOnCameraMode.cpp">
       <Filter>Camera</Filter>
     </ClCompile>
-    <ClCompile Include="Components\TargetTrackingComponent.cpp" />
+    <ClCompile Include="Message\Messenger.cpp">
+      <Filter>Message</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\TargetTrackingComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -423,6 +428,15 @@
     <ClInclude Include="Components\TargetTrackingComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="Message\Message.h">
+      <Filter>Message</Filter>
+    </ClInclude>
+    <ClInclude Include="Message\Messenger.h">
+      <Filter>Message</Filter>
+    </ClInclude>
+    <ClInclude Include="Message\IObserver.h">
+      <Filter>Message</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -490,6 +504,9 @@
     </Filter>
     <Filter Include="BehaviourTree">
       <UniqueIdentifier>{f9777594-de78-4196-9ffd-6d28381a3228}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Message">
+      <UniqueIdentifier>{f9235b91-6e95-4153-a32e-1c6878d4dd28}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

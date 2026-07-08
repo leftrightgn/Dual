@@ -1,6 +1,6 @@
 #pragma once
 #include "Components/IComponent.h"
-#include <Entities/Actor.h>
+#include <Message/IObserver.h>
 
 namespace HEIN
 {
@@ -8,7 +8,7 @@ namespace HEIN
 	class Actor;
 	class ActorManager;
 
-	class PlayerInputComponent : public HEIN::IComponent
+	class PlayerInputComponent : public HEIN::IComponent, public IObserver
 	{
 	private:
 
@@ -19,6 +19,8 @@ namespace HEIN
 
 		HEIN::CombatBlackBoard* m_blackboard = nullptr;
 		HEIN::ActorManager* m_actorManager = nullptr;
+
+		DirectX::SimpleMath::Vector3 m_localInput = DirectX::SimpleMath::Vector3::Zero;
 
 	public:
 
@@ -33,6 +35,6 @@ namespace HEIN
 
 		void Update(float deltaTime) override {}
 
-
+		void OnMessageAccepted(Message::MessageID messageID) override;
 	};
 }

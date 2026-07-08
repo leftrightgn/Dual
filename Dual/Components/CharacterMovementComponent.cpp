@@ -45,7 +45,7 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 	{
 		rb->SetHorizontalVelocity(m_blackboard->currentVelocity);
 	}
-	if (m_blackboard->isLockedOn && m_blackboard->isStrafingIntent &&  m_blackboard->dirToTarget.LengthSquared() > 0.001f)
+	if (m_blackboard->isLockedOn && m_blackboard->currentStance == HEIN::CombatStance::Strafing &&  m_blackboard->dirToTarget.LengthSquared() > 0.001f)
 	{
 		float targetYaw = atan2f(m_blackboard->dirToTarget.x, m_blackboard->dirToTarget.z);
 		float modelOffset = DirectX::XM_PI;

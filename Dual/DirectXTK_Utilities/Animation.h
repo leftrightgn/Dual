@@ -40,6 +40,8 @@ namespace DX
         // Get bone transforms
         DirectX::XMMATRIX* GetBoneTransforms() { return m_boneTransforms; }
 
+        const DirectX::XMMATRIX* GetLocalBones() const { return m_animBones.get(); }
+
     public:
         // Constructor
         AnimationSDKMESH() noexcept;

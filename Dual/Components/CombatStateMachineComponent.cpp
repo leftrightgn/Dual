@@ -17,6 +17,10 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 {
 	ApplyPendingState();
 
+	ProcessBuffer(deltaTime);
+
+	if (m_pendingState != nullptr) return;
+
 	if (m_currentState)
 	{
 		m_currentState->Update(m_owner, this, deltaTime);
@@ -63,6 +67,45 @@ void HEIN::CombatStateMachineComponent::AddState(const std::string& stateName, s
 	{
 		ChangeState(stateName);
 	}
+}
+
+void HEIN::CombatStateMachineComponent::HandleMessage(Message::MessageID messageID)
+{
+	if (messageID == Message::PLAYER_ACTION_ATTACK ||
+		messageID == Message::PLAYER_ACTION_BLOCK ||
+		messageID == Message::PLAYER_ACTION_DODGE)
+	{
+		m_messageBuffer.clear();
+
+		m_messageBuffer.push_back(messageID);
+
+		m_bufferTime = MAX_BUFFER_TIME;
+	}
+}
+
+void HEIN::CombatStateMachineComponent::ProcessBuffer(float deltaTime)
+{
+	if (m_messageBuffer.empty()) return;
+
+	m_bufferTime -= deltaTime;
+
+	if (m_bufferTime <= 0.0f)
+	{
+		m_messageBuffer.clear();
+		return;
+	}
+
+	Message::MessageID currentMessage = m_messageBuffer.front();
+
+	if (m_currentState != nullptr)
+	{
+		bool wasHandled = m_currentState->HandleMessage(m_owner, this, currentMessage);
+		if (wasHandled)
+		{
+			m_messageBuffer.clear();
+		}
+	}
+
 }
 
 void HEIN::CombatStateMachineComponent::OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad)

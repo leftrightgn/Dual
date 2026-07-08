@@ -1,4 +1,6 @@
 #include "pch.h"
+#include "Framework/GameContext.h"
+#include "Common/InputManager.h"
 #include "DebugDisplayController.h"
 #include <Camera/DebugCameraMode.h>
 #include <Camera/CameraController.h>

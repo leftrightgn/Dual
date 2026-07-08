@@ -1,5 +1,5 @@
 #pragma once
-
+#include <Message/Message.h>
 namespace HEIN
 {
 	class CombatStateMachineComponent;
@@ -16,5 +16,7 @@ namespace HEIN
 		virtual void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) = 0;
 
 		virtual void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) = 0;
+
+		virtual bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) { return false; }
 	};
 }

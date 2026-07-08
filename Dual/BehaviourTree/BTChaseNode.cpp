@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "BTChaseNode.h"
 #include <BlackBoard/CombatBlackBoard.h>
+#include <Message/Message.h>
+#include <Message/Messenger.h>
 
 HEIN::BTChaseNode::BTChaseNode(float attackRange, float walkSpeed)
 	: m_attackRange(attackRange)
@@ -17,8 +19,8 @@ HEIN::BTNodeState HEIN::BTChaseNode::Tick(
 {
 	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;
-	blackboard->lockOnIntent = true;
-	blackboard->isStrafingIntent = false;
+	blackboard->isLockedOn = true;
+	Messenger::GetInstance()->Notify(self->GetID(), Message::PLAYER_EXIT_STRAFE);
 	if (blackboard->distanceToTarget <= m_attackRange)
 	{
 		blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;

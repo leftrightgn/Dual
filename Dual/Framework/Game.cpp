@@ -10,6 +10,7 @@
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"
+#include <Message/Messenger.h>
 
 extern void ExitGame() noexcept;
 
@@ -129,7 +130,7 @@ void Game::Update(DX::StepTimer const& timer)
 
     m_gameContext->mouseState = mouse ;
     m_gameContext->keyboardState = keyboard;
-
+    Messenger::GetInstance()->Update(elapsedTime);
     m_inputManager.Update(*m_gameContext);
     if (keyboard.Escape)
     {

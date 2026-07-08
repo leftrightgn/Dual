@@ -1,7 +1,7 @@
 //--------------------------------------------------------------------------------------
 // File: GameContext.h
 //
-// ƒV[ƒ“‚Ö“n‚·ƒQ[ƒ€ƒRƒ“ƒeƒLƒXƒgƒNƒ‰ƒX
+// ã‚·ãƒ¼ãƒ³ã¸æ¸¡ã™ã‚²ãƒ¼ãƒ ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã‚¯ãƒ©ã‚¹
 //
 // Date: 2026.3.3
 // Author: Hideyasu Imase
@@ -11,28 +11,30 @@
 #include "Common/StepTimer.h"
 #include "Common/DeviceResources.h"
 #include "Common/DebugRenderer.h"
-#include "Common/InputManager.h"
 #include "Common/DebugCollisionRenderer.h"
 #include "Common/EventManager.h"
 
-namespace HEIN { class CameraController; }
+namespace HEIN { 
+	class CameraController; 
+	class InputManager;
+}
 
-// ŠeƒV[ƒ“‚É“n‚·‹¤’ÊƒŠƒ\[ƒX‚ğ‹Lq‚µ‚Ä‚­‚¾‚³‚¢
+// å„ã‚·ãƒ¼ãƒ³ã«æ¸¡ã™å…±é€šãƒªã‚½ãƒ¼ã‚¹ã‚’è¨˜è¿°ã—ã¦ãã ã•ã„
 struct GameContext
 {
-	// ƒXƒeƒbƒvƒ^ƒCƒ}[
+	// ã‚¹ãƒ†ãƒƒãƒ—ã‚¿ã‚¤ãƒãƒ¼
 	DX::StepTimer& timer;
 
-	// ƒfƒoƒCƒXƒŠƒ\[ƒX
+	// ãƒ‡ãƒã‚¤ã‚¹ãƒªã‚½ãƒ¼ã‚¹
 	DX::DeviceResources& deviceResources;
 
-	// ƒL[ƒ{[ƒhƒXƒe[ƒgƒgƒ‰ƒbƒJ[
+	// ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ã‚¹ãƒ†ãƒ¼ãƒˆãƒˆãƒ©ãƒƒã‚«ãƒ¼
 	DirectX::Keyboard::KeyboardStateTracker& keyboardTracker;
 
-	// ƒ}ƒEƒXƒXƒe[ƒgƒgƒ‰ƒbƒJ[
+	// ãƒã‚¦ã‚¹ã‚¹ãƒ†ãƒ¼ãƒˆãƒˆãƒ©ãƒƒã‚«ãƒ¼
 	DirectX::Mouse::ButtonStateTracker& mouseButtonTracker;
 
-	// ƒRƒ‚ƒ“ƒXƒe[ƒg
+	// ã‚³ãƒ¢ãƒ³ã‚¹ãƒ†ãƒ¼ãƒˆ
 	DirectX::CommonStates& commonStates;
 
 
