@@ -12,7 +12,8 @@ HEIN::ActorID HEIN::TargetTrackingComponent::FindBestTarget() const
 	HEIN::ActorID closestTargetID = HEIN::INVALID_ACTOR_ID;
 	float minDistanceSq = FLT_MAX;
 
-	for (auto& actorPair : m_actorManager->GetAllActors())
+	const std::unordered_map<HEIN::ActorID, std::unique_ptr<HEIN::Actor>>& allActors = m_actorManager->GetAllActors();
+	for (const std::pair<const HEIN::ActorID, std::unique_ptr<HEIN::Actor>>& actorPair : allActors)
 	{
 		HEIN::Actor* actor = actorPair.second.get();
 
@@ -35,7 +36,6 @@ HEIN::ActorID HEIN::TargetTrackingComponent::FindBestTarget() const
 					closestTargetID = actor->GetID();
 				}
 			}
-			
 		}
 	}
 
@@ -63,26 +63,32 @@ void HEIN::TargetTrackingComponent::Update(float deltaTime)
 {
 	if (!m_blackboard || !m_transform || !m_actorManager) return;
 
-	if (m_blackboard->lockOnIntent && m_blackboard->lockedTargetID == HEIN::INVALID_ACTOR_ID)
+	if (m_blackboard->isLockedOn && m_blackboard->lockedTargetID == HEIN::INVALID_ACTOR_ID)
 	{
 		m_blackboard->lockedTargetID = FindBestTarget();
+
+		// If there is no valid enemy nearby, force the lock-on state off
+		if (m_blackboard->lockedTargetID == HEIN::INVALID_ACTOR_ID)
+		{
+			m_blackboard->isLockedOn = false;
+		}
 	}
-	else if (!m_blackboard->lockOnIntent)
+	else if (!m_blackboard->isLockedOn)
 	{
 		m_blackboard->lockedTargetID = HEIN::INVALID_ACTOR_ID;
 		m_blackboard->dirToTarget = DirectX::SimpleMath::Vector3::Zero;
 		m_blackboard->distanceToTarget = 0.0f;
-		m_blackboard->isLockedOn = false;
 	}
 
 	if (m_blackboard->lockedTargetID != HEIN::INVALID_ACTOR_ID)
 	{
 		HEIN::Actor* target = m_actorManager->GetActor(m_blackboard->lockedTargetID);
 
+		// Safety check: Did the enemy die and get destroyed by the garbage collector?
 		if (target != nullptr)
 		{
 			HEIN::TransformComponent* targetTrans = target->GetComponent<HEIN::TransformComponent>();
-			
+
 			if (targetTrans != nullptr)
 			{
 				DirectX::SimpleMath::Vector3 myPos = m_transform->GetPosition();
@@ -97,10 +103,14 @@ void HEIN::TargetTrackingComponent::Update(float deltaTime)
 				{
 					dir.Normalize();
 					m_blackboard->dirToTarget = dir;
-					m_blackboard->isLockedOn = true;
 				}
 			}
 		}
-
+		else
+		{
+			// Target is dead/missing! Drop the lock-on cleanly.
+			m_blackboard->lockedTargetID = HEIN::INVALID_ACTOR_ID;
+			m_blackboard->isLockedOn = false;
+		}
 	}
 }

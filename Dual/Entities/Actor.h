@@ -6,7 +6,7 @@
 #include <utility>
 #include <algorithm>
 
-
+struct GameContext;
 
 namespace HEIN
 {

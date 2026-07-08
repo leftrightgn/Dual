@@ -2,6 +2,8 @@
 #include "InputManager.h"
 #include "Camera/CameraController.h"
 #include "Framework/GameContext.h"
+#include <Message/Messenger.h>
+#include <Message/Message.h>
 
 namespace HEIN
 {
@@ -55,20 +57,6 @@ namespace HEIN
 
 		return intent;
 	}
-	bool InputManager::IsDodging(const GameContext& gameContext)
-	{
-		return gameContext.keyboardState.Space;
-	}
-	bool InputManager::IsAttacking(const GameContext& gameContext)
-	{
-		return gameContext.mouseState.leftButton;
-	}
-
-	bool InputManager::IsBlocking(const GameContext& gameContext)
-	{
-		return gameContext.mouseState.rightButton;
-	}
-	
 	
 	bool InputManager::WasCameraSwitchPressed(const GameContext& gameContext, HEIN::CameraType& outType)
 	{
@@ -106,6 +94,54 @@ namespace HEIN
 	bool InputManager::WasDebugTogglePressed(const GameContext& gameContext)
 	{
 		return gameContext.keyboardTracker.pressed.F3;
+	}
+
+	void InputManager::BroadCastPlayerInput(const GameContext& gameContext, HEIN::ActorID playerID)
+	{
+		Messenger* messenger = Messenger::GetInstance();
+
+		bool isMoving = false;
+
+		if (gameContext.keyboardState.W)
+		{
+			messenger->Notify(playerID, Message::PLAYER_MOVE_FORWARD);
+			isMoving = true;
+		}
+		if (gameContext.keyboardState.S)
+		{
+			messenger->Notify(playerID, Message::PLAYER_MOVE_BACKWARD);
+			isMoving = true;
+		}
+		if (gameContext.keyboardState.A)
+		{
+			messenger->Notify(playerID, Message::PLAYER_MOVE_LEFT);
+			isMoving = true;
+		}
+		if (gameContext.keyboardState.D)
+		{
+			messenger->Notify(playerID, Message::PLAYER_MOVE_RIGHT);
+			isMoving = true;
+		}
+
+		if (!isMoving)
+		{
+			messenger->Notify(playerID, Message::PLAYER_STOP_MOVEMENT);
+		}
+
+		if (gameContext.mouseButtonTracker.leftButton == DirectX::Mouse::ButtonStateTracker::PRESSED)
+		{
+			messenger->Notify(playerID, Message::PLAYER_ACTION_ATTACK);
+		}
+
+		if (gameContext.keyboardTracker.pressed.Space)
+		{
+			messenger->Notify(playerID, Message::PLAYER_ACTION_DODGE);
+		}
+
+		if (gameContext.mouseState.rightButton)
+		{
+			messenger->Notify(playerID, Message::PLAYER_ACTION_BLOCK);
+		}
 	}
 	
 }

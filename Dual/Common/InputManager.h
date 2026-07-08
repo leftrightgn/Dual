@@ -1,5 +1,6 @@
 #pragma once
 #include <SimpleMath.h>
+#include <Entities/Actor.h>
 
 struct GameContext;
 namespace HEIN
@@ -30,13 +31,10 @@ namespace HEIN
 
 		static DirectX::SimpleMath::Vector3 GetDebugMoveIntent(const GameContext& gameContext);
  
-		static bool IsDodging(const GameContext& gameContext);
-		static bool IsAttacking(const GameContext& gameContext);
-		static bool IsBlocking(const GameContext& gameContext);
-
 		static bool WasCameraSwitchPressed(const GameContext& gameContext, HEIN::CameraType& outType);
 		static bool WasDebugMagnifyPressed(const GameContext& gameContext);
 		static bool WasDebugTogglePressed(const GameContext& gameContext);
 		
+		static void BroadCastPlayerInput(const GameContext& gameContext, HEIN::ActorID playerID);
 	};
 }

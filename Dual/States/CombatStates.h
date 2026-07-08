@@ -33,6 +33,8 @@ namespace HEIN
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
 
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+
+		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
 		
 	};
 
@@ -50,6 +52,8 @@ namespace HEIN
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
 
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+
+		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
 	};
 
 	// OneHandSwordAttack State
@@ -69,6 +73,8 @@ namespace HEIN
 
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
 
+		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
+
 	};
 
 	class DodgeState : public ICombatState
@@ -86,6 +92,8 @@ namespace HEIN
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
 
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+
+		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
 	};
 
 	class StrafeState : public ICombatState
@@ -104,6 +112,8 @@ namespace HEIN
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
 
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+
+		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
 	};
 
 	class BlockState : public ICombatState
@@ -121,5 +131,7 @@ namespace HEIN
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
 
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+
+		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
 	};
 }

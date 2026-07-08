@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "Common/InputManager.h"
 #include "PlayerInputComponent.h"
 #include "BlackBoard/CombatBlackBoard.h"
 #include "Camera/CameraController.h"
@@ -7,7 +8,8 @@
 #include <Mouse.h>
 #include "Framework/GameContext.h"
 #include "IComponent.h"
-
+#include <Message/Messenger.h>
+#include <Components/CombatStateMachineComponent.h>
 
 
 HEIN::PlayerInputComponent::PlayerInputComponent(
@@ -22,6 +24,7 @@ HEIN::PlayerInputComponent::PlayerInputComponent(
 void HEIN::PlayerInputComponent::Start()
 {
 	m_blackboard = m_owner->GetComponent<HEIN::CombatBlackBoard>();
+	Messenger::GetInstance()->Register(m_owner->GetID(), this);
 }
 
 void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
@@ -52,7 +55,7 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 	if (m_blackboard != nullptr)
 	{
 		// Get logical movement directly from the manager
-		DirectX::SimpleMath::Vector3 localInput = gameContext.inputManager->GetMoveIntent(gameContext);
+		DirectX::SimpleMath::Vector3 localInput = m_localInput;
 		DirectX::SimpleMath::Vector3 worldIntent = DirectX::SimpleMath::Vector3::Zero;
 		float cameraYaw = 0.0f;
 
@@ -81,20 +84,28 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
             isCameraLocked = true;
         }
         
-        m_blackboard->lockOnIntent = isCameraLocked;
+        m_blackboard->isLockedOn = isCameraLocked;
 
-        if (isCameraLocked && localInput.x != 0.0f)
-        {
-            m_blackboard->isStrafingIntent = true;
-        }
-        else
-        {
-            m_blackboard->isStrafingIntent = false;
-        }
+		m_blackboard->localMoveIntent = localInput;
 
-		// Get combat logic cleanly
-		m_blackboard->isAttackingIntent = gameContext.inputManager->IsAttacking(gameContext);
-		m_blackboard->isDodgingIntent = gameContext.inputManager->IsDodging(gameContext);
-		m_blackboard->isBlockingIntent = gameContext.inputManager->IsBlocking(gameContext);
+		m_localInput = DirectX::SimpleMath::Vector3::Zero;
+	}
+}
+
+void HEIN::PlayerInputComponent::OnMessageAccepted(Message::MessageID messageID)
+{
+	switch (messageID)
+	{
+	case Message::PLAYER_MOVE_FORWARD:  m_localInput.z += 1.0f; break;
+	case Message::PLAYER_MOVE_BACKWARD: m_localInput.z -= 1.0f; break;
+	case Message::PLAYER_MOVE_LEFT:     m_localInput.x += 1.0f; break;
+	case Message::PLAYER_MOVE_RIGHT:    m_localInput.x -= 1.0f; break;
+	case Message::PLAYER_STOP_MOVEMENT: m_localInput = DirectX::SimpleMath::Vector3::Zero; break;
+	}
+
+	HEIN::CombatStateMachineComponent* stateMachine = m_owner->GetComponent<HEIN::CombatStateMachineComponent>();
+	if (stateMachine != nullptr)
+	{
+		stateMachine->HandleMessage(messageID);
 	}
 }

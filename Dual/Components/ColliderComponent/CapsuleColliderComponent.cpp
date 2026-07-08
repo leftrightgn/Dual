@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "Framework/GameContext.h"
 #include "CapsuleColliderComponent.h"
 #include <DirectXColors.h>
 
