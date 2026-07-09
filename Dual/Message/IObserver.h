@@ -1,9 +1,13 @@
 #pragma once
 #include <Message/Message.h>
 
-class IObserver
+namespace HEIN
 {
-public:
+	class IObserver
+	{
+	public:
 
-	virtual void OnMessageAccepted(Message::MessageID messageID) = 0;
-};
+		virtual void OnMessageAccepted(Message::MessageID messageID) = 0;
+	};
+
+}

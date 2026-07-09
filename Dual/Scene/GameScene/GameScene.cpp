@@ -51,13 +51,13 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_playerID = playerData.playerID;
 
     // Build Sword
-    m_swordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID);
+    m_playerSwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID);
 
     // Build Enemy
     HEIN::EnemySpawnData enemyData = HEIN::ActorFactory::CreateEnemy(m_actorManager, gameContext, m_playerID);
     m_enemyID = enemyData.enemyID;
    
-
+    m_enemySwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_enemyID);
 
     // Build Stage
     m_stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
@@ -133,7 +133,7 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_debugDisplay->Initialize();
 
     
-    m_debugDisplay->SetDebugTargets(m_playerID, m_swordID, m_stageID, m_enemyID);
+    m_debugDisplay->SetDebugTargets(m_playerID, m_playerSwordID, m_stageID, m_enemyID);
 
     gameContext.eventManager->AddTriggerListener(
         [this](const HEIN::TriggerEventPayLoad& payLoad)

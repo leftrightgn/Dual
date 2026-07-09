@@ -6,7 +6,7 @@
 namespace HEIN
 {
 	class ActorManager;
-	class CombatBlackBoard;
+	struct CombatBlackBoard;
 	class TransformComponent;
 	class TargetTrackingComponent : public IComponent
 	{

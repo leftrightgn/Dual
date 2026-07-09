@@ -13,9 +13,14 @@ HEIN::BTNodeState HEIN::BTSequence::Tick(
 	float deltaTime
 )
 {
-	for (size_t i = 0; i < m_children.size(); ++i)
+	if (m_currentState != BTNodeState::Running)
 	{
-		BTNodeState childState = m_children[i]->Tick(self, manager, targetID, deltaTime);
+		m_currentChildIndex = 0;
+	}
+
+	for (; m_currentChildIndex < m_children.size(); ++m_currentChildIndex)
+	{
+		BTNodeState childState = m_children[m_currentChildIndex]->Tick(self, manager, targetID, deltaTime);
 
 		if (childState == BTNodeState::Failure)
 		{
@@ -29,6 +34,6 @@ HEIN::BTNodeState HEIN::BTSequence::Tick(
 		}
 
 	}
-	m_currentState == BTNodeState::Success;
+	m_currentState = BTNodeState::Success;
 	return m_currentState;
 }

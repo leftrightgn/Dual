@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "Messenger.h"
 
-std::unique_ptr<Messenger> Messenger::s_messenger = nullptr;
+std::unique_ptr<HEIN::Messenger> HEIN::Messenger::s_messenger = nullptr;
 
-Messenger::Messenger()
+HEIN::Messenger::Messenger()
     :
     m_elapsedTime{},
     m_objects{},
@@ -11,18 +11,18 @@ Messenger::Messenger()
 {
 }
 
-IObserver* Messenger::GetObject(int actorID)
+HEIN::IObserver* HEIN::Messenger::GetObject(int actorID)
 {
-    std::unordered_map<int, IObserver*>::iterator it = m_objects.find(actorID);
+    std::unordered_map<int, std::vector<IObserver*>>::iterator it = m_objects.find(actorID);
 
     if (it != m_objects.end())
     {
-        return it->second;
+        return it->second.front();
     }
     return nullptr;
 }
 
-Messenger* Messenger::GetInstance()
+HEIN::Messenger* HEIN::Messenger::GetInstance()
 {
     if (s_messenger == nullptr)
     {
@@ -31,37 +31,40 @@ Messenger* Messenger::GetInstance()
     return s_messenger.get();
 }
 
-void Messenger::DestroyInstance()
+void HEIN::Messenger::DestroyInstance()
 {
     s_messenger.reset();
 }
 
-void Messenger::Register(int actorID, IObserver* observer)
+void HEIN::Messenger::Register(int actorID, IObserver* observer)
 {
-    m_objects.emplace(actorID, observer);
+    m_objects[actorID].push_back(observer);
 }
 
-void Messenger::UnRegister(int actorID)
+void HEIN::Messenger::UnRegister(int actorID)
 {
     m_objects.erase(actorID);
 }
 
-void Messenger::Notify(int actorID, Message::MessageID messageID)
+void HEIN::Messenger::Notify(int actorID, Message::MessageID messageID)
 {
-    std::unordered_map<int, IObserver*>::iterator it = m_objects.find(actorID);
+    std::unordered_map<int, std::vector<IObserver*>>::iterator it = m_objects.find(actorID);
 
     if (it != m_objects.end())
     {
-        it->second->OnMessageAccepted(messageID);
+        for (size_t i = 0; i < it->second.size(); i++)
+        {
+            it->second[i]->OnMessageAccepted(messageID);
+        }
     }
 }
 
-void Messenger::NotifyAfterDelay(int actorID, Message::MessageID messageID, float delaySeconds)
+void HEIN::Messenger::NotifyAfterDelay(int actorID, Message::MessageID messageID, float delaySeconds)
 {
     m_delayedMessages.push_back({ actorID, messageID, delaySeconds });
 }
 
-void Messenger::UpdateDelayedMessage(float elapsedTime)
+void HEIN::Messenger::UpdateDelayedMessage(float elapsedTime)
 {
     for (std::vector<DelayedMessage>::iterator it = m_delayedMessages.begin();
         it != m_delayedMessages.end();)
@@ -80,7 +83,7 @@ void Messenger::UpdateDelayedMessage(float elapsedTime)
     }
 }
 
-void Messenger::Update(float elapsedTime)
+void HEIN::Messenger::Update(float elapsedTime)
 {
     m_elapsedTime = elapsedTime;
     UpdateDelayedMessage(elapsedTime);

@@ -138,9 +138,13 @@ namespace HEIN
 			messenger->Notify(playerID, Message::PLAYER_ACTION_DODGE);
 		}
 
-		if (gameContext.mouseState.rightButton)
+		if (gameContext.mouseButtonTracker.rightButton == DirectX::Mouse::ButtonStateTracker::PRESSED)
 		{
 			messenger->Notify(playerID, Message::PLAYER_ACTION_BLOCK);
+		}
+		else if (gameContext.mouseButtonTracker.rightButton == DirectX::Mouse::ButtonStateTracker::RELEASED)
+		{
+			messenger->Notify(playerID, Message::PLAYER_STOP_BLOCK);
 		}
 	}
 	

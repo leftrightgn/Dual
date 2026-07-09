@@ -19,7 +19,7 @@ HEIN::BTNodeState HEIN::BTChaseNode::Tick(
 {
 	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;
-	blackboard->isLockedOn = true;
+	blackboard->isLockedOn = false;
 	Messenger::GetInstance()->Notify(self->GetID(), Message::PLAYER_EXIT_STRAFE);
 	if (blackboard->distanceToTarget <= m_attackRange)
 	{

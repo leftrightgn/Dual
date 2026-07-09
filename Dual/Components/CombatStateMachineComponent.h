@@ -1,13 +1,18 @@
 #pragma once
-#include <States/CombatStates.h>
 #include "Common/Event.h"
-#include <Message/Message.h>
+#include "Components/IComponent.h"
+#include "Message/IObserver.h"
+#include "Message/Message.h"
+#include <vector>
+#include <unordered_map>
+#include <string>
+#include <memory>
 
 namespace HEIN
 {
+	class Actor;
 	class ICombatState;
-	class IComponent;
-	class CombatStateMachineComponent : public IComponent
+	class CombatStateMachineComponent : public IComponent, public IObserver
 	{
 	private:
 
@@ -24,6 +29,8 @@ namespace HEIN
 
 		CombatStateMachineComponent(Actor* owner);
 	
+		void Start() override;
+
 		void Update(float deltaTime) override;
 
 		void ChangeState(const std::string& stateName);
@@ -32,7 +39,7 @@ namespace HEIN
 		
 		void AddState(const std::string& stateName, std::unique_ptr<ICombatState> state);
 
-		void HandleMessage(Message::MessageID messageID);
+		void OnMessageAccepted(Message::MessageID messageID) override;
 
 		void ProcessBuffer(float deltaTime);
 	private:
