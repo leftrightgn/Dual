@@ -4,6 +4,7 @@
 #include <BlackBoard/CombatBlackBoard.h>
 #include <Components/SkinnedModelComponent.h>
 #include <Components/TransformComponent.h>
+#include <cmath>
 
 // ==============================================================================
 // IDLE STATE
@@ -30,7 +31,7 @@ void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	// Only handle movement transitions in Update
 	if (blackboard->moveIntent.LengthSquared() > 0.1f)
 	{
-		if (blackboard->isLockedOn) stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
+		if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z)) stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
 		else stateMachine->ChangeState(m_config.transitions["OnMove"]);
 	}
 }
@@ -72,14 +73,14 @@ void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 {
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
-
+	blackboard->currentSpeed = m_config.moveSpeed;
 	if (blackboard->moveIntent.LengthSquared() <= 0.1f)
 	{
 		stateMachine->ChangeState(m_config.transitions["OnStop"]);
 		return;
 	}
 
-	if (blackboard->isLockedOn)
+	if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z))
 	{
 		stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
 		return;
@@ -260,8 +261,8 @@ void HEIN::StrafeState::Update(Actor* owner, CombatStateMachineComponent* stateM
 	if (!blackboard) return;
 
 	blackboard->currentSpeed = m_config.moveSpeed;
-	// Drop Lock-on
-	if (!blackboard->isLockedOn)
+	// Drop Lock-on or switch to forward/backward
+	if (!blackboard->isLockedOn || std::abs(blackboard->localMoveIntent.z) > std::abs(blackboard->localMoveIntent.x))
 	{
 		stateMachine->ChangeState(m_config.transitions["OnMove"]);
 		return;
@@ -334,6 +335,21 @@ void HEIN::BlockState::Update(Actor* owner, CombatStateMachineComponent* stateMa
 
 bool HEIN::BlockState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
 {
+	if (messageID == Message::PLAYER_STOP_BLOCK)
+	{
+		HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
+		if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+		{
+			if (blackboard->isLockedOn) stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
+			else stateMachine->ChangeState(m_config.transitions["OnMove"]);
+		}
+		else
+		{
+			stateMachine->ChangeState(m_config.transitions["OnStop"]);
+		}
+		return true;
+	}
+
 	// If the player dodges while holding block, we immediately allow it
 	if (messageID == Message::PLAYER_ACTION_DODGE)
 	{

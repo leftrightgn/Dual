@@ -106,6 +106,6 @@ void HEIN::PlayerInputComponent::OnMessageAccepted(Message::MessageID messageID)
 	HEIN::CombatStateMachineComponent* stateMachine = m_owner->GetComponent<HEIN::CombatStateMachineComponent>();
 	if (stateMachine != nullptr)
 	{
-		stateMachine->HandleMessage(messageID);
+		stateMachine->OnMessageAccepted(messageID);
 	}
 }

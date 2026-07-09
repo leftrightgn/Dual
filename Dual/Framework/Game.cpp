@@ -1,4 +1,4 @@
-﻿//
+//
 // Game.cpp
 //
 
@@ -130,7 +130,7 @@ void Game::Update(DX::StepTimer const& timer)
 
     m_gameContext->mouseState = mouse ;
     m_gameContext->keyboardState = keyboard;
-    Messenger::GetInstance()->Update(elapsedTime);
+    HEIN::Messenger::GetInstance()->Update(elapsedTime);
     m_inputManager.Update(*m_gameContext);
     if (keyboard.Escape)
     {

@@ -5,11 +5,17 @@
 #include <Components/ColliderComponent/ColliderComponent.h>
 #include "IComponent.h"
 #include <memory>
+#include <Message/Messenger.h>
 
 
 HEIN::CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner)
 	: IComponent(owner)
 {
+}
+
+void HEIN::CombatStateMachineComponent::Start()
+{
+	Messenger::GetInstance()->Register(m_owner->GetID(), this);
 }
 
 
@@ -69,10 +75,11 @@ void HEIN::CombatStateMachineComponent::AddState(const std::string& stateName, s
 	}
 }
 
-void HEIN::CombatStateMachineComponent::HandleMessage(Message::MessageID messageID)
+void HEIN::CombatStateMachineComponent::OnMessageAccepted(Message::MessageID messageID)
 {
 	if (messageID == Message::PLAYER_ACTION_ATTACK ||
 		messageID == Message::PLAYER_ACTION_BLOCK ||
+		messageID == Message::PLAYER_STOP_BLOCK ||
 		messageID == Message::PLAYER_ACTION_DODGE)
 	{
 		m_messageBuffer.clear();

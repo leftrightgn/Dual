@@ -23,6 +23,7 @@
 #include <BehaviourTree/BTStrafeNode.h>
 #include <Camera/CameraController.h>
 #include <Components/TargetTrackingComponent.h>
+#include <States/CombatStates.h>
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ActorManager& actorManager,
@@ -182,9 +183,6 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     LeftLegCapsule->SetTrigger(true);
     //LeftFoot->SetTrigger(true);
 
-    // Connect
-    playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
-  
    
     HEIN::CombatStateMachineComponent* fsm = playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
 
@@ -570,7 +568,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     std::unique_ptr<HEIN::BTSequence> aiBrain = std::make_unique<HEIN::BTSequence>();
 
     aiBrain->AddChild(std::make_unique<HEIN::BTChaseNode>(30.0f, 20.0f));
-    aiBrain->AddChild(std::make_unique<HEIN::BTStrafeNode>(10.0f, 25.0f, 10.0f, true));
+    aiBrain->AddChild(std::make_unique<HEIN::BTStrafeNode>(10.0f, 10.0f, 10.0f, true));
 
     HEIN::BehaviourTreeComponent* btComp = enemyActor->AddComponent<HEIN::BehaviourTreeComponent>();
 

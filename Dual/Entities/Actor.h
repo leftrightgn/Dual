@@ -2,7 +2,6 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include "Components/IComponent.h"
 #include <utility>
 #include <algorithm>
 
