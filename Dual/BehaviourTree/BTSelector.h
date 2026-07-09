@@ -8,6 +8,7 @@ namespace HEIN
 	private:
 
 		std::vector<std::unique_ptr<HEIN::BTNode>> m_children;
+		size_t m_currentChildIndex = 0;
 
 	public:
 

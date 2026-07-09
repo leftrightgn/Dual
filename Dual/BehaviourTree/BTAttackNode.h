@@ -1,17 +1,19 @@
 #pragma once
 #include <BehaviourTree/BTNode.h>
 
+
 namespace HEIN
 {
-	class BTSequence : public BTNode
+	class BTAttackNode : public BTNode
 	{
 	private:
-		
-		std::vector<std::unique_ptr<HEIN::BTNode>> m_children;
-		size_t m_currentChildIndex = 0;
+
+		float m_attackDuration;
+		float m_timer;
+
 	public:
 
-		void AddChild(std::unique_ptr<HEIN::BTNode> child);
+		BTAttackNode(float attackDuration);
 
 		BTNodeState Tick(
 			HEIN::Actor* self,

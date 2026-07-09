@@ -200,6 +200,9 @@
     <ClCompile Include="Components\TargetTrackingComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="BehaviourTree\BTAttackNode.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -436,6 +439,9 @@
     </ClInclude>
     <ClInclude Include="Message\IObserver.h">
       <Filter>Message</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTAttackNode.h">
+      <Filter>BehaviourTree</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

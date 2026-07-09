@@ -7,6 +7,7 @@
 HEIN::Actor::Actor(ActorID id, const std::wstring& tag)
 	: m_id(id)
 	, m_tag(tag)
+	, m_type(ActorType::Default)
 {
 }
 

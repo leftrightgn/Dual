@@ -45,9 +45,10 @@ private:
 
 	// --- Handle-Based Entity Memory System ---
 	HEIN::ActorID m_playerID = HEIN::INVALID_ACTOR_ID;
-	HEIN::ActorID m_swordID = HEIN::INVALID_ACTOR_ID;
+	HEIN::ActorID m_playerSwordID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_stageID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_enemyID = HEIN::INVALID_ACTOR_ID;
+	HEIN::ActorID m_enemySwordID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_cameraID = HEIN::INVALID_ACTOR_ID;
 
 
