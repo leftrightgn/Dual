@@ -172,10 +172,10 @@ namespace HEIN
             HEIN::Actor* pSword = actorManager.GetActor(m_debugSwordID);
             HEIN::Actor* pStage = actorManager.GetActor(m_debugStageID);
             HEIN::Actor* pEnemy = actorManager.GetActor(m_debugEnemyID);
-
+            HEIN::Actor* pAxe = actorManager.GetActor(m_debugAxeID);
            
 
-            m_debugUI.Draw(actorManager, pPlayer, pSword, pStage);
+            m_debugUI.Draw(actorManager, pPlayer, pEnemy, pAxe, pStage);
         }
     }
 	const DirectX::SimpleMath::Matrix DebugDisplayController::GetViewMatrix() const
@@ -197,12 +197,13 @@ namespace HEIN
 		return m_projMatrix;
 	}
 
-    void DebugDisplayController::SetDebugTargets(HEIN::ActorID playerID, HEIN::ActorID swordID, HEIN::ActorID stageID, HEIN::ActorID enemyID)
+    void DebugDisplayController::SetDebugTargets(HEIN::ActorID playerID, HEIN::ActorID swordID, HEIN::ActorID axeID, HEIN::ActorID stageID, HEIN::ActorID enemyID)
     {
         m_debugPlayerID = playerID;
         m_debugSwordID = swordID;
         m_debugStageID = stageID;
         m_debugEnemyID = enemyID;
+        m_debugAxeID = axeID;
     }
 
 

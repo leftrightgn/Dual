@@ -36,6 +36,7 @@ void HEIN::SpringCameraMode::OnEnter(CameraData& data)
 		DirectX::SimpleMath::Vector3::Backward,
 		data.rotation
 	);
+	DirectX::SimpleMath::Vector3 targetLookAt = *m_desiredTarget;
 
 	m_yaw = std::atan2(backward.x, backward.z);
 	m_pitch = std::asin(-backward.y);
@@ -57,13 +58,7 @@ void HEIN::SpringCameraMode::ProcessInput(const CameraInputState& input)
 void HEIN::SpringCameraMode::Update(CameraData& outData, float deltaTime, ICameraController& /*controller*/)
 {
 
-	HEIN::Actor* targetActor = m_manager->GetActor(m_targetID);
-
-	if (targetActor == nullptr) return;
-
-	HEIN::TransformComponent* playerTransform = targetActor->GetComponent<HEIN::TransformComponent>();
-
-	if (!playerTransform || !m_desiredTarget) return;
+	if (!m_desiredTarget) return;
 
 	DirectX::SimpleMath::Vector3 targetLookAt = *m_desiredTarget;
 

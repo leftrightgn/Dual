@@ -14,6 +14,7 @@ HEIN::LockOnCameraMode::LockOnCameraMode(
 	, m_playerID(playerID)
 	, m_heightOffset(DEFAULT_HEIGHT_OFFSET)
 	, m_currentYaw(0.0f)
+	, m_invalidFrames(0)
 {
 	SetFrequency(freq);
 }
@@ -23,23 +24,44 @@ void HEIN::LockOnCameraMode::OnEnter(CameraData& data)
 	m_currentPosition = data.position;
 	m_positionVelocity = DirectX::SimpleMath::Vector3::Zero;
 	m_isInitialized = true;
+	m_invalidFrames = 0;
 }
 
 
-void HEIN::LockOnCameraMode::Update(CameraData& outData, float deltaTime, ICameraController& /*controller*/)
+void HEIN::LockOnCameraMode::Update(CameraData& outData, float deltaTime, ICameraController& controller)
 {
 	HEIN::Actor* playerActor = m_manager->GetActor(m_playerID);
 
-	if (playerActor == nullptr) return;
+	if (playerActor == nullptr) 
+	{
+		controller.RequestSwitch(CameraType::ThirdPerson);
+		return;
+	}
 
 	HEIN::TransformComponent* playerTrans = playerActor->GetComponent<HEIN::TransformComponent>();
 	HEIN::CombatBlackBoard* blackboard = playerActor->GetComponent<HEIN::CombatBlackBoard>();
-	if (blackboard == nullptr || blackboard->lockedTargetID == HEIN::INVALID_ACTOR_ID)
+	if (blackboard == nullptr)
 	{
+		controller.RequestSwitch(CameraType::ThirdPerson);
 		return;
 	}
+
+	if (blackboard->lockedTargetID == HEIN::INVALID_ACTOR_ID)
+	{
+		m_invalidFrames++;
+		if (m_invalidFrames > 2)
+		{
+			controller.RequestSwitch(CameraType::ThirdPerson);
+		}
+		return;
+	}
+	m_invalidFrames = 0;
 	HEIN::Actor* targetActor = m_manager->GetActor(blackboard->lockedTargetID);
-	if (targetActor == nullptr) return;
+	if (targetActor == nullptr) 
+	{
+		controller.RequestSwitch(CameraType::Spring);
+		return;
+	}
 	HEIN::TransformComponent* targetTrans = targetActor->GetComponent<HEIN::TransformComponent>();
 	DirectX::SimpleMath::Vector3 playerPos = playerTrans->GetPosition();
 	DirectX::SimpleMath::Vector3 targetPos = targetTrans->GetPosition();

@@ -17,8 +17,23 @@ HEIN::Actor* HEIN::ActorManager::CreateActor(const std::wstring& tag)
 
 void HEIN::ActorManager::DestroyID(ActorID id)
 {
-    // Don't destory immediately Put in the pending lists
+    // Check if it's already in the pending list to prevent infinite recursion
+    if (std::find(m_pendingDestorys.begin(), m_pendingDestorys.end(), id) != m_pendingDestorys.end())
+    {
+        return;
+    }
+
+    // Don't destroy immediately Put in the pending lists
     m_pendingDestorys.push_back(id);
+
+    // Cascade destroy to any actor that is owned by or a child of this actor
+    for (const auto& pair : m_actors)
+    {
+        if (pair.second->GetOwnerID() == id || pair.second->GetParentID() == id)
+        {
+            DestroyID(pair.second->GetID());
+        }
+    }
 }
 
 HEIN::Actor* HEIN::ActorManager::GetActor(ActorID id)

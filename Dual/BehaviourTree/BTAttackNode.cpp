@@ -4,12 +4,16 @@
 #include <Message/Messenger.h> 
 #include <Message/Message.h>  
 #include <cmath>
+#include <Components/TransformComponent.h>
 
 HEIN::BTAttackNode::BTAttackNode(
-	float attackDuration
+	float attackDuration,
+	float minAttackDistance
 )
 	: m_attackDuration(attackDuration)
 	, m_timer(0.0f)
+	, m_minAttackDis(minAttackDistance)
+	, m_isAttacking(false)
 {
 }
 
@@ -18,8 +22,28 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;
 
+	if (m_timer == 0.0f && blackboard->distanceToTarget < m_minAttackDis)
+	{
+		return BTNodeState::Failure;
+	}
+
 	blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 
+	float targetYaw = atan2f(blackboard->dirToTarget.x, blackboard->dirToTarget.z) + DirectX::XM_PI;
+	DirectX::SimpleMath::Quaternion targetRotation = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(targetYaw, 0.0f, 0.0f);
+
+	HEIN::TransformComponent* transform = self->GetComponent<HEIN::TransformComponent>();
+	if (transform != nullptr)
+	{
+		DirectX::SimpleMath::Quaternion currentRot = transform->GetRotation();
+
+		float turnSpeed = 5.0f;
+
+		DirectX::SimpleMath::Quaternion newRot = DirectX::SimpleMath::Quaternion::Slerp(targetRotation, targetRotation, deltaTime * turnSpeed);
+		transform->SetRotation(newRot);
+	}
+
+	
 	// Send attack inputs periodically so the FSM can buffer them for combos
 	if (std::fmod(m_timer, 0.5f) < deltaTime)
 	{

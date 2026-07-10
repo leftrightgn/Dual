@@ -42,6 +42,13 @@ namespace HEIN
 		DirectX::SimpleMath::Vector3 moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		DirectX::SimpleMath::Vector3 localMoveIntent = DirectX::SimpleMath::Vector3::Zero;
 
+		// Block Stats
+		float maxBlockStamina = 5.0f;
+		float currentBlockStamina = 5.0f;
+		float blockRecoveryRate = 1.0f;
+		bool isBlockBroken = false;
+		float blockCooldownTimer = 0.0f;
+
 		CombatBlackBoard(Actor* owner)
 			: IComponent(owner)
 		{

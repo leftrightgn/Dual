@@ -30,6 +30,7 @@ namespace HEIN
 		float m_damping;
 		float m_heightOffset;
 		bool  m_isInitialized;
+		int   m_invalidFrames;
 
 	public:
 

@@ -1,11 +1,12 @@
 #include "pch.h"
 #include "DebugUIManager.h"
 #include "Components/SocketComponent.h"
-#include <Components/TransformComponent.h>
+#include <Components/ColliderComponent/CapsuleColliderComponent.h>
 #include "Components/ColliderComponent/OBBColliderComponent.h"
 #include "ImGui/imgui.h"
 #include <Components/ColliderComponent/AABBColliderComponent.h>
 #include <Entities/ActorManager.h>
+#include <Components/TransformComponent.h>
 
 namespace HEIN
 {
@@ -17,18 +18,18 @@ namespace HEIN
 		}
 	}
 
-	void DebugUIManager::Draw(HEIN::ActorManager& manager, Actor* player, Actor* sword, Actor* stage)
+	void DebugUIManager::Draw(HEIN::ActorManager& manager, Actor* player, Actor* enemy, Actor* sword, Actor* stage)
 	{
 		if (!m_isVisible) return;
 
 		ImGui::Begin("Engine Debug Tools");
 
 		// Player Socket
-		if (ImGui::CollapsingHeader("Player Sockets", ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader("enemy Sockets", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			if (player != nullptr)
+			if (enemy != nullptr)
 			{
-				HEIN::SocketComponent* socketComp = player->GetComponent<HEIN::SocketComponent>();
+				HEIN::SocketComponent* socketComp = enemy->GetComponent<HEIN::SocketComponent>();
 				if (socketComp != nullptr)
 				{
 					HEIN::Socket* weaponSocket = socketComp->GetSocket(L"WeaponSocket");
@@ -49,18 +50,26 @@ namespace HEIN
 			if (sword != nullptr)
 			{
 				HEIN::OBBColliderComponent* swordHitBox = sword->GetComponent<HEIN::OBBColliderComponent>();
+				HEIN::CapsuleColliderComponent* capsuleHitBox = sword->GetComponent<HEIN::CapsuleColliderComponent>();
 				if (swordHitBox != nullptr)
 				{
 					ImGui::Text("Sword Hitbox Tuning");
 
-					// TWEAK OFFSET ---
+					// TWEAK OFFSET 
 					DirectX::SimpleMath::Vector3 currentOffset = swordHitBox->GetOffset();
 					if (ImGui::DragFloat3("Offset (XYZ)", &currentOffset.x, 0.01f))
 					{
 						swordHitBox->SetOffset(currentOffset);
 					}
 
-					// TWEAK ROTATION ---
+					// TWEAK EXTENTS
+					DirectX::SimpleMath::Vector3 currentExtent = swordHitBox->GetExtents();
+					if (ImGui::DragFloat3("Scroll (XYZ)", &currentExtent.x, 0.01f))
+					{
+						swordHitBox->SetExtents(currentExtent);
+					}
+
+					// TWEAK ROTATION 
 					DirectX::SimpleMath::Vector3 currentRot = swordHitBox->GetRotationOffset();
 
 					// Convert radians to degrees for the UI slider
@@ -77,6 +86,43 @@ namespace HEIN
 						currentRot.z = DirectX::XMConvertToRadians(currentRot.z);
 
 						swordHitBox->SetRotationOffset(currentRot);
+					}
+				}
+				if (capsuleHitBox != nullptr)
+				{
+					ImGui::Text("Sword Hitbox Tuning");
+
+					// TWEAK OFFSET 
+					DirectX::SimpleMath::Vector3 currentOffset = capsuleHitBox->GetOffset();
+					if (ImGui::DragFloat3("CapusleOffset (XYZ)", &currentOffset.x, 0.01f))
+					{
+						capsuleHitBox->SetOffset(currentOffset);
+					}
+
+					// TWEAK HEIGHT
+					float currentHeight = capsuleHitBox->GetHeight();
+					if (ImGui::DragFloat("Capsuleheight", &currentHeight, 0.01f))
+					{
+						capsuleHitBox->SetHeight(currentHeight);
+					}
+
+					// TWEAK ROTATION 
+					DirectX::SimpleMath::Vector3 currentRot = capsuleHitBox->GetRotationOffset();
+
+					// Convert radians to degrees for the UI slider
+					currentRot.x = DirectX::XMConvertToDegrees(currentRot.x);
+					currentRot.y = DirectX::XMConvertToDegrees(currentRot.y);
+					currentRot.z = DirectX::XMConvertToDegrees(currentRot.z);
+
+					// DragFloat3 speed is 1.0f because degrees are whole numbers
+					if (ImGui::DragFloat3("CapsuleRotation (Degrees)", &currentRot.x, 1.0f))
+					{
+						// Convert back to radians before giving it to the engine!
+						currentRot.x = DirectX::XMConvertToRadians(currentRot.x);
+						currentRot.y = DirectX::XMConvertToRadians(currentRot.y);
+						currentRot.z = DirectX::XMConvertToRadians(currentRot.z);
+
+						capsuleHitBox->SetRotationOffset(currentRot);
 					}
 				}
 			}

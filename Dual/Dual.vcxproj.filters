@@ -203,6 +203,9 @@
     <ClCompile Include="BehaviourTree\BTAttackNode.cpp">
       <Filter>BehaviourTree</Filter>
     </ClCompile>
+    <ClCompile Include="BehaviourTree\BTCheckDistance.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -441,6 +444,9 @@
       <Filter>Message</Filter>
     </ClInclude>
     <ClInclude Include="BehaviourTree\BTAttackNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTCheckDistance.h">
       <Filter>BehaviourTree</Filter>
     </ClInclude>
   </ItemGroup>

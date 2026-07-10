@@ -56,11 +56,11 @@ void HEIN::FirstPersonMode::Update(CameraData& outData, float /*deltaTime*/, ICa
 {
 	HEIN::Actor* targetActor = m_manager->GetActor(m_targetID);
 
-	if (targetActor == nullptr) return;
-
-	m_fpsModel->SetVisible(true);
-	m_tpsModel->SetVisible(false);
-
+	if (targetActor != nullptr)
+	{
+		if (m_fpsModel) m_fpsModel->SetVisible(true);
+		if (m_tpsModel) m_tpsModel->SetVisible(false);
+	}
 
 	outData.position = *m_playerHeadPosition;
 	outData.position.y += m_targetHeight;

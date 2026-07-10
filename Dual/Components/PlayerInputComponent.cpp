@@ -31,26 +31,6 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 {
 	if (m_actorManager == nullptr || m_blackboard == nullptr) return;
 	HEIN::CameraController* cameraController = gameContext.mainCamera;
-	if (cameraController != nullptr)
-	{
-		HEIN::CameraInputState cameraInput;
-		const DirectX::Mouse::State& mouseState = gameContext.mouseState;
-
-		cameraInput.mouseX = static_cast<float>(mouseState.x);
-		cameraInput.mouseY = static_cast<float>(mouseState.y);
-		cameraInput.isLeftMouseDown = mouseState.leftButton;
-		cameraInput.scrollWheelDelta = static_cast<float>(mouseState.scrollWheelValue);
-
-		cameraController->ProcessInput(cameraInput);
-
-		// Handle Camera Switching cleanly
-		HEIN::CameraType targetCameraType;
-		if (gameContext.inputManager->WasCameraSwitchPressed(gameContext, targetCameraType))
-		{
-			cameraController->RequestSwitch(targetCameraType);
-			
-		}
-	}
 
 	if (m_blackboard != nullptr)
 	{

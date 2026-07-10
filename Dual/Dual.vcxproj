@@ -183,6 +183,7 @@
   <ItemGroup>
     <ClInclude Include="BehaviourTree\BTAttackNode.h" />
     <ClInclude Include="BehaviourTree\BTChaseNode.h" />
+    <ClInclude Include="BehaviourTree\BTCheckDistance.h" />
     <ClInclude Include="BehaviourTree\BTNode.h" />
     <ClInclude Include="BehaviourTree\BTSelector.h" />
     <ClInclude Include="BehaviourTree\BTSequence.h" />
@@ -269,6 +270,7 @@
   <ItemGroup>
     <ClCompile Include="BehaviourTree\BTAttackNode.cpp" />
     <ClCompile Include="BehaviourTree\BTChaseNode.cpp" />
+    <ClCompile Include="BehaviourTree\BTCheckDistance.cpp" />
     <ClCompile Include="BehaviourTree\BTSelector.cpp" />
     <ClCompile Include="BehaviourTree\BTSequence.cpp" />
     <ClCompile Include="BehaviourTree\BTStrafeNode.cpp" />
