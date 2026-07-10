@@ -19,6 +19,6 @@ namespace HEIN
 
 		void Update(const GameContext& gameContext);
 
-		void Draw(HEIN::ActorManager& manager, Actor* player, Actor* sword, Actor* stageRoot);
+		void Draw(HEIN::ActorManager& manager, Actor* player, Actor* enemy, Actor* sword, Actor* stageRoot);
 	};
 }

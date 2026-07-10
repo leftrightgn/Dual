@@ -16,7 +16,7 @@
 using namespace DirectX;
 
 // --------------------------------------------------------------------------------------
-// シーン切り替え時に呼び出される関数 (OnEnter)
+// 繧ｷ繝ｼ繝ｳ蛻�繧頑崛縺域凾縺ｫ蜻ｼ縺ｳ蜃ｺ縺輔ｌ繧矩未謨ｰ (OnEnter)
 // --------------------------------------------------------------------------------------
 void GameScene::OnEnter(GameContext& gameContext)
 {
@@ -51,13 +51,13 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_playerID = playerData.playerID;
 
     // Build Sword
-    m_playerSwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID);
+    m_playerSwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID, 10);
 
     // Build Enemy
     HEIN::EnemySpawnData enemyData = HEIN::ActorFactory::CreateEnemy(m_actorManager, gameContext, m_playerID);
     m_enemyID = enemyData.enemyID;
    
-    m_enemySwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_enemyID);
+    m_enemySwordID = HEIN::ActorFactory::CreateAxe(m_actorManager, gameContext, m_enemyID, 20);
 
     // Build Stage
     m_stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
@@ -133,7 +133,7 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_debugDisplay->Initialize();
 
     
-    m_debugDisplay->SetDebugTargets(m_playerID, m_playerSwordID, m_stageID, m_enemyID);
+    m_debugDisplay->SetDebugTargets(m_playerID, m_playerSwordID, m_enemySwordID, m_stageID, m_enemyID);
 
     gameContext.eventManager->AddTriggerListener(
         [this](const HEIN::TriggerEventPayLoad& payLoad)
@@ -145,7 +145,7 @@ void GameScene::OnEnter(GameContext& gameContext)
 
 
 // --------------------------------------------------------------------------------------
-// 更新 (Update)
+// 譖ｴ譁ｰ (Update)
 // --------------------------------------------------------------------------------------
 void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, GameContext& gameContext)
 {
@@ -155,7 +155,28 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
 
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
 
-    // INPUT PHASE
+    // CAMERA INPUT PHASE
+    if (!m_debugDisplay->isMagnified() && gameContext.mainCamera != nullptr)
+    {
+        HEIN::CameraInputState cameraInput;
+        const DirectX::Mouse::State& mouseState = gameContext.mouseState;
+
+        cameraInput.mouseX = static_cast<float>(mouseState.x);
+        cameraInput.mouseY = static_cast<float>(mouseState.y);
+        cameraInput.isLeftMouseDown = mouseState.leftButton;
+        cameraInput.scrollWheelDelta = static_cast<float>(mouseState.scrollWheelValue);
+
+        gameContext.mainCamera->ProcessInput(cameraInput);
+
+        // Handle Camera Switching cleanly
+        HEIN::CameraType targetCameraType;
+        if (gameContext.inputManager->WasCameraSwitchPressed(gameContext, targetCameraType))
+        {
+            gameContext.mainCamera->RequestSwitch(targetCameraType);
+        }
+    }
+
+    // PLAYER INPUT PHASE
     if (player != nullptr && !m_debugDisplay->isMagnified())
     {
         gameContext.inputManager->BroadCastPlayerInput(gameContext, m_playerID);
@@ -218,7 +239,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
 
 
 // --------------------------------------------------------------------------------------
-// 描画 (Render)
+// 謠冗判 (Render)
 // --------------------------------------------------------------------------------------
 void GameScene::Render(GameContext& gameContext)
 {

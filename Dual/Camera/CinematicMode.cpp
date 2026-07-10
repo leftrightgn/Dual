@@ -22,9 +22,7 @@ HEIN::CinematicMode::CinematicMode(
 
 void HEIN::CinematicMode::Update(CameraData& outData, float deltaTime, ICameraController& /*controller*/)
 {
-	HEIN::Actor* targetActor = m_manager->GetActor(m_targetID);
 
-	if (targetActor == nullptr) return;
 
 	// Advance the angle over time
 	m_currentAngle += m_orbitSpeed * deltaTime;

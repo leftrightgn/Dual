@@ -33,7 +33,14 @@ namespace HEIN
 		static HEIN::ActorID CreateSword(
 			ActorManager& actorManager,
 			GameContext& gameContext,
-			HEIN::ActorID wielderID
+			HEIN::ActorID wielderID,
+			int damage
+		);
+		static HEIN::ActorID CreateAxe(
+			ActorManager& actorManager,
+			GameContext& gameContext,
+			HEIN::ActorID wielderID,
+			int damage
 		);
 
 		static HEIN::ActorID CreateStage(

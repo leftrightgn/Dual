@@ -262,14 +262,15 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
 HEIN::ActorID HEIN::ActorFactory::CreateSword(
     ActorManager& actorManager,
     GameContext& gameContext, 
-    HEIN::ActorID wielderID
+    HEIN::ActorID wielderID,
+    int damage
 )
 {
     HEIN::Actor* sword = actorManager.CreateActor(L"Sword");
     sword->SetOwnerID(wielderID);
 
     HEIN::DamageDealerComponent* swordDamage = sword->AddComponent<HEIN::DamageDealerComponent>();
-    swordDamage->Initialize(5, DamageType::Physical);
+    swordDamage->Initialize(damage, DamageType::Physical);
 
     HEIN::TransformComponent* swordTransform = sword->AddComponent<HEIN::TransformComponent>();
     swordTransform->SetScale(DirectX::SimpleMath::Vector3(2.0f));
@@ -316,6 +317,75 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
 
     sword->Start();
     return sword->GetID();
+}
+
+HEIN::ActorID HEIN::ActorFactory::CreateAxe(ActorManager& actorManager, GameContext& gameContext, HEIN::ActorID wielderID, int damage)
+{
+    HEIN::Actor* axe = actorManager.CreateActor(L"Axe");
+    axe->SetOwnerID(wielderID);
+
+    HEIN::DamageDealerComponent* axeDamage = axe->AddComponent<HEIN::DamageDealerComponent>();
+    axeDamage->Initialize(damage, DamageType::Physical);
+
+    HEIN::TransformComponent* axeTransform = axe->AddComponent<HEIN::TransformComponent>();
+    axeTransform->SetScale(DirectX::SimpleMath::Vector3(10.0f));
+
+    HEIN::StaticModelComponent* axeModel = axe->AddComponent<HEIN::StaticModelComponent>();
+    axeModel->Initialize(
+        gameContext,
+        L"Resources/Models/boss/axe.sdkmesh",
+        L"Resources/Models/boss"
+    );
+    HEIN::OBBColliderComponent* axeHitBox = axe->AddComponent<HEIN::OBBColliderComponent>();
+
+    axeHitBox->Initialize(DirectX::SimpleMath::Vector3(0.2f, 0.3f, 0.05f));
+    axeHitBox->SetOffset(DirectX::SimpleMath::Vector3(-0.4f, -0.9f, -0.05f));
+    axeHitBox->SetRotationOffset(
+        DirectX::SimpleMath::Vector3(
+            DirectX::XMConvertToRadians(1.0f),
+            DirectX::XMConvertToRadians(1.0f),
+            DirectX::XMConvertToRadians(-12.0f)
+        )
+    );
+    axeHitBox->SetTrigger(true);
+
+    HEIN::CapsuleColliderComponent* axeCapsule = axe->AddComponent<HEIN::CapsuleColliderComponent>();
+    axeCapsule->Initialize(0.5f, 8.0f);
+    axeCapsule->SetOffset(DirectX::SimpleMath::Vector3(-0.07f, -0.22f, -0.03f));
+    axeCapsule->SetRotationOffset(
+        DirectX::SimpleMath::Vector3(
+            DirectX::XMConvertToRadians(1.0f),
+            DirectX::XMConvertToRadians(-2.0f),
+            DirectX::XMConvertToRadians(-16.0f)
+        )
+    );
+    axeCapsule->SetTrigger(true);
+
+    uint32_t weaponLayer = CollisionLayer::Layer_PlayerWeapon;
+    uint32_t weaponMask = CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon;
+
+    HEIN::Actor* wielder = actorManager.GetActor(wielderID);
+
+    if (wielder != nullptr)
+    {
+        if (wielder->GetActorType() == HEIN::ActorType::Enemy)
+        {
+            weaponLayer = CollisionLayer::Layer_EnemyWeapon;
+            weaponMask = CollisionLayer::Layer_Player | CollisionLayer::Layer_PlayerWeapon;
+        }
+    }
+
+    axeHitBox->SetCollisionLayer(weaponLayer);
+    axeCapsule->SetCollisionLayer(weaponLayer);
+    axeHitBox->SetCollisionMask(weaponMask);
+    axeCapsule->SetCollisionMask(weaponMask);
+
+
+    HEIN::SocketAttachmentComponent* socketAttachment = axe->AddComponent<HEIN::SocketAttachmentComponent>(&actorManager);
+    socketAttachment->Initialize(wielderID, L"WeaponSocket");
+
+    axe->Start();
+    return axe->GetID();
 }
 
 HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameContext& gameContext)
@@ -451,23 +521,23 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
     HEIN::TransformComponent* ptransform = enemyActor->AddComponent<HEIN::TransformComponent>();
     ptransform->SetPosition(DirectX::SimpleMath::Vector3(50.0f, 4.0f, 3.0f));
-    ptransform->SetScale(DirectX::SimpleMath::Vector3(0.10f));
+    ptransform->SetScale(DirectX::SimpleMath::Vector3(0.15f));
 
     // ThirdPersonCamera model
     spawnData.tpsModel = enemyActor->AddComponent<HEIN::SkinnedModelComponent>();
     spawnData.tpsModel->Initialize(gameContext,
-        L"Resources/Models/knight/knight.sdkmesh", // normal model
-        L"Resources/Models/knight");
-    spawnData.tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/eidle.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("StrafeL", L"Resources/Models/knight/strafeL.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("StrafeR", L"Resources/Models/knight/strafeR.sdkmesh_anim");
+        L"Resources/Models/Boss/Boss.sdkmesh", // normal model
+        L"Resources/Models/Boss");
+    spawnData.tpsModel->LoadAnimation("Idle", L"Resources/Models/Boss/idle.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Walk", L"Resources/Models/Boss/running.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("OneHand", L"Resources/Models/Boss/swing2.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("StrafeL", L"Resources/Models/Boss/strafeL.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("StrafeR", L"Resources/Models/Boss/strafeR.sdkmesh_anim");
 
     
     // Head Collider
     HEIN::CapsuleColliderComponent* HeadCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    HeadCapsule->Initialize(1.5f, 1.0f);
+    HeadCapsule->Initialize(3.5f, 1.0f);
     HeadCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::BoneLinkComponent* HeadLink = enemyActor->AddComponent<HEIN::BoneLinkComponent>();
     HeadLink->Initialize(spawnData.tpsModel, L"mixamorig:Head");
@@ -475,7 +545,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
     // Body Collider
     HEIN::CapsuleColliderComponent* BodyCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    BodyCapsule->Initialize(2.0f, 0.0f);
+    BodyCapsule->Initialize(6.5f, 0.0f);
     BodyCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* BodyLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     BodyLink->Initialize(spawnData.tpsModel, L"mixamorig:Spine2", L"mixamorig:Hips");
@@ -483,13 +553,13 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
     // Right Arm Collider
     HEIN::CapsuleColliderComponent* RightarmCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightarmCapsule->Initialize(1.0f, 1.0f);
+    RightarmCapsule->Initialize(3.0f, 0.0f);
     RightarmCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* RightarmLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightarmLink->Initialize(spawnData.tpsModel, L"mixamorig:RightArm", L"mixamorig:RightForeArm");
     RightarmLink->LinkTo(RightarmCapsule);
     HEIN::CapsuleColliderComponent* RightforearmCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightforearmCapsule->Initialize(0.6f, 1.0f);
+    RightforearmCapsule->Initialize(2.5f, 0.0f);
     RightforearmCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* RightforearmLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightforearmLink->Initialize(spawnData.tpsModel, L"mixamorig:RightForeArm", L"mixamorig:RightHand");
@@ -498,13 +568,13 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
     // Left Arm Collider
     HEIN::CapsuleColliderComponent* LeftarmCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftarmCapsule->Initialize(1.0f, 1.0f);
+    LeftarmCapsule->Initialize(3.0f, 0.0f);
     LeftarmCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* LeftarmLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     LeftarmLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftArm", L"mixamorig:LeftForeArm");
     LeftarmLink->LinkTo(LeftarmCapsule);
     HEIN::CapsuleColliderComponent* LeftforearmCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftforearmCapsule->Initialize(0.6f, 1.0f);
+    LeftforearmCapsule->Initialize(2.5f, 0.0f);
     LeftforearmCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* LeftforearmLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     LeftforearmLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftForeArm", L"mixamorig:LeftHand");
@@ -512,13 +582,13 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
     // Right Leg Collider
     HEIN::CapsuleColliderComponent* RightupLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightupLegCapsule->Initialize(1.0f, 0.0f);
+    RightupLegCapsule->Initialize(2.0f, 0.0f);
     RightupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* RightupLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightUpLeg", L"RightLeg");
     RightupLegLink->LinkTo(RightupLegCapsule);
     HEIN::CapsuleColliderComponent* RightLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightLegCapsule->Initialize(0.7f, 0.0f);
+    RightLegCapsule->Initialize(1.8f, 0.0f);
     RightLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* RightLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightLeg", L"mixamorig:RightFoot");
@@ -526,13 +596,13 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
   
     // Left Leg Collider
     HEIN::CapsuleColliderComponent* LeftupLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftupLegCapsule->Initialize(1.0f, 0.0f);
+    LeftupLegCapsule->Initialize(2.0f, 0.0f);
     LeftupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* LeftupLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     LeftupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftUpLeg", L"mixamorig:LeftLeg");
     LeftupLegLink->LinkTo(LeftupLegCapsule);
     HEIN::CapsuleColliderComponent* LeftLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftLegCapsule->Initialize(0.7f, 0.0f);
+    LeftLegCapsule->Initialize(1.8f, 0.0f);
     LeftLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* LeftLegLink = enemyActor->AddComponent < HEIN::TwoBoneLinkComponent>();
     LeftLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftLeg", L"mixamorig:LeftFoot");
@@ -544,16 +614,16 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     HEIN::SocketComponent* socketComp = enemyActor->AddComponent<HEIN::SocketComponent>();
     HEIN::Socket weaponSocket(
         L"WeaponSocket",
-        L"mixamorig:RightHandThumb4",
-        DirectX::SimpleMath::Vector3(-0.770f, -1.280f, -0.550f),
-        DirectX::SimpleMath::Vector3(2.172f, 0.670f, 1.280f)
+        L"mixamorig:RightHand",
+        DirectX::SimpleMath::Vector3(1.0f, 3.0f, -1.0f),
+        DirectX::SimpleMath::Vector3(3.0f, 0.0f, 1.5f)
     );
     socketComp->AddSocket(weaponSocket);
 
     HEIN::RigidBodyComponent* rigidBody = enemyActor->AddComponent<HEIN::RigidBodyComponent>();
     rigidBody->Initialize(80.0f, true, false);
     HEIN::CapsuleColliderComponent* rootPushbox = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    rootPushbox->Initialize(3.0f, 12.0f); // Adjust height to match your Knight
+    rootPushbox->Initialize(5.0f, 17.0f); // Adjust height to match your Knight
     rootPushbox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
     rootPushbox->SetTrigger(false);      // This one physically hits the floor
     rootPushbox->SetColliderTag(L"EnemyRoot");
@@ -581,8 +651,8 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
   
     std::unique_ptr<HEIN::BTSequence> aiBrain = std::make_unique<HEIN::BTSequence>();
 
-    aiBrain->AddChild(std::make_unique<HEIN::BTChaseNode>(20.0f, 20.0f));
-    aiBrain->AddChild(std::make_unique<HEIN::BTStrafeNode>(10.0f, 15.0f, 5.0f, true));
+    aiBrain->AddChild(std::make_unique<HEIN::BTChaseNode>(30.0f, 10.0f));
+    //aiBrain->AddChild(std::make_unique<HEIN::BTStrafeNode>(10.0f, 15.0f, 5.0f, true));
     aiBrain->AddChild(std::make_unique<HEIN::BTAttackNode>(4.2f));
 
     HEIN::BehaviourTreeComponent* btComp = enemyActor->AddComponent<HEIN::BehaviourTreeComponent>();
@@ -622,9 +692,9 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     HEIN::StateConfig attackConfig;
     attackConfig.moveSpeed = 5.0f;
     attackConfig.animationName = "OneHand";
-    attackConfig.stateDuration = 4.1f;
-    attackConfig.comboEndTimes = { 1.6f, 3.0f, 4.5f };
-    attackConfig.comboWindowStarts = { 1.2f, 2.7f, 4.2f };
+    attackConfig.stateDuration = 3.4f;
+    attackConfig.comboEndTimes = { 1.6f, 3.0f, 3.4f };
+    attackConfig.comboWindowStarts = { 1.2f, 2.7f, 3.2f };
     attackConfig.transitions["OnStop"] = "Idle";
     attackConfig.transitions["OnMove"] = "Walk";
     attackConfig.transitions["OnDodge"] = "Dodge";

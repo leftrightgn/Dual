@@ -27,6 +27,7 @@ void HEIN::BehaviourTreeComponent::Update(float deltaTime)
 	if (m_rootNode && m_actorManager && m_targetID != INVALID_ACTOR_ID)
 	{
 		HEIN::Actor* target = m_actorManager->GetActor(m_targetID);
+		if (target == nullptr) return;
 		HEIN::CombatBlackBoard* bb = GetOwner()->GetComponent<HEIN::CombatBlackBoard>();
 		HEIN::TransformComponent* myTrans = GetOwner()->GetComponent<HEIN::TransformComponent>();
 		HEIN::TransformComponent* targetTrans = target->GetComponent<HEIN::TransformComponent>();

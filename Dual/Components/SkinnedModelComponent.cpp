@@ -24,8 +24,8 @@ namespace HEIN
 		if (s_fxFactory == nullptr)
 		{
 			s_fxFactory = std::make_shared<DirectX::EffectFactory>(device);
-			static_cast<DirectX::EffectFactory*>(s_fxFactory.get())->SetDirectory(textureDir);
 		}
+		static_cast<DirectX::EffectFactory*>(s_fxFactory.get())->SetDirectory(textureDir);
 	
 		std::wstring key = modelPath;
 

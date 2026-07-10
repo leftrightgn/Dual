@@ -55,11 +55,11 @@ void HEIN::ThirdPersonMode::Update(CameraData& outData, float /*deltaTime*/, ICa
 {
 	HEIN::Actor* targetActor = m_manager->GetActor(m_targetID);
 
-	if (targetActor == nullptr) return;
-
-	m_fpsModel->SetVisible(false);
-	m_tpsModel->SetVisible(true);
-
+	if (targetActor != nullptr)
+	{
+		if (m_fpsModel) m_fpsModel->SetVisible(false);
+		if (m_tpsModel) m_tpsModel->SetVisible(true);
+	}
 
 	DirectX::SimpleMath::Vector3 focalPoint = *m_playerTarget;
 	focalPoint.y += m_targetHeight;

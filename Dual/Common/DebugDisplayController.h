@@ -26,6 +26,7 @@ namespace HEIN
 		DebugUIManager m_debugUI;
 		HEIN::ActorID m_debugPlayerID = HEIN::INVALID_ACTOR_ID;
 		HEIN::ActorID m_debugSwordID = HEIN::INVALID_ACTOR_ID;
+		HEIN::ActorID m_debugAxeID = HEIN::INVALID_ACTOR_ID;
 		HEIN::ActorID m_debugStageID = HEIN::INVALID_ACTOR_ID;
 		HEIN::ActorID m_debugEnemyID = HEIN::INVALID_ACTOR_ID;
 		HEIN::ActorID m_debugCameraID = HEIN::INVALID_ACTOR_ID;
@@ -52,7 +53,7 @@ namespace HEIN
 		const DirectX::SimpleMath::Matrix GetViewMatrix() const;
 		const DirectX::SimpleMath::Matrix GetProjMatrix() const;
 
-		void SetDebugTargets(HEIN::ActorID playerID, HEIN::ActorID swordID, HEIN::ActorID stageID, HEIN::ActorID enemyID);
+		void SetDebugTargets(HEIN::ActorID playerID, HEIN::ActorID swordID, HEIN::ActorID axeID, HEIN::ActorID stageID, HEIN::ActorID enemyID);
 
 	};
 }

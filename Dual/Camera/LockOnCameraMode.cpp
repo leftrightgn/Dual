@@ -26,20 +26,29 @@ void HEIN::LockOnCameraMode::OnEnter(CameraData& data)
 }
 
 
-void HEIN::LockOnCameraMode::Update(CameraData& outData, float deltaTime, ICameraController& /*controller*/)
+void HEIN::LockOnCameraMode::Update(CameraData& outData, float deltaTime, ICameraController& controller)
 {
 	HEIN::Actor* playerActor = m_manager->GetActor(m_playerID);
 
-	if (playerActor == nullptr) return;
+	if (playerActor == nullptr) 
+	{
+		controller.RequestSwitch(CameraType::ThirdPerson);
+		return;
+	}
 
 	HEIN::TransformComponent* playerTrans = playerActor->GetComponent<HEIN::TransformComponent>();
 	HEIN::CombatBlackBoard* blackboard = playerActor->GetComponent<HEIN::CombatBlackBoard>();
 	if (blackboard == nullptr || blackboard->lockedTargetID == HEIN::INVALID_ACTOR_ID)
 	{
+		controller.RequestSwitch(CameraType::ThirdPerson);
 		return;
 	}
 	HEIN::Actor* targetActor = m_manager->GetActor(blackboard->lockedTargetID);
-	if (targetActor == nullptr) return;
+	if (targetActor == nullptr) 
+	{
+		controller.RequestSwitch(CameraType::ThirdPerson);
+		return;
+	}
 	HEIN::TransformComponent* targetTrans = targetActor->GetComponent<HEIN::TransformComponent>();
 	DirectX::SimpleMath::Vector3 playerPos = playerTrans->GetPosition();
 	DirectX::SimpleMath::Vector3 targetPos = targetTrans->GetPosition();
