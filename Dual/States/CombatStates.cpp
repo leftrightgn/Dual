@@ -323,13 +323,25 @@ void HEIN::BlockState::OnEnter(Actor* owner, CombatStateMachineComponent* stateM
 
 void HEIN::BlockState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
 {
-	// Note: Blocking logic typically transitions out via a "Release" event.
-	// As a fallback placeholder based on your old logic, you can check movement intent.
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
 	if (blackboard)
 	{
-		// You will likely need to send a `PLAYER_STOP_BLOCK` message from InputManager to exit cleanly.
-		// For now, it stays trapped in Block State until you add the release input check here.
+		blackboard->currentBlockStamina -= deltaTime;
+		if (blackboard->currentBlockStamina <= 0.0f)
+		{
+			blackboard->isBlockBroken = true;
+			
+			// Force exit block
+			if (blackboard->moveIntent.LengthSquared() > 0.1f)
+			{
+				if (blackboard->isLockedOn) stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
+				else stateMachine->ChangeState(m_config.transitions["OnMove"]);
+			}
+			else
+			{
+				stateMachine->ChangeState(m_config.transitions["OnStop"]);
+			}
+		}
 	}
 }
 

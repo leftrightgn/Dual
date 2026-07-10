@@ -6,6 +6,7 @@
 #include "IComponent.h"
 #include <memory>
 #include <Message/Messenger.h>
+#include <BlackBoard/CombatBlackBoard.h>
 
 
 HEIN::CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner)
@@ -30,6 +31,23 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 	if (m_currentState)
 	{
 		m_currentState->Update(m_owner, this, deltaTime);
+	}
+
+	HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
+	if (blackboard)
+	{
+		if (!IsBlocking())
+		{
+			if (blackboard->currentBlockStamina < blackboard->maxBlockStamina)
+			{
+				blackboard->currentBlockStamina += blackboard->blockRecoveryRate * deltaTime;
+				if (blackboard->currentBlockStamina >= blackboard->maxBlockStamina)
+				{
+					blackboard->currentBlockStamina = blackboard->maxBlockStamina;
+					blackboard->isBlockBroken = false;
+				}
+			}
+		}
 	}
 }
 
@@ -113,6 +131,24 @@ void HEIN::CombatStateMachineComponent::ProcessBuffer(float deltaTime)
 		}
 	}
 
+}
+
+bool HEIN::CombatStateMachineComponent::IsAttacking() const
+{
+	if (m_currentState != nullptr)
+	{
+		return m_currentState->IsAttackState();
+	}
+	return false;
+}
+
+bool HEIN::CombatStateMachineComponent::IsBlocking() const
+{
+	if (m_currentState != nullptr)
+	{
+		return m_currentState->IsBlockState();
+	}
+	return false;
 }
 
 void HEIN::CombatStateMachineComponent::OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad)

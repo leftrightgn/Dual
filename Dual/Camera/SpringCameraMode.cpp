@@ -36,6 +36,7 @@ void HEIN::SpringCameraMode::OnEnter(CameraData& data)
 		DirectX::SimpleMath::Vector3::Backward,
 		data.rotation
 	);
+	DirectX::SimpleMath::Vector3 targetLookAt = *m_desiredTarget;
 
 	m_yaw = std::atan2(backward.x, backward.z);
 	m_pitch = std::asin(-backward.y);

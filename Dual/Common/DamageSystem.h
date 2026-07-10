@@ -10,6 +10,6 @@ namespace HEIN
 		DamageSystem() = default;
 		~DamageSystem() = default;
 
-		void HandlTriggerHit(const HEIN::TriggerEventPayLoad& payLoad);
+		void HandlTriggerHit(const HEIN::TriggerEventPayLoad& payLoad, class ActorManager& actorManager);
 	};
 }

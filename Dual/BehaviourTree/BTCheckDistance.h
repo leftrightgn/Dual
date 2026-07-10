@@ -1,22 +1,18 @@
 #pragma once
 #include <BehaviourTree/BTNode.h>
 
-
 namespace HEIN
 {
-	class BTAttackNode : public BTNode
+	class BTCheckDistance : public BTNode
 	{
 	private:
 
-		float m_attackDuration;
-		float m_timer;
-
-		float m_minAttackDis;
-		bool m_isAttacking;
+		float m_minDistance;
+		float m_maxDistance;
 
 	public:
 
-		BTAttackNode(float attackDuration, float minAttackDis = 12.0f);
+		BTCheckDistance(float minDistance, float maxDistance);
 
 		BTNodeState Tick(
 			HEIN::Actor* self,

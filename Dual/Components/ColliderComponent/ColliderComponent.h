@@ -82,7 +82,11 @@ namespace HEIN
 		void SetRotationOffset(const DirectX::SimpleMath::Vector3& rotation)
 		{
 			m_rotationEuler = rotation;
-			m_rotationOffset = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(rotation.y, rotation.x, rotation.z);
+			m_rotationOffset = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(
+				rotation.y,
+				rotation.x,
+				rotation.z
+			);
 		}
 		DirectX::SimpleMath::Vector3 GetRotationOffset() const { return m_rotationEuler; }
 
@@ -99,7 +103,9 @@ namespace HEIN
 		uint32_t GetCollisionMask() const { return m_mask; }
 
 		DirectX::SimpleMath::Matrix GetCalculateWorldMatrix() { return CalculateWorldMatrix(); }
+
 	protected:
+
 		DirectX::SimpleMath::Matrix CalculateWorldMatrix();
 	};
 }

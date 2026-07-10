@@ -42,6 +42,9 @@ namespace HEIN
 		void OnMessageAccepted(Message::MessageID messageID) override;
 
 		void ProcessBuffer(float deltaTime);
+
+		bool IsAttacking() const;
+		bool IsBlocking() const;
 	private:
 
 		void OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad);

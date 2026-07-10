@@ -77,6 +77,7 @@ namespace HEIN
 
 		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
 
+		bool IsAttackState() const override { return true; }
 	};
 
 	class DodgeState : public ICombatState
@@ -135,5 +136,7 @@ namespace HEIN
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
 
 		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
+
+		bool IsBlockState() const override { return true; }
 	};
 }

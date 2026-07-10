@@ -214,8 +214,8 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     attackConfig.moveSpeed = 5.0f;
     attackConfig.animationName = "OneHand";
     attackConfig.stateDuration = 4.1f;
-    attackConfig.comboEndTimes = { 1.6f, 3.0f, 4.5f };
-    attackConfig.comboWindowStarts = { 1.2f, 2.7f, 4.2f };
+    attackConfig.comboEndTimes = { 1.6f, 2.4f, 4.5f };
+    attackConfig.comboWindowStarts = { 1.2f, 2.2f, 4.2f };
     attackConfig.transitions["OnStop"] = "Idle";
     attackConfig.transitions["OnMove"] = "Walk";
     attackConfig.transitions["OnDodge"] = "Dodge";
@@ -582,7 +582,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
     // Right Leg Collider
     HEIN::CapsuleColliderComponent* RightupLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightupLegCapsule->Initialize(2.0f, 0.0f);
+    RightupLegCapsule->Initialize(2.8f, 0.0f);
     RightupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* RightupLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightUpLeg", L"RightLeg");
@@ -596,7 +596,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
   
     // Left Leg Collider
     HEIN::CapsuleColliderComponent* LeftupLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftupLegCapsule->Initialize(2.0f, 0.0f);
+    LeftupLegCapsule->Initialize(2.3f, 0.0f);
     LeftupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* LeftupLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     LeftupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftUpLeg", L"mixamorig:LeftLeg");
@@ -694,7 +694,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     attackConfig.animationName = "OneHand";
     attackConfig.stateDuration = 3.4f;
     attackConfig.comboEndTimes = { 1.6f, 3.0f, 3.4f };
-    attackConfig.comboWindowStarts = { 1.2f, 2.7f, 3.2f };
+    attackConfig.comboWindowStarts = { 1.2f, 2.7f, 3.0f };
     attackConfig.transitions["OnStop"] = "Idle";
     attackConfig.transitions["OnMove"] = "Walk";
     attackConfig.transitions["OnDodge"] = "Dodge";

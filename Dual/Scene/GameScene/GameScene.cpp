@@ -11,6 +11,7 @@
 #include <Components/PlayerInputComponent.h>
 #include <Factory/ActorFactory.h>
 #include <Components/HealthComponent.h>
+#include <BlackBoard/CombatBlackBoard.h>
 #include <ImGui/imgui.h>
 
 using namespace DirectX;
@@ -75,7 +76,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     if (player != nullptr)
     {
         HEIN::TransformComponent* playerTransform = player->GetComponent<HEIN::TransformComponent>();
-        m_targetPos = ModelPointer->GetBoneWorldPosition(L"mixamorig:Head", playerTransform->GetWorldMatrix());
+        ModelPointer->Update(0.0f);
+        m_targetPos = ModelPointer->GetBoneWorldPosition(L"mixamorig:HeadTop_End", playerTransform->GetWorldMatrix());
 
         // First Person Mode
         cameraComp->RegisterCamera(
@@ -123,7 +125,7 @@ void GameScene::OnEnter(GameContext& gameContext)
         []() 
         { return std::make_unique<HEIN::DebugCameraMode>(); }
     );
-    cameraComp->SetFirstCamera(HEIN::CameraType::Debug);
+    cameraComp->SetFirstCamera(HEIN::CameraType::Spring);
     
 
     // -------------------------------------------------------
@@ -138,7 +140,7 @@ void GameScene::OnEnter(GameContext& gameContext)
     gameContext.eventManager->AddTriggerListener(
         [this](const HEIN::TriggerEventPayLoad& payLoad)
         {
-            m_damageSystem->HandlTriggerHit(payLoad);
+            m_damageSystem->HandlTriggerHit(payLoad, m_actorManager);
         }
     );
 }
@@ -268,7 +270,25 @@ void GameScene::Render(GameContext& gameContext)
         if (pHealth != nullptr)
         {
             ImGui::Text("Player Health");
+            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
             ImGui::ProgressBar(pHealth->GetCurrentHealth() / pHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
+            ImGui::PopStyleColor();
+        }
+
+        HEIN::CombatBlackBoard* pBB = player->GetComponent<HEIN::CombatBlackBoard>();
+        if (pBB != nullptr)
+        {
+            if (pBB->isBlockBroken)
+            {
+                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // Red bar
+                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
+                ImGui::PopStyleColor();
+            }
+            else
+            {
+                ImGui::Text("Block Stamina");
+                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
+            }
         }
     }
     else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "PLAYER DEAD");
