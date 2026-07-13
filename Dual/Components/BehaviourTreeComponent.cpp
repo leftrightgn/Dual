@@ -28,18 +28,18 @@ void HEIN::BehaviourTreeComponent::Update(float deltaTime)
 	{
 		HEIN::Actor* target = m_actorManager->GetActor(m_targetID);
 		if (target == nullptr) return;
-		HEIN::CombatBlackBoard* bb = GetOwner()->GetComponent<HEIN::CombatBlackBoard>();
+		HEIN::CombatBlackBoard* blackboard = GetOwner()->GetComponent<HEIN::CombatBlackBoard>();
 		HEIN::TransformComponent* myTrans = GetOwner()->GetComponent<HEIN::TransformComponent>();
 		HEIN::TransformComponent* targetTrans = target->GetComponent<HEIN::TransformComponent>();
 
-		if (target && bb && myTrans && targetTrans)
+		if (target && blackboard && myTrans && targetTrans)
 		{
 			DirectX::SimpleMath::Vector3 dir = targetTrans->GetPosition() - myTrans->GetPosition();
 			dir.y = 0.0f;
-			bb->distanceToTarget = dir.Length();
+			blackboard->distanceToTarget = dir.Length();
 
-			if (bb->distanceToTarget > 0.001f) dir.Normalize();
-			bb->dirToTarget = dir;
+			if (blackboard->distanceToTarget > 0.001f) dir.Normalize();
+			blackboard->dirToTarget = dir;
 		}
 
 		m_rootNode->Tick(GetOwner(), m_actorManager, m_targetID, deltaTime);

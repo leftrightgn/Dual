@@ -52,7 +52,7 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_playerID = playerData.playerID;
 
     // Build Sword
-    m_playerSwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID, 10);
+    m_playerSwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID, 5);
 
     // Build Enemy
     HEIN::EnemySpawnData enemyData = HEIN::ActorFactory::CreateEnemy(m_actorManager, gameContext, m_playerID);
@@ -302,6 +302,12 @@ void GameScene::Render(GameContext& gameContext)
         {
             ImGui::Text("Enemy Health");
             ImGui::ProgressBar(eHealth->GetCurrentHealth() / eHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
+            
+           /* HEIN::CombatBlackBoard* eBB = enemy->GetComponent<HEIN::CombatBlackBoard>();
+            if (eBB != nullptr)
+            {
+                ImGui::Text("Enemy Node: %s", eBB->activeNodeName.c_str());
+            }*/
         }
     }
     else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "ENEMY DEAD");

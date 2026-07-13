@@ -60,7 +60,7 @@ void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*state
 	if (blackboard)
 	{
 		blackboard->currentStance = CombatStance::Walking;
-		// blackboard->currentSpeed = m_config.moveSpeed; // Uncomment if added to blackboard
+		blackboard->currentSpeed = m_config.moveSpeed; 
 	}
 	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
 	for (HEIN::SkinnedModelComponent* model : models)
@@ -126,19 +126,25 @@ void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent*
 	m_timer += deltaTime;
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 
-	// If the animation completely finishes the current combo stage, exit state
-	if (m_timer >= m_config.comboEndTimes[m_comboStage])
+	if (blackboard)
 	{
-		if (blackboard != nullptr && blackboard->moveIntent.LengthSquared() > 0.1f)
+		// If the animation completely finishes the current combo stage, exit state
+		if (m_timer >= m_config.comboEndTimes[m_comboStage])
 		{
-			if (blackboard->isLockedOn) stateMachine->ChangeState(m_config.transitions["OnStrafe"]); 
-			else stateMachine->ChangeState(m_config.transitions["OnMove"]);
+			if (blackboard != nullptr && blackboard->moveIntent.LengthSquared() > 0.01f)
+			{
+				if (blackboard->isLockedOn) stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
+				else stateMachine->ChangeState(m_config.transitions["OnMove"]);
+			}
+			else
+			{
+				stateMachine->ChangeState(m_config.transitions["OnStop"]);
+			}
+
 		}
-		else
-		{
-			stateMachine->ChangeState(m_config.transitions["OnStop"]);
-		}
+		blackboard->currentSpeed = m_config.moveSpeed;
 	}
+	
 }
 
 bool HEIN::OneHandAttackState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
@@ -342,6 +348,7 @@ void HEIN::BlockState::Update(Actor* owner, CombatStateMachineComponent* stateMa
 				stateMachine->ChangeState(m_config.transitions["OnStop"]);
 			}
 		}
+		blackboard->currentSpeed = m_config.moveSpeed;
 	}
 }
 

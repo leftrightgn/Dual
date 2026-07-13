@@ -12,6 +12,7 @@ namespace HEIN
 		bool isColliding = false;
 		DirectX::SimpleMath::Vector3 normal = DirectX::SimpleMath::Vector3::Zero; // The direction to push out
 		float penetrationDepth = 0.0f;                                            // How far to push out
+		DirectX::SimpleMath::Vector3 contactPoint = DirectX::SimpleMath::Vector3::Zero;
 	};
 
 	class CollisionMath
@@ -23,5 +24,7 @@ namespace HEIN
 		static HEIN::CollisionManifold CheckOBBvsOBB(HEIN::OBBColliderComponent* obbA, HEIN::OBBColliderComponent* obbB);
 
 		static HEIN::CollisionManifold CheckCapsuleVsAABB(HEIN::CapsuleColliderComponent* capsule, HEIN::AABBColliderComponent* aabb);
+
+		static HEIN::CollisionManifold CheckCapsuleVsCapsule(HEIN::CapsuleColliderComponent* capsuleA, HEIN::CapsuleColliderComponent* capsuleB);
 	};
 }
