@@ -50,6 +50,22 @@ HEIN::CollisionManifold HEIN::CollisionDispatcher::CheckCollision(HEIN::Collider
 
         return resultManifold;
     }
+    else if (shapeA == HEIN::ColliderShape::Capsule && shapeB == HEIN::ColliderShape::Capsule)
+    {
+        HEIN::CapsuleColliderComponent* capsuleA = dynamic_cast<HEIN::CapsuleColliderComponent*>(colA);
+        HEIN::CapsuleColliderComponent* capsuleB = dynamic_cast<HEIN::CapsuleColliderComponent*>(colB);
+        return HEIN::CollisionMath::CheckCapsuleVsCapsule(capsuleA, capsuleB);
+    }
+    else if (shapeA == HEIN::ColliderShape::Capsule && shapeB == HEIN::ColliderShape::Capsule)
+    {
+        HEIN::CapsuleColliderComponent* capsuleA = dynamic_cast<HEIN::CapsuleColliderComponent*>(colB);
+        HEIN::CapsuleColliderComponent* capsuleB = dynamic_cast<HEIN::CapsuleColliderComponent*>(colA);
+
+        resultManifold = HEIN::CollisionMath::CheckCapsuleVsCapsule(capsuleA, capsuleB);
+        resultManifold.normal = resultManifold.normal * -1.0f;
+
+        return resultManifold;
+    }
 
     return resultManifold;
 

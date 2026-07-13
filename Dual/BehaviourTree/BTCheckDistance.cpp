@@ -16,7 +16,7 @@ HEIN::BTNodeState HEIN::BTCheckDistance::Tick(HEIN::Actor* self, HEIN::ActorMana
 	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;
 
-	if (blackboard->distanceToTarget >= m_maxDistance && blackboard->distanceToTarget <= m_minDistance)
+	if (blackboard->distanceToTarget >= m_minDistance && blackboard->distanceToTarget <= m_maxDistance)
 	{
 		return BTNodeState::Success;
 	}

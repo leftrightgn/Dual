@@ -64,7 +64,7 @@ HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsOBB(HEIN::CapsuleColl
         manifold.penetrationDepth = capsule->GetRadius() - distance;
 
         // Rotate the normal back to world space using our clean matrix!
-        if (distance > 0.001f)
+        if (distance > 0.0001f)
         {
             localDiff.Normalize();
             manifold.normal = DirectX::SimpleMath::Vector3::TransformNormal(localDiff, cleanTransform);
@@ -73,6 +73,8 @@ HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsOBB(HEIN::CapsuleColl
         {
             manifold.normal = DirectX::SimpleMath::Vector3::TransformNormal(DirectX::SimpleMath::Vector3(0.0f, 1.0f, 0.0f), cleanTransform);
         }
+
+        manifold.contactPoint = DirectX::SimpleMath::Vector3::Transform(localClosestOnObb, cleanTransform);
     }
 
     return manifold;
@@ -159,4 +161,121 @@ HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsAABB(HEIN::CapsuleCol
     }
 
     return manifold;
+}
+
+HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsCapsule(HEIN::CapsuleColliderComponent* capsuleA, HEIN::CapsuleColliderComponent* capsuleB)
+{
+    HEIN::CollisionManifold manifold;
+    manifold.isColliding = false;
+
+    if (capsuleA == nullptr || capsuleB == nullptr) return manifold;
+
+    // Get the line Segement for the both Capusule
+    DirectX::SimpleMath::Vector3 p1 = capsuleA->GetWorldBottomCenter();
+    DirectX::SimpleMath::Vector3 q1 = capsuleA->GetWorldTopCenter();
+    DirectX::SimpleMath::Vector3 p2 = capsuleB->GetWorldBottomCenter();
+    DirectX::SimpleMath::Vector3 q2 = capsuleB->GetWorldTopCenter();
+
+    // Calculate the segement direction Vector
+    DirectX::SimpleMath::Vector3 d1 = q1 - p1; // Direction of segment A
+    DirectX::SimpleMath::Vector3 d2 = q2 - p2; // Direction of segment B
+    DirectX::SimpleMath::Vector3 r = p1 - p2;
+
+    float a = d1.Dot(d1); // Squared length of segment A
+    float e = d2.Dot(d2); // Squared length of segment B
+    float f = d2.Dot(r);
+
+    float s = 0.0f;
+    float t = 0.0f;
+
+    const float EPSILON = 0.0001f;
+    if (a <= EPSILON && e <= EPSILON)
+    {
+        s = 0.0f;
+        t = 0.0f;
+    }
+    else if (a <= EPSILON)
+    {
+        s = 0.0f;
+        t = f / e;
+        t = std::fmax(0.0f, std::fmin(1.0f, t));
+    }
+    else
+    {
+        float c = d1.Dot(r);
+        if (e <= EPSILON)
+        {
+            t = 0.0f;
+            s = std::fmax(0.0f, std::fmin(1.0f, -c / a));
+        }
+        else
+        {
+            // The general non-degenerate case
+            float b = d1.Dot(d2);
+            float denom = a * e - b * b; // Denominator to check for parallel lines
+
+            // If segments are not parallel, compute closest point on L1 to L2 and clamp to segment 1.
+            if (denom != 0.0f)
+            {
+                s = std::fmax(0.0f, std::fmin(1.0f, (b * f - c * e) / denom));
+            }
+            else
+            {
+                s = 0.0f; // Lines are parallel, pick an arbitrary point on segment 1
+            }
+
+            // Compute point on L2 closest to S1(s) using s, clamp to segment 2
+            t = (b * s + f) / e;
+
+            if (t < 0.0f)
+            {
+                t = 0.0f;
+                s = std::fmax(0.0f, std::fmin(1.0f, -c / a));
+            }
+            else if (t > 1.0f)
+            {
+                t = 1.0f;
+                s = std::fmax(0.0f, std::fmin(1.0f, (b - c) / a));
+            }
+
+        }
+
+    }
+
+    // Calculate the actual closest points in 3D space
+    DirectX::SimpleMath::Vector3 closestPointA = p1 + d1 * s;
+    DirectX::SimpleMath::Vector3 closestPointB = p2 + d2 * t;
+
+    // Check the distance between the closest points
+    DirectX::SimpleMath::Vector3 diff = closestPointA - closestPointB;
+    float distanceSq = diff.LengthSquared();
+    float radiusSum = capsuleA->GetRadius() + capsuleB->GetRadius();
+
+    // Resolve Collision
+    if (distanceSq <= (radiusSum * radiusSum))
+    {
+        manifold.isColliding = true;
+
+        float distance = std::sqrt(distanceSq);
+
+        // Generate Penetration depth
+        manifold.penetrationDepth = radiusSum - distance;
+
+        // Generate Collision Normal (pointing from B to A to push A out)
+        if (distance > EPSILON)
+        {
+            manifold.normal = diff / distance; // Normalize the diff vector
+        }
+        else
+        {
+            // If perfectly overlapping, push up by default
+            manifold.normal = DirectX::SimpleMath::Vector3::Up;
+        }
+
+        // The exact point of contact in world space
+        manifold.contactPoint = closestPointB + (manifold.normal * capsuleB->GetRadius());
+    }
+
+    return manifold;
+
 }

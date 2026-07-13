@@ -2,6 +2,7 @@
 #include "Components/IComponent.h"
 #include <SimpleMath.h>
 #include <Entities/Actor.h>
+#include <string>
 
 namespace HEIN
 {
@@ -23,6 +24,8 @@ namespace HEIN
 	// Only holds Data contains zero logic
 	struct CombatBlackBoard : public IComponent
 	{
+		std::string activeNodeName = "None";
+
 		// Physical Reality
 		DirectX::SimpleMath::Vector3 currentVelocity = DirectX::SimpleMath::Vector3::Zero;
 		bool isGrounded = true;
@@ -43,9 +46,9 @@ namespace HEIN
 		DirectX::SimpleMath::Vector3 localMoveIntent = DirectX::SimpleMath::Vector3::Zero;
 
 		// Block Stats
-		float maxBlockStamina = 5.0f;
-		float currentBlockStamina = 5.0f;
-		float blockRecoveryRate = 1.0f;
+		float maxBlockStamina = 2.0f;
+		float currentBlockStamina = 2.0f;
+		float blockRecoveryRate = 0.5f;
 		bool isBlockBroken = false;
 		float blockCooldownTimer = 0.0f;
 

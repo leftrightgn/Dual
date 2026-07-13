@@ -133,12 +133,16 @@ FILE: .\BehaviourTree\BTAttackNode.cpp
 #include <Message/Messenger.h> 
 #include <Message/Message.h>  
 #include <cmath>
+#include <Components/TransformComponent.h>
 
 HEIN::BTAttackNode::BTAttackNode(
-	float attackDuration
+	float attackDuration,
+	float minAttackDistance
 )
 	: m_attackDuration(attackDuration)
 	, m_timer(0.0f)
+	, m_minAttackDis(minAttackDistance)
+	, m_isAttacking(false)
 {
 }
 
@@ -147,8 +151,28 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;
 
+	if (m_timer == 0.0f && blackboard->distanceToTarget < m_minAttackDis)
+	{
+		return BTNodeState::Failure;
+	}
+
 	blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 
+	float targetYaw = atan2f(blackboard->dirToTarget.x, blackboard->dirToTarget.z) + DirectX::XM_PI;
+	DirectX::SimpleMath::Quaternion targetRotation = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(targetYaw, 0.0f, 0.0f);
+
+	HEIN::TransformComponent* transform = self->GetComponent<HEIN::TransformComponent>();
+	if (transform != nullptr)
+	{
+		DirectX::SimpleMath::Quaternion currentRot = transform->GetRotation();
+
+		float turnSpeed = 5.0f;
+
+		DirectX::SimpleMath::Quaternion newRot = DirectX::SimpleMath::Quaternion::Slerp(targetRotation, targetRotation, deltaTime * turnSpeed);
+		transform->SetRotation(newRot);
+	}
+
+	
 	// Send attack inputs periodically so the FSM can buffer them for combos
 	if (std::fmod(m_timer, 0.5f) < deltaTime)
 	{
@@ -184,9 +208,12 @@ namespace HEIN
 		float m_attackDuration;
 		float m_timer;
 
+		float m_minAttackDis;
+		bool m_isAttacking;
+
 	public:
 
-		BTAttackNode(float attackDuration);
+		BTAttackNode(float attackDuration, float minAttackDis = 12.0f);
 
 		BTNodeState Tick(
 			HEIN::Actor* self,
@@ -258,6 +285,67 @@ namespace HEIN
 	public:
 
 		BTChaseNode(float attackRange, float walkSpeed);
+
+		BTNodeState Tick(
+			HEIN::Actor* self,
+			HEIN::ActorManager* manager,
+			HEIN::ActorID targetID,
+			float deltaTime
+		) override;
+	};
+}
+
+
+============================================================
+FILE: .\BehaviourTree\BTCheckDistance.cpp
+============================================================
+
+#include "pch.h"
+#include "BTCheckDistance.h"
+#include <BlackBoard/CombatBlackBoard.h>
+
+HEIN::BTCheckDistance::BTCheckDistance(
+	float minDistance, 
+	float maxDistance
+)
+	: m_minDistance(minDistance)
+	, m_maxDistance(maxDistance)
+{
+}
+
+HEIN::BTNodeState HEIN::BTCheckDistance::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
+{
+	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+	if (blackboard == nullptr) return BTNodeState::Failure;
+
+	if (blackboard->distanceToTarget >= m_maxDistance && blackboard->distanceToTarget <= m_minDistance)
+	{
+		return BTNodeState::Success;
+	}
+
+	return BTNodeState::Failure;
+}
+
+
+============================================================
+FILE: .\BehaviourTree\BTCheckDistance.h
+============================================================
+
+#pragma once
+#include <BehaviourTree/BTNode.h>
+
+namespace HEIN
+{
+	class BTCheckDistance : public BTNode
+	{
+	private:
+
+		float m_minDistance;
+		float m_maxDistance;
+
+	public:
+
+		BTCheckDistance(float minDistance, float maxDistance);
 
 		BTNodeState Tick(
 			HEIN::Actor* self,
@@ -602,6 +690,13 @@ namespace HEIN
 
 		DirectX::SimpleMath::Vector3 moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		DirectX::SimpleMath::Vector3 localMoveIntent = DirectX::SimpleMath::Vector3::Zero;
+
+		// Block Stats
+		float maxBlockStamina = 5.0f;
+		float currentBlockStamina = 5.0f;
+		float blockRecoveryRate = 1.0f;
+		bool isBlockBroken = false;
+		float blockCooldownTimer = 0.0f;
 
 		CombatBlackBoard(Actor* owner)
 			: IComponent(owner)
@@ -2262,9 +2357,11 @@ FILE: .\Common\DamageSystem.cpp
 #include <Components/DamageDealerComponent.h>
 #include <Components/HealthComponent.h>
 #include <Components/ColliderComponent/ColliderComponent.h>
+#include <Components/CombatStateMachineComponent.h>
+#include <Entities/ActorManager.h>
 #include <Entities/Actor.h>
 
-void HEIN::DamageSystem::HandlTriggerHit(const HEIN::TriggerEventPayLoad& payLoad)
+void HEIN::DamageSystem::HandlTriggerHit(const HEIN::TriggerEventPayLoad& payLoad, HEIN::ActorManager& actorManager)
 {
 	HEIN::Actor* actorA = payLoad.triggerA->GetOwner();
 	HEIN::Actor* actorB = payLoad.triggerB->GetOwner();
@@ -2278,7 +2375,28 @@ void HEIN::DamageSystem::HandlTriggerHit(const HEIN::TriggerEventPayLoad& payLoa
 	{
 		if (actorA->GetOwnerID() != actorB->GetID())
 		{
-			victimB->ApplyDamage(dealerA->GetDamageAmount());
+			bool isAttacking = true;
+			HEIN::CombatStateMachineComponent* fsmA = actorA->GetComponent<HEIN::CombatStateMachineComponent>();
+			if (!fsmA && actorA->GetOwnerID() != HEIN::INVALID_ACTOR_ID)
+			{
+				HEIN::Actor* ownerA = actorManager.GetActor(actorA->GetOwnerID());
+				if (ownerA) fsmA = ownerA->GetComponent<HEIN::CombatStateMachineComponent>();
+			}
+			if (fsmA) isAttacking = fsmA->IsAttacking();
+
+			bool isBlocking = false;
+			HEIN::CombatStateMachineComponent* fsmB = actorB->GetComponent<HEIN::CombatStateMachineComponent>();
+			if (!fsmB && actorB->GetOwnerID() != HEIN::INVALID_ACTOR_ID)
+			{
+				HEIN::Actor* ownerB = actorManager.GetActor(actorB->GetOwnerID());
+				if (ownerB) fsmB = ownerB->GetComponent<HEIN::CombatStateMachineComponent>();
+			}
+			if (fsmB) isBlocking = fsmB->IsBlocking();
+
+			if (isAttacking && !isBlocking)
+			{
+				victimB->ApplyDamage(dealerA->GetDamageAmount());
+			}
 		}
 	}
 
@@ -2289,7 +2407,28 @@ void HEIN::DamageSystem::HandlTriggerHit(const HEIN::TriggerEventPayLoad& payLoa
 	{
 		if (actorB->GetOwnerID() != actorA->GetID())
 		{
-			victimA->ApplyDamage(dealerB->GetDamageAmount());
+			bool isAttacking = true;
+			HEIN::CombatStateMachineComponent* fsmB = actorB->GetComponent<HEIN::CombatStateMachineComponent>();
+			if (!fsmB && actorB->GetOwnerID() != HEIN::INVALID_ACTOR_ID)
+			{
+				HEIN::Actor* ownerB = actorManager.GetActor(actorB->GetOwnerID());
+				if (ownerB) fsmB = ownerB->GetComponent<HEIN::CombatStateMachineComponent>();
+			}
+			if (fsmB) isAttacking = fsmB->IsAttacking();
+
+			bool isBlocking = false;
+			HEIN::CombatStateMachineComponent* fsmA = actorA->GetComponent<HEIN::CombatStateMachineComponent>();
+			if (!fsmA && actorA->GetOwnerID() != HEIN::INVALID_ACTOR_ID)
+			{
+				HEIN::Actor* ownerA = actorManager.GetActor(actorA->GetOwnerID());
+				if (ownerA) fsmA = ownerA->GetComponent<HEIN::CombatStateMachineComponent>();
+			}
+			if (fsmA) isBlocking = fsmA->IsBlocking();
+
+			if (isAttacking && !isBlocking)
+			{
+				victimA->ApplyDamage(dealerB->GetDamageAmount());
+			}
 		}
 	}
 }
@@ -2311,7 +2450,7 @@ namespace HEIN
 		DamageSystem() = default;
 		~DamageSystem() = default;
 
-		void HandlTriggerHit(const HEIN::TriggerEventPayLoad& payLoad);
+		void HandlTriggerHit(const HEIN::TriggerEventPayLoad& payLoad, class ActorManager& actorManager);
 	};
 }
 
@@ -5585,6 +5724,7 @@ FILE: .\Components\CombatStateMachineComponent.cpp
 #include "IComponent.h"
 #include <memory>
 #include <Message/Messenger.h>
+#include <BlackBoard/CombatBlackBoard.h>
 
 
 HEIN::CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner)
@@ -5609,6 +5749,23 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 	if (m_currentState)
 	{
 		m_currentState->Update(m_owner, this, deltaTime);
+	}
+
+	HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
+	if (blackboard)
+	{
+		if (!IsBlocking())
+		{
+			if (blackboard->currentBlockStamina < blackboard->maxBlockStamina)
+			{
+				blackboard->currentBlockStamina += blackboard->blockRecoveryRate * deltaTime;
+				if (blackboard->currentBlockStamina >= blackboard->maxBlockStamina)
+				{
+					blackboard->currentBlockStamina = blackboard->maxBlockStamina;
+					blackboard->isBlockBroken = false;
+				}
+			}
+		}
 	}
 }
 
@@ -5694,6 +5851,24 @@ void HEIN::CombatStateMachineComponent::ProcessBuffer(float deltaTime)
 
 }
 
+bool HEIN::CombatStateMachineComponent::IsAttacking() const
+{
+	if (m_currentState != nullptr)
+	{
+		return m_currentState->IsAttackState();
+	}
+	return false;
+}
+
+bool HEIN::CombatStateMachineComponent::IsBlocking() const
+{
+	if (m_currentState != nullptr)
+	{
+		return m_currentState->IsBlockState();
+	}
+	return false;
+}
+
 void HEIN::CombatStateMachineComponent::OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad)
 {
 	if (payLoad.triggerA->GetOwner() != GetOwner() && payLoad.triggerB->GetOwner() != GetOwner())
@@ -5771,6 +5946,9 @@ namespace HEIN
 		void OnMessageAccepted(Message::MessageID messageID) override;
 
 		void ProcessBuffer(float deltaTime);
+
+		bool IsAttacking() const;
+		bool IsBlocking() const;
 	private:
 
 		void OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad);
@@ -7913,7 +8091,11 @@ namespace HEIN
 		void SetRotationOffset(const DirectX::SimpleMath::Vector3& rotation)
 		{
 			m_rotationEuler = rotation;
-			m_rotationOffset = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(rotation.y, rotation.x, rotation.z);
+			m_rotationOffset = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(
+				rotation.y,
+				rotation.x,
+				rotation.z
+			);
 		}
 		DirectX::SimpleMath::Vector3 GetRotationOffset() const { return m_rotationEuler; }
 
@@ -7930,7 +8112,9 @@ namespace HEIN
 		uint32_t GetCollisionMask() const { return m_mask; }
 
 		DirectX::SimpleMath::Matrix GetCalculateWorldMatrix() { return CalculateWorldMatrix(); }
+
 	protected:
+
 		DirectX::SimpleMath::Matrix CalculateWorldMatrix();
 	};
 }
@@ -10487,8 +10671,8 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     attackConfig.moveSpeed = 5.0f;
     attackConfig.animationName = "OneHand";
     attackConfig.stateDuration = 4.1f;
-    attackConfig.comboEndTimes = { 1.6f, 3.0f, 4.5f };
-    attackConfig.comboWindowStarts = { 1.2f, 2.7f, 4.2f };
+    attackConfig.comboEndTimes = { 1.6f, 2.4f, 4.5f };
+    attackConfig.comboWindowStarts = { 1.2f, 2.2f, 4.2f };
     attackConfig.transitions["OnStop"] = "Idle";
     attackConfig.transitions["OnMove"] = "Walk";
     attackConfig.transitions["OnDodge"] = "Dodge";
@@ -10855,7 +11039,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
     // Right Leg Collider
     HEIN::CapsuleColliderComponent* RightupLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightupLegCapsule->Initialize(2.0f, 0.0f);
+    RightupLegCapsule->Initialize(2.8f, 0.0f);
     RightupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* RightupLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightUpLeg", L"RightLeg");
@@ -10869,7 +11053,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
   
     // Left Leg Collider
     HEIN::CapsuleColliderComponent* LeftupLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftupLegCapsule->Initialize(2.0f, 0.0f);
+    LeftupLegCapsule->Initialize(2.3f, 0.0f);
     LeftupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* LeftupLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     LeftupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftUpLeg", L"mixamorig:LeftLeg");
@@ -10967,7 +11151,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     attackConfig.animationName = "OneHand";
     attackConfig.stateDuration = 3.4f;
     attackConfig.comboEndTimes = { 1.6f, 3.0f, 3.4f };
-    attackConfig.comboWindowStarts = { 1.2f, 2.7f, 3.2f };
+    attackConfig.comboWindowStarts = { 1.2f, 2.7f, 3.0f };
     attackConfig.transitions["OnStop"] = "Idle";
     attackConfig.transitions["OnMove"] = "Walk";
     attackConfig.transitions["OnDodge"] = "Dodge";
@@ -13687,6 +13871,7 @@ FILE: .\Scene\GameScene\GameScene.cpp
 #include <Components/PlayerInputComponent.h>
 #include <Factory/ActorFactory.h>
 #include <Components/HealthComponent.h>
+#include <BlackBoard/CombatBlackBoard.h>
 #include <ImGui/imgui.h>
 
 using namespace DirectX;
@@ -13751,7 +13936,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     if (player != nullptr)
     {
         HEIN::TransformComponent* playerTransform = player->GetComponent<HEIN::TransformComponent>();
-        m_targetPos = ModelPointer->GetBoneWorldPosition(L"mixamorig:Head", playerTransform->GetWorldMatrix());
+        ModelPointer->Update(0.0f);
+        m_targetPos = ModelPointer->GetBoneWorldPosition(L"mixamorig:HeadTop_End", playerTransform->GetWorldMatrix());
 
         // First Person Mode
         cameraComp->RegisterCamera(
@@ -13814,7 +14000,7 @@ void GameScene::OnEnter(GameContext& gameContext)
     gameContext.eventManager->AddTriggerListener(
         [this](const HEIN::TriggerEventPayLoad& payLoad)
         {
-            m_damageSystem->HandlTriggerHit(payLoad);
+            m_damageSystem->HandlTriggerHit(payLoad, m_actorManager);
         }
     );
 }
@@ -13944,7 +14130,25 @@ void GameScene::Render(GameContext& gameContext)
         if (pHealth != nullptr)
         {
             ImGui::Text("Player Health");
+            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
             ImGui::ProgressBar(pHealth->GetCurrentHealth() / pHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
+            ImGui::PopStyleColor();
+        }
+
+        HEIN::CombatBlackBoard* pBB = player->GetComponent<HEIN::CombatBlackBoard>();
+        if (pBB != nullptr)
+        {
+            if (pBB->isBlockBroken)
+            {
+                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // Red bar
+                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
+                ImGui::PopStyleColor();
+            }
+            else
+            {
+                ImGui::Text("Block Stamina");
+                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
+            }
         }
     }
     else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "PLAYER DEAD");
@@ -14372,13 +14576,25 @@ void HEIN::BlockState::OnEnter(Actor* owner, CombatStateMachineComponent* stateM
 
 void HEIN::BlockState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
 {
-	// Note: Blocking logic typically transitions out via a "Release" event.
-	// As a fallback placeholder based on your old logic, you can check movement intent.
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
 	if (blackboard)
 	{
-		// You will likely need to send a `PLAYER_STOP_BLOCK` message from InputManager to exit cleanly.
-		// For now, it stays trapped in Block State until you add the release input check here.
+		blackboard->currentBlockStamina -= deltaTime;
+		if (blackboard->currentBlockStamina <= 0.0f)
+		{
+			blackboard->isBlockBroken = true;
+			
+			// Force exit block
+			if (blackboard->moveIntent.LengthSquared() > 0.1f)
+			{
+				if (blackboard->isLockedOn) stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
+				else stateMachine->ChangeState(m_config.transitions["OnMove"]);
+			}
+			else
+			{
+				stateMachine->ChangeState(m_config.transitions["OnStop"]);
+			}
+		}
 	}
 }
 
@@ -14493,6 +14709,7 @@ namespace HEIN
 
 		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
 
+		bool IsAttackState() const override { return true; }
 	};
 
 	class DodgeState : public ICombatState
@@ -14551,6 +14768,8 @@ namespace HEIN
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
 
 		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
+
+		bool IsBlockState() const override { return true; }
 	};
 }
 
@@ -14579,5 +14798,8 @@ namespace HEIN
 		virtual void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) = 0;
 
 		virtual bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) { return false; }
+
+		virtual bool IsAttackState() const { return false; }
+		virtual bool IsBlockState() const { return false; }
 	};
 }

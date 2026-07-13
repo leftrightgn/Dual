@@ -206,6 +206,9 @@
     <ClCompile Include="BehaviourTree\BTCheckDistance.cpp">
       <Filter>BehaviourTree</Filter>
     </ClCompile>
+    <ClCompile Include="BehaviourTree\BTDodgeNode.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -447,6 +450,9 @@
       <Filter>BehaviourTree</Filter>
     </ClInclude>
     <ClInclude Include="BehaviourTree\BTCheckDistance.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTDodgeNode.h">
       <Filter>BehaviourTree</Filter>
     </ClInclude>
   </ItemGroup>
