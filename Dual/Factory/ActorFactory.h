@@ -34,13 +34,13 @@ namespace HEIN
 			ActorManager& actorManager,
 			GameContext& gameContext,
 			HEIN::ActorID wielderID,
-			int damage
+			float damage
 		);
 		static HEIN::ActorID CreateAxe(
 			ActorManager& actorManager,
 			GameContext& gameContext,
 			HEIN::ActorID wielderID,
-			int damage
+			float damage
 		);
 
 		static HEIN::ActorID CreateStage(

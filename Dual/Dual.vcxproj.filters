@@ -77,12 +77,6 @@
     <ClCompile Include="Effect\Skybox.cpp">
       <Filter>Effect</Filter>
     </ClCompile>
-    <ClCompile Include="Common\DebugDisplayController.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="Common\DebugRenderer.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="Framework\Game.cpp">
       <Filter>Framework</Filter>
     </ClCompile>
@@ -90,9 +84,6 @@
       <Filter>Framework</Filter>
     </ClCompile>
     <ClCompile Include="Common\InputManager.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="Common\DebugCollisionRenderer.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="Components\ColliderComponent\ColliderComponent.cpp">
@@ -121,9 +112,6 @@
     </ClCompile>
     <ClCompile Include="ImGui\imgui_widgets.cpp">
       <Filter>ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Common\DebugUIManager.cpp">
-      <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="Components\ColliderComponent\AABBColliderComponent.cpp">
       <Filter>Components\ColliderComponent</Filter>
@@ -208,6 +196,21 @@
     </ClCompile>
     <ClCompile Include="BehaviourTree\BTDodgeNode.cpp">
       <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\DebugCollisionRenderer.cpp">
+      <Filter>Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\DebugDisplayController.cpp">
+      <Filter>Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\DebugRenderer.cpp">
+      <Filter>Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\DebugUIManager.cpp">
+      <Filter>Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\ImGuizmo.cpp">
+      <Filter>ImGui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -311,12 +314,6 @@
     <ClInclude Include="BlackBoard\CombatBlackBoard.h">
       <Filter>BlackBoard</Filter>
     </ClInclude>
-    <ClInclude Include="Common\DebugDisplayController.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\DebugRenderer.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="Framework\Game.h">
       <Filter>Framework</Filter>
     </ClInclude>
@@ -324,9 +321,6 @@
       <Filter>Framework</Filter>
     </ClInclude>
     <ClInclude Include="Common\InputManager.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\DebugCollisionRenderer.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="Components\ColliderComponent\ColliderComponent.h">
@@ -358,9 +352,6 @@
     </ClInclude>
     <ClInclude Include="ImGui\imstb_truetype.h">
       <Filter>ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\DebugUIManager.h">
-      <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="Components\ColliderComponent\AABBColliderComponent.h">
       <Filter>Components\ColliderComponent</Filter>
@@ -455,6 +446,22 @@
     <ClInclude Include="BehaviourTree\BTDodgeNode.h">
       <Filter>BehaviourTree</Filter>
     </ClInclude>
+    <ClInclude Include="Debug\DebugCollisionRenderer.h">
+      <Filter>Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Debug\DebugDisplayController.h">
+      <Filter>Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Debug\DebugRenderer.h">
+      <Filter>Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Debug\DebugUIManager.h">
+      <Filter>Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\ImGuizmo.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Debug\IGizmoEditable.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -525,6 +532,9 @@
     </Filter>
     <Filter Include="Message">
       <UniqueIdentifier>{f9235b91-6e95-4153-a32e-1c6878d4dd28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Debug">
+      <UniqueIdentifier>{15e6802d-4ad2-49b9-88b5-97ebd7096072}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

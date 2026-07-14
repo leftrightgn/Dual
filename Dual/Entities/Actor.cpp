@@ -51,3 +51,11 @@ void HEIN::Actor::Start()
 		comp->Start();
 	}
 }
+
+void HEIN::Actor::DrawInspector()
+{
+	for (auto& comp : m_components)
+	{
+		comp->OnInspectorGUI();
+	}
+}

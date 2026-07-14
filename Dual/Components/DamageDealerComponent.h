@@ -25,7 +25,7 @@ namespace HEIN
 		void Initialize(float damageAmount, DamageType damageType = DamageType::Physical);
 
 		void Start() override{}
-		void Update(float deltaTime) override{}
+		void Update(float /*deltaTime*/) override{}
 		
 		float GetDamageAmount() const { return m_damageAmount; }
 		DamageType GetDamageType() const { return m_damageType; }

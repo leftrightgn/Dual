@@ -52,13 +52,13 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_playerID = playerData.playerID;
 
     // Build Sword
-    m_playerSwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID, 5);
+    m_playerSwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID, 5.0f);
 
     // Build Enemy
     HEIN::EnemySpawnData enemyData = HEIN::ActorFactory::CreateEnemy(m_actorManager, gameContext, m_playerID);
     m_enemyID = enemyData.enemyID;
    
-    m_enemySwordID = HEIN::ActorFactory::CreateAxe(m_actorManager, gameContext, m_enemyID, 20);
+    m_enemySwordID = HEIN::ActorFactory::CreateAxe(m_actorManager, gameContext, m_enemyID, 20.0f);
 
     // Build Stage
     m_stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
@@ -153,7 +153,7 @@ void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, Ga
 {
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
-    m_debugDisplay->Update(gameContext);
+    m_debugDisplay->Update(gameContext, m_actorManager);
 
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
 
@@ -262,8 +262,14 @@ void GameScene::Render(GameContext& gameContext)
     m_actorManager.DrawAll(gameContext, view, m_proj);
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
     HEIN::Actor* enemy = m_actorManager.GetActor(m_enemyID);
-    // --- COMBAT UI ---
-    ImGui::Begin("Combat Status");
+    // COMBAT UI
+    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Always);
+
+    // Set up flags to make the window static (No moving, No resizing, No collapsing)
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
+
+    // Begin the window with the new flags
+    ImGui::Begin("Combat Status", nullptr, flags);
     if (player != nullptr)
     {
         HEIN::HealthComponent* pHealth = player->GetComponent<HEIN::HealthComponent>();

@@ -17,7 +17,12 @@ namespace HEIN
 
 		virtual void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) = 0;
 
-		virtual bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) { return false; }
+		virtual bool HandleMessage(
+			Actor* /*owner*/,
+			CombatStateMachineComponent* /*stateMachine*/,
+			Message::MessageID /*messageID*/
+		)
+		{ return false; }
 
 		virtual bool IsAttackState() const { return false; }
 		virtual bool IsBlockState() const { return false; }

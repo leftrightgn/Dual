@@ -201,6 +201,11 @@
     <ClInclude Include="Components\DamageDealerComponent.h" />
     <ClInclude Include="Components\HealthComponent.h" />
     <ClInclude Include="Components\TargetTrackingComponent.h" />
+    <ClInclude Include="Debug\DebugCollisionRenderer.h" />
+    <ClInclude Include="Debug\DebugDisplayController.h" />
+    <ClInclude Include="Debug\DebugRenderer.h" />
+    <ClInclude Include="Debug\DebugUIManager.h" />
+    <ClInclude Include="Debug\IGizmoEditable.h" />
     <ClInclude Include="Entities\ActorManager.h" />
     <ClInclude Include="Factory\ActorFactory.h" />
     <ClInclude Include="Components\BoneLinkComponent.h" />
@@ -208,9 +213,6 @@
     <ClInclude Include="BlackBoard\CombatBlackBoard.h" />
     <ClInclude Include="Components\ColliderComponent\CapsuleColliderComponent.h" />
     <ClInclude Include="Components\ColliderComponent\ColliderComponent.h" />
-    <ClInclude Include="Common\DebugCollisionRenderer.h" />
-    <ClInclude Include="Common\DebugDisplayController.h" />
-    <ClInclude Include="Common\DebugRenderer.h" />
     <ClInclude Include="Common\InputManager.h" />
     <ClInclude Include="Components\CharacterMovementComponent.h" />
     <ClInclude Include="Components\ColliderComponent\OBBColliderComponent.h" />
@@ -219,7 +221,6 @@
     <ClInclude Include="Components\SocketComponent.h" />
     <ClInclude Include="Components\StaticModelComponent.h" />
     <ClInclude Include="Components\TransformComponent.h" />
-    <ClInclude Include="Common\DebugUIManager.h" />
     <ClInclude Include="Components\TwoBoneLinkComponent.h" />
     <ClInclude Include="Entities\Actor.h" />
     <ClInclude Include="Camera\CameraController.h" />
@@ -248,6 +249,7 @@
     </ClInclude>
     <ClInclude Include="ImGui\imconfig.h" />
     <ClInclude Include="ImGui\imgui.h" />
+    <ClInclude Include="ImGui\ImGuizmo.h" />
     <ClInclude Include="ImGui\imgui_impl_dx11.h" />
     <ClInclude Include="ImGui\imgui_impl_win32.h" />
     <ClInclude Include="ImGui\imgui_internal.h" />
@@ -288,6 +290,10 @@
     <ClCompile Include="Components\DamageDealerComponent.cpp" />
     <ClCompile Include="Components\HealthComponent.cpp" />
     <ClCompile Include="Components\TargetTrackingComponent.cpp" />
+    <ClCompile Include="Debug\DebugCollisionRenderer.cpp" />
+    <ClCompile Include="Debug\DebugDisplayController.cpp" />
+    <ClCompile Include="Debug\DebugRenderer.cpp" />
+    <ClCompile Include="Debug\DebugUIManager.cpp" />
     <ClCompile Include="Entities\ActorManager.cpp" />
     <ClCompile Include="Factory\ActorFactory.cpp" />
     <ClCompile Include="Components\BoneLinkComponent.cpp" />
@@ -299,9 +305,6 @@
     <ClCompile Include="Camera\ThirdPersonMode.cpp" />
     <ClCompile Include="Components\ColliderComponent\CapsuleColliderComponent.cpp" />
     <ClCompile Include="Components\ColliderComponent\ColliderComponent.cpp" />
-    <ClCompile Include="Common\DebugCollisionRenderer.cpp" />
-    <ClCompile Include="Common\DebugDisplayController.cpp" />
-    <ClCompile Include="Common\DebugRenderer.cpp" />
     <ClCompile Include="Common\DeviceResources.cpp" />
     <ClCompile Include="Common\InputManager.cpp" />
     <ClCompile Include="Components\CharacterMovementComponent.cpp" />
@@ -311,7 +314,6 @@
     <ClCompile Include="Components\SocketComponent.cpp" />
     <ClCompile Include="Components\StaticModelComponent.cpp" />
     <ClCompile Include="Components\TransformComponent.cpp" />
-    <ClCompile Include="Common\DebugUIManager.cpp" />
     <ClCompile Include="Components\TwoBoneLinkComponent.cpp" />
     <ClCompile Include="DirectXTK_Utilities\Animation.cpp" />
     <ClCompile Include="DirectXTK_Utilities\DebugDraw.cpp" />
@@ -325,6 +327,9 @@
     <ClCompile Include="ImaseLib\DebugCamera.cpp" />
     <ClCompile Include="ImaseLib\GridFloor.cpp" />
     <ClCompile Include="ImGui\imgui.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ImGui\ImGuizmo.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ImGui\imgui_demo.cpp">

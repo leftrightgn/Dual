@@ -1,10 +1,11 @@
 #pragma once
 #include <SimpleMath.h>
 #include "IComponent.h"
+#include <Debug/IGizmoEditable.h>
 
 namespace HEIN
 {
-    class TransformComponent : public IComponent
+    class TransformComponent : public IComponent, public IGizmoEditable
     {
     private:
         DirectX::SimpleMath::Vector3 m_position;
@@ -14,8 +15,17 @@ namespace HEIN
     public:
 
         TransformComponent(Actor* owner);
-            
 
+        void Update(float deltaTime) override;
+
+        void OnInspectorGUI() override;
+
+        void DrawGizmo(
+            const DirectX::SimpleMath::Matrix& view,
+            const DirectX::SimpleMath::Matrix& proj,
+            int operation,
+            int mode
+        ) override;
         // --- Getters & Setters ---
 
         void SetPosition(const DirectX::SimpleMath::Vector3& pos) { m_position = pos; }
@@ -41,8 +51,7 @@ namespace HEIN
 
         // Generates the World Matrix for DirectX 11 rendering
         DirectX::SimpleMath::Matrix GetWorldMatrix() const;
-      
-        void Update(float deltaTime) override;
+     
 
     };
 }

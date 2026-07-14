@@ -1,5 +1,6 @@
 #pragma once
 #include "IComponent.h"
+#include <Debug/IGizmoEditable.h>
 
 namespace HEIN
 {
@@ -28,7 +29,7 @@ namespace HEIN
         }
     };
 
-    class SocketComponent : public IComponent
+    class SocketComponent : public IComponent, public IGizmoEditable
     {
     private:
         std::unordered_map<std::wstring, Socket> m_sockets;
@@ -48,6 +49,15 @@ namespace HEIN
             const DirectX::SimpleMath::Vector3& newPos,
             const DirectX::SimpleMath::Vector3& newRot
         );
+
+        void OnInspectorGUI() override;
+
+        void DrawGizmo(
+            const DirectX::SimpleMath::Matrix& view,
+            const DirectX::SimpleMath::Matrix& proj,
+            int operation,
+            int mode
+        ) override;
 
         void AddSocket(const Socket& socket);
 

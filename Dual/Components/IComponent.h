@@ -23,7 +23,7 @@ namespace HEIN
 
 		virtual void Update(float deltaTime) = 0;
 
-		virtual void LateUpdate(float deltaTime) {}
+		virtual void LateUpdate(float /*deltaTime*/) {}
 
 		virtual void Start() {}
 
@@ -33,6 +33,8 @@ namespace HEIN
 			const DirectX::SimpleMath::Matrix& /*view*/, 
 			const DirectX::SimpleMath::Matrix& /*proj*/
 		) {}
+
+		virtual void OnInspectorGUI() {}
 
 		Actor* GetOwner() const { return m_owner; }
 	};

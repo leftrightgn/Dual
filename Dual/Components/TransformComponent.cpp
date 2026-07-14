@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "TransformComponent.h"
+//#include <ImGui/imgui.h>
+//#include <ImGui/ImGuizmo.h>
+#include <Debug/DebugUIManager.h>
 
 HEIN::TransformComponent::TransformComponent(Actor* owner)
     : IComponent(owner)
@@ -8,6 +11,78 @@ HEIN::TransformComponent::TransformComponent(Actor* owner)
     , m_scale(1.0f, 1.0f, 1.0f)
     , m_parentMatrix(DirectX::SimpleMath::Matrix::Identity)
 {
+}
+
+void HEIN::TransformComponent::OnInspectorGUI()
+{
+    bool isActive = (HEIN::g_ActiveGizmoTarget == this);
+    if (ImGui::RadioButton("Edit Transform with Gizmo", isActive))
+    {
+        HEIN::g_ActiveGizmoTarget = this; // Point the global tracker to THIS specific component!
+    }
+    if (ImGui::CollapsingHeader("Transform Component", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        // Position
+        DirectX::SimpleMath::Vector3 pos = GetPosition();
+        if (ImGui::DragFloat3("Position", &pos.x, 0.05f))
+        {
+            SetPosition(pos);
+        }
+
+        // Scale
+        DirectX::SimpleMath::Vector3 scale = GetScale();
+        if (ImGui::DragFloat3("Scale", &scale.x, 0.05f))
+        {
+            SetScale(scale);
+        }
+
+        // Rotation
+        DirectX::SimpleMath::Vector3 euler = GetRotationEuler();
+        euler.x = DirectX::XMConvertToDegrees(euler.x);
+        euler.y = DirectX::XMConvertToDegrees(euler.y);
+        euler.z = DirectX::XMConvertToDegrees(euler.z);
+
+        if (ImGui::DragFloat3("Rotation", &euler.x, 0.5f))
+        {
+            float radX = DirectX::XMConvertToRadians(euler.x);
+            float radY = DirectX::XMConvertToRadians(euler.y);
+            float radZ = DirectX::XMConvertToRadians(euler.z);
+
+            DirectX::SimpleMath::Quaternion newRot = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(radY, radX, radZ);
+            SetRotation(newRot);
+        }
+    }
+}
+
+void HEIN::TransformComponent::DrawGizmo(
+    const DirectX::SimpleMath::Matrix& view, 
+    const DirectX::SimpleMath::Matrix& proj,
+    int operation,
+    int mode
+)
+{
+    ImGuizmo::SetOrthographic(false);
+    ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+    ImGuizmo::SetGizmoSizeClipSpace(0.2f);
+
+    DirectX::SimpleMath::Matrix worldMat = GetWorldMatrix();
+
+    // Use the operation/mode passed in from the UI manager
+    ImGuizmo::Manipulate((float*)&view.m[0][0], (float*)&proj.m[0][0], (ImGuizmo::OPERATION)operation, (ImGuizmo::MODE)mode, (float*)&worldMat.m[0][0]);
+
+    if (ImGuizmo::IsUsing())
+    {
+        DirectX::SimpleMath::Vector3 scale, pos;
+        DirectX::SimpleMath::Quaternion rot;
+        if (worldMat.Decompose(scale, rot, pos))
+        {
+            SetPosition(pos);
+            SetRotation(rot);
+            SetScale(scale);
+        }
+    }
 }
 
 void HEIN::TransformComponent::SetRotationEuler(const DirectX::SimpleMath::Vector3& eulerAngles)
