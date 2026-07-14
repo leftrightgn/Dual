@@ -35,17 +35,7 @@ namespace HEIN
 	{
 		return gameContext.mouseState.leftButton;
 	}
-	DirectX::SimpleMath::Vector3 InputManager::GetMoveIntent(const GameContext& gameContext)
-	{
-		DirectX::SimpleMath::Vector3 intent = DirectX::SimpleMath::Vector3::Zero;
 
-		if (gameContext.keyboardState.W) intent.z += 1.0f;
-		if (gameContext.keyboardState.S) intent.z -= 1.0f;
-		if (gameContext.keyboardState.A) intent.x += 1.0f;
-		if (gameContext.keyboardState.D) intent.x -= 1.0f;
-
-		return intent;
-	}
 	DirectX::SimpleMath::Vector3 InputManager::GetDebugMoveIntent(const GameContext& gameContext)
 	{
 		DirectX::SimpleMath::Vector3 intent = DirectX::SimpleMath::Vector3::Zero;
@@ -54,6 +44,8 @@ namespace HEIN
 		if (gameContext.keyboardState.S) intent.z += 1.0f;
 		if (gameContext.keyboardState.A) intent.x -= 1.0f;
 		if (gameContext.keyboardState.D) intent.x += 1.0f;
+		if (gameContext.keyboardState.Up) intent.y += 1.0f;
+		if (gameContext.keyboardState.Down) intent.y -= 1.0f;
 
 		return intent;
 	}

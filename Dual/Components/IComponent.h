@@ -34,6 +34,8 @@ namespace HEIN
 			const DirectX::SimpleMath::Matrix& /*proj*/
 		) {}
 
+		virtual void OnInspectorGUI() {}
+
 		Actor* GetOwner() const { return m_owner; }
 	};
 }

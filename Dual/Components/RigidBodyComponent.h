@@ -21,7 +21,7 @@ namespace HEIN
 
 	public:
 
-		static constexpr float GRAVITY_FORCE = -9.81f;
+		static constexpr float GRAVITY_FORCE = -45.0f;
 
 		friend class PhysicsSystem;
 	public:

@@ -55,6 +55,8 @@ namespace HEIN
 
 		void Start();
 
+		void DrawInspector();
+
 		ActorID GetID() const { return m_id; }
 		std::wstring GetTag() const { return m_tag; }
 

@@ -11,7 +11,7 @@
 #include "Effect/Skybox.h"
 #include "ImaseLib/DebugCamera.h"
 #include "Camera/CameraController.h"
-#include "Common/DebugDisplayController.h"
+#include "Debug/DebugDisplayController.h"
 #include "Common/PhysicsSystem.h"
 #include "Entities/ActorManager.h"
 #include <Common/DamageSystem.h>

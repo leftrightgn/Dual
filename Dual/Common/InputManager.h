@@ -27,7 +27,6 @@ namespace HEIN
 
 		static bool IsDebugDrugHeld(const GameContext& gameContext);
 
-		static DirectX::SimpleMath::Vector3 GetMoveIntent(const GameContext& gameContext);
 
 		static DirectX::SimpleMath::Vector3 GetDebugMoveIntent(const GameContext& gameContext);
  
