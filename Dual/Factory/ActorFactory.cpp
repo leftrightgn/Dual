@@ -33,7 +33,7 @@
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ActorManager& actorManager,
     GameContext& gameContext, 
-    DirectX::SimpleMath::Vector3* targetCameraOut
+    DirectX::SimpleMath::Vector3* /*targetCameraOut*/
 )
 {
     HEIN::PlayerSpawnData spawnData;
@@ -269,7 +269,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
     ActorManager& actorManager,
     GameContext& gameContext, 
     HEIN::ActorID wielderID,
-    int damage
+    float damage
 )
 {
     HEIN::Actor* sword = actorManager.CreateActor(L"Sword");
@@ -325,7 +325,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
     return sword->GetID();
 }
 
-HEIN::ActorID HEIN::ActorFactory::CreateAxe(ActorManager& actorManager, GameContext& gameContext, HEIN::ActorID wielderID, int damage)
+HEIN::ActorID HEIN::ActorFactory::CreateAxe(ActorManager& actorManager, GameContext& gameContext, HEIN::ActorID wielderID, float damage)
 {
     HEIN::Actor* axe = actorManager.CreateActor(L"Axe");
     axe->SetOwnerID(wielderID);
@@ -404,7 +404,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
 
     // FLOOR CHILD 
     HEIN::Actor* floorActor = actorManager.CreateActor(L"Floor");
-    HEIN::TransformComponent* floorTran = floorActor->AddComponent<HEIN::TransformComponent>();
+    floorActor->AddComponent<HEIN::TransformComponent>();
 
     HEIN::StaticModelComponent* floorModel = floorActor->AddComponent<HEIN::StaticModelComponent>();
     floorModel->Initialize(gameContext, L"Resources/Models/stage/tile1.sdkmesh", L"Resources/Models/stage");
@@ -740,7 +740,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateMainCamera(ActorManager& actorManager)
 {
     HEIN::Actor* cameraActor = actorManager.CreateActor(L"MainCamera");
 
-    HEIN::CameraController* cameraComp = cameraActor->AddComponent<HEIN::CameraController>();
+    cameraActor->AddComponent<HEIN::CameraController>();
 
     cameraActor->Start();
     return cameraActor->GetID();

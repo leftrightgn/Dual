@@ -31,10 +31,15 @@ namespace HEIN
 		void LinkTo(CapsuleColliderComponent* capsule);
 
 		void Start() override;
-		void Update(float deltaTime) override {}
+		void Update(float /*deltaTime*/) override {}
 		void LateUpdate(float deltaTime) override;
 
-		void Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj) override {}
+		void Draw(
+			GameContext& /*gameContext*/, 
+			const DirectX::SimpleMath::Matrix& /*world*/, 
+			const DirectX::SimpleMath::Matrix& /*view*/, 
+			const DirectX::SimpleMath::Matrix& /*proj*/
+		) override {}
 	};
 }
 

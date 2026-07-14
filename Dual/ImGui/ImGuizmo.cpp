@@ -1338,7 +1338,7 @@ namespace IMGUIZMO_NAMESPACE
          const bool usingAxis = (gContext.mbUsing && type == MT_ROTATE_Z - axis);
          const int circleMul = (hasRSC && !usingAxis) ? 1 : 2;
 
-         ImVec2* circlePos = (ImVec2*)alloca(sizeof(ImVec2) * (circleMul * halfCircleSegmentCount + 1));
+         ImVec2* circlePos = (ImVec2*)alloca(sizeof(ImVec2) * (static_cast<unsigned long long>(circleMul) * halfCircleSegmentCount + 1));
          const bool rightHanded = gContext.mProjectionMat.m[2][3] < 0.f;
          float angleStart = atan2f(viewDirNormalized[(4 - axis) % 3], viewDirNormalized[(3 - axis) % 3]) + (gContext.mIsOrthographic ? ZPI : -ZPI) * 0.5f + (rightHanded ? 0.f : ZPI);
 

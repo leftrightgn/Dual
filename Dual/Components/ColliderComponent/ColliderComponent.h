@@ -57,7 +57,7 @@ namespace HEIN
 		virtual ~ColliderComponent() = default;
 
 		void Start() override;
-		void Update(float deltaTime) override {}
+		void Update(float /*deltaTime*/) override {}
 
 		virtual void SyncColliderState() = 0;
 

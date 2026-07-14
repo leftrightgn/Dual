@@ -23,13 +23,13 @@ namespace HEIN
 		void Initialize(HEIN::ActorID targetActorID, const std::wstring& socketName);
 
 		void Start() override {}
-		void Update(float deltaTime) override {}
+		void Update(float /*deltaTime*/) override {}
 		void LateUpdate(float deltaTime) override;
 		void Draw(
-			GameContext& gameContext,
-			const DirectX::SimpleMath::Matrix& world,
-			const DirectX::SimpleMath::Matrix& view,
-			const DirectX::SimpleMath::Matrix& proj
+			GameContext& /*gameContext*/,
+			const DirectX::SimpleMath::Matrix& /*world*/,
+			const DirectX::SimpleMath::Matrix& /*view*/,
+			const DirectX::SimpleMath::Matrix& /*proj*/
 			) override {}
 
 	};

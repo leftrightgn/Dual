@@ -25,7 +25,7 @@ namespace HEIN
 
 		void Initialize(float radius, float height);
 
-		void Update(float deltaTime) override {}
+		void Update(float /*deltaTime*/) override {}
 
 		void SyncColliderState() override;
 

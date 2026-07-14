@@ -52,13 +52,13 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_playerID = playerData.playerID;
 
     // Build Sword
-    m_playerSwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID, 5);
+    m_playerSwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID, 5.0f);
 
     // Build Enemy
     HEIN::EnemySpawnData enemyData = HEIN::ActorFactory::CreateEnemy(m_actorManager, gameContext, m_playerID);
     m_enemyID = enemyData.enemyID;
    
-    m_enemySwordID = HEIN::ActorFactory::CreateAxe(m_actorManager, gameContext, m_enemyID, 20);
+    m_enemySwordID = HEIN::ActorFactory::CreateAxe(m_actorManager, gameContext, m_enemyID, 20.0f);
 
     // Build Stage
     m_stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
