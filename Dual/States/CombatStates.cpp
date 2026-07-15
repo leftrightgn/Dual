@@ -179,6 +179,7 @@ void HEIN::DodgeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateM
 	if (blackboard)
 	{
 		blackboard->currentStance = CombatStance::Dodging;
+		blackboard->dodgeCooldownTimer = blackboard->maxDodgeCooldown;
 		if (blackboard->moveIntent.LengthSquared() > 0.01f)
 		{
 			m_lockedDirection = blackboard->moveIntent;

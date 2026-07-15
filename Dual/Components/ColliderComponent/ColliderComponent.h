@@ -10,7 +10,8 @@ namespace HEIN
 		Sphere,
 		AABB,
 		OBB,
-		Capsule
+		Capsule,
+		Mesh
 	};
 
 	// Collision Filtering Layers(using BitWise Shifts)

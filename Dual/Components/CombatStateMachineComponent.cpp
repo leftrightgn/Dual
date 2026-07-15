@@ -48,6 +48,15 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 				}
 			}
 		}
+
+		if (blackboard->dodgeCooldownTimer > 0.0f)
+		{
+			blackboard->dodgeCooldownTimer -= deltaTime;
+			if (blackboard->dodgeCooldownTimer < 0.0f)
+			{
+				blackboard->dodgeCooldownTimer = 0.0f;
+			}
+		}
 	}
 }
 
@@ -100,6 +109,15 @@ void HEIN::CombatStateMachineComponent::OnMessageAccepted(Message::MessageID mes
 		messageID == Message::PLAYER_STOP_BLOCK ||
 		messageID == Message::PLAYER_ACTION_DODGE)
 	{
+		if (messageID == Message::PLAYER_ACTION_DODGE)
+		{
+			HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
+			if (blackboard && blackboard->dodgeCooldownTimer > 0.0f)
+			{
+				return;
+			}
+		}
+
 		m_messageBuffer.clear();
 
 		m_messageBuffer.push_back(messageID);

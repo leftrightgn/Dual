@@ -196,6 +196,7 @@
     <ClInclude Include="Common\Event.h" />
     <ClInclude Include="Common\PhysicsSystem.h" />
     <ClInclude Include="Components\BehaviourTreeComponent.h" />
+    <ClInclude Include="Components\ColliderComponent\MeshColliderComponent.h" />
     <ClInclude Include="Components\ColliderComponent\SphereColliderComponent.h" />
     <ClInclude Include="Common\EventManager.h" />
     <ClInclude Include="Components\DamageDealerComponent.h" />
@@ -285,6 +286,7 @@
     <ClCompile Include="Common\DamageSystem.cpp" />
     <ClCompile Include="Common\PhysicsSystem.cpp" />
     <ClCompile Include="Components\BehaviourTreeComponent.cpp" />
+    <ClCompile Include="Components\ColliderComponent\MeshColliderComponent.cpp" />
     <ClCompile Include="Components\ColliderComponent\SphereColliderComponent.cpp" />
     <ClCompile Include="Common\EventManager.cpp" />
     <ClCompile Include="Components\DamageDealerComponent.cpp" />

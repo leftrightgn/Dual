@@ -212,6 +212,9 @@
     <ClCompile Include="ImGui\ImGuizmo.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="Components\ColliderComponent\MeshColliderComponent.cpp">
+      <Filter>Components\ColliderComponent</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -462,6 +465,9 @@
       <Filter>ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Debug\IGizmoEditable.h" />
+    <ClInclude Include="Components\ColliderComponent\MeshColliderComponent.h">
+      <Filter>Components\ColliderComponent</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
