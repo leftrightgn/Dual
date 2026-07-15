@@ -5,6 +5,7 @@
 #include "Components/ColliderComponent/OBBColliderComponent.h"
 #include "Components/ColliderComponent/CapsuleColliderComponent.h"
 #include "Components/ColliderComponent/AABBColliderComponent.h"
+#include <Components/ColliderComponent/MeshColliderComponent.h>
 
 HEIN::CollisionManifold HEIN::CollisionDispatcher::CheckCollision(HEIN::ColliderComponent* colA, HEIN::ColliderComponent* colB)
 {
@@ -65,6 +66,13 @@ HEIN::CollisionManifold HEIN::CollisionDispatcher::CheckCollision(HEIN::Collider
         resultManifold.normal = resultManifold.normal * -1.0f;
 
         return resultManifold;
+    }
+    else if (shapeA == HEIN::ColliderShape::Capsule && shapeB == HEIN::ColliderShape::Mesh)
+    {
+        HEIN::CapsuleColliderComponent* capsuleA = dynamic_cast<HEIN::CapsuleColliderComponent*>(colA);
+        HEIN::MeshColliderComponent* meshB = dynamic_cast<HEIN::MeshColliderComponent*>(colB);
+
+        return HEIN::CollisionMath::CheckCapsuleVsMesh(capsuleA, meshB);
     }
 
     return resultManifold;

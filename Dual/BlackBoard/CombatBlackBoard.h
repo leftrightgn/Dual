@@ -52,6 +52,10 @@ namespace HEIN
 		bool isBlockBroken = false;
 		float blockCooldownTimer = 0.0f;
 
+		// Dodge Stats
+		float dodgeCooldownTimer = 0.0f;
+		float maxDodgeCooldown = 5.0f;
+
 		CombatBlackBoard(Actor* owner)
 			: IComponent(owner)
 		{

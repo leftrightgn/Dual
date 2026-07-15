@@ -29,6 +29,7 @@
 #include <States/CombatStates.h>
 #include <BehaviourTree/BTAttackNode.h>
 #include <utility>
+#include <Components/ColliderComponent/MeshColliderComponent.h>
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ActorManager& actorManager,
@@ -404,10 +405,12 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
 
     // FLOOR CHILD 
     HEIN::Actor* floorActor = actorManager.CreateActor(L"Floor");
-    floorActor->AddComponent<HEIN::TransformComponent>();
+            floorActor->AddComponent<HEIN::TransformComponent>();
 
     HEIN::StaticModelComponent* floorModel = floorActor->AddComponent<HEIN::StaticModelComponent>();
     floorModel->Initialize(gameContext, L"Resources/Models/stage/tile1.sdkmesh", L"Resources/Models/stage");
+    HEIN::MeshColliderComponent* floorPhysics = floorActor->AddComponent<HEIN::MeshColliderComponent>();
+    floorPhysics->LoadFromObj(L"Resources/Models/stage/stage_collision.obj");
 
     HEIN::AABBColliderComponent* floorCol = floorActor->AddComponent<HEIN::AABBColliderComponent>();
     floorCol->InitializeFromModel(floorModel);

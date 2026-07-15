@@ -295,6 +295,23 @@ void GameScene::Render(GameContext& gameContext)
                 ImGui::Text("Block Stamina");
                 ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
             }
+
+            ImGui::Separator();
+
+            if (pBB->dodgeCooldownTimer > 0.0f)
+            {
+                ImGui::Text("Dodge Recharging...");
+                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+                ImGui::ProgressBar(1.0f - (pBB->dodgeCooldownTimer / pBB->maxDodgeCooldown), ImVec2(200.0f, 20.0f), "");
+                ImGui::PopStyleColor();
+            }
+            else
+            {
+                ImGui::Text("Dodge Ready");
+                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 0.8f, 1.0f, 1.0f));
+                ImGui::ProgressBar(1.0f, ImVec2(200.0f, 20.0f), "");
+                ImGui::PopStyleColor();
+            }
         }
     }
     else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "PLAYER DEAD");

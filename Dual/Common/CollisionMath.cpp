@@ -4,6 +4,7 @@
 #include <Components/ColliderComponent/ColliderComponent.h>
 #include <Components/ColliderComponent/CapsuleColliderComponent.h>
 #include <Components/ColliderComponent/OBBColliderComponent.h>
+#include <Components/ColliderComponent/MeshColliderComponent.h>
 
 HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsOBB(HEIN::CapsuleColliderComponent* capsule, HEIN::OBBColliderComponent* obb)
 {
@@ -277,5 +278,103 @@ HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsCapsule(HEIN::Capsule
     }
 
     return manifold;
+
+}
+
+HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsMesh(
+    HEIN::CapsuleColliderComponent* capsule, 
+    HEIN::MeshColliderComponent* mesh
+)
+{
+    HEIN::CollisionManifold manifold;
+    manifold.isColliding = false;
+
+    if (capsule == nullptr || mesh == nullptr) return manifold;
+
+    // Capsule Height
+    DirectX::SimpleMath::Vector3 top = capsule->GetWorldTopCenter();
+    DirectX::SimpleMath::Vector3 bottom = capsule->GetWorldBottomCenter();
+    float radius = capsule->GetRadius();
+
+    float capsuleHeight = DirectX::SimpleMath::Vector3::Distance(top, bottom) + (radius * 2.0f);
+
+    // Shot a Ray
+    DirectX::SimpleMath::Vector3 rayOrigin = top;
+    DirectX::SimpleMath::Vector3 rayDir(0.0f, -1.0f, 0.0f);
+
+    float maxCheckDistance = capsuleHeight + 0.5f;
+
+    float closestHitDistance = FLT_MAX;
+    DirectX::SimpleMath::Vector3 bestNormal;
+    bool hitSomething = false;
+    
+    const std::vector<Triangle>& triangles = mesh->GetWorldTriangles();
+
+    for (const Triangle& tri : triangles)
+    {
+        float hitDistance = 0.0f;
+        DirectX::SimpleMath::Vector3 hitNormal;
+        if (IntersectRayTriangle(rayOrigin, rayDir, tri, hitDistance, hitNormal))
+        {
+            if (hitDistance <= maxCheckDistance && hitDistance < closestHitDistance)
+            {
+                closestHitDistance = hitDistance;
+                bestNormal = hitNormal;
+                hitSomething = true;
+            }
+        }
+    }
+
+    if (hitSomething)
+    {
+        DirectX::SimpleMath::Vector3 hitPoint = rayOrigin + (rayDir * closestHitDistance);
+
+        float playerFeetY = bottom.y - radius;
+
+        if (playerFeetY < hitPoint.y + 0.01f)
+        {
+            manifold.isColliding = true;
+            manifold.normal = bestNormal;
+            manifold.penetrationDepth = hitPoint.y - playerFeetY;
+        }
+    }
+
+    return manifold;
+}
+
+bool HEIN::CollisionMath::IntersectRayTriangle(
+    const DirectX::SimpleMath::Vector3& rayOrigin, 
+    const DirectX::SimpleMath::Vector3& rayDir, 
+    const Triangle& triangle, 
+    float& outDistance, 
+    DirectX::SimpleMath::Vector3& outNormal
+)
+{
+    DirectX::SimpleMath::Vector3 edge1 = triangle.v1 - triangle.v0;
+    DirectX::SimpleMath::Vector3 edge2 = triangle.v2 - triangle.v1;
+    DirectX::SimpleMath::Vector3 h = rayDir.Cross(edge2);
+
+    float a = edge1.Dot(h);
+    if (a > -0.0001f && a < 0.0001f) return false; // Ray is Parallel To Triangle
+
+    float f = 1.0f / a;
+    DirectX::SimpleMath::Vector3 s = rayOrigin - triangle.v0;
+    float u = f * s.Dot(h);
+    if (u < 0.0f || u > 1.0f) return false;
+
+    DirectX::SimpleMath::Vector3 q = s.Cross(edge1);
+    float v = f * rayDir.Dot(q); 
+    if (v < 0.0f || u + v > 1.0f) return false;
+
+    float t = f * edge2.Dot(q);
+    if (t > 0.0001f)
+    {
+        outDistance = t;
+        outNormal = edge1.Cross(edge2);
+        outNormal.Normalize();
+
+        return true;
+    }
+    return false;
 
 }
