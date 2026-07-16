@@ -2,6 +2,7 @@
 #include "ColliderComponent.h"
 #include <Common/CollisionMath.h>
 #include <vector> 
+#include <VertexTypes.h>
 
 namespace HEIN
 {
@@ -11,6 +12,9 @@ namespace HEIN
 
 		std::vector<Triangle> m_localTriangles;
 		std::vector<Triangle> m_worldTriangles;
+
+		std::vector<DirectX::VertexPosition> m_debugVertices;
+		std::vector<uint16_t> m_debugIndices;
 
 	public:
 
@@ -27,7 +31,7 @@ namespace HEIN
 			const DirectX::SimpleMath::Matrix& world,
 			const DirectX::SimpleMath::Matrix& view,
 			const DirectX::SimpleMath::Matrix& proj
-		) override {}
+		) override;
 
 		const std::vector<Triangle>& GetWorldTriangles() const{ return m_worldTriangles; }
 	};
