@@ -281,61 +281,98 @@ HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsCapsule(HEIN::Capsule
 
 }
 
-HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsMesh(
-    HEIN::CapsuleColliderComponent* capsule, 
-    HEIN::MeshColliderComponent* mesh
-)
+HEIN::CollisionManifold HEIN::CollisionMath::CheckCapsuleVsMesh(HEIN::CapsuleColliderComponent* capsule, HEIN::MeshColliderComponent* mesh)
 {
     HEIN::CollisionManifold manifold;
     manifold.isColliding = false;
 
-    if (capsule == nullptr || mesh == nullptr) return manifold;
+    if (!capsule || !mesh) return manifold;
 
-    // Capsule Height
     DirectX::SimpleMath::Vector3 top = capsule->GetWorldTopCenter();
     DirectX::SimpleMath::Vector3 bottom = capsule->GetWorldBottomCenter();
     float radius = capsule->GetRadius();
 
+    //  Calculate the exact total height of the player
     float capsuleHeight = DirectX::SimpleMath::Vector3::Distance(top, bottom) + (radius * 2.0f);
 
-    // Shot a Ray
-    DirectX::SimpleMath::Vector3 rayOrigin = top;
-    DirectX::SimpleMath::Vector3 rayDir(0.0f, -1.0f, 0.0f);
+    // Define the Ray-Ring (1 Center, 4 Compass Points)
+    // shrink the ring slightly (radius * 0.7f) so the rays don't accidentally catch on vertical walls.
+    float ringOffset = radius * 0.7f;
+    DirectX::SimpleMath::Vector3 rayOrigins[5] = {
+        top,                                                              // Center
+        top + DirectX::SimpleMath::Vector3(ringOffset, 0.0f, 0.0f),       // Right (+X)
+        top + DirectX::SimpleMath::Vector3(-ringOffset, 0.0f, 0.0f),      // Left  (-X)
+        top + DirectX::SimpleMath::Vector3(0.0f, 0.0f, ringOffset),       // Front (+Z)
+        top + DirectX::SimpleMath::Vector3(0.0f, 0.0f, -ringOffset)       // Back  (-Z)
+    };
 
+    DirectX::SimpleMath::Vector3 rayDir(0.0f, -1.0f, 0.0f); // Pointing straight down
     float maxCheckDistance = capsuleHeight + 0.5f;
 
-    float closestHitDistance = FLT_MAX;
-    DirectX::SimpleMath::Vector3 bestNormal;
-    bool hitSomething = false;
-    
+    // Variables to accumulate our smooth ring data
+    int validHits = 0;
+    DirectX::SimpleMath::Vector3 accumulatedNormal = DirectX::SimpleMath::Vector3::Zero;
+    float highestHitY = -FLT_MAX;
+
     const std::vector<Triangle>& triangles = mesh->GetWorldTriangles();
 
-    for (const Triangle& tri : triangles)
+    // Fire all 5 Rays
+    for (int i = 0; i < 5; ++i)
     {
-        float hitDistance = 0.0f;
-        DirectX::SimpleMath::Vector3 hitNormal;
-        if (IntersectRayTriangle(rayOrigin, rayDir, tri, hitDistance, hitNormal))
+        float closestHitDistance = FLT_MAX;
+        DirectX::SimpleMath::Vector3 bestNormal;
+        bool hitSomethingForThisRay = false;
+
+        // Loop through triangles for this specific ray
+        for (const Triangle& tri : triangles)
         {
-            if (hitDistance <= maxCheckDistance && hitDistance < closestHitDistance)
+            float hitDistance = 0.0f;
+            DirectX::SimpleMath::Vector3 hitNormal;
+
+            if (IntersectRayTriangle(rayOrigins[i], rayDir, tri, hitDistance, hitNormal))
             {
-                closestHitDistance = hitDistance;
-                bestNormal = hitNormal;
-                hitSomething = true;
+                if (hitDistance <= maxCheckDistance && hitDistance < closestHitDistance)
+                {
+                    closestHitDistance = hitDistance;
+                    bestNormal = hitNormal;
+                    hitSomethingForThisRay = true;
+                }
+            }
+        }
+
+        // If this specific ray hit the floor, add its data to our averages!
+        if (hitSomethingForThisRay)
+        {
+            validHits++;
+            accumulatedNormal += bestNormal;
+
+            // Calculate the exact Y position of this hit
+            float hitY = rayOrigins[i].y - closestHitDistance;
+
+            // We want the HIGHEST hit point to prevent the player's toes from clipping into slopes
+            if (hitY > highestHitY)
+            {
+                highestHitY = hitY;
             }
         }
     }
 
-    if (hitSomething)
+    // Final Resolution (If at least one ray hit the floor)
+    if (validHits > 0)
     {
-        DirectX::SimpleMath::Vector3 hitPoint = rayOrigin + (rayDir * closestHitDistance);
+        // Average the accumulated normals and normalize the result to get a perfectly smooth slope vector
+        accumulatedNormal /= static_cast<float>(validHits);
+        accumulatedNormal.Normalize();
 
+        // Find the absolute lowest pixel of the player's feet
         float playerFeetY = bottom.y - radius;
 
-        if (playerFeetY < hitPoint.y + 0.01f)
+        // If the HIGHEST floor point we hit is higher than the player's feet, push the player UP!
+        if (playerFeetY < highestHitY + 0.01f)
         {
             manifold.isColliding = true;
-            manifold.normal = bestNormal;
-            manifold.penetrationDepth = hitPoint.y - playerFeetY;
+            manifold.normal = accumulatedNormal; // Smooth blended normal!
+            manifold.penetrationDepth = highestHitY - playerFeetY;
         }
     }
 
@@ -351,7 +388,7 @@ bool HEIN::CollisionMath::IntersectRayTriangle(
 )
 {
     DirectX::SimpleMath::Vector3 edge1 = triangle.v1 - triangle.v0;
-    DirectX::SimpleMath::Vector3 edge2 = triangle.v2 - triangle.v1;
+    DirectX::SimpleMath::Vector3 edge2 = triangle.v2 - triangle.v0;
     DirectX::SimpleMath::Vector3 h = rayDir.Cross(edge2);
 
     float a = edge1.Dot(h);
