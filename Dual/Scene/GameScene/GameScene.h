@@ -4,24 +4,23 @@
 //--------------------------------------------------------------------------------------
 #pragma once
 #include "pch.h"
-#include "ImaseLib/SceneManager.h"
+#include <Scene/IScene.h>
 #include "Framework/GameContext.h"
-#include "../SceneId.h"
 #include "Effect/Water.h"
 #include "Effect/Skybox.h"
 #include "ImaseLib/DebugCamera.h"
 #include "Camera/CameraController.h"
-#include "Debug/DebugDisplayController.h"
+#include "DebugingTools/DebugDisplayController.h"
 #include "Common/PhysicsSystem.h"
 #include "Entities/ActorManager.h"
 #include <Common/DamageSystem.h>
 
-class GameScene : public Imase::SceneBase<SceneId, GameContext>
+class GameScene : public HEIN::IScene
 {
 public:
 
 	// çXêV
-	void Update(Imase::ISceneController<SceneId>& sceneController, GameContext& gameContext) override;
+	void Update(GameContext& gameContext) override;
 
 	// ï`âÊ
 	void Render(GameContext& gameContext) override;

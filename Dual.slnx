@@ -4,5 +4,6 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="Dual/Dual.vcxproj" Id="e1243215-95a8-4f22-a58e-ff701ff23f78" />
+  <Project Path="HEIN_Engine/HEIN_Engine.vcxproj" Id="7b25aeb1-3c1e-45a1-910f-7e1184e03743" />
   <Project Path="ResourceBuild/ResourceBuild.vcxproj" Id="2165b15f-a117-4bd7-87b7-89e9cb2f92b2" />
 </Solution>

@@ -3,7 +3,7 @@
 #include "Components/TransformComponent.h"
 #include "BlackBoard/CombatBlackBoard.h"
 #include "Entities/Actor.h"
-#include "RigidBodyComponent.h"
+#include <Components/RigidBodyComponent.h>
 
 
 HEIN::CharacterMovementComponent::CharacterMovementComponent(Actor* owner)
