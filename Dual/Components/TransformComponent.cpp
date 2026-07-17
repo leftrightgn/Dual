@@ -2,7 +2,7 @@
 #include "TransformComponent.h"
 //#include <ImGui/imgui.h>
 //#include <ImGui/ImGuizmo.h>
-#include <Debug/DebugUIManager.h>
+#include <DebugingTools/DebugUIManager.h>
 
 HEIN::TransformComponent::TransformComponent(Actor* owner)
     : IComponent(owner)

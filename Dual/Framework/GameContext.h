@@ -10,8 +10,8 @@
 
 #include "Common/StepTimer.h"
 #include "Common/DeviceResources.h"
-#include "Debug/DebugRenderer.h"
-#include "Debug/DebugCollisionRenderer.h"
+#include "DebugingTools/DebugRenderer.h"
+#include "DebugingTools/DebugCollisionRenderer.h"
 #include "Common/EventManager.h"
 
 namespace HEIN { 

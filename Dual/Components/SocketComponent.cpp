@@ -3,7 +3,7 @@
 #include "Components/SkinnedModelComponent.h"
 #include "Components/TransformComponent.h"
 #include "Entities/Actor.h"
-#include <Debug/DebugUIManager.h>
+#include <DebugingTools/DebugUIManager.h>
 
 HEIN::SocketComponent::SocketComponent(Actor* owner)
     : IComponent(owner)

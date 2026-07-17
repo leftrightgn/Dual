@@ -1,6 +1,6 @@
 #pragma once
 #include "IComponent.h"
-#include <Debug/IGizmoEditable.h>
+#include <DebugingTools/IGizmoEditable.h>
 
 namespace HEIN
 {

@@ -11,9 +11,9 @@
 #include <optional>
 
 #include "ImaseLib/SceneManager.h"
-#include "Debug/DebugRenderer.h"
+#include "DebugingTools/DebugRenderer.h"
 #include "Common/InputManager.h"
-#include "Debug/DebugCollisionRenderer.h"
+#include "DebugingTools/DebugCollisionRenderer.h"
 #include "Common/EventManager.h"
 #include "GameContext.h"
 #include "Scene/SceneId.h"

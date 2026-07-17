@@ -197,17 +197,17 @@
     <ClCompile Include="BehaviourTree\BTDodgeNode.cpp">
       <Filter>BehaviourTree</Filter>
     </ClCompile>
-    <ClCompile Include="Debug\DebugCollisionRenderer.cpp">
-      <Filter>Debug</Filter>
+    <ClCompile Include="DebugingTools\DebugCollisionRenderer.cpp">
+      <Filter>DebugingTools</Filter>
     </ClCompile>
-    <ClCompile Include="Debug\DebugDisplayController.cpp">
-      <Filter>Debug</Filter>
+    <ClCompile Include="DebugingTools\DebugDisplayController.cpp">
+      <Filter>DebugingTools</Filter>
     </ClCompile>
-    <ClCompile Include="Debug\DebugRenderer.cpp">
-      <Filter>Debug</Filter>
+    <ClCompile Include="DebugingTools\DebugRenderer.cpp">
+      <Filter>DebugingTools</Filter>
     </ClCompile>
-    <ClCompile Include="Debug\DebugUIManager.cpp">
-      <Filter>Debug</Filter>
+    <ClCompile Include="DebugingTools\DebugUIManager.cpp">
+      <Filter>DebugingTools</Filter>
     </ClCompile>
     <ClCompile Include="ImGui\ImGuizmo.cpp">
       <Filter>ImGui</Filter>
@@ -449,22 +449,22 @@
     <ClInclude Include="BehaviourTree\BTDodgeNode.h">
       <Filter>BehaviourTree</Filter>
     </ClInclude>
-    <ClInclude Include="Debug\DebugCollisionRenderer.h">
-      <Filter>Debug</Filter>
+    <ClInclude Include="DebugingTools\DebugCollisionRenderer.h">
+      <Filter>DebugingTools</Filter>
     </ClInclude>
-    <ClInclude Include="Debug\DebugDisplayController.h">
-      <Filter>Debug</Filter>
+    <ClInclude Include="DebugingTools\DebugDisplayController.h">
+      <Filter>DebugingTools</Filter>
     </ClInclude>
-    <ClInclude Include="Debug\DebugRenderer.h">
-      <Filter>Debug</Filter>
+    <ClInclude Include="DebugingTools\DebugRenderer.h">
+      <Filter>DebugingTools</Filter>
     </ClInclude>
-    <ClInclude Include="Debug\DebugUIManager.h">
-      <Filter>Debug</Filter>
+    <ClInclude Include="DebugingTools\DebugUIManager.h">
+      <Filter>DebugingTools</Filter>
     </ClInclude>
     <ClInclude Include="ImGui\ImGuizmo.h">
       <Filter>ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="Debug\IGizmoEditable.h" />
+    <ClInclude Include="DebugingTools\IGizmoEditable.h" />
     <ClInclude Include="Components\ColliderComponent\MeshColliderComponent.h">
       <Filter>Components\ColliderComponent</Filter>
     </ClInclude>
@@ -539,7 +539,7 @@
     <Filter Include="Message">
       <UniqueIdentifier>{f9235b91-6e95-4153-a32e-1c6878d4dd28}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Debug">
+    <Filter Include="DebugingTools">
       <UniqueIdentifier>{15e6802d-4ad2-49b9-88b5-97ebd7096072}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
