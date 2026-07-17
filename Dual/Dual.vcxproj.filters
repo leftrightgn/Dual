@@ -17,9 +17,6 @@
     <ClCompile Include="ImaseLib\GridFloor.cpp">
       <Filter>ImaseLib</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\BaseScene\BaseScene.cpp">
-      <Filter>Scene\BaseScene</Filter>
-    </ClCompile>
     <ClCompile Include="Scene\GameScene\GameScene.cpp">
       <Filter>Scene\GameScene</Filter>
     </ClCompile>
@@ -215,6 +212,7 @@
     <ClCompile Include="Components\ColliderComponent\MeshColliderComponent.cpp">
       <Filter>Components\ColliderComponent</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\SceneManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -232,15 +230,6 @@
     </ClInclude>
     <ClInclude Include="ImaseLib\GridFloor.h">
       <Filter>ImaseLib</Filter>
-    </ClInclude>
-    <ClInclude Include="ImaseLib\SceneManager.h">
-      <Filter>ImaseLib</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\SceneId.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\BaseScene\BaseScene.h">
-      <Filter>Scene\BaseScene</Filter>
     </ClInclude>
     <ClInclude Include="Scene\GameScene\GameScene.h">
       <Filter>Scene\GameScene</Filter>
@@ -464,10 +453,14 @@
     <ClInclude Include="ImGui\ImGuizmo.h">
       <Filter>ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="DebugingTools\IGizmoEditable.h" />
     <ClInclude Include="Components\ColliderComponent\MeshColliderComponent.h">
       <Filter>Components\ColliderComponent</Filter>
     </ClInclude>
+    <ClInclude Include="DebugingTools\IGizmoEditable.h">
+      <Filter>DebugingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\IScene.h" />
+    <ClInclude Include="Scene\SceneManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

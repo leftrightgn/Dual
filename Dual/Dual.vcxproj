@@ -245,9 +245,6 @@
     <ClInclude Include="Framework\GameContext.h" />
     <ClInclude Include="ImaseLib\DebugCamera.h" />
     <ClInclude Include="ImaseLib\GridFloor.h" />
-    <ClInclude Include="ImaseLib\SceneManager.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="ImGui\imconfig.h" />
     <ClInclude Include="ImGui\imgui.h" />
     <ClInclude Include="ImGui\ImGuizmo.h" />
@@ -262,12 +259,12 @@
     <ClInclude Include="Message\Messenger.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Components\RigidBodyComponent.h" />
-    <ClInclude Include="Scene\BaseScene\BaseScene.h" />
     <ClInclude Include="Scene\GameScene\GameScene.h" />
-    <ClInclude Include="Scene\SceneId.h" />
+    <ClInclude Include="Scene\IScene.h" />
     <ClInclude Include="Components\SkinnedModelComponent.h" />
     <ClInclude Include="Effect\Skybox.h" />
     <ClInclude Include="Components\SocketAttachmentComponent.h" />
+    <ClInclude Include="Scene\SceneManager.h" />
     <ClInclude Include="States\CombatStates.h" />
     <ClInclude Include="States\ICombatState.h" />
   </ItemGroup>
@@ -360,11 +357,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Components\RigidBodyComponent.cpp" />
-    <ClCompile Include="Scene\BaseScene\BaseScene.cpp" />
     <ClCompile Include="Scene\GameScene\GameScene.cpp" />
     <ClCompile Include="Components\SkinnedModelComponent.cpp" />
     <ClCompile Include="Effect\Skybox.cpp" />
     <ClCompile Include="Components\SocketAttachmentComponent.cpp" />
+    <ClCompile Include="Scene\SceneManager.cpp" />
     <ClCompile Include="States\CombatStates.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -9,14 +9,12 @@
 
 #include <memory>
 #include <optional>
-
-#include "ImaseLib/SceneManager.h"
+#include <Scene/SceneManager.h>
 #include "DebugingTools/DebugRenderer.h"
 #include "Common/InputManager.h"
 #include "DebugingTools/DebugCollisionRenderer.h"
 #include "Common/EventManager.h"
 #include "GameContext.h"
-#include "Scene/SceneId.h"
 
 
 // A basic game implementation that creates a D3D11 device and
@@ -56,6 +54,23 @@ public:
     // Properties
     void GetDefaultSize( int& width, int& height ) const noexcept;
 
+    template <class TScene>
+    void RegisterScene(const std::string& name)
+    {
+        m_sceneManager.RegisterScene<TScene>(name);
+    }
+
+    // Default to Single mode if the user doesn't specify
+    void LoadScene(const std::string& name, HEIN::LoadSceneMode mode = HEIN::LoadSceneMode::Single)
+    {
+        m_sceneManager.LoadScene(name, mode);
+    }
+
+    void UnloadScene(const std::string& name)
+    {
+        m_sceneManager.UnloadScene(name);
+    }
+
 private:
 
     void Update(DX::StepTimer const& timer);
@@ -89,7 +104,7 @@ private:
     std::optional<GameContext> m_gameContext;
 
     // シーンマネージャー
-    Imase::SceneManager<SceneId, GameContext> m_sceneManager;
+    HEIN::SceneManager m_sceneManager;
 
     HEIN::InputManager m_inputManager;
     HEIN::DebugRenderer m_debugRenderer;

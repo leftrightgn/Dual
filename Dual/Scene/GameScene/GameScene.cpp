@@ -149,7 +149,7 @@ void GameScene::OnEnter(GameContext& gameContext)
 // --------------------------------------------------------------------------------------
 // 更新 (Update)
 // --------------------------------------------------------------------------------------
-void GameScene::Update(Imase::ISceneController<SceneId>& /*sceneController*/, GameContext& gameContext)
+void GameScene::Update(GameContext& gameContext)
 {
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 

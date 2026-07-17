@@ -4,8 +4,6 @@
 
 #include "pch.h"
 #include "Game.h"
-#include "Scene/SceneId.h"
-#include "Scene/BaseScene/BaseScene.h"
 #include "Scene/GameScene/GameScene.h"
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_win32.h"
@@ -57,9 +55,6 @@ void Game::Initialize(HWND window, int width, int height)
     m_timer.SetTargetElapsedSeconds(1.0 / 60);
     */
 
-    // シーンの登録
-    m_sceneManager.RegisterScene<BaseScene>(SceneId::BaseScene);
-    m_sceneManager.RegisterScene<GameScene>(SceneId::GameScene);
    
 
     // ゲームコンテキストの設定
@@ -76,8 +71,7 @@ void Game::Initialize(HWND window, int width, int height)
     m_gameContext->debugCollisionRenderer = &m_debugCollisionRenderer;
     m_gameContext->eventManager = &m_eventManager;
 
-    // 起動シーンの設定
-    m_sceneManager.SetFirstScene(SceneId::GameScene, *m_gameContext);
+
 
     // --- SETUP IMGUI ---
     IMGUI_CHECKVERSION();
@@ -273,13 +267,12 @@ void Game::CreateWindowSizeDependentResources()
     {
         return;
     }
-    m_sceneManager.OnWindowSizeChanged(*m_gameContext);
 }
 
 void Game::OnDeviceLost()
 {
     // TODO: Add Direct3D resource cleanup here.
-    m_sceneManager.OnDeviceLost(*m_gameContext);
+   
 }
 
 void Game::OnDeviceRestored()
@@ -288,6 +281,5 @@ void Game::OnDeviceRestored()
 
     CreateWindowSizeDependentResources();
 
-    m_sceneManager.OnDeviceRestored(*m_gameContext);
 }
 #pragma endregion
