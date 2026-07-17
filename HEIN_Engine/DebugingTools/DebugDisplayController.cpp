@@ -5,7 +5,6 @@
 #include <Camera/DebugCameraMode.h>
 #include <Camera/CameraController.h>
 #include "Effect/Skybox.h"
-#include <Factory/ActorFactory.h>
 #include <Entities/Actor.h>
 
 
@@ -19,9 +18,11 @@ namespace HEIN
 
 	void DebugDisplayController::Initialize()
 	{
-		m_debugCameraID = HEIN::ActorFactory::CreateMainCamera(m_actorManager);
-        HEIN::Actor* cameraActor = m_actorManager.GetActor(m_debugCameraID);
-        HEIN::CameraController* cameraComp = cameraActor->GetComponent<HEIN::CameraController>();
+        HEIN::Actor* cameraActor = m_actorManager.CreateActor(L"MainCamera");
+        m_debugCameraID = cameraActor->GetID();
+        HEIN::CameraController* cameraComp = cameraActor->AddComponent<HEIN::CameraController>();
+        cameraActor->Start();
+
         cameraComp->RegisterCamera(
             HEIN::CameraType::Debug,
             []()

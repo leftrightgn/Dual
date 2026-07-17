@@ -7,7 +7,7 @@
 #include "Entities/Actor.h"
 #include <Mouse.h>
 #include "Framework/GameContext.h"
-#include "IComponent.h"
+#include <Components/IComponent.h>
 #include <Message/Messenger.h>
 #include <Components/CombatStateMachineComponent.h>
 

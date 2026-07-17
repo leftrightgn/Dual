@@ -1,5 +1,5 @@
 #pragma once
-#include "ICameraMode.h"
+#include <Camera/ICameraMode.h>
 #include <Entities/Actor.h>
 
 namespace HEIN
@@ -22,6 +22,7 @@ namespace HEIN
 
 		HEIN::ActorManager* m_manager;
 		HEIN::ActorID m_playerID = HEIN::INVALID_ACTOR_ID;
+		HEIN::ActorID m_targetID = HEIN::INVALID_ACTOR_ID;
 
 		DirectX::SimpleMath::Vector3 m_currentPosition;
 		DirectX::SimpleMath::Vector3 m_positionVelocity;
@@ -37,6 +38,7 @@ namespace HEIN
 		LockOnCameraMode(
 			HEIN::ActorManager* manager,
 			HEIN::ActorID playerID,
+			HEIN::ActorID targetID,
 			float freq = DEFAULT_FRE
 		);
 
@@ -55,6 +57,9 @@ namespace HEIN
 		bool LocksPlayerRotation() const override { return false; }
 
 		CameraType GetType() const override { return CameraType::LockOn; }
+		
+		HEIN::ActorID GetTargetID() const { return m_targetID; }
+		void SetTargetID(HEIN::ActorID target) { m_targetID = target; }
 	private:
 
 		void UpdateSpring(

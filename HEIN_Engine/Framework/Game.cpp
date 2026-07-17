@@ -4,7 +4,7 @@
 
 #include "pch.h"
 #include "Game.h"
-#include "Scene/GameScene/GameScene.h"
+
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"

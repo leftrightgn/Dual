@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "TargetTrackingComponent.h"
 #include <Entities/ActorManager.h>
-#include <BlackBoard/CombatBlackBoard.h>
 #include <Components/TransformComponent.h>
 
 HEIN::ActorID HEIN::TargetTrackingComponent::FindBestTarget() const
@@ -55,34 +54,33 @@ HEIN::TargetTrackingComponent::TargetTrackingComponent(
 
 void HEIN::TargetTrackingComponent::Start()
 {
-	m_blackboard = m_owner->GetComponent<HEIN::CombatBlackBoard>();
 	m_transform = m_owner->GetComponent<HEIN::TransformComponent>();
 }
 
 void HEIN::TargetTrackingComponent::Update(float deltaTime)
 {
-	if (!m_blackboard || !m_transform || !m_actorManager) return;
+	if (!m_transform || !m_actorManager) return;
 
-	if (m_blackboard->isLockedOn && m_blackboard->lockedTargetID == HEIN::INVALID_ACTOR_ID)
+	if (m_isLockedOn && m_targetID == HEIN::INVALID_ACTOR_ID)
 	{
-		m_blackboard->lockedTargetID = FindBestTarget();
+		m_targetID = FindBestTarget();
 
 		// If there is no valid enemy nearby, force the lock-on state off
-		if (m_blackboard->lockedTargetID == HEIN::INVALID_ACTOR_ID)
+		if (m_targetID == HEIN::INVALID_ACTOR_ID)
 		{
-			m_blackboard->isLockedOn = false;
+			m_isLockedOn = false;
 		}
 	}
-	else if (!m_blackboard->isLockedOn)
+	else if (!m_isLockedOn)
 	{
-		m_blackboard->lockedTargetID = HEIN::INVALID_ACTOR_ID;
-		m_blackboard->dirToTarget = DirectX::SimpleMath::Vector3::Zero;
-		m_blackboard->distanceToTarget = 0.0f;
+		m_targetID = HEIN::INVALID_ACTOR_ID;
+		m_dirToTarget = DirectX::SimpleMath::Vector3::Zero;
+		m_distanceToTarget = 0.0f;
 	}
 
-	if (m_blackboard->lockedTargetID != HEIN::INVALID_ACTOR_ID)
+	if (m_targetID != HEIN::INVALID_ACTOR_ID)
 	{
-		HEIN::Actor* target = m_actorManager->GetActor(m_blackboard->lockedTargetID);
+		HEIN::Actor* target = m_actorManager->GetActor(m_targetID);
 
 		// Safety check: Did the enemy die and get destroyed by the garbage collector?
 		if (target != nullptr)
@@ -96,21 +94,21 @@ void HEIN::TargetTrackingComponent::Update(float deltaTime)
 
 				DirectX::SimpleMath::Vector3 dir = targetPos - myPos;
 
-				m_blackboard->distanceToTarget = dir.Length();
+				m_distanceToTarget = dir.Length();
 				dir.y = 0.0f;
 
 				if (dir.LengthSquared() > 0.001f)
 				{
 					dir.Normalize();
-					m_blackboard->dirToTarget = dir;
+					m_dirToTarget = dir;
 				}
 			}
 		}
 		else
 		{
 			// Target is dead/missing! Drop the lock-on cleanly.
-			m_blackboard->lockedTargetID = HEIN::INVALID_ACTOR_ID;
-			m_blackboard->isLockedOn = false;
+			m_targetID = HEIN::INVALID_ACTOR_ID;
+			m_isLockedOn = false;
 		}
 	}
 }

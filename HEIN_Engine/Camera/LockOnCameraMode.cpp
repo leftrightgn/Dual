@@ -2,16 +2,17 @@
 #include "LockOnCameraMode.h"
 #include "Components/TransformComponent.h"
 #include <Entities/ActorManager.h>
-#include <BlackBoard/CombatBlackBoard.h>
 
 
 HEIN::LockOnCameraMode::LockOnCameraMode(
 	HEIN::ActorManager* manager,
 	HEIN::ActorID playerID,
+	HEIN::ActorID targetID,
 	float freq
 )
 	: m_manager(manager)
 	, m_playerID(playerID)
+	, m_targetID(targetID)
 	, m_heightOffset(DEFAULT_HEIGHT_OFFSET)
 	, m_currentYaw(0.0f)
 	, m_invalidFrames(0)
@@ -39,14 +40,8 @@ void HEIN::LockOnCameraMode::Update(CameraData& outData, float deltaTime, ICamer
 	}
 
 	HEIN::TransformComponent* playerTrans = playerActor->GetComponent<HEIN::TransformComponent>();
-	HEIN::CombatBlackBoard* blackboard = playerActor->GetComponent<HEIN::CombatBlackBoard>();
-	if (blackboard == nullptr)
-	{
-		controller.RequestSwitch(CameraType::ThirdPerson);
-		return;
-	}
 
-	if (blackboard->lockedTargetID == HEIN::INVALID_ACTOR_ID)
+	if (m_targetID == HEIN::INVALID_ACTOR_ID)
 	{
 		m_invalidFrames++;
 		if (m_invalidFrames > 2)
@@ -56,7 +51,7 @@ void HEIN::LockOnCameraMode::Update(CameraData& outData, float deltaTime, ICamer
 		return;
 	}
 	m_invalidFrames = 0;
-	HEIN::Actor* targetActor = m_manager->GetActor(blackboard->lockedTargetID);
+	HEIN::Actor* targetActor = m_manager->GetActor(m_targetID);
 	if (targetActor == nullptr) 
 	{
 		controller.RequestSwitch(CameraType::Spring);

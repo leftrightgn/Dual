@@ -6,6 +6,7 @@ HEIN::HealthComponent::HealthComponent(Actor* owner)
 	, m_maxHealth()
 	, m_currentHealth()
 	, m_invincibilityTimer()
+	, m_isInvincible(false)
 {
 }
 
@@ -25,7 +26,7 @@ void HEIN::HealthComponent::Update(float deltaTime)
 
 void HEIN::HealthComponent::ApplyDamage(float damage)
 {
-	if (m_invincibilityTimer <= 0.0f && m_currentHealth > 0.0f)
+	if (m_invincibilityTimer <= 0.0f && m_currentHealth > 0.0f && !m_isInvincible)
 	{
 		m_currentHealth -= damage;
 		m_invincibilityTimer = 0.5f;

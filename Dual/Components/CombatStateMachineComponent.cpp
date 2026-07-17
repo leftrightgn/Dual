@@ -3,7 +3,10 @@
 #include <States/ICombatState.h>
 #include <Entities/Actor.h>
 #include <Components/ColliderComponent/ColliderComponent.h>
-#include "IComponent.h"
+#include <Components/IComponent.h>
+#include <Components/DamageDealerComponent.h>
+#include <Components/HealthComponent.h>
+#include <Components/TargetTrackingComponent.h>
 #include <memory>
 #include <Message/Messenger.h>
 #include <BlackBoard/CombatBlackBoard.h>
@@ -33,6 +36,12 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 		m_currentState->Update(m_owner, this, deltaTime);
 	}
 
+	HEIN::DamageDealerComponent* dealer = m_owner->GetComponent<HEIN::DamageDealerComponent>();
+	if (dealer) dealer->SetActive(IsAttacking());
+
+	HEIN::HealthComponent* health = m_owner->GetComponent<HEIN::HealthComponent>();
+	if (health) health->SetInvincible(IsBlocking());
+
 	HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
 	if (blackboard)
 	{
@@ -56,6 +65,16 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 			{
 				blackboard->dodgeCooldownTimer = 0.0f;
 			}
+		}
+
+		HEIN::TargetTrackingComponent* tracking = m_owner->GetComponent<HEIN::TargetTrackingComponent>();
+		if (tracking)
+		{
+			tracking->SetLockedOn(blackboard->isLockedOn);
+			blackboard->lockedTargetID = tracking->GetTargetID();
+			blackboard->dirToTarget = tracking->GetDirToTarget();
+			blackboard->distanceToTarget = tracking->GetDistanceToTarget();
+			blackboard->isLockedOn = tracking->IsLockedOn();
 		}
 	}
 }

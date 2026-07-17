@@ -1,11 +1,11 @@
-﻿//
+//
 // Main.cpp
 //
 
 #include "pch.h"
-#include "Game.h"
 #include "ImGui/imgui_impl_win32.h"
 #include <Scene/GameScene/GameScene.h>
+#include <Framework/Game.h>
 
 using namespace DirectX;
 
@@ -57,73 +57,86 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
     g_game = std::make_unique<Game>();
 
-    // Register class and create window
+    try
     {
-        // Register class
-        WNDCLASSEXW wcex = {};
-        wcex.cbSize = sizeof(WNDCLASSEXW);
-        wcex.style = CS_HREDRAW | CS_VREDRAW;
-        wcex.lpfnWndProc = WndProc;
-        wcex.hInstance = hInstance;
-        wcex.hIcon = LoadIconW(hInstance, L"IDI_ICON");
-        wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-        wcex.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
-        wcex.lpszClassName = L"Direct3D_Win32_GameWindowClass";
-        wcex.hIconSm = LoadIconW(wcex.hInstance, L"IDI_ICON");
-        if (!RegisterClassExW(&wcex))
-            return 1;
+        // Register class and create window
+        {
+            // Register class
+            WNDCLASSEXW wcex = {};
+            wcex.cbSize = sizeof(WNDCLASSEXW);
+            wcex.style = CS_HREDRAW | CS_VREDRAW;
+            wcex.lpfnWndProc = WndProc;
+            wcex.hInstance = hInstance;
+            wcex.hIcon = LoadIconW(hInstance, L"IDI_ICON");
+            wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+            wcex.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+            wcex.lpszClassName = L"Direct3D_Win32_GameWindowClass";
+            wcex.hIconSm = LoadIconW(wcex.hInstance, L"IDI_ICON");
+            if (!RegisterClassExW(&wcex))
+                return 1;
 
-        // Create window
-        int w, h;
-        g_game->GetDefaultSize(w, h);
+            // Create window
+            int w, h;
+            g_game->GetDefaultSize(w, h);
 
-        RECT rc = { 0, 0, static_cast<LONG>(w), static_cast<LONG>(h) };
+            RECT rc = { 0, 0, static_cast<LONG>(w), static_cast<LONG>(h) };
 
-        AdjustWindowRect(&rc, WS_MYSTYLE, FALSE);
+            AdjustWindowRect(&rc, WS_MYSTYLE, FALSE);
 
-        HWND hwnd = CreateWindowExW(0, L"Direct3D_Win32_GameWindowClass", g_szAppName, WS_MYSTYLE,
-            CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top,
-            nullptr, nullptr, hInstance,
-            g_game.get());
-        // TODO: Change to CreateWindowExW(WS_EX_TOPMOST, L"Direct3D_Win32_GameWindowClass", g_szAppName, WS_POPUP,
-        // to default to fullscreen.
+            HWND hwnd = CreateWindowExW(0, L"Direct3D_Win32_GameWindowClass", g_szAppName, WS_MYSTYLE,
+                CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top,
+                nullptr, nullptr, hInstance,
+                g_game.get());
+            // TODO: Change to CreateWindowExW(WS_EX_TOPMOST, L"Direct3D_Win32_GameWindowClass", g_szAppName, WS_POPUP,
+            // to default to fullscreen.
 
-        if (!hwnd)
-            return 1;
+            if (!hwnd)
+                return 1;
 
-        // マウスにウインドウハンドルを設定
-        mouse->SetWindow(hwnd);
+            // マウスにウインドウハンドルを設定
+            mouse->SetWindow(hwnd);
 
-        ShowWindow(hwnd, nCmdShow);
-        // TODO: Change nCmdShow to SW_SHOWMAXIMIZED to default to fullscreen.
+            ShowWindow(hwnd, nCmdShow);
+            // TODO: Change nCmdShow to SW_SHOWMAXIMIZED to default to fullscreen.
 
-        GetClientRect(hwnd, &rc);
+            GetClientRect(hwnd, &rc);
 
-        g_game->Initialize(hwnd, rc.right - rc.left, rc.bottom - rc.top);
+            g_game->Initialize(hwnd, rc.right - rc.left, rc.bottom - rc.top);
 
-        g_game->RegisterScene<GameScene>("GameScene");
+            g_game->RegisterScene<GameScene>("GameScene");
 
-        g_game->LoadScene("GameScene");
+            g_game->LoadScene("GameScene");
+        }
+
+        // Main message loop
+        MSG msg = {};
+        while (WM_QUIT != msg.message)
+        {
+            if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+            else
+            {
+                g_game->Tick();
+            }
+        }
+
+        g_game.reset();
+
+        return static_cast<int>(msg.wParam);
     }
-
-    // Main message loop
-    MSG msg = {};
-    while (WM_QUIT != msg.message)
+    catch (const std::exception& e)
     {
-        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+        FILE* fp = nullptr;
+        fopen_s(&fp, "crash_log.txt", "w");
+        if (fp) {
+            fprintf(fp, "Crash: %s\n", e.what());
+            fclose(fp);
         }
-        else
-        {
-            g_game->Tick();
-        }
+        return -1;
     }
-
-    g_game.reset();
-
-    return static_cast<int>(msg.wParam);
 }
 
 // Windows procedure

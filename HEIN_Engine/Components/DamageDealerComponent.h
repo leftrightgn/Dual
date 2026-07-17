@@ -17,6 +17,7 @@ namespace HEIN
 
 		float m_damageAmount;
 		DamageType m_damageType;
+		bool m_isActive;
 
 	public:
 
@@ -29,5 +30,8 @@ namespace HEIN
 		
 		float GetDamageAmount() const { return m_damageAmount; }
 		DamageType GetDamageType() const { return m_damageType; }
+		
+		bool IsActive() const { return m_isActive; }
+		void SetActive(bool active) { m_isActive = active; }
 	};
 }

@@ -3,8 +3,9 @@
 
 HEIN::DamageDealerComponent::DamageDealerComponent(Actor* owner)
 	: IComponent(owner)
-	, m_damageAmount()
-	, m_damageType()
+	, m_damageAmount(0.0f)
+	, m_damageType(DamageType::Physical)
+	, m_isActive(true)
 {
 }
 

@@ -10,6 +10,7 @@ namespace HEIN
 		float m_maxHealth;
 		float m_currentHealth;
 		float m_invincibilityTimer;
+		bool m_isInvincible;
 
 	public:
 
@@ -25,6 +26,9 @@ namespace HEIN
 		float GetCurrentHealth() const { return m_currentHealth; }
 		float GetMaxHealth() const { return m_maxHealth; }
 		bool isDead() const { return m_currentHealth <= 0.0f; }
+
+		bool IsInvincible() const { return m_isInvincible; }
+		void SetInvincible(bool invincible) { m_isInvincible = invincible; }
 
 	};
 }
