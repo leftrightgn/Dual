@@ -8,7 +8,6 @@
 #include "Framework/GameContext.h"
 #include "Effect/Water.h"
 #include "Effect/Skybox.h"
-#include "ImaseLib/DebugCamera.h"
 #include "Camera/CameraController.h"
 #include "DebugingTools/DebugDisplayController.h"
 #include "Common/PhysicsSystem.h"
@@ -31,7 +30,6 @@ public:
 private:
 
 	std::unique_ptr<HEIN::Skybox> m_skybox;
-	std::unique_ptr<Imase::DebugCamera> m_debugCamera;
 
 	DirectX::SimpleMath::Matrix m_proj;
 	DirectX::SimpleMath::Matrix m_world;
