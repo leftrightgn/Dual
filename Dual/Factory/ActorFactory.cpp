@@ -408,11 +408,11 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
             floorActor->AddComponent<HEIN::TransformComponent>();
 
     HEIN::StaticModelComponent* floorModel = floorActor->AddComponent<HEIN::StaticModelComponent>();
-    floorModel->Initialize(gameContext, L"Resources/Models/stage/floor.sdkmesh", L"Resources/Models/stage");
+    floorModel->Initialize(gameContext, L"Resources/Models/stage/floor1.sdkmesh", L"Resources/Models/stage");
     HEIN::MeshColliderComponent* floorPhysics = floorActor->AddComponent<HEIN::MeshColliderComponent>();
-    floorPhysics->LoadFromObj(L"Resources/Models/stage/floor.obj");
+    floorPhysics->LoadFromObj(L"Resources/Models/stage/floor1.obj");
     floorPhysics->SetCollisionLayer(CollisionLayer::Layer_Environment);
-    floorPhysics->SetRotationOffset(DirectX::SimpleMath::Vector3(0.0f, DirectX::XMConvertToRadians(-180.0f), 0.0f));
+ 
   
    
 
