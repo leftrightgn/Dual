@@ -1,5 +1,5 @@
 #pragma once
-#include "Components/IComponent.h"
+#include "../../External/Engine/Components/IComponent.h"
 
 namespace HEIN
 {

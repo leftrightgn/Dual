@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "BTAttackNode.h"
 #include <BlackBoard/CombatBlackBoard.h>
-#include <Message/Messenger.h> 
-#include <Message/Message.h>  
+#include "../../External/Engine/Message/Messenger.h" 
+#include "../../External/Engine/Message/Message.h" 
 #include <cmath>
-#include <Components/TransformComponent.h>
+#include "../../External/Engine/Components/TransformComponent.h"
+
 
 HEIN::BTAttackNode::BTAttackNode(
 	float attackDuration,

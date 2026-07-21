@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="14.0">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -85,7 +85,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\HEIN_Engine;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\External\Engine;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
@@ -107,7 +107,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\HEIN_Engine;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\External\Engine;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
@@ -129,7 +129,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\HEIN_Engine;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\External\Engine;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
@@ -155,7 +155,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\HEIN_Engine;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\External\Engine;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
@@ -205,9 +205,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    </ItemGroup>
+  </ItemGroup>
   <ItemGroup>
-    </ItemGroup>
+  </ItemGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>このプロジェクトは、このコンピューター上にない NuGet パッケージを参照しています。それらのパッケージをダウンロードするには、[NuGet パッケージの復元] を使用します。詳細については、http://go.microsoft.com/fwlink/?LinkID=322105 を参照してください。見つからないファイルは {0} です。</ErrorText>
@@ -215,12 +215,44 @@
     <Error Condition="!Exists('..\packages\directxtk_desktop_win10.2026.4.1.1\build\native\directxtk_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk_desktop_win10.2026.4.1.1\build\native\directxtk_desktop_win10.targets'))" />
   </Target>
   <ItemGroup>
-    <ProjectReference Include="..\HEIN_Engine\HEIN_Engine.vcxproj">
+    <ClInclude Include="Factory\ActorFactory.h" />
+    <ClInclude Include="States\CombatStates.h" />
+    <ClInclude Include="States\ICombatState.h" />
+    <ClInclude Include="BlackBoard\CombatBlackBoard.h" />
+    <ClInclude Include="Components\CombatStateMachineComponent.h" />
+    <ClInclude Include="Components\PlayerInputComponent.h" />
+    <ClInclude Include="BehaviourTree\BTAttackNode.h" />
+    <ClInclude Include="BehaviourTree\BTChaseNode.h" />
+    <ClInclude Include="BehaviourTree\BTCheckDistance.h" />
+    <ClInclude Include="BehaviourTree\BTDodgeNode.h" />
+    <ClInclude Include="BehaviourTree\BTStrafeNode.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Factory\ActorFactory.cpp" />
+    <ClCompile Include="States\CombatStates.cpp" />
+    <ClCompile Include="Components\CombatStateMachineComponent.cpp" />
+    <ClCompile Include="Components\PlayerInputComponent.cpp" />
+    <ClCompile Include="BehaviourTree\BTAttackNode.cpp" />
+    <ClCompile Include="BehaviourTree\BTChaseNode.cpp" />
+    <ClCompile Include="BehaviourTree\BTCheckDistance.cpp" />
+    <ClCompile Include="BehaviourTree\BTDodgeNode.cpp" />
+    <ClCompile Include="BehaviourTree\BTStrafeNode.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Components\BehaviourTreeComponent.h" />
+    <ClInclude Include="Components\CharacterMovementComponent.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Components\BehaviourTreeComponent.cpp" />
+    <ClCompile Include="Components\CharacterMovementComponent.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\External\Engine\HEIN_Engine.vcxproj">
       <Project>{7B25AEB1-3C1E-45A1-910F-7E1184E03743}</Project>
     </ProjectReference>
   </ItemGroup>
-<ItemGroup><ClInclude Include="Factory\ActorFactory.h" /><ClInclude Include="States\CombatStates.h" /><ClInclude Include="States\ICombatState.h" /><ClInclude Include="BlackBoard\CombatBlackBoard.h" /><ClInclude Include="Components\CombatStateMachineComponent.h" /><ClInclude Include="Components\PlayerInputComponent.h" /><ClInclude Include="BehaviourTree\BTAttackNode.h" /><ClInclude Include="BehaviourTree\BTChaseNode.h" /><ClInclude Include="BehaviourTree\BTCheckDistance.h" /><ClInclude Include="BehaviourTree\BTDodgeNode.h" /><ClInclude Include="BehaviourTree\BTStrafeNode.h" /></ItemGroup><ItemGroup><ClCompile Include="Factory\ActorFactory.cpp" /><ClCompile Include="States\CombatStates.cpp" /><ClCompile Include="Components\CombatStateMachineComponent.cpp" /><ClCompile Include="Components\PlayerInputComponent.cpp" /><ClCompile Include="BehaviourTree\BTAttackNode.cpp" /><ClCompile Include="BehaviourTree\BTChaseNode.cpp" /><ClCompile Include="BehaviourTree\BTCheckDistance.cpp" /><ClCompile Include="BehaviourTree\BTDodgeNode.cpp" /><ClCompile Include="BehaviourTree\BTStrafeNode.cpp" /></ItemGroup><ItemGroup><ClInclude Include="Components\BehaviourTreeComponent.h" /><ClInclude Include="Components\CharacterMovementComponent.h" /></ItemGroup><ItemGroup><ClCompile Include="Components\BehaviourTreeComponent.cpp" /><ClCompile Include="Components\CharacterMovementComponent.cpp" /></ItemGroup><Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\directxtk_desktop_win10.2026.4.1.1\build\native\directxtk_desktop_win10.targets" Condition="Exists('..\packages\directxtk_desktop_win10.2026.4.1.1\build\native\directxtk_desktop_win10.targets')" />
   </ImportGroup>
-  </Project>
+</Project>

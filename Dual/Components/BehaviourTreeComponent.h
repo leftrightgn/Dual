@@ -1,6 +1,8 @@
 #pragma once
-#include <Components/IComponent.h>
-#include <BehaviourTree/BTNode.h>
+#include "../../External/Engine/Components/IComponent.h"
+#include "../../External/Engine/BehaviourTree/BTNode.h"
+#include "../../External/Engine/Entities/Actor.h"
+#include "../../External/Engine/Entities/ActorManager.h"
 
 namespace HEIN
 {

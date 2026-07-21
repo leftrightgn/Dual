@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "BTDodgeNode.h"
 #include <BlackBoard/CombatBlackBoard.h>
-#include <Message/Messenger.h> 
-#include <Message/Message.h>  
+#include "../../External/Engine/Message/Messenger.h" 
+#include "../../External/Engine/Message/Message.h"  
 
 
 HEIN::BTDodgeNode::BTDodgeNode(float cooldown)

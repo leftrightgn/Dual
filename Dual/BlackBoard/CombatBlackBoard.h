@@ -1,8 +1,8 @@
 #pragma once
-#include "Components/IComponent.h"
+#include "../../External/Engine/Components/IComponent.h"
 #include <SimpleMath.h>
-#include <Entities/Actor.h>
 #include <string>
+#include "../../External/Engine/Entities/Actor.h"
 
 namespace HEIN
 {

@@ -1,8 +1,8 @@
 #pragma once
-#include "Common/Event.h"
-#include "Components/IComponent.h"
-#include "Message/IObserver.h"
-#include "Message/Message.h"
+#include "../../External/Engine/Common/Event.h"
+#include "../../External/Engine/Components/IComponent.h"
+#include "../../External/Engine/Message/IObserver.h"
+#include "../../External/Engine/Message/Message.h"
 #include <vector>
 #include <unordered_map>
 #include <string>

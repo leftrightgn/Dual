@@ -1,6 +1,6 @@
 #pragma once
-#include "Components/IComponent.h"
-#include <Message/IObserver.h>
+#include "../../External/Engine/Components/IComponent.h"
+#include "../../External/Engine/Message/IObserver.h"
 
 namespace HEIN
 {
