@@ -1,9 +1,8 @@
 #include "pch.h"
 #include "BTChaseNode.h"
 #include <BlackBoard/CombatBlackBoard.h>
-#include <Message/Message.h>
-#include <Message/Messenger.h>
-
+#include "../../External/Engine/Message/Messenger.h" 
+#include "../../External/Engine/Message/Message.h" 
 HEIN::BTChaseNode::BTChaseNode(float attackRange, float walkSpeed)
 	: m_attackRange(attackRange)
 	, m_walkSpeed(walkSpeed)

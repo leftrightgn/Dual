@@ -4,15 +4,13 @@
 //--------------------------------------------------------------------------------------
 #pragma once
 #include "pch.h"
-#include <Scene/IScene.h>
-#include "Framework/GameContext.h"
-#include "Effect/Water.h"
-#include "Effect/Skybox.h"
-#include "Camera/CameraController.h"
-#include "DebugingTools/DebugDisplayController.h"
-#include "Common/PhysicsSystem.h"
-#include "Entities/ActorManager.h"
-#include <Common/DamageSystem.h>
+#include "../../../External/Engine/Entities/Actor.h"
+#include "../../../External/Engine/Entities/ActorManager.h"
+#include "../../../External/Engine/Scene/IScene.h"
+#include "../../../External/Engine/Effect/Skybox.h"
+#include "../../../External/Engine/Common/PhysicsSystem.h"
+#include "../../../External/Engine/Common/DamageSystem.h"
+#include "../../../External/Engine/DebugingTools/DebugDisplayController.h"
 
 class GameScene : public HEIN::IScene
 {
@@ -51,6 +49,5 @@ private:
 
 	HEIN::ActorManager m_actorManager;
 
-	std::unique_ptr<DirectX::GeometricPrimitive> m_debugSphere;
 	std::unique_ptr<HEIN::DebugDisplayController> m_debugDisplay;
 };

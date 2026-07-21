@@ -1,5 +1,5 @@
 #pragma once
-#include <Message/Message.h>
+#include "../../../External/Engine/Message/Message.h"
 namespace HEIN
 {
 	class CombatStateMachineComponent;

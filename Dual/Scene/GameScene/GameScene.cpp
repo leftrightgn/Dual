@@ -1,18 +1,21 @@
 #include "pch.h"
-#include "Common/InputManager.h"
+#include "../../../External/Engine/Common/InputManager.h"
 #include "GameScene.h"
-#include <Camera/DebugCameraMode.h>
-#include <Camera/ThirdPersonMode.h>
-#include <Camera/FirstPersonMode.h>
-#include <Camera/LockOnCameraMode.h>
-#include <Camera/SpringCameraMode.h>
-#include <Components/TransformComponent.h>
-#include <Components/SkinnedModelComponent.h>
+#include "../../../External/Engine/Camera/DebugCameraMode.h"
+#include "../../../External/Engine/Camera/CameraController.h"
+#include "../../../External/Engine/Camera/ThirdPersonMode.h"
+#include "../../../External/Engine/Camera/FirstPersonMode.h"
+#include "../../../External/Engine/Camera/LockOnCameraMode.h"
+#include "../../../External/Engine/Camera/SpringCameraMode.h"
+#include "../../../External/Engine/Components/TransformComponent.h"
+#include "../../../External/Engine/Components/SkinnedModelComponent.h"
+#include "../../../External/Engine/FrameWork/GameContext.h"
 #include <Components/PlayerInputComponent.h>
 #include <Factory/ActorFactory.h>
-#include <Components/HealthComponent.h>
+#include "../../../External/Engine/Components/HealthComponent.h"
 #include <BlackBoard/CombatBlackBoard.h>
-#include <ImGui/imgui.h>
+#include "../../../External/Engine/ImGui/imgui.h"
+#include "../../../External/Engine/Common/Event.h"
 
 using namespace DirectX;
 

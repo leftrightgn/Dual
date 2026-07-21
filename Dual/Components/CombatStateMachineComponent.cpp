@@ -1,15 +1,14 @@
 #include "pch.h"
 #include "CombatStateMachineComponent.h"
 #include <States/ICombatState.h>
-#include <Entities/Actor.h>
-#include <Components/ColliderComponent/ColliderComponent.h>
-#include <Components/IComponent.h>
-#include <Components/DamageDealerComponent.h>
-#include <Components/HealthComponent.h>
-#include <Components/TargetTrackingComponent.h>
+#include "../../../External/Engine/Entities/Actor.h"
+#include "../../External/Engine/Components/ColliderComponent/ColliderComponent.h"
 #include <memory>
-#include <Message/Messenger.h>
+#include "../../External/Engine/Message/Messenger.h" 
 #include <BlackBoard/CombatBlackBoard.h>
+#include "../../External/Engine/Components/DamageDealerComponent.h"
+#include "../../External/Engine/Components/HealthComponent.h"
+#include "../../External/Engine/Components/TargetTrackingComponent.h"
 
 
 HEIN::CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner)

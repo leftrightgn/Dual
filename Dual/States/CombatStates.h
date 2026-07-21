@@ -1,6 +1,6 @@
 #pragma once
 #include "States/ICombatState.h"
-#include "Entities/Actor.h"
+#include "../../../External/Engine/Entities/Actor.h"
 #include <string>
 #include <unordered_map>
 #include <vector>

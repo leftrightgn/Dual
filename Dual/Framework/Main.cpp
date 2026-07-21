@@ -3,9 +3,9 @@
 //
 
 #include "pch.h"
-#include "ImGui/imgui_impl_win32.h"
+#include "../../../External/Engine/ImGui/imgui_impl_win32.h"
 #include <Scene/GameScene/GameScene.h>
-#include <Framework/Game.h>
+#include "../../../External/Engine/Framework/Game.h"
 
 using namespace DirectX;
 

@@ -1,35 +1,35 @@
 #include "pch.h"
-#include "ActorFactory.h"
-#include <Components/TransformComponent.h>
-#include <Components/ColliderComponent/CapsuleColliderComponent.h>
-#include <Components/TwoBoneLinkComponent.h>
-#include <Components/SocketComponent.h>
 #include <BlackBoard/CombatBlackBoard.h>
 #include <Components/PlayerInputComponent.h>
 #include <Components/CharacterMovementComponent.h>
 #include <Components/CombatStateMachineComponent.h>
-#include <Components/StaticModelComponent.h>
-#include <Components/ColliderComponent/OBBColliderComponent.h>
-#include <Components/SocketAttachmentComponent.h>
-#include <Components/BoneLinkComponent.h>
-#include <Components/ColliderComponent/AABBColliderComponent.h>
-#include <Components/RigidBodyComponent.h>
-#include <Entities/ActorManager.h>
-#include <Components/DamageDealerComponent.h>
-#include <Components/HealthComponent.h>
-#include <BehaviourTree/BTSequence.h>
 #include <BehaviourTree/BTChaseNode.h>
 #include <BehaviourTree/BTCheckDistance.h>
 #include <BehaviourTree/BTDodgeNode.h>
 #include <Components/BehaviourTreeComponent.h>
 #include <BehaviourTree/BTStrafeNode.h>
-#include <BehaviourTree/BTSelector.h>
-#include <Camera/CameraController.h>
-#include <Components/TargetTrackingComponent.h>
 #include <States/CombatStates.h>
 #include <BehaviourTree/BTAttackNode.h>
 #include <utility>
-#include <Components/ColliderComponent/MeshColliderComponent.h>
+#include "../../External/Engine/Components/HealthComponent.h"
+#include "../../External/Engine/Components/ColliderComponent/CapsuleColliderComponent.h"
+#include "../../External/Engine/Components/BoneLinkComponent.h"
+#include "../../External/Engine/Components/TwoBoneLinkComponent.h"
+#include "../../External/Engine/Components/SocketComponent.h"
+#include "../../External/Engine/Components/RigidBodyComponent.h"
+#include "../../External/Engine/Components/TargetTrackingComponent.h"
+#include "../../External/Engine/Components/DamageDealerComponent.h"
+#include "../../External/Engine/Components/ColliderComponent/OBBColliderComponent.h"
+#include "../../External/Engine/Components/SocketAttachmentComponent.h"
+#include "../../External/Engine/Components/StaticModelComponent.h"
+#include "../../External/Engine/Components/ColliderComponent/MeshColliderComponent.h"
+#include "../../External/Engine/Components/ColliderComponent/AABBColliderComponent.h"
+#include "../../External/Engine/BehaviourTree/BTSelector.h"
+#include "../../External/Engine/BehaviourTree/BTSequence.h"
+#include "../../External/Engine/Camera/CameraController.h"
+#include "ActorFactory.h"
+#include "../../External/Engine/Components/TransformComponent.h"
+
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ActorManager& actorManager,
@@ -77,6 +77,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     HeadCapsule->Initialize(1.5f, 1.0f);
     HeadCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
     HeadCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
+    HeadCapsule->SetColliderTag(L"HeadCollider");
     HEIN::BoneLinkComponent* HeadLink = playerActor->AddComponent<HEIN::BoneLinkComponent>();
     HeadLink->Initialize(spawnData.tpsModel, L"mixamorig:Head");
     HeadLink->LinkTo(HeadCapsule);
@@ -86,6 +87,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     BodyCapsule->Initialize(2.0f, 0.0f);
     BodyCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
     BodyCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
+    BodyCapsule->SetColliderTag(L"BodyCollider");
     HEIN::TwoBoneLinkComponent* BodyLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     BodyLink->Initialize(spawnData.tpsModel, L"mixamorig:Spine2", L"mixamorig:Hips");
     BodyLink->LinkTo(BodyCapsule);
@@ -95,6 +97,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     RightarmCapsule->Initialize(1.0f, 1.0f);
     RightarmCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
     RightarmCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
+    RightarmCapsule->SetColliderTag(L"RarmCollider");
     HEIN::TwoBoneLinkComponent* RightarmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightarmLink->Initialize(spawnData.tpsModel, L"mixamorig:RightArm", L"mixamorig:RightForeArm");
     RightarmLink->LinkTo(RightarmCapsule);
@@ -102,6 +105,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     RightforearmCapsule->Initialize(0.6f, 1.0f);
     RightforearmCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
     RightforearmCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
+    RightforearmCapsule->SetColliderTag(L"RforearmCollider");
     HEIN::TwoBoneLinkComponent* RightforearmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightforearmLink->Initialize(spawnData.tpsModel, L"mixamorig:RightForeArm", L"mixamorig:RightHand");
     RightforearmLink->LinkTo(RightforearmCapsule);
@@ -112,6 +116,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     LeftarmCapsule->Initialize(1.0f, 1.0f);
     LeftarmCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
     LeftarmCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
+    LeftarmCapsule->SetColliderTag(L"LarmCollider");
     HEIN::TwoBoneLinkComponent* LeftarmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     LeftarmLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftArm", L"mixamorig:LeftForeArm");
     LeftarmLink->LinkTo(LeftarmCapsule);
@@ -119,6 +124,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     LeftforearmCapsule->Initialize(0.6f, 1.0f);
     LeftforearmCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
     LeftforearmCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
+    LeftforearmCapsule->SetColliderTag(L"LforearmCollider");
     HEIN::TwoBoneLinkComponent* LeftforearmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     LeftforearmLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftForeArm", L"mixamorig:LeftHand");
     LeftforearmLink->LinkTo(LeftforearmCapsule);
@@ -128,6 +134,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     RightupLegCapsule->Initialize(1.0f, 0.0f);
     RightupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
     RightupLegCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
+    RightupLegCapsule->SetColliderTag(L"RupLegCollider");
     HEIN::TwoBoneLinkComponent* RightupLegLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightUpLeg", L"RightLeg");
     RightupLegLink->LinkTo(RightupLegCapsule);
@@ -135,6 +142,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     RightLegCapsule->Initialize(0.7f, 0.0f);
     RightLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
     RightLegCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
+    RightLegCapsule->SetColliderTag(L"RLegCollider");
     HEIN::TwoBoneLinkComponent* RightLegLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightLeg", L"mixamorig:RightFoot");
     RightLegLink->LinkTo(RightLegCapsule);
@@ -144,6 +152,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     LeftupLegCapsule->Initialize(1.0f, 0.0f);
     LeftupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
     LeftupLegCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
+    LeftupLegCapsule->SetColliderTag(L"LupLegCollider");
     HEIN::TwoBoneLinkComponent* LeftupLegLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     LeftupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftUpLeg", L"mixamorig:LeftLeg");
     LeftupLegLink->LinkTo(LeftupLegCapsule);
@@ -151,6 +160,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     LeftLegCapsule->Initialize(0.7f, 0.0f);
     LeftLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
     LeftLegCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
+    LeftLegCapsule->SetColliderTag(L"LLegCollider");
     HEIN::TwoBoneLinkComponent* LeftLegLink = playerActor->AddComponent < HEIN::TwoBoneLinkComponent>();
     LeftLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftLeg", L"mixamorig:LeftFoot");
     LeftLegLink->LinkTo(LeftLegCapsule);

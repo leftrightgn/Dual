@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "BehaviourTreeComponent.h"
 #include <BlackBoard/CombatBlackBoard.h>
-#include <Components/TransformComponent.h>
+#include "../../External/Engine/Components/TransformComponent.h"
 
 HEIN::BehaviourTreeComponent::BehaviourTreeComponent(Actor* owner)
 	: IComponent(owner)

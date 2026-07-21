@@ -73,6 +73,6 @@
 #include "GeometricPrimitive.h"
 
 // DirectXTK_Utilities
-#include "DirectXTK_Utilities/DebugDraw.h"
+#include "../../../External/Engine/DirectXTK_Utilities/DebugDraw.h"
 
 #pragma comment(lib, "d3dcompiler.lib")

@@ -1,14 +1,12 @@
 #include "pch.h"
-#include "Common/InputManager.h"
 #include "PlayerInputComponent.h"
 #include "BlackBoard/CombatBlackBoard.h"
-#include "Camera/CameraController.h"
-#include <Entities/ActorManager.h>
-#include "Entities/Actor.h"
-#include <Mouse.h>
-#include "Framework/GameContext.h"
-#include <Components/IComponent.h>
-#include <Message/Messenger.h>
+#include "../../External/Engine/Camera/CameraController.h"
+#include "../../../External/Engine/Entities/ActorManager.h"
+#include "../../../External/Engine/Entities/Actor.h"
+#include "../../External/Engine/Message/Messenger.h" 
+#include "../../External/Engine/Message/Message.h"  
+#include "../../External/Engine/Framework/GameContext.h"
 #include <Components/CombatStateMachineComponent.h>
 
 

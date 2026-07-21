@@ -2,8 +2,8 @@
 #include "States/CombatStates.h"
 #include "Components/CombatStateMachineComponent.h"
 #include <BlackBoard/CombatBlackBoard.h>
-#include <Components/SkinnedModelComponent.h>
-#include <Components/TransformComponent.h>
+#include "../../../External/Engine/Components/SkinnedModelComponent.h"
+#include "../../../External/Engine/Components/TransformComponent.h"
 #include <cmath>
 
 // ==============================================================================

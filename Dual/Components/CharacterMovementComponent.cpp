@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "CharacterMovementComponent.h"
-#include "Components/TransformComponent.h"
+#include "../../External/Engine/Components/TransformComponent.h"
 #include "BlackBoard/CombatBlackBoard.h"
-#include "Entities/Actor.h"
-#include <Components/RigidBodyComponent.h>
+#include "../../External/Engine/Entities/Actor.h"
+#include "../../External/Engine/Components/RigidBodyComponent.h"
 
 
 HEIN::CharacterMovementComponent::CharacterMovementComponent(Actor* owner)

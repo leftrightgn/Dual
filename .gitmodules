@@ -1,0 +1,3 @@
+[submodule "External/Engine"]
+	path = External/Engine
+	url = https://github.com/leftrightgn/HEIN_Engine.git
