@@ -39,7 +39,7 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 	if (dealer) dealer->SetActive(IsAttacking());
 
 	HEIN::HealthComponent* health = m_owner->GetComponent<HEIN::HealthComponent>();
-	if (health) health->SetInvincible(IsBlocking());
+	if (health) health->SetGameplayInvincible(IsBlocking());
 
 	HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
 	if (blackboard)

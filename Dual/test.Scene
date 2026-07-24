@@ -1,0 +1,128 @@
+{
+    "Actors": [
+        {
+            "Children": [],
+            "Components": [],
+            "Name": "MainCamera"
+        },
+        {
+            "Children": [],
+            "Components": [],
+            "Name": "Enemy"
+        },
+        {
+            "Children": [],
+            "Components": [],
+            "Name": "Axe"
+        },
+        {
+            "Children": [
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "Floor"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "StageWall0"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "StageWall1"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "StageWall2"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "StageWall3"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "Pillar0"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "Pillar1"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "Pillar2"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "Pillar3"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "Bridge0"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "Bridge1"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "Bridge2"
+                },
+                {
+                    "Children": [],
+                    "Components": [],
+                    "Name": "Bridge3"
+                }
+            ],
+            "Components": [],
+            "Name": "StageRoot"
+        },
+        {
+            "Children": [],
+            "Components": [],
+            "Name": "ri"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "RotationEuler": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "ModelPath": "knight.sdkmesh",
+                        "TextureDir": ".\\"
+                    },
+                    "Type": "SkinnedModelComponent"
+                }
+            ],
+            "Name": "NewActor"
+        }
+    ]
+}

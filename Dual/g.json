@@ -1,0 +1,1401 @@
+{
+    "Actors": [
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {},
+                    "Type": "CameraController"
+                }
+            ],
+            "Name": "MainCamera"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "CurrentHealth": 80.0,
+                        "IsGameplayInvincible": false,
+                        "IsInvincible": false,
+                        "MaxHealth": 100.0
+                    },
+                    "Type": "HealthComponent"
+                },
+                {
+                    "Data": {
+                        "Position": [
+                            -36.29999923706055,
+                            -8.717179298400879e-07,
+                            -99.13896942138672
+                        ],
+                        "Rotation": [
+                            -0.0,
+                            0.0,
+                            -0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            0.10000000149011612,
+                            0.10000000149011612,
+                            0.10000000149011612
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "Animations": [
+                            {
+                                "Name": "Idle",
+                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Dodge",
+                                "Path": "Resources/Models/knight/Dodge.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Walk",
+                                "Path": "Resources/Models/knight/running.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "StrafeL",
+                                "Path": "Resources/Models/knight/strafeL.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "OneHand",
+                                "Path": "Resources/Models/knight/swing.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "StrafeR",
+                                "Path": "Resources/Models/knight/strafeR.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Block",
+                                "Path": "Resources/Models/knight/block.sdkmesh_anim"
+                            }
+                        ],
+                        "ModelPath": "Resources/Models/knight/knight.sdkmesh",
+                        "TextureDir": "Resources/Models/knight"
+                    },
+                    "Type": "SkinnedModelComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "HeadCollider",
+                        "Height": 1.0,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.5,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "LinkedColliderTag": "HeadCollider",
+                        "TargetBoneName": "mixamorig:Head"
+                    },
+                    "Type": "BoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "BodyCollider",
+                        "Height": 3.717737913131714,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 2.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:Spine2",
+                        "BoneBName": "mixamorig:Hips",
+                        "LinkedColliderTag": "BodyCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RarmCollider",
+                        "Height": 2.5574305057525635,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightArm",
+                        "BoneBName": "mixamorig:RightForeArm",
+                        "LinkedColliderTag": "RarmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RforearmCollider",
+                        "Height": 2.1603407859802246,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.6000000238418579,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightForeArm",
+                        "BoneBName": "mixamorig:RightHand",
+                        "LinkedColliderTag": "RforearmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LarmCollider",
+                        "Height": 2.5574307441711426,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftArm",
+                        "BoneBName": "mixamorig:LeftForeArm",
+                        "LinkedColliderTag": "LarmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LforearmCollider",
+                        "Height": 2.1603336334228516,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.6000000238418579,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftForeArm",
+                        "BoneBName": "mixamorig:LeftHand",
+                        "LinkedColliderTag": "LforearmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RupLegCollider",
+                        "Height": 4.170205593109131,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightUpLeg",
+                        "BoneBName": "RightLeg",
+                        "LinkedColliderTag": "RupLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RLegCollider",
+                        "Height": 3.6980957984924316,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.699999988079071,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightLeg",
+                        "BoneBName": "mixamorig:RightFoot",
+                        "LinkedColliderTag": "RLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LupLegCollider",
+                        "Height": 4.170206069946289,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftUpLeg",
+                        "BoneBName": "mixamorig:LeftLeg",
+                        "LinkedColliderTag": "LupLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LLegCollider",
+                        "Height": 3.6981053352355957,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.699999988079071,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftLeg",
+                        "BoneBName": "mixamorig:LeftFoot",
+                        "LinkedColliderTag": "LLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "Sockets": [
+                            {
+                                "BoneName": "mixamorig:RightHand",
+                                "Name": "WeaponSocket",
+                                "PosX": -1.7300000190734863,
+                                "PosY": 0.3799999952316284,
+                                "PosZ": -0.1899999976158142,
+                                "RotX": 3.0,
+                                "RotY": 1.600000023841858,
+                                "RotZ": 2.0
+                            }
+                        ]
+                    },
+                    "Type": "SocketComponent"
+                },
+                {
+                    "Data": {
+                        "IsKinematic": false,
+                        "Mass": 80.0,
+                        "UseGravity": true
+                    },
+                    "Type": "RigidBodyComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "PlayerRoot",
+                        "Height": 12.0,
+                        "IsTrigger": false,
+                        "OffsetX": 0.0,
+                        "OffsetY": 90.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 3.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "TargetType": 2
+                    },
+                    "Type": "TargetTrackingComponent"
+                }
+            ],
+            "Name": "Player"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "DamageAmount": 5.0,
+                        "DamageType": 0,
+                        "IsActive": true
+                    },
+                    "Type": "DamageDealerComponent"
+                },
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            2.0,
+                            2.0,
+                            2.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "ModelPath": "Resources/Models/knight/sword.sdkmesh",
+                        "TextureDir": "Resources/Models/knight"
+                    },
+                    "Type": "StaticModelComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "ExtentsX": 0.30000001192092896,
+                        "ExtentsY": 0.10000000149011612,
+                        "ExtentsZ": 2.5,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": -3.299999952316284,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "OBBColliderComponent"
+                },
+                {
+                    "Data": {
+                        "OwnerTag": "Player",
+                        "SocketName": "WeaponSocket"
+                    },
+                    "Type": "SocketAttachmentComponent"
+                }
+            ],
+            "Name": "Sword"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "CurrentHealth": 100.0,
+                        "IsGameplayInvincible": false,
+                        "IsInvincible": false,
+                        "MaxHealth": 100.0
+                    },
+                    "Type": "HealthComponent"
+                },
+                {
+                    "Data": {
+                        "Position": [
+                            -29.419687271118164,
+                            -1.4025717973709106e-06,
+                            95.80000305175781
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.017639201134443283,
+                            0.0,
+                            0.9998444318771362
+                        ],
+                        "Scale": [
+                            0.15000002086162567,
+                            0.15000000596046448,
+                            0.15000002086162567
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "Animations": [
+                            {
+                                "Name": "Idle",
+                                "Path": "Resources/Models/Boss/idle.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Dodge",
+                                "Path": "Resources/Models/Boss/Dodge.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Walk",
+                                "Path": "Resources/Models/Boss/running.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "StrafeL",
+                                "Path": "Resources/Models/Boss/strafeL.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "OneHand",
+                                "Path": "Resources/Models/Boss/swing2.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "StrafeR",
+                                "Path": "Resources/Models/Boss/strafeR.sdkmesh_anim"
+                            }
+                        ],
+                        "ModelPath": "Resources/Models/Boss/Boss.sdkmesh",
+                        "TextureDir": "Resources/Models/Boss"
+                    },
+                    "Type": "SkinnedModelComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 1.0,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 3.5,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "LinkedColliderTag": "",
+                        "TargetBoneName": "mixamorig:Head"
+                    },
+                    "Type": "BoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 6.432083606719971,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 6.5,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:Spine2",
+                        "BoneBName": "mixamorig:Hips",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 7.395201206207275,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 3.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightArm",
+                        "BoneBName": "mixamorig:RightForeArm",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 4.740747928619385,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 2.5,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightForeArm",
+                        "BoneBName": "mixamorig:RightHand",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 7.3951945304870605,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 3.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftArm",
+                        "BoneBName": "mixamorig:LeftForeArm",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 4.740703582763672,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 2.5,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftForeArm",
+                        "BoneBName": "mixamorig:LeftHand",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 5.742437362670898,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 2.799999952316284,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightUpLeg",
+                        "BoneBName": "RightLeg",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 4.9025983810424805,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.7999999523162842,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightLeg",
+                        "BoneBName": "mixamorig:RightFoot",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 5.742436408996582,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 2.299999952316284,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftUpLeg",
+                        "BoneBName": "mixamorig:LeftLeg",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 4.902600288391113,
+                        "IsTrigger": true,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.7999999523162842,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftLeg",
+                        "BoneBName": "mixamorig:LeftFoot",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "Sockets": [
+                            {
+                                "BoneName": "mixamorig:RightHand",
+                                "Name": "WeaponSocket",
+                                "PosX": 1.0,
+                                "PosY": 3.0,
+                                "PosZ": -1.0,
+                                "RotX": 3.0,
+                                "RotY": 0.0,
+                                "RotZ": 1.5
+                            }
+                        ]
+                    },
+                    "Type": "SocketComponent"
+                },
+                {
+                    "Data": {
+                        "IsKinematic": false,
+                        "Mass": 80.0,
+                        "UseGravity": true
+                    },
+                    "Type": "RigidBodyComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "EnemyRoot",
+                        "Height": 17.0,
+                        "IsTrigger": false,
+                        "OffsetX": 0.0,
+                        "OffsetY": 90.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 5.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "TargetType": 1
+                    },
+                    "Type": "TargetTrackingComponent"
+                }
+            ],
+            "Name": "Enemy"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "DamageAmount": 20.0,
+                        "DamageType": 0,
+                        "IsActive": true
+                    },
+                    "Type": "DamageDealerComponent"
+                },
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            10.0,
+                            10.0,
+                            10.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "ModelPath": "Resources/Models/boss/axe.sdkmesh",
+                        "TextureDir": "Resources/Models/boss"
+                    },
+                    "Type": "StaticModelComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "ExtentsX": 0.20000000298023224,
+                        "ExtentsY": 0.30000001192092896,
+                        "ExtentsZ": 0.05000000074505806,
+                        "IsTrigger": true,
+                        "OffsetX": -0.4000000059604645,
+                        "OffsetY": -0.8999999761581421,
+                        "OffsetZ": -0.05000000074505806,
+                        "RotW": 0.9944382309913635,
+                        "RotX": 0.007766264025121927,
+                        "RotY": 0.009590537287294865,
+                        "RotZ": -0.10459624230861664
+                    },
+                    "Type": "OBBColliderComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 8.0,
+                        "IsTrigger": true,
+                        "OffsetX": -0.07000000029802322,
+                        "OffsetY": -0.2199999988079071,
+                        "OffsetZ": -0.029999999329447746,
+                        "Radius": 0.5,
+                        "RotW": 0.9901007413864136,
+                        "RotX": 0.011069105938076973,
+                        "RotY": -0.016067586839199066,
+                        "RotZ": -0.13899579644203186
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "OwnerTag": "Enemy",
+                        "SocketName": "WeaponSocket"
+                    },
+                    "Type": "SocketAttachmentComponent"
+                }
+            ],
+            "Name": "Axe"
+        },
+        {
+            "Children": [
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/floor1.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        },
+                        {
+                            "Data": {
+                                "ColliderTag": "",
+                                "IsTrigger": false,
+                                "ObjPath": "Resources/Models/stage/floor1.obj",
+                                "OffsetX": 0.0,
+                                "OffsetY": 0.0,
+                                "OffsetZ": 0.0,
+                                "RotW": 1.0,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": 0.0
+                            },
+                            "Type": "MeshColliderComponent"
+                        }
+                    ],
+                    "Name": "Floor"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    9.0,
+                                    1.0,
+                                    0.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ColliderTag": "",
+                                "ExtentsX": 0.07999999821186066,
+                                "ExtentsY": 1.0,
+                                "ExtentsZ": 10.0,
+                                "IsTrigger": false,
+                                "OffsetX": 0.0,
+                                "OffsetY": 0.0,
+                                "OffsetZ": 0.0,
+                                "RotW": 1.0,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": 0.0
+                            },
+                            "Type": "AABBColliderComponent"
+                        }
+                    ],
+                    "Name": "StageWall0"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    0.0,
+                                    1.0,
+                                    9.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ColliderTag": "",
+                                "ExtentsX": 10.0,
+                                "ExtentsY": 1.0,
+                                "ExtentsZ": 0.07999999821186066,
+                                "IsTrigger": false,
+                                "OffsetX": 0.0,
+                                "OffsetY": 0.0,
+                                "OffsetZ": 0.0,
+                                "RotW": 1.0,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": 0.0
+                            },
+                            "Type": "AABBColliderComponent"
+                        }
+                    ],
+                    "Name": "StageWall1"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -9.0,
+                                    1.0,
+                                    0.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ColliderTag": "",
+                                "ExtentsX": 0.07999999821186066,
+                                "ExtentsY": 1.0,
+                                "ExtentsZ": 10.399999618530273,
+                                "IsTrigger": false,
+                                "OffsetX": 0.0,
+                                "OffsetY": 0.0,
+                                "OffsetZ": 0.0,
+                                "RotW": 1.0,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": 0.0
+                            },
+                            "Type": "AABBColliderComponent"
+                        }
+                    ],
+                    "Name": "StageWall2"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    0.0,
+                                    1.0,
+                                    -9.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ColliderTag": "",
+                                "ExtentsX": 10.0,
+                                "ExtentsY": 1.0,
+                                "ExtentsZ": 0.07999999821186066,
+                                "IsTrigger": false,
+                                "OffsetX": 0.0,
+                                "OffsetY": 0.0,
+                                "OffsetZ": 0.0,
+                                "RotW": 1.0,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": 0.0
+                            },
+                            "Type": "AABBColliderComponent"
+                        }
+                    ],
+                    "Name": "StageWall3"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    10.0,
+                                    0.0,
+                                    10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Pillar0"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    10.0,
+                                    0.0,
+                                    -10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Pillar1"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -10.0,
+                                    0.0,
+                                    10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Pillar2"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -10.0,
+                                    0.0,
+                                    -10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Pillar3"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    10.0,
+                                    0.0,
+                                    10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.7071068286895752,
+                                    0.0,
+                                    0.7071067690849304
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Bridge0"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -10.0,
+                                    0.0,
+                                    10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Bridge1"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -10.0,
+                                    0.0,
+                                    10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.7071068286895752,
+                                    0.0,
+                                    0.7071067690849304
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Bridge2"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -10.0,
+                                    0.0,
+                                    -10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Bridge3"
+                }
+            ],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            10.0,
+                            10.0,
+                            10.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                }
+            ],
+            "Name": "StageRoot"
+        }
+    ]
+}
