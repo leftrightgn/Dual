@@ -16,6 +16,12 @@
 #include <BlackBoard/CombatBlackBoard.h>
 #include "../../../External/Engine/ImGui/imgui.h"
 #include "../../../External/Engine/Common/Event.h"
+#include <commdlg.h>
+#include <fstream>
+#include "../../../External/Engine/Common/json.hpp"
+#include <Windows.h>
+#include <utility>
+#include "../../../External/Engine/Common/json.hpp"
 
 using namespace DirectX;
 
@@ -146,6 +152,15 @@ void GameScene::OnEnter(GameContext& gameContext)
             m_damageSystem->HandlTriggerHit(payLoad, m_actorManager);
         }
     );
+    
+    // Auto-load last saved changes over the factory actors!
+    std::ifstream autoSaveFile("AutoSave.json");
+    if (autoSaveFile.is_open())
+    {
+        nlohmann::json j;
+        autoSaveFile >> j;
+        m_actorManager.Deserialize(j);
+    }
 }
 
 
@@ -157,6 +172,90 @@ void GameScene::Update(GameContext& gameContext)
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
     m_debugDisplay->Update(gameContext, m_actorManager);
+
+    static bool s_isPlaying = true;
+
+    HEIN::EditorAction uiAction = m_debugDisplay->GetUIAction();
+    if (uiAction == HEIN::EditorAction::PlayPressed) {
+        s_isPlaying = true;
+    } else if (uiAction == HEIN::EditorAction::StopPressed) {
+        s_isPlaying = false;
+    } else if (uiAction == HEIN::EditorAction::LoadPressed) {
+        WCHAR szFile[260] = { 0 };
+        OPENFILENAMEW ofn = { 0 };
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = gameContext.deviceResources.GetWindow();
+        ofn.lpstrFile = szFile;
+        ofn.nMaxFile = sizeof(szFile) / sizeof(WCHAR);
+        ofn.lpstrFilter = L"JSON Files\0*.json\0Scene Files\0*.Scene\0All Files\0*.*\0";
+        ofn.nFilterIndex = 1;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+        if (GetOpenFileNameW(&ofn) == TRUE) {
+            std::ifstream file(szFile);
+            if (file.is_open()) {
+                nlohmann::json j;
+                file >> j;
+                
+                gameContext.mainCamera = nullptr; 
+                // Do not clear actors! We merge data from JSON overlay-style
+                m_actorManager.Deserialize(j);
+                
+                auto player = m_actorManager.GetActorByName(L"Player");
+                if(player) m_playerID = player->GetID();
+                auto enemy = m_actorManager.GetActorByName(L"Enemy");
+                if(enemy) m_enemyID = enemy->GetID();
+                gameContext.mainCamera = nullptr;
+                for (auto& pair : m_actorManager.GetAllActors())
+                {
+                    if (auto cam = pair.second->GetComponent<HEIN::CameraController>())
+                    {
+                        gameContext.mainCamera = cam;
+                        m_cameraID = pair.second->GetID();
+                        break;
+                    }
+                }
+                s_isPlaying = true;
+            }
+        }
+    } else if (uiAction == HEIN::EditorAction::NewScenePressed) {
+        gameContext.mainCamera = nullptr;
+        m_actorManager.ClearAllActors();
+        m_playerID = HEIN::INVALID_ACTOR_ID;
+        m_enemyID = HEIN::INVALID_ACTOR_ID;
+        m_cameraID = HEIN::INVALID_ACTOR_ID;
+    } else if (uiAction == HEIN::EditorAction::SavePressed) {
+        WCHAR szFile[260] = { 0 };
+        OPENFILENAMEW ofn = { 0 };
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = gameContext.deviceResources.GetWindow();
+        ofn.lpstrFile = szFile;
+        ofn.nMaxFile = sizeof(szFile) / sizeof(WCHAR);
+        ofn.lpstrFilter = L"JSON Files\0*.json\0Scene Files\0*.Scene\0All Files\0*.*\0";
+        ofn.nFilterIndex = 1;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+        ofn.lpstrDefExt = L"json";
+
+        if (GetSaveFileNameW(&ofn) == TRUE) {
+            std::ofstream file(szFile);
+            if (file.is_open()) {
+                nlohmann::json j = m_actorManager.Serialize();
+                file << j.dump(4);
+            }
+            // Auto-save mirror so it reloads automatically next boot!
+            std::ofstream autoSave("AutoSave.json");
+            if (autoSave.is_open()) {
+                nlohmann::json j = m_actorManager.Serialize();
+                autoSave << j.dump(4);
+            }
+        }
+    }
+
+    // Zero delta time stops all physics/logic automatically when paused
+    if (!s_isPlaying) 
+    {
+        deltaTime = 0.0f;
+    }
 
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
 
@@ -182,7 +281,7 @@ void GameScene::Update(GameContext& gameContext)
     }
 
     // PLAYER INPUT PHASE
-    if (player != nullptr && !m_debugDisplay->isMagnified())
+    if (s_isPlaying && player != nullptr && !m_debugDisplay->isMagnified())
     {
         gameContext.inputManager->BroadCastPlayerInput(gameContext, m_playerID);
 
@@ -194,11 +293,19 @@ void GameScene::Update(GameContext& gameContext)
     }
 
     // CORE ENGINE LOOP (Data-Oriented Math Pipeline)
-    m_actorManager.UpdateAll(deltaTime);
-    m_physicsSystem->UpdateMovement(gameContext, m_actorManager, deltaTime);
-    m_actorManager.UpdateAllHierarchies(); //  Math Cascades Downwards
-    m_actorManager.LateUpdateAll(deltaTime);
-    m_physicsSystem->UpdateCollisions(gameContext, m_actorManager, deltaTime);
+    if (s_isPlaying)
+    {
+        m_actorManager.UpdateAll(deltaTime);
+        m_physicsSystem->UpdateMovement(gameContext, m_actorManager, deltaTime);
+        m_actorManager.UpdateAllHierarchies(); // Math Cascades Downwards
+        m_actorManager.LateUpdateAll(deltaTime);
+        m_physicsSystem->UpdateCollisions(gameContext, m_actorManager, deltaTime);
+    }
+    else
+    {
+        // When paused, still update hierarchies so Editor changes to transforms reflect instantly
+        m_actorManager.UpdateAllHierarchies();
+    }
 
     // CAMERA TRACKING
     if (player != nullptr)

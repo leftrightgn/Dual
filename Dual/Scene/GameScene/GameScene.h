@@ -16,13 +16,13 @@ class GameScene : public HEIN::IScene
 {
 public:
 
-	// 更新
+	// 譖ｴ譁ｰ
 	void Update(GameContext& gameContext) override;
 
-	// 描画
+	// 謠冗判
 	void Render(GameContext& gameContext) override;
 
-	// シーン切り替え時に呼び出される関数
+	// 繧ｷ繝ｼ繝ｳ蛻�繧頑崛縺域凾縺ｫ蜻ｼ縺ｳ蜃ｺ縺輔ｌ繧矩未謨ｰ
 	void OnEnter(GameContext& gameContext) override;
 
 private:
@@ -45,7 +45,6 @@ private:
 	HEIN::ActorID m_enemyID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_enemySwordID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_cameraID = HEIN::INVALID_ACTOR_ID;
-
 
 	HEIN::ActorManager m_actorManager;
 

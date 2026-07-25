@@ -365,3 +365,6 @@ FodyWeavers.xsd
 # ただし 指定フォルダ内は無視しない
 !ResourceBuild/Models/*
 !ResourceBuild/Textures/*
+
+Dual/Resources/Models/stage/*.dds
+Dual/Resources/Models/stage/*.sdkmesh

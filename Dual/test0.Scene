@@ -1,0 +1,136 @@
+{
+    "Actors": [
+        {
+            "Children": [],
+            "Components": [],
+            "Name": "MainCamera"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "Animations": [
+                            {
+                                "Name": "Anim0",
+                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
+                            }
+                        ],
+                        "ModelPath": "Resources/Models/knight/knight.sdkmesh",
+                        "TextureDir": "Resources/Models/knight/"
+                    },
+                    "Type": "SkinnedModelComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "head",
+                        "Height": 0.15000000596046448,
+                        "IsTrigger": false,
+                        "OffsetX": 0.0,
+                        "OffsetY": 4.5,
+                        "OffsetZ": 0.0,
+                        "Radius": 18.399999618530273,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "LinkedColliderTag": "head",
+                        "TargetBoneName": "mixamorig:Head"
+                    },
+                    "Type": "BoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "body",
+                        "Height": 37.202056884765625,
+                        "IsTrigger": false,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 20.950000762939453,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:Spine2",
+                        "BoneBName": "mixamorig:Hips",
+                        "LinkedColliderTag": "body"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                }
+            ],
+            "Name": "NewActor"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            500.0,
+                            20.0,
+                            183.83351135253906
+                        ],
+                        "Rotation": [
+                            0.013796932995319366,
+                            0.3314470946788788,
+                            0.03923540934920311,
+                            0.9425566792488098
+                        ],
+                        "Scale": [
+                            0.9999873638153076,
+                            0.9999917149543762,
+                            1.0000007152557373
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "Animations": [
+                            {
+                                "Name": "Anim0",
+                                "Path": "Resources/Models/Boss/running.sdkmesh_anim"
+                            }
+                        ],
+                        "ModelPath": "Resources/Models/Boss/Boss.sdkmesh",
+                        "TextureDir": "Resources/Models/Boss/"
+                    },
+                    "Type": "SkinnedModelComponent"
+                }
+            ],
+            "Name": "Enemy"
+        }
+    ]
+}
