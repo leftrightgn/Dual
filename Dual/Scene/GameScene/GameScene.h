@@ -49,4 +49,5 @@ private:
 	HEIN::ActorManager m_actorManager;
 
 	std::unique_ptr<HEIN::DebugDisplayController> m_debugDisplay;
+	bool m_isPlaying = true;
 };

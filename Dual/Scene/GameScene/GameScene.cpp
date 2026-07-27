@@ -15,6 +15,7 @@
 #include "../../../External/Engine/Components/HealthComponent.h"
 #include <BlackBoard/CombatBlackBoard.h>
 #include "../../../External/Engine/ImGui/imgui.h"
+#include "../../../External/Engine/ImGui/ImGuizmo.h"
 #include "../../../External/Engine/Common/Event.h"
 #include <commdlg.h>
 #include <fstream>
@@ -173,13 +174,11 @@ void GameScene::Update(GameContext& gameContext)
 
     m_debugDisplay->Update(gameContext, m_actorManager);
 
-    static bool s_isPlaying = true;
-
     HEIN::EditorAction uiAction = m_debugDisplay->GetUIAction();
-    if (uiAction == HEIN::EditorAction::PlayPressed) {
-        s_isPlaying = true;
+    if (uiAction == HEIN::EditorAction::PlayPressed || !m_debugDisplay->isVisible()) {
+        m_isPlaying = true;
     } else if (uiAction == HEIN::EditorAction::StopPressed) {
-        s_isPlaying = false;
+        m_isPlaying = false;
     } else if (uiAction == HEIN::EditorAction::LoadPressed) {
         WCHAR szFile[260] = { 0 };
         OPENFILENAMEW ofn = { 0 };
@@ -215,7 +214,7 @@ void GameScene::Update(GameContext& gameContext)
                         break;
                     }
                 }
-                s_isPlaying = true;
+                m_isPlaying = true;
             }
         }
     } else if (uiAction == HEIN::EditorAction::NewScenePressed) {
@@ -249,15 +248,24 @@ void GameScene::Update(GameContext& gameContext)
                 autoSave << j.dump(4);
             }
         }
+    } else if (uiAction == HEIN::EditorAction::AutoSavePressed) {
+        std::ofstream autoSave("AutoSave.json");
+        if (autoSave.is_open()) {
+            nlohmann::json j = m_actorManager.Serialize();
+            autoSave << j.dump(4);
+        }
     }
 
     // Zero delta time stops all physics/logic automatically when paused
-    if (!s_isPlaying) 
+    if (!m_isPlaying) 
     {
         deltaTime = 0.0f;
     }
 
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
+
+    bool isUICapturingMouse = ImGui::GetIO().WantCaptureMouse || ImGuizmo::IsUsing() || ImGuizmo::IsOver();
+    bool isUICapturingKeyboard = ImGui::GetIO().WantCaptureKeyboard;
 
     // CAMERA INPUT PHASE
     if (!m_debugDisplay->isMagnified() && gameContext.mainCamera != nullptr)
@@ -265,10 +273,21 @@ void GameScene::Update(GameContext& gameContext)
         HEIN::CameraInputState cameraInput;
         const DirectX::Mouse::State& mouseState = gameContext.mouseState;
 
-        cameraInput.mouseX = static_cast<float>(mouseState.x);
-        cameraInput.mouseY = static_cast<float>(mouseState.y);
-        cameraInput.isLeftMouseDown = mouseState.leftButton;
+        if (mouseState.positionMode == DirectX::Mouse::MODE_RELATIVE)
+        {
+            cameraInput.mouseX = isUICapturingMouse ? 0.0f : static_cast<float>(mouseState.x);
+            cameraInput.mouseY = isUICapturingMouse ? 0.0f : static_cast<float>(mouseState.y);
+        }
+        else
+        {
+            cameraInput.mouseX = static_cast<float>(mouseState.x);
+            cameraInput.mouseY = static_cast<float>(mouseState.y);
+        }
+
+        cameraInput.isLeftMouseDown = isUICapturingMouse ? false : mouseState.leftButton;
         cameraInput.scrollWheelDelta = static_cast<float>(mouseState.scrollWheelValue);
+        cameraInput.ignoreScroll = isUICapturingMouse;
+        cameraInput.ignoreMovement = isUICapturingKeyboard;
 
         gameContext.mainCamera->ProcessInput(cameraInput);
 
@@ -281,7 +300,7 @@ void GameScene::Update(GameContext& gameContext)
     }
 
     // PLAYER INPUT PHASE
-    if (s_isPlaying && player != nullptr && !m_debugDisplay->isMagnified())
+    if (m_isPlaying && player != nullptr && !m_debugDisplay->isMagnified() && !isUICapturingMouse && !isUICapturingKeyboard)
     {
         gameContext.inputManager->BroadCastPlayerInput(gameContext, m_playerID);
 
@@ -293,7 +312,7 @@ void GameScene::Update(GameContext& gameContext)
     }
 
     // CORE ENGINE LOOP (Data-Oriented Math Pipeline)
-    if (s_isPlaying)
+    if (m_isPlaying)
     {
         m_actorManager.UpdateAll(deltaTime);
         m_physicsSystem->UpdateMovement(gameContext, m_actorManager, deltaTime);
@@ -373,78 +392,75 @@ void GameScene::Render(GameContext& gameContext)
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
     HEIN::Actor* enemy = m_actorManager.GetActor(m_enemyID);
     // COMBAT UI
-    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Always);
-
-    // Set up flags to make the window static (No moving, No resizing, No collapsing)
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
-
-    // Begin the window with the new flags
-    ImGui::Begin("Combat Status", nullptr, flags);
-    if (player != nullptr)
+    if (m_isPlaying && !m_debugDisplay->isVisible())
     {
-        HEIN::HealthComponent* pHealth = player->GetComponent<HEIN::HealthComponent>();
-        if (pHealth != nullptr)
+        ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Always);
+
+        // Set up flags to make the window static (No moving, No resizing, No collapsing, No inputs)
+        ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoInputs;
+
+        // Begin the window with the new flags
+        ImGui::Begin("Combat Status", nullptr, flags);
+        if (player != nullptr)
         {
-            ImGui::Text("Player Health");
-            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-            ImGui::ProgressBar(pHealth->GetCurrentHealth() / pHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
-            ImGui::PopStyleColor();
-        }
+            HEIN::HealthComponent* pHealth = player->GetComponent<HEIN::HealthComponent>();
+            if (pHealth != nullptr)
+            {
+                ImGui::Text("Player Health");
+                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+                ImGui::ProgressBar(pHealth->GetCurrentHealth() / pHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
+                ImGui::PopStyleColor();
+            }
 
-        HEIN::CombatBlackBoard* pBB = player->GetComponent<HEIN::CombatBlackBoard>();
-        if (pBB != nullptr)
+            HEIN::CombatBlackBoard* pBB = player->GetComponent<HEIN::CombatBlackBoard>();
+            if (pBB != nullptr)
+            {
+                if (pBB->isBlockBroken)
+                {
+                    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // Red bar
+                    ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
+                    ImGui::PopStyleColor();
+                }
+                else
+                {
+                    ImGui::Text("Block Stamina");
+                    ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
+                }
+
+                ImGui::Separator();
+
+                if (pBB->dodgeCooldownTimer > 0.0f)
+                {
+                    ImGui::Text("Dodge Recharging...");
+                    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+                    ImGui::ProgressBar(1.0f - (pBB->dodgeCooldownTimer / pBB->maxDodgeCooldown), ImVec2(200.0f, 20.0f), "");
+                    ImGui::PopStyleColor();
+                }
+                else
+                {
+                    ImGui::Text("Dodge Ready");
+                    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 0.8f, 1.0f, 1.0f));
+                    ImGui::ProgressBar(1.0f, ImVec2(200.0f, 20.0f), "");
+                    ImGui::PopStyleColor();
+                }
+            }
+        }
+        else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "PLAYER DEAD");
+
+        ImGui::Separator();
+
+        if (enemy != nullptr)
         {
-            if (pBB->isBlockBroken)
+            HEIN::HealthComponent* eHealth = enemy->GetComponent<HEIN::HealthComponent>();
+            if (eHealth != nullptr)
             {
-                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // Red bar
-                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
-                ImGui::PopStyleColor();
-            }
-            else
-            {
-                ImGui::Text("Block Stamina");
-                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
-            }
-
-            ImGui::Separator();
-
-            if (pBB->dodgeCooldownTimer > 0.0f)
-            {
-                ImGui::Text("Dodge Recharging...");
-                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-                ImGui::ProgressBar(1.0f - (pBB->dodgeCooldownTimer / pBB->maxDodgeCooldown), ImVec2(200.0f, 20.0f), "");
-                ImGui::PopStyleColor();
-            }
-            else
-            {
-                ImGui::Text("Dodge Ready");
-                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 0.8f, 1.0f, 1.0f));
-                ImGui::ProgressBar(1.0f, ImVec2(200.0f, 20.0f), "");
-                ImGui::PopStyleColor();
+                ImGui::Text("Enemy Health");
+                ImGui::ProgressBar(eHealth->GetCurrentHealth() / eHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
             }
         }
+        else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "ENEMY DEAD");
+        ImGui::End();
     }
-    else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "PLAYER DEAD");
-
-    ImGui::Separator();
-
-    if (enemy != nullptr)
-    {
-        HEIN::HealthComponent* eHealth = enemy->GetComponent<HEIN::HealthComponent>();
-        if (eHealth != nullptr)
-        {
-            ImGui::Text("Enemy Health");
-            ImGui::ProgressBar(eHealth->GetCurrentHealth() / eHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
-            
-           /* HEIN::CombatBlackBoard* eBB = enemy->GetComponent<HEIN::CombatBlackBoard>();
-            if (eBB != nullptr)
-            {
-                ImGui::Text("Enemy Node: %s", eBB->activeNodeName.c_str());
-            }*/
-        }
-    }
-    else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "ENEMY DEAD");
-    ImGui::End();
     // Transparent Pipeline Setup
     ID3D11SamplerState* wrapSampler = gameContext.commonStates.LinearWrap();
     context->RSSetState(gameContext.commonStates.CullNone());
