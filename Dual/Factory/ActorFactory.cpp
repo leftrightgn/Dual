@@ -29,6 +29,7 @@
 #include "../../External/Engine/Camera/CameraController.h"
 #include "ActorFactory.h"
 #include "../../External/Engine/Components/TransformComponent.h"
+#include "../../External/Engine/Components/TerrainComponent.h"
 
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
@@ -423,9 +424,12 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
     floorPhysics->LoadFromObj(L"Resources/Models/stage/floor1.obj");
     floorPhysics->SetCollisionLayer(CollisionLayer::Layer_Environment);
  
-  
+    HEIN::Actor* terrianActor = actorManager.CreateActor(L"Terrian");
+    terrianActor->AddComponent<HEIN::TransformComponent>();
+    HEIN::TerrainComponent* terrainComp = terrianActor->AddComponent<HEIN::TerrainComponent>();
+    terrainComp->Initialize(gameContext, L"Resources/Textures/heightmap.bmp", 10.0f);
    
-
+    terrianActor->Start();
     // Link Floor to Root
     floorActor->SetParent(stageRoot->GetID());
     stageRoot->AddChild(floorActor->GetID());
