@@ -427,7 +427,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
     HEIN::Actor* terrianActor = actorManager.CreateActor(L"Terrian");
     terrianActor->AddComponent<HEIN::TransformComponent>();
     HEIN::TerrainComponent* terrainComp = terrianActor->AddComponent<HEIN::TerrainComponent>();
-    terrainComp->Initialize(gameContext, L"Resources/Textures/heightmap.bmp", 10.0f);
+    terrainComp->Initialize(gameContext, L"Resources/Textures/heightmap.bmp", L"Resources/Textures/pic4010.dds", 10.0f, 1.0f);
    
     terrianActor->Start();
     // Link Floor to Root

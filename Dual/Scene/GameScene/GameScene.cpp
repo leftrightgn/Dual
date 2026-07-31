@@ -23,6 +23,7 @@
 #include <Windows.h>
 #include <utility>
 #include "../../../External/Engine/Common/json.hpp"
+#include <Components/TerrainComponent.h>
 
 using namespace DirectX;
 

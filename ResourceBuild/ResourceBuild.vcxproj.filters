@@ -27,5 +27,8 @@
     <ImageContentTask Include="Textures\blinn4SG_Mixed_AO.jpeg">
       <Filter>Textures</Filter>
     </ImageContentTask>
+    <ImageContentTask Include="Textures\pic4010.png">
+      <Filter>Textures</Filter>
+    </ImageContentTask>
   </ItemGroup>
 </Project>
