@@ -15,7 +15,7 @@
             "Components": [
                 {
                     "Data": {
-                        "CurrentHealth": 100.0,
+                        "CurrentHealth": 60.0,
                         "IsGameplayInvincible": false,
                         "IsInvincible": false,
                         "MaxHealth": 100.0
@@ -25,9 +25,9 @@
                 {
                     "Data": {
                         "Position": [
-                            79.98443603515625,
-                            5.67576265335083,
-                            -434.8420104980469
+                            100.6296157836914,
+                            5.6757636070251465,
+                            -414.1421813964844
                         ],
                         "Rotation": [
                             -0.0,
@@ -106,7 +106,7 @@
                 {
                     "Data": {
                         "ColliderTag": "BodyCollider",
-                        "Height": 3.7055349349975586,
+                        "Height": 3.7173495292663574,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -130,7 +130,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RarmCollider",
-                        "Height": 2.557446241378784,
+                        "Height": 2.557424306869507,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -154,7 +154,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RforearmCollider",
-                        "Height": 2.160346031188965,
+                        "Height": 2.1603338718414307,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -178,7 +178,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LarmCollider",
-                        "Height": 2.5574355125427246,
+                        "Height": 2.557432174682617,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -202,7 +202,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LforearmCollider",
-                        "Height": 2.1603286266326904,
+                        "Height": 2.160339593887329,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -226,7 +226,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RupLegCollider",
-                        "Height": 4.170197486877441,
+                        "Height": 4.170207500457764,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -250,7 +250,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RLegCollider",
-                        "Height": 3.6981077194213867,
+                        "Height": 3.6980910301208496,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -274,7 +274,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LupLegCollider",
-                        "Height": 4.170220375061035,
+                        "Height": 4.170198440551758,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -298,7 +298,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LLegCollider",
-                        "Height": 3.6981050968170166,
+                        "Height": 3.698105573654175,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -450,15 +450,15 @@
                 {
                     "Data": {
                         "Position": [
-                            73.10066986083984,
-                            5.675762176513672,
-                            -409.85089111328125
+                            63.36514663696289,
+                            -1.6033830642700195,
+                            -363.0191650390625
                         ],
                         "Rotation": [
                             0.0,
-                            0.13398736715316772,
-                            -0.0,
-                            -0.9909830093383789
+                            0.9500501751899719,
+                            0.0,
+                            0.3120971918106079
                         ],
                         "Scale": [
                             0.15000002086162567,
@@ -527,7 +527,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 6.490283012390137,
+                        "Height": 6.383288383483887,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -551,7 +551,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.395193099975586,
+                        "Height": 7.395194053649902,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -575,7 +575,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.740747928619385,
+                        "Height": 4.740745544433594,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -599,7 +599,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.3951945304870605,
+                        "Height": 7.395191192626953,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -623,7 +623,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.740705966949463,
+                        "Height": 4.740711212158203,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -647,7 +647,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 5.742437362670898,
+                        "Height": 5.742438793182373,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -671,7 +671,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.902597427368164,
+                        "Height": 4.902616500854492,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -695,7 +695,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 5.742437839508057,
+                        "Height": 5.7424235343933105,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -719,7 +719,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.902609825134277,
+                        "Height": 4.902608394622803,
                         "IsTrigger": true,
                         "OffsetX": 0.0,
                         "OffsetY": 0.0,
@@ -1423,6 +1423,7 @@
                 },
                 {
                     "Data": {
+                        "ColorMapPath": "Resources/Textures/colormap.bmp",
                         "DiffuseColor": [
                             1.0,
                             1.0,
@@ -1432,9 +1433,9 @@
                         "HeightScale": 29.5,
                         "IsVisible": true,
                         "LightDirection": [
-                            -0.5,
-                            -1.0,
-                            0.5
+                            1.0,
+                            -0.6499999761581421,
+                            -0.8999999761581421
                         ],
                         "TexturePath": "Resources/Textures/dirt01d.dds",
                         "TextureTiling": 13.0,
