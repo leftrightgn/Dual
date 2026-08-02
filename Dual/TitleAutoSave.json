@@ -1,0 +1,622 @@
+{
+    "Actors": [
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            85.96399688720703,
+                            18.229000091552734,
+                            24.5
+                        ],
+                        "Rotation": [
+                            -0.024965405464172363,
+                            0.3006027042865753,
+                            0.007871548645198345,
+                            0.9533901810646057
+                        ],
+                        "Scale": [
+                            0.9999967217445374,
+                            1.0,
+                            0.9999967217445374
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "BlendDuration": 5.0,
+                        "Fov": 0.7487462759017944,
+                        "PosX": 85.96399688720703,
+                        "PosY": 18.229000091552734,
+                        "PosZ": 24.5,
+                        "RotW": 0.9533901810646057,
+                        "RotX": -0.024965405464172363,
+                        "RotY": 0.3006027042865753,
+                        "RotZ": 0.007871548645198345
+                    },
+                    "Type": "CameraController"
+                }
+            ],
+            "Name": "TitleCamera"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            0.0,
+                            100.0
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "ElementType": 0,
+                        "FontSize": 2.450000047683716,
+                        "HoverTex": "",
+                        "IsVisible": true,
+                        "NormalTex": "",
+                        "PosX": 700.0,
+                        "PosY": 325.0000305175781,
+                        "PressedTex": "",
+                        "SizeX": 280.0,
+                        "SizeY": 64.0,
+                        "Text": "START GAME",
+                        "TextColorA": 1.0,
+                        "TextColorB": 1.0,
+                        "TextColorG": 1.0,
+                        "TextColorR": 1.0,
+                        "TintA": 1.0,
+                        "TintB": 1.0,
+                        "TintG": 1.0,
+                        "TintR": 1.0
+                    },
+                    "Type": "UIButtonComponent"
+                }
+            ],
+            "Name": "StartButton"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            0.0,
+                            100.0
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "ElementType": 0,
+                        "FontSize": 2.450000047683716,
+                        "HoverTex": "",
+                        "IsVisible": true,
+                        "NormalTex": "",
+                        "PosX": 700.0,
+                        "PosY": 407.0,
+                        "PressedTex": "",
+                        "SizeX": 280.0,
+                        "SizeY": 64.0,
+                        "Text": "QUIT GAME",
+                        "TextColorA": 1.0,
+                        "TextColorB": 1.0,
+                        "TextColorG": 1.0,
+                        "TextColorR": 1.0,
+                        "TintA": 1.0,
+                        "TintB": 1.0,
+                        "TintG": 1.0,
+                        "TintR": 1.0
+                    },
+                    "Type": "UIButtonComponent"
+                }
+            ],
+            "Name": "ExitButton"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            22.67398452758789,
+                            -1.3067413568496704,
+                            -14.611927032470703
+                        ],
+                        "Rotation": [
+                            -4.221719418495695e-09,
+                            0.9590288400650024,
+                            -1.4290673533423615e-08,
+                            -0.2833084166049957
+                        ],
+                        "Scale": [
+                            0.10000136494636536,
+                            0.10000000149011612,
+                            0.10000136494636536
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "Animations": [
+                            {
+                                "Name": "Anim0",
+                                "Path": "Resources/Models/knight/Hip Hop Dancing.sdkmesh_anim"
+                            }
+                        ],
+                        "ModelPath": "Resources/Models/knight/knight.sdkmesh",
+                        "TextureDir": "Resources/Models/knight/"
+                    },
+                    "Type": "SkinnedModelComponent"
+                }
+            ],
+            "Name": "Player"
+        },
+        {
+            "Children": [
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/floor1.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Floor"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    10.0,
+                                    0.0,
+                                    10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Pillar0"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    10.0,
+                                    0.0,
+                                    -10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Pillar1"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -10.0,
+                                    0.0,
+                                    10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Pillar2"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -10.0,
+                                    0.0,
+                                    -10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Pillar3"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    10.0,
+                                    0.0,
+                                    10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.7071068286895752,
+                                    0.0,
+                                    0.7071067690849304
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Bridge0"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -10.0,
+                                    0.0,
+                                    10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Bridge1"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -10.0,
+                                    0.0,
+                                    10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.7071068286895752,
+                                    0.0,
+                                    0.7071067690849304
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Bridge2"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -10.0,
+                                    0.0,
+                                    -10.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Bridge3"
+                }
+            ],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            -17.727642059326172,
+                            -21.085906982421875
+                        ],
+                        "Rotation": [
+                            -0.0,
+                            0.0,
+                            -0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            10.0,
+                            10.0,
+                            10.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                }
+            ],
+            "Name": "StageRoot"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            62.05628204345703,
+                            -108.13887023925781,
+                            0.0
+                        ],
+                        "Rotation": [
+                            -0.0,
+                            0.6578071117401123,
+                            -0.0,
+                            0.7531864643096924
+                        ],
+                        "Scale": [
+                            5.000032424926758,
+                            5.0,
+                            5.000032424926758
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "ColorMapPath": "Resources/Textures/colormap.bmp",
+                        "DiffuseColor": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "HeightMapPath": "Resources/Textures/heightmap.bmp",
+                        "HeightScale": 33.5,
+                        "IsVisible": true,
+                        "LightDirection": [
+                            -0.3499999940395355,
+                            -0.6499999761581421,
+                            -0.6499999761581421
+                        ],
+                        "NormalMapPath": "",
+                        "TexturePath": "Resources/Textures/dirt01d.dds",
+                        "TextureTiling": 26.5,
+                        "isWiredFrame": false
+                    },
+                    "Type": "TerrainComponent"
+                }
+            ],
+            "Name": "Terrain"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "ElementType": 1,
+                        "FontSize": 1.0,
+                        "HoverTex": "",
+                        "IsVisible": true,
+                        "NormalTex": "Resources/Textures/title.dds",
+                        "PosX": 446.0006103515625,
+                        "PosY": 118.00013732910156,
+                        "PressedTex": "",
+                        "SizeX": 338.0,
+                        "SizeY": 93.0,
+                        "Text": "",
+                        "TextColorA": 1.0,
+                        "TextColorB": 1.0,
+                        "TextColorG": 1.0,
+                        "TextColorR": 1.0,
+                        "TintA": 1.0,
+                        "TintB": 1.0,
+                        "TintG": 1.0,
+                        "TintR": 1.0
+                    },
+                    "Type": "UIButtonComponent"
+                }
+            ],
+            "Name": "UIImage"
+        }
+    ]
+}

@@ -183,6 +183,7 @@
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Scene\GameScene\GameScene.h" />
+    <ClInclude Include="Scene\TitleScene\TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Framework\Main.cpp" />
@@ -193,6 +194,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Scene\GameScene\GameScene.cpp" />
+    <ClCompile Include="Scene\TitleScene\TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

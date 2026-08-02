@@ -8,6 +8,9 @@
     <ClCompile Include="Scene\GameScene\GameScene.cpp">
       <Filter>Scene\GameScene</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\TitleScene\TitleScene.cpp">
+      <Filter>Scene\TitleScene</Filter>
+    </ClCompile>
     <ClCompile Include="States\CombatStates.cpp">
       <Filter>States</Filter>
     </ClCompile>
@@ -19,6 +22,9 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Scene\GameScene\GameScene.h">
       <Filter>Scene\GameScene</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\TitleScene\TitleScene.h">
+      <Filter>Scene\TitleScene</Filter>
     </ClInclude>
     <ClInclude Include="States\CombatStates.h">
       <Filter>States</Filter>
@@ -54,6 +60,9 @@
     </Filter>
     <Filter Include="Scene\GameScene">
       <UniqueIdentifier>{0d9d6f68-4a02-4f44-994a-620e016fcc76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\TitleScene">
+      <UniqueIdentifier>{1d9d6f68-4a02-4f44-994a-620e016fcc77}</UniqueIdentifier>
     </Filter>
     <Filter Include="Effect">
       <UniqueIdentifier>{5915fa9b-369f-46a7-b832-10067f3f5875}</UniqueIdentifier>
