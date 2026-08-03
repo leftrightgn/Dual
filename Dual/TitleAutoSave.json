@@ -232,13 +232,13 @@
                                 "Rotation": [
                                     0.0,
                                     0.0,
-                                    0.0,
-                                    1.0
+                                    -0.7071068286895752,
+                                    0.7071067690849304
                                 ],
                                 "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
+                                    0.009999999776482582,
+                                    0.009999999776482582,
+                                    0.009999999776482582
                                 ]
                             },
                             "Type": "TransformComponent"
@@ -266,13 +266,13 @@
                                 "Rotation": [
                                     0.0,
                                     0.0,
-                                    0.0,
-                                    1.0
+                                    -0.7071068286895752,
+                                    0.7071067690849304
                                 ],
                                 "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
+                                    0.009999999776482582,
+                                    0.009999999776482582,
+                                    0.009999999776482582
                                 ]
                             },
                             "Type": "TransformComponent"
@@ -300,13 +300,13 @@
                                 "Rotation": [
                                     0.0,
                                     0.0,
-                                    0.0,
-                                    1.0
+                                    -0.7071068286895752,
+                                    0.7071067690849304
                                 ],
                                 "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
+                                    0.009999999776482582,
+                                    0.009999999776482582,
+                                    0.009999999776482582
                                 ]
                             },
                             "Type": "TransformComponent"
@@ -334,13 +334,13 @@
                                 "Rotation": [
                                     0.0,
                                     0.0,
-                                    0.0,
-                                    1.0
+                                    -0.7071068286895752,
+                                    0.7071067690849304
                                 ],
                                 "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
+                                    0.009999999776482582,
+                                    0.009999999776482582,
+                                    0.009999999776482582
                                 ]
                             },
                             "Type": "TransformComponent"
@@ -354,142 +354,6 @@
                         }
                     ],
                     "Name": "Pillar3"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    10.0,
-                                    0.0,
-                                    10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.7071068286895752,
-                                    0.0,
-                                    0.7071067690849304
-                                ],
-                                "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Bridge0"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -10.0,
-                                    0.0,
-                                    10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    0.0,
-                                    1.0
-                                ],
-                                "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Bridge1"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -10.0,
-                                    0.0,
-                                    10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.7071068286895752,
-                                    0.0,
-                                    0.7071067690849304
-                                ],
-                                "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Bridge2"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -10.0,
-                                    0.0,
-                                    -10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    0.0,
-                                    1.0
-                                ],
-                                "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Bridge3"
                 }
             ],
             "Components": [
@@ -617,6 +481,40 @@
                 }
             ],
             "Name": "UIImage"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            -100.23152160644531,
+                            -14.591560363769531,
+                            78.78213500976563
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            -1.1920930376163597e-07
+                        ],
+                        "Scale": [
+                            0.10000000149011612,
+                            0.10000000149011612,
+                            0.10000000149011612
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                        "TextureDir": "Resources/Models/stage/"
+                    },
+                    "Type": "StaticModelComponent"
+                }
+            ],
+            "Name": "bridge1"
         }
     ]
 }
