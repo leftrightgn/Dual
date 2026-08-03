@@ -255,6 +255,12 @@ void GameScene::Update(GameContext& gameContext)
             nlohmann::json j = m_actorManager.Serialize();
             autoSave << j.dump(4);
         }
+    } else if (uiAction == HEIN::EditorAction::CreateStagePressed) {
+        HEIN::ActorID stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
+        m_stageID = stageID;
+        if (m_debugDisplay != nullptr && stageID != HEIN::INVALID_ACTOR_ID) {
+            m_debugDisplay->GetDebugUI().SetSelectedActor(m_actorManager.GetActor(stageID));
+        }
     }
 
     // Zero delta time stops all physics/logic automatically when paused
@@ -264,6 +270,27 @@ void GameScene::Update(GameContext& gameContext)
     }
 
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
+    
+    // Safely sync camera pointer against actor manager
+    HEIN::Actor* cameraActor = m_actorManager.GetActor(m_cameraID);
+    if (cameraActor != nullptr)
+    {
+        gameContext.mainCamera = cameraActor->GetComponent<HEIN::CameraController>();
+    }
+    else
+    {
+        // If the camera actor was deleted, check if any other actor has a camera controller
+        gameContext.mainCamera = nullptr;
+        for (const auto& pair : m_actorManager.GetAllActors())
+        {
+            if (auto* cam = pair.second->GetComponent<HEIN::CameraController>())
+            {
+                gameContext.mainCamera = cam;
+                m_cameraID = pair.second->GetID();
+                break;
+            }
+        }
+    }
 
     bool isUICapturingMouse = ImGui::GetIO().WantCaptureMouse || ImGuizmo::IsUsing() || ImGuizmo::IsOver();
     bool isUICapturingKeyboard = ImGui::GetIO().WantCaptureKeyboard;
