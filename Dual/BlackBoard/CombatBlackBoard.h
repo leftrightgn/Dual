@@ -41,6 +41,7 @@ namespace HEIN
 		float currentHealth = 100.0f;
 		CombatStance currentStance = CombatStance::Idle;
 		float currentSpeed = 30.0f;
+		float currentTurnSpeed = 12.0f;
 
 		DirectX::SimpleMath::Vector3 moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		DirectX::SimpleMath::Vector3 localMoveIntent = DirectX::SimpleMath::Vector3::Zero;

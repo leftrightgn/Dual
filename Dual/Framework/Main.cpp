@@ -46,7 +46,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     if (!XMVerifyCPUSupport())
         return 1;
 
-    HRESULT hr = CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     if (FAILED(hr))
         return 1;
 
@@ -107,7 +107,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
             g_game->RegisterScene<TitleScene>("TitleScene");
             g_game->RegisterScene<GameScene>("GameScene");
 
-            g_game->LoadScene("TitleScene");
+            g_game->LoadScene("GameScene");
         }
 
         // Main message loop
