@@ -56,8 +56,7 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 		while (difference < -DirectX::XM_PI) difference += DirectX::XM_2PI;
 		while (difference > DirectX::XM_PI) difference -= DirectX::XM_2PI;
 
-		float turnSpeed = 10.0f;
-		currentRot.y += difference * turnSpeed * deltaTime;
+		currentRot.y += difference * m_blackboard->currentTurnSpeed * deltaTime;
 
 		currentRot.x = 0.0f;
 		currentRot.z = 0.0f;

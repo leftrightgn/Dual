@@ -28,6 +28,8 @@ void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
 
+	blackboard->currentTurnSpeed = 12.0f;
+	
 	// Only handle movement transitions in Update
 	if (blackboard->moveIntent.LengthSquared() > 0.1f)
 	{
@@ -74,6 +76,9 @@ void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMac
 	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 	if (!blackboard) return;
 	blackboard->currentSpeed = m_config.moveSpeed;
+
+	blackboard->currentTurnSpeed = 12.0f;
+
 	if (blackboard->moveIntent.LengthSquared() <= 0.1f)
 	{
 		stateMachine->ChangeState(m_config.transitions["OnStop"]);
@@ -128,6 +133,15 @@ void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent*
 
 	if (blackboard)
 	{
+		float windUpTime = 0.3f;
+		if (m_timer < windUpTime)
+		{
+			blackboard->currentTurnSpeed = 40.0f;
+		}
+		else
+		{
+			blackboard->currentTurnSpeed = 0.1f;
+		}
 		// If the animation completely finishes the current combo stage, exit state
 		if (m_timer >= m_config.comboEndTimes[m_comboStage])
 		{
@@ -211,6 +225,7 @@ void HEIN::DodgeState::Update(Actor* owner, CombatStateMachineComponent* stateMa
 
 	if (blackboard)
 	{
+		blackboard->currentTurnSpeed = 30.0f;
 		if (m_timer >= m_config.stateDuration)
 		{
 			if (blackboard->moveIntent.LengthSquared() > 0.1f)
