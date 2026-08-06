@@ -350,8 +350,9 @@ void GameScene::Update(GameContext& gameContext)
     }
     else
     {
-        // When paused, still update hierarchies so Editor changes to transforms reflect instantly
+        // When paused/stopped, update hierarchies and dynamic sockets/bone links so Editor changes reflect live
         m_actorManager.UpdateAllHierarchies();
+        m_actorManager.LateUpdateAll(0.0f);
     }
 
     // CAMERA TRACKING
