@@ -136,7 +136,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     RightupLegCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
     RightupLegCapsule->SetColliderTag(L"RupLegCollider");
     HEIN::TwoBoneLinkComponent* RightupLegLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    RightupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightUpLeg", L"RightLeg");
+    RightupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightUpLeg", L"mixamorig:RightLeg");
     RightupLegLink->LinkTo(RightupLegCapsule);
     HEIN::CapsuleColliderComponent* RightLegCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
     RightLegCapsule->Initialize(0.7f, 0.0f);
@@ -331,12 +331,18 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
 
     HEIN::SocketAttachmentComponent* socketAttachment = sword->AddComponent<HEIN::SocketAttachmentComponent>(&actorManager);
     socketAttachment->Initialize(wielderID, L"WeaponSocket");
+    actorManager.SetParent(sword->GetID(), wielderID, false);
 
     sword->Start();
     return sword->GetID();
 }
 
-HEIN::ActorID HEIN::ActorFactory::CreateAxe(ActorManager& actorManager, GameContext& gameContext, HEIN::ActorID wielderID, float damage)
+HEIN::ActorID HEIN::ActorFactory::CreateAxe(
+    ActorManager& actorManager,
+    GameContext& gameContext,
+    HEIN::ActorID wielderID, 
+    float damage
+)
 {
     HEIN::Actor* axe = actorManager.CreateActor(L"Axe");
     axe->SetOwnerID(wielderID);
@@ -400,6 +406,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateAxe(ActorManager& actorManager, GameCont
 
     HEIN::SocketAttachmentComponent* socketAttachment = axe->AddComponent<HEIN::SocketAttachmentComponent>(&actorManager);
     socketAttachment->Initialize(wielderID, L"WeaponSocket");
+    actorManager.SetParent(axe->GetID(), wielderID, false);
 
     axe->Start();
     return axe->GetID();
@@ -485,7 +492,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
     {
         DirectX::SimpleMath::Vector3(10.0f, 0.0f, 10.0f),
         DirectX::SimpleMath::Vector3(-10.0f, 0.0f, 10.0f),
-        DirectX::SimpleMath::Vector3(-10.0f, 0.0f, 10.0f),
+        DirectX::SimpleMath::Vector3(10.0f, 0.0f, -10.0f),
         DirectX::SimpleMath::Vector3(-10.0f, 0.0f, -10.0f)
     };
     DirectX::SimpleMath::Vector3 bridgeRotation[] =
@@ -600,7 +607,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     RightupLegCapsule->Initialize(2.8f, 0.0f);
     RightupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* RightupLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    RightupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightUpLeg", L"RightLeg");
+    RightupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightUpLeg", L"mixamorig:RightLeg");
     RightupLegLink->LinkTo(RightupLegCapsule);
     HEIN::CapsuleColliderComponent* RightLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     RightLegCapsule->Initialize(1.8f, 0.0f);
