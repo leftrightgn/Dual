@@ -178,7 +178,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     HEIN::RigidBodyComponent* rigidBody = playerActor->AddComponent<HEIN::RigidBodyComponent>();
     rigidBody->Initialize(80.0f, true, false);
     HEIN::CapsuleColliderComponent* rootPushbox = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    rootPushbox->Initialize(3.0f, 12.0f); // Adjust height to match your Knight
+    rootPushbox->Initialize(3.0f, 12.0f); // Adjust height to match knight model proportions
     rootPushbox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
     rootPushbox->SetTrigger(false);      // This one physically hits the floor
     rootPushbox->SetColliderTag(L"PlayerRoot");
@@ -645,7 +645,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     HEIN::RigidBodyComponent* rigidBody = enemyActor->AddComponent<HEIN::RigidBodyComponent>();
     rigidBody->Initialize(80.0f, true, false);
     HEIN::CapsuleColliderComponent* rootPushbox = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    rootPushbox->Initialize(5.0f, 17.0f); // Adjust height to match your Knight
+    rootPushbox->Initialize(5.0f, 17.0f); // Adjust height to match knight model proportions
     rootPushbox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
     rootPushbox->SetTrigger(false);      // This one physically hits the floor
     rootPushbox->SetColliderTag(L"EnemyRoot");

@@ -76,7 +76,7 @@ void GameScene::OnEnter(GameContext& gameContext)
 
    
 
-    // Grab the Camera Component so we can register the modes
+    // Retrieve Camera Component to register camera modes
     HEIN::Actor* cameraActor = m_actorManager.GetActor(m_cameraID);
     HEIN::CameraController* cameraComp = cameraActor->GetComponent<HEIN::CameraController>();
     gameContext.mainCamera = cameraComp;
@@ -198,7 +198,7 @@ void GameScene::Update(GameContext& gameContext)
                 file >> j;
                 
                 gameContext.mainCamera = nullptr; 
-                // Do not clear actors! We merge data from JSON overlay-style
+                // Retain existing actor instances; merge serialized state overlay-style
                 m_actorManager.Deserialize(j);
                 
                 auto player = m_actorManager.GetActorByName(L"Player");

@@ -385,7 +385,7 @@ bool HEIN::BlockState::HandleMessage(Actor* owner, CombatStateMachineComponent* 
 		return true;
 	}
 
-	// If the player dodges while holding block, we immediately allow it
+	// Immediately transition if the player dodges while blocking
 	if (messageID == Message::PLAYER_ACTION_DODGE)
 	{
 		stateMachine->ChangeState(m_config.transitions["OnDodge"]);
