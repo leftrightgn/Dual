@@ -14,7 +14,7 @@
 // Use the C++ standard templated min/max
 #define NOMINMAX
 
-// DirectX apps don't need GDI, but we need it for simple dialogs (ponytail)
+// GDI and bitmap definitions are retained for simple native dialogs.
 // #define NODRAWTEXT
 // #define NOGDI
 // #define NOBITMAP
