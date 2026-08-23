@@ -42,11 +42,15 @@ HEIN::BTNodeState HEIN::BTStrafeNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 	}
 
 	DirectX::SimpleMath::Vector3 upVector = DirectX::SimpleMath::Vector3::Up;
+	
+	// Calculate perpendicular strafe direction based on target vector.
+	// Uses cross product with Up vector, swapping operands for left/right direction.
 	DirectX::SimpleMath::Vector3 strafeDir = m_strafeRight ?
 		blackboard->dirToTarget.Cross(upVector) : upVector.Cross(blackboard->dirToTarget);
 
 	strafeDir.Normalize();
 
+	// Calculate a corrective vector to push/pull the actor to maintain the desired orbit radius
 	float distanceError = blackboard->distanceToTarget - m_orbitRadius;
 	DirectX::SimpleMath::Vector3 correctionDir = blackboard->dirToTarget * (distanceError * 2.0f);
 

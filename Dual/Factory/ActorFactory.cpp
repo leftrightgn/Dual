@@ -229,8 +229,8 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     attackConfig.moveSpeed = 5.0f;
     attackConfig.animationName = "OneHand";
     attackConfig.stateDuration = 4.1f;
-    attackConfig.comboEndTimes = { 1.6f, 2.4f, 4.5f };
-    attackConfig.comboWindowStarts = { 1.2f, 2.2f, 4.2f };
+    attackConfig.comboEndTimes = { HEIN::OneHandAttackState::STAGE_1_END_TIME, HEIN::OneHandAttackState::STAGE_2_END_TIME, HEIN::OneHandAttackState::STAGE_3_END_TIME };
+    attackConfig.comboWindowStarts = { HEIN::OneHandAttackState::STAGE_1_WINDOW_START, HEIN::OneHandAttackState::STAGE_2_WINDOW_START, HEIN::OneHandAttackState::STAGE_3_WINDOW_START };
     attackConfig.transitions["OnStop"] = "Idle";
     attackConfig.transitions["OnMove"] = "Walk";
     attackConfig.transitions["OnDodge"] = "Dodge";

@@ -12,6 +12,13 @@
 #include "../../../External/Engine/Camera/CameraController.h"
 #include "../../../External/Engine/DebugingTools/DebugDisplayController.h"
 
+/**
+ * @class TitleScene
+ * @brief Handles the initial start menu, UI interactions, and scene transitions.
+ * 
+ * Manages the "Start Game" and "Quit Game" buttons, as well as a debug/editor
+ * interface for tweaking the title layout and automatically saving changes.
+ */
 class TitleScene : public HEIN::IScene
 {
 public:

@@ -19,6 +19,12 @@ namespace HEIN
 		HEIN::SkinnedModelComponent* tpsModel = nullptr;
 	};
 
+	/**
+	 * @brief The ActorFactory class handles the creation and initial configuration 
+	 * of various game entities (Actors). It abstracts the complexities of assembling
+	 * components like models, colliders, rigidbodies, and state machines, providing 
+	 * a simple interface to spawn ready-to-use actors into the game world.
+	 */
 	class ActorFactory
 	{
 	public:

@@ -32,6 +32,8 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 
 	blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 
+	// Calculate desired rotation to face the target directly.
+	// Adds PI to yaw because standard orientation might be reversed depending on the model's forward vector.
 	float targetYaw = atan2f(blackboard->dirToTarget.x, blackboard->dirToTarget.z) + DirectX::XM_PI;
 	DirectX::SimpleMath::Quaternion targetRotation = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(targetYaw, 0.0f, 0.0f);
 

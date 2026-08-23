@@ -5,6 +5,11 @@
 
 namespace HEIN
 {
+	/// <summary>
+	/// Behavior Tree node responsible for chasing a target.
+	/// Moves the actor towards the target until it enters a specified attack range,
+	/// clearing lock-on and strafe states while active.
+	/// </summary>
 	class BTChaseNode : public BTNode
 	{
 	private:

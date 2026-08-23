@@ -7,13 +7,13 @@
                     "Data": {
                         "BlendDuration": 1.0,
                         "Fov": 0.8726646304130554,
-                        "PosX": 53.544921875,
-                        "PosY": 9.134721755981445,
-                        "PosZ": -339.69708251953125,
-                        "RotW": 0.9857094287872314,
-                        "RotX": -0.1654842644929886,
-                        "RotY": -0.031060192734003067,
-                        "RotZ": -0.005214490927755833
+                        "PosX": 34.724117279052734,
+                        "PosY": 26.842601776123047,
+                        "PosZ": -394.13348388671875,
+                        "RotW": 0.5740950107574463,
+                        "RotX": -0.04650671407580376,
+                        "RotY": -0.8147976994514465,
+                        "RotZ": -0.06600573658943176
                     },
                     "Type": "CameraController"
                 }
@@ -94,7 +94,7 @@
             "Components": [
                 {
                     "Data": {
-                        "CurrentHealth": 80.0,
+                        "CurrentHealth": 100.0,
                         "IsGameplayInvincible": false,
                         "IsInvincible": false,
                         "MaxHealth": 100.0
@@ -104,15 +104,15 @@
                 {
                     "Data": {
                         "Position": [
-                            52.89690399169922,
-                            -10.321025848388672,
-                            -350.7960510253906
+                            72.88104248046875,
+                            5.6756911277771,
+                            -377.9475402832031
                         ],
                         "Rotation": [
                             0.0,
-                            -0.8660244941711426,
+                            -0.11327444016933441,
                             0.0,
-                            0.5000015497207642
+                            0.9935637712478638
                         ],
                         "Scale": [
                             0.10000000149011612,
@@ -187,7 +187,7 @@
                 {
                     "Data": {
                         "ColliderTag": "BodyCollider",
-                        "Height": 3.715578079223633,
+                        "Height": 3.7160699367523193,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -213,7 +213,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RarmCollider",
-                        "Height": 2.5574448108673096,
+                        "Height": 2.557417392730713,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -239,7 +239,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RforearmCollider",
-                        "Height": 2.1603424549102783,
+                        "Height": 2.1603450775146484,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -265,7 +265,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LarmCollider",
-                        "Height": 2.5574307441711426,
+                        "Height": 2.5574276447296143,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -291,7 +291,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LforearmCollider",
-                        "Height": 2.1603291034698486,
+                        "Height": 2.160329580307007,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -317,7 +317,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RupLegCollider",
-                        "Height": 4.170205116271973,
+                        "Height": 4.170202255249023,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -343,7 +343,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RLegCollider",
-                        "Height": 3.6980974674224854,
+                        "Height": 3.6981091499328613,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -369,7 +369,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LupLegCollider",
-                        "Height": 4.170206546783447,
+                        "Height": 4.170206069946289,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -395,7 +395,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LLegCollider",
-                        "Height": 3.6981041431427,
+                        "Height": 3.698105812072754,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -572,15 +572,15 @@
                 {
                     "Data": {
                         "Position": [
-                            36.64497756958008,
-                            -6.791845798492432,
-                            -370.7996520996094
+                            32.82332229614258,
+                            -10.321027755737305,
+                            -366.3839111328125
                         ],
                         "Rotation": [
                             0.0,
-                            0.942410409450531,
-                            -0.0,
-                            -0.33445876836776733
+                            -0.6004751920700073,
+                            0.0,
+                            0.7996434569358826
                         ],
                         "Scale": [
                             0.14999999105930328,
@@ -651,7 +651,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 6.513240337371826,
+                        "Height": 6.431355953216553,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -677,7 +677,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.395175933837891,
+                        "Height": 7.395191669464111,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -703,7 +703,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.7407546043396,
+                        "Height": 4.740758419036865,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -729,7 +729,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.395175933837891,
+                        "Height": 7.395191669464111,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -755,7 +755,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.740715503692627,
+                        "Height": 4.740715980529785,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -781,7 +781,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 5.742455005645752,
+                        "Height": 5.742430686950684,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -807,7 +807,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.902592182159424,
+                        "Height": 4.9026007652282715,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -833,7 +833,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 5.742437839508057,
+                        "Height": 5.742432117462158,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -859,7 +859,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.9026031494140625,
+                        "Height": 4.902597427368164,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1450,8 +1450,8 @@
                             "Data": {
                                 "Position": [
                                     -10.192133903503418,
-                                    -16.875038146972656,
-                                    42.78971481323242
+                                    -24.385000228881836,
+                                    42.7905387878418
                                 ],
                                 "Rotation": [
                                     -0.0,

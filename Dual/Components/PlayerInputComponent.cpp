@@ -39,6 +39,7 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 
 		if (cameraController != nullptr)
 		{
+			// Transform local player movement into world space relative to the camera's facing direction
 			DirectX::SimpleMath::Matrix view = cameraController->GetView();
 			DirectX::SimpleMath::Matrix invView = view.Invert();
 			DirectX::SimpleMath::Vector3 camForward = invView.Forward();
@@ -72,6 +73,7 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 
 void HEIN::PlayerInputComponent::OnMessageAccepted(Message::MessageID messageID)
 {
+	// Accumulate local directional inputs from messages
 	switch (messageID)
 	{
 	case Message::PLAYER_MOVE_FORWARD:  m_localInput.z += 1.0f; break;

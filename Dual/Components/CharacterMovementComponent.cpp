@@ -27,10 +27,11 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 	if (m_blackboard->currentStance == HEIN::CombatStance::AttackRelese ||
 		m_blackboard->currentStance == HEIN::CombatStance::Staggered)
 	{
+		// Cancel movement if the character is currently attacking or staggered
 		m_blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 	}
 
-	// Dynamic Speed
+	// Dynamic Speed: Calculate desired velocity and apply friction interpolation
 	DirectX::SimpleMath::Vector3 desiredVelocity = m_blackboard->moveIntent * m_blackboard->currentSpeed;
 
 	m_blackboard->currentVelocity = DirectX::SimpleMath::Vector3::Lerp(
@@ -47,11 +48,13 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 	}
 	if (m_blackboard->isLockedOn && m_blackboard->currentStance == HEIN::CombatStance::Strafing &&  m_blackboard->dirToTarget.LengthSquared() > 0.001f)
 	{
+		// Force character to face the lock-on target while strafing
 		float targetYaw = atan2f(m_blackboard->dirToTarget.x, m_blackboard->dirToTarget.z);
 		float modelOffset = DirectX::XM_PI;
 		targetYaw += modelOffset;
 		DirectX::SimpleMath::Vector3 currentRot = m_transform->GetRotationEuler();
 
+		// Shortest path interpolation for yaw rotation
 		float difference = targetYaw - currentRot.y;
 		while (difference < -DirectX::XM_PI) difference += DirectX::XM_2PI;
 		while (difference > DirectX::XM_PI) difference -= DirectX::XM_2PI;
@@ -65,6 +68,7 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 	}
 	else if (m_blackboard->moveIntent.LengthSquared() > 0.001f)
 	{
+		// Rotate smoothly towards the current movement direction
 		float targetYaw = atan2f(m_blackboard->moveIntent.x, m_blackboard->moveIntent.z);
 		float modelOffset = DirectX::XM_PI;
 		targetYaw += modelOffset;
