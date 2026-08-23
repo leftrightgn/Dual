@@ -6,6 +6,11 @@
 
 namespace HEIN
 {
+	/// <summary>
+	/// Behavior Tree node for orbital movement around a target.
+	/// Maintains a specific radius while moving laterally to reposition 
+	/// and evade attacks, while keeping the target locked on.
+	/// </summary>
 	class BTStrafeNode : public BTNode
 	{
 	private:

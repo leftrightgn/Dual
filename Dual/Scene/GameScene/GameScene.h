@@ -12,6 +12,14 @@
 #include "../../../External/Engine/Common/DamageSystem.h"
 #include "../../../External/Engine/DebugingTools/DebugDisplayController.h"
 
+/**
+ * @class GameScene
+ * @brief Manages the main gameplay loop, physical world simulation, and actor instances.
+ * 
+ * Responsible for initializing the primary game environment, loading actors
+ * (player, enemies, stage) via the factory, and coordinating the camera, 
+ * UI, and physics/damage systems during active gameplay.
+ */
 class GameScene : public HEIN::IScene
 {
 public:

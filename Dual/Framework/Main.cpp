@@ -38,6 +38,12 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #define WS_MYSTYLE ( WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX )
 
 // Entry point
+/**
+ * @brief The WinMain function is the entry point for the application.
+ * It initializes COM, sets up input devices (Keyboard, Mouse), creates the main
+ * game window, initializes the Game instance, registers scenes, and runs the 
+ * primary Windows message loop. 
+ */
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -104,9 +110,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
             g_game->Initialize(hwnd, rc.right - rc.left, rc.bottom - rc.top);
 
+            // Register game scenes. The Game class uses a string-based mapping to instantiate these scenes when requested.
             g_game->RegisterScene<TitleScene>("TitleScene");
             g_game->RegisterScene<GameScene>("GameScene");
 
+            // Load the initial scene
             g_game->LoadScene("GameScene");
         }
 
@@ -142,6 +150,12 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 }
 
 // Windows procedure
+/**
+ * @brief WndProc handles all window messages dispatched to the main game window.
+ * It processes system events like resizing, moving, activation, and passes input
+ * events (keyboard, mouse) to their respective handlers. It also integrates ImGui
+ * for UI processing.
+ */
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))

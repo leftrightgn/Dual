@@ -28,6 +28,7 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 
 	ProcessBuffer(deltaTime);
 
+	// Stop updating current state if a transition is pending
 	if (m_pendingState != nullptr) return;
 
 	if (m_currentState)
@@ -35,6 +36,7 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 		m_currentState->Update(m_owner, this, deltaTime);
 	}
 
+	// Sync attack/block states with relevant gameplay components
 	HEIN::DamageDealerComponent* dealer = m_owner->GetComponent<HEIN::DamageDealerComponent>();
 	if (dealer) dealer->SetActive(IsAttacking());
 
@@ -46,6 +48,7 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 	{
 		if (!IsBlocking())
 		{
+			// Regenerate block stamina over time when not actively blocking
 			if (blackboard->currentBlockStamina < blackboard->maxBlockStamina)
 			{
 				blackboard->currentBlockStamina += blackboard->blockRecoveryRate * deltaTime;
@@ -129,6 +132,7 @@ void HEIN::CombatStateMachineComponent::OnMessageAccepted(Message::MessageID mes
 	{
 		if (messageID == Message::PLAYER_ACTION_DODGE)
 		{
+			// Ignore dodge inputs if the ability is still on cooldown
 			HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
 			if (blackboard && blackboard->dodgeCooldownTimer > 0.0f)
 			{

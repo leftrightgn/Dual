@@ -23,7 +23,7 @@ void HEIN::BehaviourTreeComponent::Initialize(
 
 void HEIN::BehaviourTreeComponent::Update(float deltaTime)
 {
-
+	// Execute AI logic only if the tree, manager, and a valid target exist
 	if (m_rootNode && m_actorManager && m_targetID != INVALID_ACTOR_ID)
 	{
 		HEIN::Actor* target = m_actorManager->GetActor(m_targetID);

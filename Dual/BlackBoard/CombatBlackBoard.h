@@ -22,6 +22,20 @@ namespace HEIN
 	};
 
 	// Only holds Data contains zero logic
+	/**
+	 * @brief The CombatBlackBoard struct serves as a decoupled memory hub for an actor's current combat state.
+	 * 
+	 * WHAT KIND OF INFO IS STORED:
+	 * It purely holds raw data parameters: 
+	 * - Physical Reality: Velocity, ground state, target distance/direction.
+	 * - Combat Stats: Health, stamina, move intents, cooldowns, current stance.
+	 * 
+	 * WHY IT IS SEPARATED (DECOUPLING):
+	 * By separating this data from specific AI nodes, multiple distinct systems (like Behaviour Tree Nodes, 
+	 * TargetTrackingComponent, and CombatStateMachine) can read and write shared context asynchronously 
+	 * without directly knowing about or including headers of each other. This prevents tight coupling 
+	 * between the AI brain and the physics/animation execution layer.
+	 */
 	struct CombatBlackBoard : public IComponent
 	{
 		std::string activeNodeName = "None";
