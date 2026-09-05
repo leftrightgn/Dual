@@ -25,7 +25,7 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 
 	blackboard->activeNodeName = "Attack Node";
 
-	if (m_timer == 0.0f && blackboard->distanceToTarget < m_minAttackDis)
+	if (m_timer == 0.0f && blackboard->distanceToTarget > m_minAttackDis)
 	{
 		return BTNodeState::Failure;
 	}

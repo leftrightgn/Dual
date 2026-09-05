@@ -71,6 +71,14 @@ namespace HEIN
 		float dodgeCooldownTimer = 0.0f;
 		float maxDodgeCooldown = 5.0f;
 
+		bool hasBeenSeenByPlayer = false;
+
+		bool hasSetSpawnPosition = false;
+		DirectX::SimpleMath::Vector3 spawnPosition = DirectX::SimpleMath::Vector3::Zero;
+		float aggroRange = 80.0f;
+
+		bool isLeashing = false;
+
 		CombatBlackBoard(Actor* owner)
 			: IComponent(owner)
 		{
