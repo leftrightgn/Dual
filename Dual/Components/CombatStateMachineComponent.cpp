@@ -37,8 +37,7 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 	}
 
 	// Sync attack/block states with relevant gameplay components
-	HEIN::DamageDealerComponent* dealer = m_owner->GetComponent<HEIN::DamageDealerComponent>();
-	if (dealer) dealer->SetActive(IsAttacking());
+	Messenger::GetInstance()->Notify(m_owner->GetID(), IsAttacking() ? Message::SET_WEAPON_ACTIVE : Message::SET_WEAPON_INACTIVE);
 
 	HEIN::HealthComponent* health = m_owner->GetComponent<HEIN::HealthComponent>();
 	if (health) health->SetGameplayInvincible(IsBlocking());

@@ -3,11 +3,13 @@
 #include <Components/PlayerInputComponent.h>
 #include <Components/CharacterMovementComponent.h>
 #include <Components/CombatStateMachineComponent.h>
-#include <BehaviourTree/BTChaseNode.h>
-#include <BehaviourTree/BTCheckDistance.h>
-#include <BehaviourTree/BTDodgeNode.h>
+#include "BehaviourTree/BTChaseNode.h"
+#include "BehaviourTree/BTCheckDistance.h"
+
+
+#include "BehaviourTree/BTDodgeNode.h"
 #include <Components/BehaviourTreeComponent.h>
-#include <BehaviourTree/BTStrafeNode.h>
+#include "BehaviourTree/BTIdleNode.h"
 #include <States/CombatStates.h>
 #include <BehaviourTree/BTAttackNode.h>
 #include <utility>
@@ -29,6 +31,8 @@
 #include "../../External/Engine/Camera/CameraController.h"
 #include "ActorFactory.h"
 #include "../../External/Engine/Components/TransformComponent.h"
+#include <BehaviourTree/BTReturnToSpawnNode.h>
+#include <BehaviourTree/BTCheckTetherNode.h>
 
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
@@ -46,7 +50,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     HEIN::HealthComponent* playerHealth = playerActor->AddComponent<HEIN::HealthComponent>();
     playerHealth->Initialize(100);
     HEIN::TransformComponent* ptransform = playerActor->AddComponent<HEIN::TransformComponent>();
-    ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 4.0f, 0.0f));
+    ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 4.0f, -40.0f));
     ptransform->SetScale(DirectX::SimpleMath::Vector3(0.10f));
 
     // ThirdPersonCamera model
@@ -541,7 +545,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     enemyHealth->Initialize(100);
 
     HEIN::TransformComponent* ptransform = enemyActor->AddComponent<HEIN::TransformComponent>();
-    ptransform->SetPosition(DirectX::SimpleMath::Vector3(50.0f, 4.0f, 3.0f));
+    ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 4.0f, 0.0f));
     ptransform->SetScale(DirectX::SimpleMath::Vector3(0.15f));
 
     // ThirdPersonCamera model
@@ -667,29 +671,65 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     LeftLegCapsule->SetTrigger(true);
     //LeftFoot->SetTrigger(true);
 
-    enemyActor->AddComponent<HEIN::CombatBlackBoard>();
+    HEIN::CombatBlackBoard* bb = enemyActor->AddComponent<HEIN::CombatBlackBoard>();
+    bb->spawnPosition = ptransform->GetPosition();
+    bb->hasSetSpawnPosition = true;
+    
     enemyActor->AddComponent<HEIN::CharacterMovementComponent>();
     enemyActor->AddComponent<HEIN::TargetTrackingComponent>(&actorManager, HEIN::ActorType::Player);
   
     std::unique_ptr<HEIN::BTSelector> aiBrain = std::make_unique<HEIN::BTSelector>();
 
-    // Dodge Sequence
+    // ---------------------------------------------------------
+    // 1. LEASHING SEQUENCE (Highest Priority - Checked First!)
+    // ---------------------------------------------------------
+    std::unique_ptr<HEIN::BTSequence> leashSequence = std::make_unique<HEIN::BTSequence>();
+    // If enemy wanders > 40m from spawn (OR is currently returning), this succeeds
+    leashSequence->AddChild(std::make_unique<HEIN::BTCheckTetherNode>(40.0f));
+    // Execute the walk back home
+    leashSequence->AddChild(std::make_unique<HEIN::BTReturnToSpawnNode>(20.0f));
+    aiBrain->AddChild(std::move(leashSequence));
+
+
+    // ---------------------------------------------------------
+    // 2. COMBAT SEQUENCE (The Aggro Zone)
+    // ---------------------------------------------------------
+    std::unique_ptr<HEIN::BTSequence> combatSequence = std::make_unique<HEIN::BTSequence>();
+
+    // The player must be within 20 meters of the enemy to start the fight!
+    combatSequence->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 100.0f));
+
+    // If the player is in range, decide how to fight them:
+    std::unique_ptr<HEIN::BTSelector> combatSelector = std::make_unique<HEIN::BTSelector>();
+
+    // -- Dodge
     std::unique_ptr<HEIN::BTSequence> dodgeSequence = std::make_unique<HEIN::BTSequence>();
-    dodgeSequence->AddChild(std::make_unique<HEIN::BTCheckDistance>(1.0f, 28.0f));
-    dodgeSequence->AddChild(std::make_unique<HEIN::BTDodgeNode>(0.1f));
-    aiBrain->AddChild(std::move(dodgeSequence));
+    dodgeSequence->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 15.0f));
+    dodgeSequence->AddChild(std::make_unique<HEIN::BTDodgeNode>(1.4f));
+    combatSelector->AddChild(std::move(dodgeSequence));
 
-    // Attack Sequence
+    // -- Attack
     std::unique_ptr<HEIN::BTSequence> attackSequence = std::make_unique<HEIN::BTSequence>();
-    attackSequence->AddChild(std::make_unique<HEIN::BTCheckDistance>(25.0f, 30.0f));
-    attackSequence->AddChild(std::make_unique<HEIN::BTAttackNode>(4.2f, 25.0f));
-    aiBrain->AddChild(std::move(attackSequence));
+    attackSequence->AddChild(std::make_unique<HEIN::BTCheckDistance>(15.0f, 25.0f));
+    attackSequence->AddChild(std::make_unique<HEIN::BTAttackNode>(3.4f, 25.0f));
+    combatSelector->AddChild(std::move(attackSequence));
 
-    aiBrain->AddChild(std::make_unique<HEIN::BTChaseNode>(30.0f, 10.0f));
+    // -- Chase
+    combatSelector->AddChild(std::make_unique<HEIN::BTChaseNode>(25.0f, 80.0f));
+
+    combatSequence->AddChild(std::move(combatSelector));
+    aiBrain->AddChild(std::move(combatSequence));
+
+
+    // ---------------------------------------------------------
+    // 3. IDLE NODE (Fallback)
+    // ---------------------------------------------------------
+    // If we are NOT leashing, AND the player is > 20m away... stand perfectly still!
+    aiBrain->AddChild(std::make_unique<HEIN::BTIdleNode>());
 
     HEIN::BehaviourTreeComponent* btComp = enemyActor->AddComponent<HEIN::BehaviourTreeComponent>();
-
     btComp->Initialize(std::move(aiBrain), &actorManager, targetID);
+
 
     HEIN::CombatStateMachineComponent* fsm = enemyActor->AddComponent<HEIN::CombatStateMachineComponent>();
 

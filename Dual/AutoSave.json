@@ -7,13 +7,13 @@
                     "Data": {
                         "BlendDuration": 1.0,
                         "Fov": 0.8726646304130554,
-                        "PosX": 165.04383850097656,
-                        "PosY": 29.608318328857422,
-                        "PosZ": -448.835205078125,
-                        "RotW": 0.1533266305923462,
-                        "RotX": -0.016132742166519165,
-                        "RotY": 0.98261958360672,
-                        "RotZ": 0.10338940471410751
+                        "PosX": 952.87255859375,
+                        "PosY": -43.46236038208008,
+                        "PosZ": -237.0696258544922,
+                        "RotW": 0.8008989095687866,
+                        "RotX": -0.11967824399471283,
+                        "RotY": 0.580275297164917,
+                        "RotZ": 0.08671048283576965
                     },
                     "Type": "CameraController"
                 }
@@ -29,7 +29,7 @@
                             "Data": {
                                 "DamageAmount": 5.0,
                                 "DamageType": 0,
-                                "IsActive": true
+                                "IsActive": false
                             },
                             "Type": "DamageDealerComponent"
                         },
@@ -94,7 +94,7 @@
             "Components": [
                 {
                     "Data": {
-                        "CurrentHealth": 60.0,
+                        "CurrentHealth": 100.0,
                         "IsGameplayInvincible": false,
                         "IsInvincible": false,
                         "MaxHealth": 100.0
@@ -104,20 +104,20 @@
                 {
                     "Data": {
                         "Position": [
-                            153.8217010498047,
-                            5.67576265335083,
-                            -413.5976257324219
+                            914.4705810546875,
+                            -70.24961853027344,
+                            -247.16261291503906
                         ],
                         "Rotation": [
                             -0.0,
-                            -0.9308147430419922,
-                            0.0,
-                            -0.3654913008213043
+                            -0.5967650413513184,
+                            -0.0,
+                            0.8024160265922546
                         ],
                         "Scale": [
+                            0.10000001639127731,
                             0.10000000149011612,
-                            0.10000000149011612,
-                            0.10000000149011612
+                            0.10000001639127731
                         ]
                     },
                     "Type": "TransformComponent"
@@ -187,7 +187,7 @@
                 {
                     "Data": {
                         "ColliderTag": "BodyCollider",
-                        "Height": 3.719137668609619,
+                        "Height": 3.7169222831726074,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -213,7 +213,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RarmCollider",
-                        "Height": 2.5574259757995605,
+                        "Height": 2.5574169158935547,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -239,7 +239,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RforearmCollider",
-                        "Height": 2.160325765609741,
+                        "Height": 2.160334825515747,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -265,7 +265,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LarmCollider",
-                        "Height": 2.5574302673339844,
+                        "Height": 2.5574350357055664,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -291,7 +291,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LforearmCollider",
-                        "Height": 2.1603376865386963,
+                        "Height": 2.1603500843048096,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -317,7 +317,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RupLegCollider",
-                        "Height": 4.170205116271973,
+                        "Height": 4.170202255249023,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -343,7 +343,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RLegCollider",
-                        "Height": 3.6980862617492676,
+                        "Height": 3.698106527328491,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -369,7 +369,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LupLegCollider",
-                        "Height": 4.170208930969238,
+                        "Height": 4.170228004455566,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -395,7 +395,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LLegCollider",
-                        "Height": 3.6981048583984375,
+                        "Height": 3.6980996131896973,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -439,6 +439,7 @@
                     "Data": {
                         "IsKinematic": false,
                         "Mass": 80.0,
+                        "NeedsInitialSnap": false,
                         "UseGravity": true
                     },
                     "Type": "RigidBodyComponent"
@@ -466,6 +467,12 @@
                         "TargetType": 2
                     },
                     "Type": "TargetTrackingComponent"
+                },
+                {
+                    "Data": {
+                        "TargetType": 2
+                    },
+                    "Type": "TargetTrackingComponent"
                 }
             ],
             "Name": "Player"
@@ -479,7 +486,7 @@
                             "Data": {
                                 "DamageAmount": 20.0,
                                 "DamageType": 0,
-                                "IsActive": true
+                                "IsActive": false
                             },
                             "Type": "DamageDealerComponent"
                         },
@@ -572,20 +579,20 @@
                 {
                     "Data": {
                         "Position": [
-                            144.9737548828125,
-                            1.915486216545105,
-                            -462.2835388183594
+                            66.12889862060547,
+                            5.675762176513672,
+                            -420.5532531738281
                         ],
                         "Rotation": [
                             0.0,
-                            -0.9959431290626526,
-                            0.0,
-                            0.0899856686592102
+                            0.7514268755912781,
+                            -0.0,
+                            -0.6598164439201355
                         ],
                         "Scale": [
-                            0.14999999105930328,
+                            0.15000031888484955,
                             0.15000000596046448,
-                            0.14999999105930328
+                            0.15000031888484955
                         ]
                     },
                     "Type": "TransformComponent"
@@ -651,7 +658,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 6.465127944946289,
+                        "Height": 6.481277942657471,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -677,7 +684,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.39517879486084,
+                        "Height": 7.395214557647705,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -703,7 +710,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.740758419036865,
+                        "Height": 4.740756034851074,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -729,7 +736,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.3951921463012695,
+                        "Height": 7.395187854766846,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -755,7 +762,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.740701675415039,
+                        "Height": 4.740718364715576,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -781,7 +788,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 5.7424397468566895,
+                        "Height": 5.742447853088379,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -807,7 +814,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.902598857879639,
+                        "Height": 4.902615547180176,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -833,7 +840,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 5.742435932159424,
+                        "Height": 5.742438793182373,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -859,7 +866,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.902599811553955,
+                        "Height": 4.902604579925537,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -903,6 +910,7 @@
                     "Data": {
                         "IsKinematic": false,
                         "Mass": 80.0,
+                        "NeedsInitialSnap": false,
                         "UseGravity": true
                     },
                     "Type": "RigidBodyComponent"
@@ -924,6 +932,24 @@
                         "RotZ": 0.0
                     },
                     "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "TargetType": 1
+                    },
+                    "Type": "TargetTrackingComponent"
+                },
+                {
+                    "Data": {
+                        "aggroRange": 200.0,
+                        "hasSetSpawnPosition": true,
+                        "spawnPosition": [
+                            66.12889862060547,
+                            5.214826583862305,
+                            -420.5532531738281
+                        ]
+                    },
+                    "Type": "BehaviourTreeComponent"
                 },
                 {
                     "Data": {
@@ -1085,14 +1111,14 @@
                         {
                             "Data": {
                                 "Position": [
-                                    -9.0,
-                                    1.0,
-                                    0.0
+                                    -9.000127792358398,
+                                    -2.0574967861175537,
+                                    0.00051116943359375
                                 ],
                                 "Rotation": [
+                                    -0.0,
                                     0.0,
-                                    0.0,
-                                    0.0,
+                                    -0.0,
                                     1.0
                                 ],
                                 "Scale": [
@@ -1107,8 +1133,8 @@
                             "Data": {
                                 "ColliderTag": "",
                                 "ExtentsX": 0.07999999821186066,
-                                "ExtentsY": 1.0,
-                                "ExtentsZ": 10.399999618530273,
+                                "ExtentsY": 4.199999809265137,
+                                "ExtentsZ": 10.25,
                                 "IsTrigger": false,
                                 "Layer": 2,
                                 "Mask": 4294967295,
@@ -1131,14 +1157,14 @@
                         {
                             "Data": {
                                 "Position": [
-                                    0.0,
-                                    1.0,
-                                    -9.0
+                                    -0.000270843505859375,
+                                    -0.04662609100341797,
+                                    -8.999984741210938
                                 ],
                                 "Rotation": [
+                                    -0.0,
                                     0.0,
-                                    0.0,
-                                    0.0,
+                                    -0.0,
                                     1.0
                                 ],
                                 "Scale": [
@@ -1153,7 +1179,7 @@
                             "Data": {
                                 "ColliderTag": "",
                                 "ExtentsX": 10.0,
-                                "ExtentsY": 1.0,
+                                "ExtentsY": 2.0999999046325684,
                                 "ExtentsZ": 0.07999999821186066,
                                 "IsTrigger": false,
                                 "Layer": 2,
@@ -1507,14 +1533,82 @@
                             "Type": "TerrainColliderComponent"
                         }
                     ],
-                    "Name": "Terrian"
+                    "Name": "Terrain"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -9.995073318481445,
+                                    -7.500520706176758,
+                                    -9.99789047241211
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.7071068286895752,
+                                    -0.7071068286895752
+                                ],
+                                "Scale": [
+                                    0.010000784881412983,
+                                    0.010000784881412983,
+                                    0.009999999776482582
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Pillar3_Copy"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -9.951873779296875,
+                                    -7.183327674865723,
+                                    10.011924743652344
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.7071068286895752,
+                                    -0.7071068286895752
+                                ],
+                                "Scale": [
+                                    0.01000090129673481,
+                                    0.01000090129673481,
+                                    0.009999999776482582
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "Pillar2_Copy"
                 }
             ],
             "Components": [
                 {
                     "Data": {
                         "Position": [
-                            101.92134094238281,
+                            102.52690124511719,
                             -10.321025848388672,
                             -427.8970947265625
                         ],

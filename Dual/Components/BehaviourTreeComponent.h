@@ -46,13 +46,21 @@ namespace HEIN
 			HEIN::ActorID targetID
 		);
 
-		void Start() override {}
+		void Start() override;
 		
 		/**
 		 * @brief Evaluates the behaviour tree every frame.
 		 * @param deltaTime Time elapsed since the last frame.
 		 */
+		bool m_hasSetSpawnPosition = false;
+		DirectX::SimpleMath::Vector3 m_spawnPosition = DirectX::SimpleMath::Vector3::Zero;
+		float m_aggroRange = 80.0f;
+
 		void Update(float deltaTime) override;
 
+		std::string GetComponentName() const override { return "BehaviourTreeComponent"; }
+		void OnInspectorGUI(GameContext& gamecontext) override;
+		nlohmann::json Serialize() override;
+		void Deserialize(const nlohmann::json& data) override;
 	};
 }
