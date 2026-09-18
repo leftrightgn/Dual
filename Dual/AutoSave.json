@@ -7,13 +7,13 @@
                     "Data": {
                         "BlendDuration": 1.0,
                         "Fov": 0.8726646304130554,
-                        "PosX": 952.87255859375,
-                        "PosY": -43.46236038208008,
-                        "PosZ": -237.0696258544922,
-                        "RotW": 0.8008989095687866,
-                        "RotX": -0.11967824399471283,
-                        "RotY": 0.580275297164917,
-                        "RotZ": 0.08671048283576965
+                        "PosX": 1243.75390625,
+                        "PosY": -25.01464080810547,
+                        "PosZ": -1216.7225341796875,
+                        "RotW": 0.719811737537384,
+                        "RotX": -0.047576699405908585,
+                        "RotY": 0.6910291314125061,
+                        "RotZ": 0.04567428305745125
                     },
                     "Type": "CameraController"
                 }
@@ -104,15 +104,15 @@
                 {
                     "Data": {
                         "Position": [
-                            914.4705810546875,
-                            -70.24961853027344,
-                            -247.16261291503906
+                            1205.63720703125,
+                            -45.65441131591797,
+                            -1219.1827392578125
                         ],
                         "Rotation": [
-                            -0.0,
-                            -0.5967650413513184,
-                            -0.0,
-                            0.8024160265922546
+                            0.0,
+                            0.7701096534729004,
+                            0.0,
+                            0.6379116177558899
                         ],
                         "Scale": [
                             0.10000001639127731,
@@ -187,7 +187,7 @@
                 {
                     "Data": {
                         "ColliderTag": "BodyCollider",
-                        "Height": 3.7169222831726074,
+                        "Height": 3.716238260269165,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -213,7 +213,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RarmCollider",
-                        "Height": 2.5574169158935547,
+                        "Height": 2.557370662689209,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -239,7 +239,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RforearmCollider",
-                        "Height": 2.160334825515747,
+                        "Height": 2.160274028778076,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -265,7 +265,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LarmCollider",
-                        "Height": 2.5574350357055664,
+                        "Height": 2.5574448108673096,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -291,7 +291,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LforearmCollider",
-                        "Height": 2.1603500843048096,
+                        "Height": 2.160327911376953,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -317,7 +317,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RupLegCollider",
-                        "Height": 4.170202255249023,
+                        "Height": 4.1702070236206055,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -343,7 +343,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RLegCollider",
-                        "Height": 3.698106527328491,
+                        "Height": 3.6980504989624023,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -369,7 +369,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LupLegCollider",
-                        "Height": 4.170228004455566,
+                        "Height": 4.1702094078063965,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -395,7 +395,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LLegCollider",
-                        "Height": 3.6980996131896973,
+                        "Height": 3.6981093883514404,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -579,20 +579,20 @@
                 {
                     "Data": {
                         "Position": [
-                            66.12889862060547,
-                            5.675762176513672,
-                            -420.5532531738281
+                            -205.97555541992188,
+                            -89.92565155029297,
+                            -1553.62548828125
                         ],
                         "Rotation": [
                             0.0,
                             0.7514268755912781,
-                            -0.0,
-                            -0.6598164439201355
+                            0.0,
+                            -0.6598163843154907
                         ],
                         "Scale": [
-                            0.15000031888484955,
+                            0.15000054240226746,
                             0.15000000596046448,
-                            0.15000031888484955
+                            0.15000054240226746
                         ]
                     },
                     "Type": "TransformComponent"
@@ -658,7 +658,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 6.481277942657471,
+                        "Height": 6.47880744934082,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -684,7 +684,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.395214557647705,
+                        "Height": 7.3951849937438965,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -710,7 +710,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.740756034851074,
+                        "Height": 4.740734100341797,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -736,7 +736,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.395187854766846,
+                        "Height": 7.395203590393066,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -762,7 +762,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.740718364715576,
+                        "Height": 4.740715980529785,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -788,7 +788,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 5.742447853088379,
+                        "Height": 5.742400169372559,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -814,7 +814,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.902615547180176,
+                        "Height": 4.9026079177856445,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -840,7 +840,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 5.742438793182373,
+                        "Height": 5.742444038391113,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -866,7 +866,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.902604579925537,
+                        "Height": 4.902588367462158,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -944,9 +944,9 @@
                         "aggroRange": 200.0,
                         "hasSetSpawnPosition": true,
                         "spawnPosition": [
-                            66.12889862060547,
-                            5.214826583862305,
-                            -420.5532531738281
+                            -205.97555541992188,
+                            -90.49786376953125,
+                            -1553.62548828125
                         ]
                     },
                     "Type": "BehaviourTreeComponent"
@@ -963,19 +963,1022 @@
         {
             "Children": [
                 {
-                    "Children": [],
+                    "Children": [
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.117324829101563,
+                                            -0.3120765686035156,
+                                            -9.03546142578125
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.7071068286895752
+                                        ],
+                                        "Scale": [
+                                            0.010001489892601967,
+                                            0.010001489892601967,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "Pillar1"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.167684555053711,
+                                            7.2536163330078125,
+                                            -9.05792236328125
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.7071068286895752
+                                        ],
+                                        "Scale": [
+                                            0.0100020170211792,
+                                            0.0100020170211792,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "Pillar2"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            8.795610427856445,
+                                            7.254142761230469,
+                                            -9.0408935546875
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.7071068286895752
+                                        ],
+                                        "Scale": [
+                                            0.010002604685723782,
+                                            0.010002604685723782,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "Pillar3"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            8.993502616882324,
+                                            7.254661560058594,
+                                            8.80511474609375
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.7071068286895752
+                                        ],
+                                        "Scale": [
+                                            0.010003183037042618,
+                                            0.010003183037042618,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "Pillar4"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.047988891601563,
+                                            7.255289077758789,
+                                            8.8131103515625
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.7071068286895752
+                                        ],
+                                        "Scale": [
+                                            0.010003883391618729,
+                                            0.010003883391618729,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "Pillar5"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.510152816772461,
+                                            -3.04708194732666,
+                                            -6.878662109375
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall1"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.60208511352539,
+                                            -3.04708194732666,
+                                            -2.586700439453125
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall2"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.650592803955078,
+                                            -3.04708194732666,
+                                            1.67938232421875
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall3"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -6.848514556884766,
+                                            -5.114645957946777,
+                                            -9.77020263671875
+                                        ],
+                                        "Rotation": [
+                                            -0.0,
+                                            0.0,
+                                            -0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.7000000476837158,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall4"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -2.7947731018066406,
+                                            -5.114645957946777,
+                                            -9.681427001953125
+                                        ],
+                                        "Rotation": [
+                                            -0.0,
+                                            0.0,
+                                            -0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.7000000476837158,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall5"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            1.4567108154296875,
+                                            -5.114645957946777,
+                                            -9.70062255859375
+                                        ],
+                                        "Rotation": [
+                                            -0.0,
+                                            0.0,
+                                            -0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.7000000476837158,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall6"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            5.71348762512207,
+                                            -5.114645957946777,
+                                            -9.6529541015625
+                                        ],
+                                        "Rotation": [
+                                            -0.0,
+                                            0.0,
+                                            -0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.7000000476837158,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall7"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.855563163757324,
+                                            -2.9937524795532227,
+                                            -4.2269287109375
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall8"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.971148490905762,
+                                            -2.9937524795532227,
+                                            -0.465576171875
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall9"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.988070487976074,
+                                            -2.9937524795532227,
+                                            3.8179931640625
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall10"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.970038414001465,
+                                            -2.9937524795532227,
+                                            6.79254150390625
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall11"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            8.964982986450195,
+                                            -0.5184574127197266,
+                                            -9.517822265625
+                                        ],
+                                        "Rotation": [
+                                            1.0,
+                                            0.0,
+                                            0.0,
+                                            -1.1920930376163597e-07
+                                        ],
+                                        "Scale": [
+                                            0.008999999612569809,
+                                            0.009999999776482582,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "bridge1"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.142142295837402,
+                                            -0.5179967880249023,
+                                            9.193115234375
+                                        ],
+                                        "Rotation": [
+                                            1.0,
+                                            0.0,
+                                            0.0,
+                                            -1.1920930376163597e-07
+                                        ],
+                                        "Scale": [
+                                            0.008999999612569809,
+                                            0.009999999776482582,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "bridge2"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.51416301727295,
+                                            -0.5174264907836914,
+                                            -8.848831176757813
+                                        ],
+                                        "Rotation": [
+                                            0.7071068286895752,
+                                            -1.6858589901858068e-07,
+                                            -0.7071068286895752,
+                                            -1.1174034787730935e-11
+                                        ],
+                                        "Scale": [
+                                            0.009000259451568127,
+                                            0.010001882910728455,
+                                            0.010000672191381454
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "bridge3"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.106058120727539,
+                                            -0.516998291015625,
+                                            -9.0535888671875
+                                        ],
+                                        "Rotation": [
+                                            0.7071068286895752,
+                                            -1.6858481899362232e-07,
+                                            -0.7071068286895752,
+                                            -1.929832335600956e-11
+                                        ],
+                                        "Scale": [
+                                            0.009000737220048904,
+                                            0.010003221221268177,
+                                            0.010001149959862232
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "bridge4"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.659709930419922,
+                                            -0.45280933380126953,
+                                            0.0
+                                        ],
+                                        "Rotation": [
+                                            -0.0,
+                                            0.0,
+                                            -0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 0.10000000149011612,
+                                        "ExtentsY": 3.0,
+                                        "ExtentsZ": 10.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "wallcol1"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.966057777404785,
+                                            -0.452301025390625,
+                                            -0.0255584716796875
+                                        ],
+                                        "Rotation": [
+                                            -0.0,
+                                            0.0,
+                                            -0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 0.10000000149011612,
+                                        "ExtentsY": 3.0,
+                                        "ExtentsZ": 10.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "wallcol2"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            0.07563591003417969,
+                                            -0.4519224166870117,
+                                            -9.74664306640625
+                                        ],
+                                        "Rotation": [
+                                            -0.0,
+                                            0.0,
+                                            -0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 10.0,
+                                        "ExtentsY": 3.0,
+                                        "ExtentsZ": 0.10000000149011612,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "wallcol3"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -8.947956085205078,
+                                            0.42067909240722656,
+                                            -8.90185546875
+                                        ],
+                                        "Rotation": [
+                                            -0.0,
+                                            0.0,
+                                            -0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 1.0,
+                                        "ExtentsY": 7.050000190734863,
+                                        "ExtentsZ": 1.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "pillarcol1"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.145334243774414,
+                                            0.4210519790649414,
+                                            8.75115966796875
+                                        ],
+                                        "Rotation": [
+                                            -0.0,
+                                            0.0,
+                                            -0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 1.0,
+                                        "ExtentsY": 7.050000190734863,
+                                        "ExtentsZ": 1.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "pillarcol2"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            8.9647855758667,
+                                            0.42147254943847656,
+                                            8.819076538085938
+                                        ],
+                                        "Rotation": [
+                                            -0.0,
+                                            0.0,
+                                            -0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 1.0,
+                                        "ExtentsY": 7.050000190734863,
+                                        "ExtentsZ": 1.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "pillarcol3"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            8.812884330749512,
+                                            0.4217815399169922,
+                                            -8.9102783203125
+                                        ],
+                                        "Rotation": [
+                                            -0.0,
+                                            0.0,
+                                            -0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 1.0,
+                                        "ExtentsY": 7.050000190734863,
+                                        "ExtentsZ": 1.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "pillarcol4"
+                        }
+                    ],
                     "Components": [
                         {
                             "Data": {
                                 "Position": [
-                                    0.0,
-                                    0.0,
-                                    0.0
+                                    -30.759504318237305,
+                                    -9.560141563415527,
+                                    -113.50982666015625
                                 ],
                                 "Rotation": [
+                                    -0.0,
                                     0.0,
-                                    0.0,
-                                    0.0,
+                                    -0.0,
                                     1.0
                                 ],
                                 "Scale": [
@@ -1019,462 +2022,6 @@
                         {
                             "Data": {
                                 "Position": [
-                                    9.0,
-                                    1.0,
-                                    0.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    0.0,
-                                    1.0
-                                ],
-                                "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ColliderTag": "",
-                                "ExtentsX": 0.07999999821186066,
-                                "ExtentsY": 1.0,
-                                "ExtentsZ": 10.0,
-                                "IsTrigger": false,
-                                "Layer": 2,
-                                "Mask": 4294967295,
-                                "OffsetX": 0.0,
-                                "OffsetY": 0.0,
-                                "OffsetZ": 0.0,
-                                "RotW": 1.0,
-                                "RotX": 0.0,
-                                "RotY": 0.0,
-                                "RotZ": 0.0
-                            },
-                            "Type": "AABBColliderComponent"
-                        }
-                    ],
-                    "Name": "StageWall0"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    0.0,
-                                    1.0,
-                                    9.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    0.0,
-                                    1.0
-                                ],
-                                "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ColliderTag": "",
-                                "ExtentsX": 10.0,
-                                "ExtentsY": 1.0,
-                                "ExtentsZ": 0.07999999821186066,
-                                "IsTrigger": false,
-                                "Layer": 2,
-                                "Mask": 4294967295,
-                                "OffsetX": 0.0,
-                                "OffsetY": 0.0,
-                                "OffsetZ": 0.0,
-                                "RotW": 1.0,
-                                "RotX": 0.0,
-                                "RotY": 0.0,
-                                "RotZ": 0.0
-                            },
-                            "Type": "AABBColliderComponent"
-                        }
-                    ],
-                    "Name": "StageWall1"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -9.000127792358398,
-                                    -2.0574967861175537,
-                                    0.00051116943359375
-                                ],
-                                "Rotation": [
-                                    -0.0,
-                                    0.0,
-                                    -0.0,
-                                    1.0
-                                ],
-                                "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ColliderTag": "",
-                                "ExtentsX": 0.07999999821186066,
-                                "ExtentsY": 4.199999809265137,
-                                "ExtentsZ": 10.25,
-                                "IsTrigger": false,
-                                "Layer": 2,
-                                "Mask": 4294967295,
-                                "OffsetX": 0.0,
-                                "OffsetY": 0.0,
-                                "OffsetZ": 0.0,
-                                "RotW": 1.0,
-                                "RotX": 0.0,
-                                "RotY": 0.0,
-                                "RotZ": 0.0
-                            },
-                            "Type": "AABBColliderComponent"
-                        }
-                    ],
-                    "Name": "StageWall2"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -0.000270843505859375,
-                                    -0.04662609100341797,
-                                    -8.999984741210938
-                                ],
-                                "Rotation": [
-                                    -0.0,
-                                    0.0,
-                                    -0.0,
-                                    1.0
-                                ],
-                                "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ColliderTag": "",
-                                "ExtentsX": 10.0,
-                                "ExtentsY": 2.0999999046325684,
-                                "ExtentsZ": 0.07999999821186066,
-                                "IsTrigger": false,
-                                "Layer": 2,
-                                "Mask": 4294967295,
-                                "OffsetX": 0.0,
-                                "OffsetY": 0.0,
-                                "OffsetZ": 0.0,
-                                "RotW": 1.0,
-                                "RotX": 0.0,
-                                "RotY": 0.0,
-                                "RotZ": 0.0
-                            },
-                            "Type": "AABBColliderComponent"
-                        }
-                    ],
-                    "Name": "StageWall3"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    10.0,
-                                    0.0,
-                                    10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    -0.7071068286895752,
-                                    0.7071067690849304
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Pillar0"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    10.0,
-                                    0.0,
-                                    -10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    -0.7071068286895752,
-                                    0.7071067690849304
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Pillar1"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -10.0,
-                                    0.0,
-                                    10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    -0.7071068286895752,
-                                    0.7071067690849304
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Pillar2"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -10.0,
-                                    0.0,
-                                    -10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    -0.7071068286895752,
-                                    0.7071067690849304
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Pillar3"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    10.0,
-                                    0.0,
-                                    -10.0
-                                ],
-                                "Rotation": [
-                                    0.7071067690849304,
-                                    -8.42937097900176e-08,
-                                    -0.7071068286895752,
-                                    -8.429370268459024e-08
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Bridge0"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -10.0,
-                                    0.0,
-                                    10.0
-                                ],
-                                "Rotation": [
-                                    0.7071067690849304,
-                                    8.42937097900176e-08,
-                                    0.7071068286895752,
-                                    -8.429370268459024e-08
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Bridge1"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -10.0,
-                                    0.0,
-                                    10.0
-                                ],
-                                "Rotation": [
-                                    -1.1920930376163597e-07,
-                                    -1.1920930376163597e-07,
-                                    -1.0,
-                                    1.4210858103333793e-14
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Bridge2"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -10.0,
-                                    0.0,
-                                    -10.0
-                                ],
-                                "Rotation": [
-                                    -1.1920930376163597e-07,
-                                    1.1920930376163597e-07,
-                                    1.0,
-                                    1.4210858103333793e-14
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Bridge3"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
                                     -10.192133903503418,
                                     -24.385000228881836,
                                     42.7905387878418
@@ -1495,13 +2042,14 @@
                         },
                         {
                             "Data": {
-                                "ColorMapPath": "Resources/Textures/colormap.bmp",
+                                "AlphaMapPath": "",
+                                "ColorMapPath": "Resources/Textures/colormap_with_road.bmp",
                                 "DiffuseColor": [
                                     1.0,
                                     1.0,
                                     1.0
                                 ],
-                                "HeightMapPath": "Resources/Textures/heightmap.bmp",
+                                "HeightMapPath": "Resources/Textures/heightmap_with_road.bmp",
                                 "HeightScale": 35.0,
                                 "IsVisible": true,
                                 "LightDirection": [
@@ -1510,6 +2058,7 @@
                                     -0.6499999761581421
                                 ],
                                 "NormalMapPath": "",
+                                "Texture2Path": "",
                                 "TexturePath": "Resources/Textures/dirt01d.dds",
                                 "TextureTiling": 10.5,
                                 "isWiredFrame": false
@@ -1534,74 +2083,6 @@
                         }
                     ],
                     "Name": "Terrain"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -9.995073318481445,
-                                    -7.500520706176758,
-                                    -9.99789047241211
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    0.7071068286895752,
-                                    -0.7071068286895752
-                                ],
-                                "Scale": [
-                                    0.010000784881412983,
-                                    0.010000784881412983,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Pillar3_Copy"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -9.951873779296875,
-                                    -7.183327674865723,
-                                    10.011924743652344
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    0.7071068286895752,
-                                    -0.7071068286895752
-                                ],
-                                "Scale": [
-                                    0.01000090129673481,
-                                    0.01000090129673481,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Pillar2_Copy"
                 }
             ],
             "Components": [
@@ -1628,6 +2109,136 @@
                 }
             ],
             "Name": "StageRoot"
+        },
+        {
+            "Children": [
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -36.7049560546875,
+                                    11.00506591796875,
+                                    -83.579345703125
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.9772846698760986,
+                                    0.0,
+                                    -0.2119309902191162
+                                ],
+                                "Scale": [
+                                    0.20000194013118744,
+                                    0.20000000298023224,
+                                    0.20000194013118744
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/signs.sdkmesh",
+                                "TextureDir": "Resources/Models/stage/"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "sign1"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -520.9781494140625,
+                                    -5.092891693115234,
+                                    -83.4515380859375
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.9772846698760986,
+                                    0.0,
+                                    -0.21193087100982666
+                                ],
+                                "Scale": [
+                                    0.20000213384628296,
+                                    0.20000000298023224,
+                                    0.20000213384628296
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/signs.sdkmesh",
+                                "TextureDir": "Resources/Models/stage/"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "sign2"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -1063.58447265625,
+                                    -30.034320831298828,
+                                    -73.8465576171875
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.9974987506866455,
+                                    0.0,
+                                    0.07068398594856262
+                                ],
+                                "Scale": [
+                                    0.20000365376472473,
+                                    0.20000000298023224,
+                                    0.20000365376472473
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "ModelPath": "Resources/Models/stage/signs.sdkmesh",
+                                "TextureDir": "Resources/Models/stage/"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "sign2_Copy"
+                }
+            ],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            1194.0362548828125,
+                            -61.390079498291016,
+                            -1162.031982421875
+                        ],
+                        "Rotation": [
+                            -0.0,
+                            0.0,
+                            -0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                }
+            ],
+            "Name": "Signs"
         }
     ]
 }

@@ -184,7 +184,6 @@
     <ClInclude Include="BehaviourTree\BTCheckTetherNode.h" />
     <ClInclude Include="BehaviourTree\BTIdleNode.h" />
     <ClInclude Include="BehaviourTree\BTReturnToSpawnNode.h" />
-    <ClInclude Include="BehaviourTree\BTAwakeCheckNode.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Scene\GameScene\GameScene.h" />
     <ClInclude Include="Scene\TitleScene\TitleScene.h" />
@@ -193,7 +192,6 @@
     <ClCompile Include="BehaviourTree\BTCheckTetherNode.cpp" />
     <ClCompile Include="BehaviourTree\BTIdleNode.cpp" />
     <ClCompile Include="BehaviourTree\BTReturnToSpawnNode.cpp" />
-    <ClCompile Include="BehaviourTree\BTAwakeCheckNode.cpp" />
     <ClCompile Include="Framework\Main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
