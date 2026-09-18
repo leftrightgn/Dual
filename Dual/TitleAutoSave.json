@@ -407,12 +407,21 @@
                 },
                 {
                     "Data": {
+                        "AlphaMapPath": "",
                         "ColorMapPath": "Resources/Textures/colormap.bmp",
                         "DiffuseColor": [
                             1.0,
                             1.0,
                             1.0
                         ],
+                        "FogColor": [
+                            0.5,
+                            0.6000000238418579,
+                            0.699999988079071,
+                            1.0
+                        ],
+                        "FogEnd": 800.0,
+                        "FogStart": 100.0,
                         "HeightMapPath": "Resources/Textures/heightmap.bmp",
                         "HeightScale": 33.5,
                         "IsVisible": true,
@@ -422,6 +431,7 @@
                             -0.6499999761581421
                         ],
                         "NormalMapPath": "",
+                        "Texture2Path": "",
                         "TexturePath": "Resources/Textures/dirt01d.dds",
                         "TextureTiling": 26.5,
                         "isWiredFrame": false

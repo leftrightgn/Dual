@@ -24,6 +24,8 @@
 #include <utility>
 #include "../../../External/Engine/Common/json.hpp"
 #include <Components/TerrainComponent.h>
+#include "../../../External/Engine/Components/ColliderComponent/TerrainColliderComponent.h"
+#include "../../../External/Engine/Factory/ComponentFactory.h"
 
 using namespace DirectX;
 
@@ -42,7 +44,7 @@ void GameScene::OnEnter(GameContext& gameContext)
     // Default Projection
     D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
     float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
-    m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.0f, aspectRatio, 0.01f, 1000.0f);
+    m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.0f, aspectRatio, 0.01f, 5000.0f);
 
 
     // -------------------------------------------------------
@@ -373,7 +375,7 @@ void GameScene::Update(GameContext& gameContext)
     {
         D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
         float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
-        m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(activeCamera->GetFov(), aspectRatio, 0.1f, 1000.0f);
+        m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(activeCamera->GetFov(), aspectRatio, 0.1f, 5000.0f);
     }
 
     // // ---------------------------------------------------------
