@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemGroup>
     <Manifest Include="settings.manifest" />
@@ -11,13 +11,43 @@
     <ClCompile Include="Scene\TitleScene\TitleScene.cpp">
       <Filter>Scene\TitleScene</Filter>
     </ClCompile>
-    <ClCompile Include="States\CombatStates.cpp">
-      <Filter>States</Filter>
-    </ClCompile>
     <ClCompile Include="Framework\Main.cpp">
       <Filter>Framework</Filter>
     </ClCompile>
-    </ItemGroup>
+    <ClCompile Include="Factory\ActorFactory.cpp">
+      <Filter>Factory</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\BehaviourTreeComponent.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTAttackNode.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTChaseNode.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTCheckDistance.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTDodgeNode.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTStrafeNode.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\CharacterMovementComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\CombatStateMachineComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\PlayerInputComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="States\CombatStates.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
+  </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Scene\GameScene\GameScene.h">
@@ -26,13 +56,46 @@
     <ClInclude Include="Scene\TitleScene\TitleScene.h">
       <Filter>Scene\TitleScene</Filter>
     </ClInclude>
+    <ClInclude Include="Factory\ActorFactory.h">
+      <Filter>Factory</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\BehaviourTreeComponent.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTAttackNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTChaseNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTCheckDistance.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTDodgeNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTStrafeNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\CharacterMovementComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\CombatStateMachineComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\PlayerInputComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
     <ClInclude Include="States\CombatStates.h">
       <Filter>States</Filter>
     </ClInclude>
     <ClInclude Include="States\ICombatState.h">
       <Filter>States</Filter>
     </ClInclude>
-    </ItemGroup>
+    <ClInclude Include="BlackBoard\CombatBlackBoard.h">
+      <Filter>BlackBoard</Filter>
+    </ClInclude>
+  </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
   </ItemGroup>
@@ -41,7 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    </ItemGroup>
+  </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
       <UniqueIdentifier>{a355142e-3d25-4fca-922d-aeadbfedb2ae}</UniqueIdentifier>
@@ -108,5 +171,30 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    </ItemGroup>
-<ItemGroup><ClCompile Include="Factory\ActorFactory.cpp" /><ClCompile Include="States\CombatStates.cpp" /><ClCompile Include="Components\CombatStateMachineComponent.cpp" /><ClCompile Include="Components\PlayerInputComponent.cpp" /><ClCompile Include="BehaviourTree\BTAttackNode.cpp" /><ClCompile Include="BehaviourTree\BTChaseNode.cpp" /><ClCompile Include="BehaviourTree\BTCheckDistance.cpp" /><ClCompile Include="BehaviourTree\BTDodgeNode.cpp" /><ClCompile Include="BehaviourTree\BTStrafeNode.cpp" /><ClCompile Include="BehaviourTree\BTCheckTetherNode.cpp"><Filter>BehaviourTree</Filter></ClCompile><ClCompile Include="BehaviourTree\BTIdleNode.cpp"><Filter>BehaviourTree</Filter></ClCompile><ClCompile Include="BehaviourTree\BTReturnToSpawnNode.cpp"><Filter>BehaviourTree</Filter></ClCompile><ClCompile Include="BehaviourTree\BTAwakeCheckNode.cpp"><Filter>BehaviourTree</Filter></ClCompile></ItemGroup><ItemGroup><ClInclude Include="Factory\ActorFactory.h" /><ClInclude Include="States\CombatStates.h" /><ClInclude Include="States\ICombatState.h" /><ClInclude Include="BlackBoard\CombatBlackBoard.h" /><ClInclude Include="Components\CombatStateMachineComponent.h" /><ClInclude Include="Components\PlayerInputComponent.h" /><ClInclude Include="BehaviourTree\BTAttackNode.h" /><ClInclude Include="BehaviourTree\BTChaseNode.h" /><ClInclude Include="BehaviourTree\BTCheckDistance.h" /><ClInclude Include="BehaviourTree\BTDodgeNode.h" /><ClInclude Include="BehaviourTree\BTStrafeNode.h" /><ClInclude Include="BehaviourTree\BTCheckTetherNode.h"><Filter>BehaviourTree</Filter></ClInclude><ClInclude Include="BehaviourTree\BTIdleNode.h"><Filter>BehaviourTree</Filter></ClInclude><ClInclude Include="BehaviourTree\BTReturnToSpawnNode.h"><Filter>BehaviourTree</Filter></ClInclude><ClInclude Include="BehaviourTree\BTAwakeCheckNode.h"><Filter>BehaviourTree</Filter></ClInclude></ItemGroup><ItemGroup><ClCompile Include="Components\BehaviourTreeComponent.cpp" /><ClCompile Include="Components\CharacterMovementComponent.cpp" /></ItemGroup><ItemGroup><ClInclude Include="Components\BehaviourTreeComponent.h" /><ClInclude Include="Components\CharacterMovementComponent.h" /></ItemGroup></Project>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="States\CombatStates.cpp" />
+    <ClCompile Include="BehaviourTree\BTCheckTetherNode.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTIdleNode.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTReturnToSpawnNode.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="States\CombatStates.h" />
+    <ClInclude Include="States\ICombatState.h" />
+    <ClInclude Include="BehaviourTree\BTCheckTetherNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTIdleNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTReturnToSpawnNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
