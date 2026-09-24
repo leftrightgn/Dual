@@ -31,6 +31,7 @@
 #include "../../External/Engine/Camera/CameraController.h"
 #include "ActorFactory.h"
 #include "../../External/Engine/Components/TransformComponent.h"
+#include "../../External/Engine/Components/ProceduralAnimationComponent.h"
 #include <BehaviourTree/BTReturnToSpawnNode.h>
 #include <BehaviourTree/BTCheckTetherNode.h>
 
@@ -275,6 +276,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     playerActor->AddComponent<HEIN::PlayerInputComponent>(&actorManager); 
     playerActor->AddComponent<HEIN::TargetTrackingComponent>(&actorManager, HEIN::ActorType::Enemy);
     playerActor->AddComponent<HEIN::CharacterMovementComponent>();
+    playerActor->AddComponent<HEIN::ProceduralAnimationComponent>(&actorManager);
 
     playerActor->Start();
     return spawnData;
@@ -703,6 +705,8 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     dodgeConfig.transitions["OnAttack"] = "OneHand";
     dodgeConfig.transitions["OnStrafe"] = "Strafe";
     fsm->AddState("Dodge", std::make_unique<HEIN::DodgeState>(dodgeConfig));
+
+    enemyActor->AddComponent<HEIN::ProceduralAnimationComponent>(&actorManager);
 
     enemyActor->Start();
     return spawnData;

@@ -115,7 +115,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
             g_game->RegisterScene<GameScene>("GameScene");
 
             // Load the initial scene
-            g_game->LoadScene("TitleScene");
+            g_game->LoadScene("GameScene");
         }
 
         // Main message loop
