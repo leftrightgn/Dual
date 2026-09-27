@@ -1,0 +1,9 @@
+--- SKINNED MESH VB DECL ---
+Semantic: POSITION, Index: 0, Format: 6, Offset: -1
+Semantic: BLENDWEIGHT, Index: 0, Format: 28, Offset: -1
+Semantic: BLENDINDICES, Index: 0, Format: 30, Offset: -1
+Semantic: NORMAL, Index: 0, Format: 6, Offset: -1
+Semantic: COLOR, Index: 0, Format: 87, Offset: -1
+Semantic: TEXCOORD, Index: 0, Format: 16, Offset: -1
+----------------------------
+SUCCESS: CreateInputLayout succeeded!

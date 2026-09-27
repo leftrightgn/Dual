@@ -4,7 +4,7 @@ import argparse
 def combine_code(directory, output_file, extensions=None):
     # Common code file extensions to include by default
     if extensions is None:
-        extensions = ['.cpp', '.h']
+        extensions = ['.cpp', '.h', '.hlsl']
     
     # Directories to ignore to prevent combining huge dependencies or binaries
     ignore_dirs = {

@@ -41,6 +41,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_skybox = std::make_unique<HEIN::Skybox>();
     m_skybox->Initialize(gameContext, L"Resources/Textures/skybox.dds");
 
+    m_shadowSystem.Initialize(gameContext.deviceResources.GetD3DDevice(), 2048, 2048);
+
     // Default Projection
     D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
     float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
@@ -164,6 +166,7 @@ void GameScene::OnEnter(GameContext& gameContext)
         nlohmann::json j;
         autoSaveFile >> j;
         m_actorManager.Deserialize(j);
+        m_actorManager.InitializeAfterDeserialize(gameContext);
     }
 }
 
@@ -202,6 +205,7 @@ void GameScene::Update(GameContext& gameContext)
                 gameContext.mainCamera = nullptr; 
                 // Retain existing actor instances; merge serialized state overlay-style
                 m_actorManager.Deserialize(j);
+                m_actorManager.InitializeAfterDeserialize(gameContext);
                 
                 auto player = m_actorManager.GetActorByName(L"Player");
                 if(player) m_playerID = player->GetID();
@@ -413,13 +417,90 @@ void GameScene::Render(GameContext& gameContext)
     {
         view = activeCamera->GetView();
     }
+
+    gameContext.actorManager = &m_actorManager;
+    gameContext.shadowSystem = &m_shadowSystem;
+    gameContext.isEditorMode = (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()));
+
+    // Find Active Light
+    HEIN::LightComponent* activeLight = nullptr;
+    for (auto& pair : m_actorManager.GetAllActors())
+    {
+        activeLight = pair.second->GetComponent<HEIN::LightComponent>();
+        if (activeLight && activeLight->CastsShadows()) break;
+    }
+
+    DirectX::SimpleMath::Vector3 lightDir(0.5f, -1.0f, 0.5f);
+    DirectX::SimpleMath::Vector3 lightPos(-500.0f, 1000.0f, -500.0f);
+    float projSize = 150.0f;
+    
+    if (activeLight)
+    {
+        lightDir = activeLight->GetOwner()->GetComponent<HEIN::TransformComponent>()->GetForward();
+        if (activeLight->GetLightType() == HEIN::LightType::Directional)
+        {
+            // Center the shadow orthographic projection around the player
+            HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
+            DirectX::SimpleMath::Vector3 targetCenter = DirectX::SimpleMath::Vector3::Zero;
+            if (player)
+            {
+                targetCenter = player->GetComponent<HEIN::TransformComponent>()->GetPosition();
+            }
+            lightPos = targetCenter - lightDir * 500.0f;
+            projSize = 40.0f; 
+        }
+        else
+        {
+            // For point/spot light, use its actual position
+            lightPos = activeLight->GetOwner()->GetComponent<HEIN::TransformComponent>()->GetPosition();
+            projSize = activeLight->GetRange();
+        }
+    }
+    lightDir.Normalize();
+    
+    DirectX::SimpleMath::Vector3 targetPos = lightPos + lightDir * 500.0f;
+    DirectX::SimpleMath::Vector3 up = DirectX::SimpleMath::Vector3::Up;
+    if (std::abs(lightDir.Dot(up)) > 0.999f)
+    {
+        up = DirectX::SimpleMath::Vector3::Right;
+    }
+    DirectX::SimpleMath::Matrix viewMat = DirectX::SimpleMath::Matrix::CreateLookAt(lightPos, targetPos, up);
+    DirectX::SimpleMath::Matrix projMat = DirectX::SimpleMath::Matrix::CreateOrthographic(projSize, projSize, 0.1f, 1000.0f);
+    DirectX::SimpleMath::Matrix lightViewProj = viewMat * projMat;
+    m_shadowSystem.SetLightViewProj(lightViewProj);
+    
+    m_shadowSystem.BindShadowMap(context);
+    m_actorManager.DrawAllShadows(gameContext, lightViewProj);
+
+    // Restore Main Render Target
+    ID3D11RenderTargetView* rtv = gameContext.deviceResources.GetRenderTargetView();
+    ID3D11DepthStencilView* dsv = gameContext.deviceResources.GetDepthStencilView();
+    context->OMSetRenderTargets(1, &rtv, dsv);
+    D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
+    context->RSSetViewports(1, &viewport);
+
     if (m_skybox)
     {
         m_skybox->Draw(gameContext, view, m_proj);
     }
 
+    // Bind Shadow Map SRV for shaders (slot 4)
+    ID3D11ShaderResourceView* shadowSRV = m_shadowSystem.GetShadowMapSRV();
+    context->PSSetShaderResources(4, 1, &shadowSRV);
+
+    // Bind Comparison Sampler for shaders (slot 1)
+    ID3D11SamplerState* shadowSampler = m_shadowSystem.GetShadowSampler();
+    context->PSSetSamplers(1, 1, &shadowSampler);
     // Tell the Manager to draw all active entities
     m_actorManager.DrawAll(gameContext, view, m_proj);
+
+    // Unbind Shadow Map SRV and Sampler
+    ID3D11ShaderResourceView* nullSRV = nullptr;
+    context->PSSetShaderResources(4, 1, &nullSRV);
+    
+    ID3D11SamplerState* nullSampler = nullptr;
+    context->PSSetSamplers(1, 1, &nullSampler);
+
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
     HEIN::Actor* enemy = m_actorManager.GetActor(m_enemyID);
     // COMBAT UI

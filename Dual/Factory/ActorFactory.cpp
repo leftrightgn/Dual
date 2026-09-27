@@ -432,6 +432,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
 
     HEIN::StaticModelComponent* floorModel = floorActor->AddComponent<HEIN::StaticModelComponent>();
     floorModel->Initialize(gameContext, L"Resources/Models/stage/floor1.sdkmesh", L"Resources/Models/stage");
+    floorModel->m_castShadows = false;
     HEIN::MeshColliderComponent* floorPhysics = floorActor->AddComponent<HEIN::MeshColliderComponent>();
     floorPhysics->LoadFromObj(L"Resources/Models/stage/floor1.obj");
     floorPhysics->SetCollisionLayer(CollisionLayer::Layer_Environment);
