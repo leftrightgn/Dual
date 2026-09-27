@@ -523,7 +523,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     // ---------------------------------------------------------
     // IDLE NODE (Fallback)
     // ---------------------------------------------------------
-    // If we are NOT leashing, AND the player is > 20m away... stand perfectly still!
+    // Fallback idle behavior when target is outside combat threshold and within tether bounds
     aiBrain->AddChild(std::make_unique<HEIN::BTIdleNode>());
 
     HEIN::BehaviourTreeComponent* btComp = enemyActor->AddComponent<HEIN::BehaviourTreeComponent>();

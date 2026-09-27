@@ -1,6 +1,10 @@
+//--------------------------------------------------------------------------------------
+// File: GameScene.cpp
+// Author: HEIN SOE KHANT
+//--------------------------------------------------------------------------------------
 #include "pch.h"
-#include "../../../External/Engine/Common/InputManager.h"
 #include "GameScene.h"
+#include "../../../External/Engine/Common/InputManager.h"
 #include "../../../External/Engine/Camera/DebugCameraMode.h"
 #include "../../../External/Engine/Camera/CameraController.h"
 #include "../../../External/Engine/Camera/ThirdPersonMode.h"
@@ -9,6 +13,7 @@
 #include "../../../External/Engine/Camera/SpringCameraMode.h"
 #include "../../../External/Engine/Components/TransformComponent.h"
 #include "../../../External/Engine/Components/SkinnedModelComponent.h"
+#include "../../../External/Engine/Components/LightComponent.h"
 #include "../../../External/Engine/FrameWork/GameContext.h"
 #include <Components/PlayerInputComponent.h>
 #include <Factory/ActorFactory.h>
@@ -17,15 +22,12 @@
 #include "../../../External/Engine/ImGui/imgui.h"
 #include "../../../External/Engine/ImGui/ImGuizmo.h"
 #include "../../../External/Engine/Common/Event.h"
+#include "../../../External/Engine/Common/json.hpp"
 #include <commdlg.h>
 #include <fstream>
-#include "../../../External/Engine/Common/json.hpp"
 #include <Windows.h>
 #include <utility>
-#include "../../../External/Engine/Common/json.hpp"
-#include <Components/TerrainComponent.h>
-#include "../../../External/Engine/Components/ColliderComponent/TerrainColliderComponent.h"
-#include "../../../External/Engine/Factory/ComponentFactory.h"
+#include <cmath>
 
 using namespace DirectX;
 
@@ -34,275 +36,120 @@ using namespace DirectX;
 // --------------------------------------------------------------------------------------
 void GameScene::OnEnter(GameContext& gameContext)
 {
+    // Initialize Core Systems & Viewport Pipeline
     m_physicsSystem = std::make_unique<HEIN::PhysicsSystem>();
     m_damageSystem = std::make_unique<HEIN::DamageSystem>();
 
-    // Skybox
     m_skybox = std::make_unique<HEIN::Skybox>();
     m_skybox->Initialize(gameContext, L"Resources/Textures/skybox.dds");
 
     m_shadowSystem.Initialize(gameContext.deviceResources.GetD3DDevice(), 2048, 2048);
 
-    // Default Projection
     D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
     float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
     m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.0f, aspectRatio, 0.01f, 5000.0f);
 
-
-    // -------------------------------------------------------
-   // Camera Registration
-   // -------------------------------------------------------
-
+    // Entity Spawning via Actor Factory
     m_cameraID = HEIN::ActorFactory::CreateMainCamera(m_actorManager);
-    // -------------------------------------------------------
-    // Entity Spawn (Passing the ActorManager)
-    // -------------------------------------------------------
 
-    // Build Player
-    HEIN::PlayerSpawnData playerData = HEIN::ActorFactory::CreateKnight(
-        m_actorManager,
-        gameContext,
-        &m_targetPos
-    );
+    HEIN::PlayerSpawnData playerData = HEIN::ActorFactory::CreateKnight(m_actorManager, gameContext, &m_targetPos);
     m_playerID = playerData.playerID;
+    HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID, 5.0f);
 
-    // Build Sword
-    m_playerSwordID = HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID, 5.0f);
-
-    // Build Enemy
     HEIN::EnemySpawnData enemyData = HEIN::ActorFactory::CreateEnemy(m_actorManager, gameContext, m_playerID);
     m_enemyID = enemyData.enemyID;
-   
-    m_enemySwordID = HEIN::ActorFactory::CreateAxe(m_actorManager, gameContext, m_enemyID, 20.0f);
+    HEIN::ActorFactory::CreateAxe(m_actorManager, gameContext, m_enemyID, 20.0f);
 
-    // Build Stage
-    m_stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
+    HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
 
-   
+    // Camera Controller & Modes Registration
+    SetupCameraModes(gameContext, GetActiveCameraController(gameContext), playerData.tpsModel);
 
-    // Retrieve Camera Component to register camera modes
-    HEIN::Actor* cameraActor = m_actorManager.GetActor(m_cameraID);
-    HEIN::CameraController* cameraComp = cameraActor->GetComponent<HEIN::CameraController>();
-    gameContext.mainCamera = cameraComp;
-    //HEIN::SkinnedModelComponent* fpsModelPointer = playerData.fpsModel;
-    HEIN::SkinnedModelComponent* ModelPointer = playerData.tpsModel;
-
-    HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
-    if (player != nullptr)
-    {
-        HEIN::TransformComponent* playerTransform = player->GetComponent<HEIN::TransformComponent>();
-        ModelPointer->Update(0.0f);
-        m_targetPos = ModelPointer->GetBoneWorldPosition(L"mixamorig:HeadTop_End", playerTransform->GetWorldMatrix());
-
-        // First Person Mode
-        cameraComp->RegisterCamera(
-            HEIN::CameraType::FirstPerson,
-            [this, ModelPointer]()
-            {
-                return std::make_unique<HEIN::FirstPersonMode>(
-                    &m_actorManager, m_playerID, &m_targetPos, ModelPointer, ModelPointer);
-            }
-        );
-
-        // Third Person Mode
-        cameraComp->RegisterCamera(
-            HEIN::CameraType::ThirdPerson,
-            [this, ModelPointer]()
-            {
-                return std::make_unique<HEIN::ThirdPersonMode>(
-                    &m_actorManager, m_playerID, &m_targetPos, ModelPointer, ModelPointer);
-            }
-        );
-
-        // Spring Camera Mode
-        cameraComp->RegisterCamera(
-            HEIN::CameraType::Spring,
-            [this]()
-            {
-                return std::make_unique<HEIN::SpringCameraMode>(
-                    &m_actorManager, m_playerID, &m_targetPos);
-            }
-        );
-
-        cameraComp->RegisterCamera(
-            HEIN::CameraType::LockOn,
-            [this]()
-            {
-                return std::make_unique<HEIN::LockOnCameraMode>(
-                    &m_actorManager, m_playerID, m_enemyID);
-            }
-        );
-    }
-
-    // Debug Mode
-    cameraComp->RegisterCamera(
-        HEIN::CameraType::Debug,
-        []() 
-        { return std::make_unique<HEIN::DebugCameraMode>(); }
-    );
-    cameraComp->SetFirstCamera(HEIN::CameraType::Spring);
-    
-
-    // -------------------------------------------------------
-    // UI Tools
-    // -------------------------------------------------------
+    // Debug Display Controller & Trigger Event Listeners
     m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
     m_debugDisplay->Initialize();
+    UpdateDebugTargets();
 
-    
-    m_debugDisplay->SetDebugTargets(m_playerID, m_playerSwordID, m_enemySwordID, m_stageID, m_enemyID);
+    gameContext.eventManager->AddTriggerListener([this](const HEIN::TriggerEventPayLoad& payLoad) {
+        m_damageSystem->HandlTriggerHit(payLoad, m_actorManager);
+    });
 
-    gameContext.eventManager->AddTriggerListener(
-        [this](const HEIN::TriggerEventPayLoad& payLoad)
-        {
-            m_damageSystem->HandlTriggerHit(payLoad, m_actorManager);
-        }
-    );
-    
-    // Auto-load last saved changes over the factory actors!
-    std::ifstream autoSaveFile("AutoSave.json");
-    if (autoSaveFile.is_open())
-    {
-        nlohmann::json j;
-        autoSaveFile >> j;
-        m_actorManager.Deserialize(j);
-        m_actorManager.InitializeAfterDeserialize(gameContext);
-    }
+    // AutoSave Scene State Overlay
+    LoadAutoSave(gameContext);
+    UpdateDebugTargets();
 }
 
-
 // --------------------------------------------------------------------------------------
-// 更新 (Update)
+// 更新 (Update) - Orchestrates ECS Pipeline Phases
 // --------------------------------------------------------------------------------------
 void GameScene::Update(GameContext& gameContext)
 {
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
+    // Phase 1: Editor & Tooling Phase
     m_debugDisplay->Update(gameContext, m_actorManager);
+    HandleEditorActions(gameContext);
 
-    HEIN::EditorAction uiAction = m_debugDisplay->GetUIAction();
-    if (uiAction == HEIN::EditorAction::PlayPressed || !m_debugDisplay->isVisible()) {
-        m_isPlaying = true;
-    } else if (uiAction == HEIN::EditorAction::StopPressed) {
-        m_isPlaying = false;
-    } else if (uiAction == HEIN::EditorAction::LoadPressed) {
-        WCHAR szFile[260] = { 0 };
-        OPENFILENAMEW ofn = { 0 };
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = gameContext.deviceResources.GetWindow();
-        ofn.lpstrFile = szFile;
-        ofn.nMaxFile = sizeof(szFile) / sizeof(WCHAR);
-        ofn.lpstrFilter = L"JSON Files\0*.json\0Scene Files\0*.Scene\0All Files\0*.*\0";
-        ofn.nFilterIndex = 1;
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-
-        if (GetOpenFileNameW(&ofn) == TRUE) {
-            std::ifstream file(szFile);
-            if (file.is_open()) {
-                nlohmann::json j;
-                file >> j;
-                
-                gameContext.mainCamera = nullptr; 
-                // Retain existing actor instances; merge serialized state overlay-style
-                m_actorManager.Deserialize(j);
-                m_actorManager.InitializeAfterDeserialize(gameContext);
-                
-                auto player = m_actorManager.GetActorByName(L"Player");
-                if(player) m_playerID = player->GetID();
-                auto enemy = m_actorManager.GetActorByName(L"Enemy");
-                if(enemy) m_enemyID = enemy->GetID();
-                gameContext.mainCamera = nullptr;
-                for (auto& pair : m_actorManager.GetAllActors())
-                {
-                    if (auto cam = pair.second->GetComponent<HEIN::CameraController>())
-                    {
-                        gameContext.mainCamera = cam;
-                        m_cameraID = pair.second->GetID();
-                        break;
-                    }
-                }
-                m_isPlaying = true;
-            }
-        }
-    } else if (uiAction == HEIN::EditorAction::NewScenePressed) {
-        gameContext.mainCamera = nullptr;
-        m_actorManager.ClearAllActors();
-        m_playerID = HEIN::INVALID_ACTOR_ID;
-        m_enemyID = HEIN::INVALID_ACTOR_ID;
-        m_cameraID = HEIN::INVALID_ACTOR_ID;
-    } else if (uiAction == HEIN::EditorAction::SavePressed) {
-        WCHAR szFile[260] = { 0 };
-        OPENFILENAMEW ofn = { 0 };
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = gameContext.deviceResources.GetWindow();
-        ofn.lpstrFile = szFile;
-        ofn.nMaxFile = sizeof(szFile) / sizeof(WCHAR);
-        ofn.lpstrFilter = L"JSON Files\0*.json\0Scene Files\0*.Scene\0All Files\0*.*\0";
-        ofn.nFilterIndex = 1;
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
-        ofn.lpstrDefExt = L"json";
-
-        if (GetSaveFileNameW(&ofn) == TRUE) {
-            std::ofstream file(szFile);
-            if (file.is_open()) {
-                nlohmann::json j = m_actorManager.Serialize();
-                file << j.dump(4);
-            }
-            // Auto-save mirror so it reloads automatically next boot!
-            std::ofstream autoSave("AutoSave.json");
-            if (autoSave.is_open()) {
-                nlohmann::json j = m_actorManager.Serialize();
-                autoSave << j.dump(4);
-            }
-        }
-    } else if (uiAction == HEIN::EditorAction::AutoSavePressed) {
-        std::ofstream autoSave("AutoSave.json");
-        if (autoSave.is_open()) {
-            nlohmann::json j = m_actorManager.Serialize();
-            autoSave << j.dump(4);
-        }
-    } else if (uiAction == HEIN::EditorAction::CreateStagePressed) {
-        HEIN::ActorID stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
-        m_stageID = stageID;
-        if (m_debugDisplay != nullptr && stageID != HEIN::INVALID_ACTOR_ID) {
-            m_debugDisplay->GetDebugUI().SetSelectedActor(m_actorManager.GetActor(stageID));
-        }
-    }
-
-    // Zero delta time stops all physics/logic automatically when paused
-    if (!m_isPlaying) 
+    if (!m_isPlaying)
     {
         deltaTime = 0.0f;
     }
 
-    HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
-    
-    // Safely sync camera pointer against actor manager
-    HEIN::Actor* cameraActor = m_actorManager.GetActor(m_cameraID);
-    if (cameraActor != nullptr)
+    // Phase 2: Input Phase
+    ProcessInputPhase(gameContext);
+
+    // Phase 3: Simulation Phase (Physics, Hierarchies, LateUpdate, Collisions, Tracking)
+    ProcessSimulationPhase(gameContext, deltaTime);
+
+    // Phase 4: Lifecycle Phase (Garbage Collection / Death System)
+    ProcessLifecyclePhase();
+}
+
+// --------------------------------------------------------------------------------------
+// 描画 (Render) - Orchestrates Rendering Passes
+// --------------------------------------------------------------------------------------
+void GameScene::Render(GameContext& gameContext)
+{
+    ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
+    DirectX::SimpleMath::Matrix view = DirectX::SimpleMath::Matrix::Identity;
+
+    HEIN::CameraController* activeCamera = GetActiveCameraController(gameContext);
+    if (activeCamera != nullptr)
     {
-        gameContext.mainCamera = cameraActor->GetComponent<HEIN::CameraController>();
+        view = activeCamera->GetView();
     }
-    else
-    {
-        // If the camera actor was deleted, check if any other actor has a camera controller
-        gameContext.mainCamera = nullptr;
-        for (const auto& pair : m_actorManager.GetAllActors())
-        {
-            if (auto* cam = pair.second->GetComponent<HEIN::CameraController>())
-            {
-                gameContext.mainCamera = cam;
-                m_cameraID = pair.second->GetID();
-                break;
-            }
-        }
-    }
+
+    gameContext.actorManager = &m_actorManager;
+    gameContext.shadowSystem = &m_shadowSystem;
+    gameContext.isEditorMode = (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()));
+
+    // Pass 1: Shadow Map Depth Generation Pass
+    RenderShadowPhase(gameContext, context);
+
+    // Pass 2: Main Color & Scene Drawing Pass
+    RenderMainPassPhase(gameContext, context, view);
+
+    // Pass 3: In-Game Combat Status HUD Pass
+    RenderUIPhase();
+
+    // Pass 4: ImGui Editor & Gizmo Overlay Pass
+    m_debugDisplay->Render(gameContext, m_actorManager, m_skybox.get(), view, m_proj);
+}
+
+// --------------------------------------------------------------------------------------
+// ECS Pipeline Phase Implementations
+// --------------------------------------------------------------------------------------
+
+void GameScene::ProcessInputPhase(GameContext& gameContext)
+{
+    HEIN::CameraController* camera = GetActiveCameraController(gameContext);
+    HEIN::Actor* player = GetPlayerActor();
 
     bool isUICapturingMouse = ImGui::GetIO().WantCaptureMouse || ImGuizmo::IsUsing() || ImGuizmo::IsOver();
     bool isUICapturingKeyboard = ImGui::GetIO().WantCaptureKeyboard;
 
-    // CAMERA INPUT PHASE
-    if (!m_debugDisplay->isMagnified() && gameContext.mainCamera != nullptr)
+    // Camera Input Processing
+    if (!m_debugDisplay->isMagnified() && camera != nullptr)
     {
         HEIN::CameraInputState cameraInput;
         const DirectX::Mouse::State& mouseState = gameContext.mouseState;
@@ -323,29 +170,29 @@ void GameScene::Update(GameContext& gameContext)
         cameraInput.ignoreScroll = isUICapturingMouse;
         cameraInput.ignoreMovement = isUICapturingKeyboard;
 
-        gameContext.mainCamera->ProcessInput(cameraInput);
+        camera->ProcessInput(cameraInput);
 
-        // Handle Camera Switching cleanly
         HEIN::CameraType targetCameraType;
         if (gameContext.inputManager->WasCameraSwitchPressed(gameContext, targetCameraType))
         {
-            gameContext.mainCamera->RequestSwitch(targetCameraType);
+            camera->RequestSwitch(targetCameraType);
         }
     }
 
-    // PLAYER INPUT PHASE
+    // Player Input Processing
     if (m_isPlaying && player != nullptr && !m_debugDisplay->isMagnified() && !isUICapturingMouse && !isUICapturingKeyboard)
     {
-        gameContext.inputManager->BroadCastPlayerInput(gameContext, m_playerID);
+        gameContext.inputManager->BroadCastPlayerInput(gameContext, player->GetID());
 
-        HEIN::PlayerInputComponent* inputComp = player->GetComponent<HEIN::PlayerInputComponent>();
-        if (inputComp)
+        if (auto* inputComp = player->GetComponent<HEIN::PlayerInputComponent>())
         {
             inputComp->ProcessInput(gameContext);
         }
     }
+}
 
-    // CORE ENGINE LOOP (Data-Oriented Math Pipeline)
+void GameScene::ProcessSimulationPhase(GameContext& gameContext, float deltaTime)
+{
     if (m_isPlaying)
     {
         m_actorManager.UpdateAll(deltaTime);
@@ -361,19 +208,20 @@ void GameScene::Update(GameContext& gameContext)
         m_actorManager.LateUpdateAll(0.0f);
     }
 
-    // CAMERA TRACKING
+    // Dynamic Camera Target Tracking
+    HEIN::Actor* player = GetPlayerActor();
     if (player != nullptr)
     {
-        HEIN::TransformComponent* pTransform = player->GetComponent<HEIN::TransformComponent>();
-        HEIN::SkinnedModelComponent* pModel = player->GetComponent<HEIN::SkinnedModelComponent>();
+        auto* pTransform = player->GetComponent<HEIN::TransformComponent>();
+        auto* pModel = player->GetComponent<HEIN::SkinnedModelComponent>();
 
         if (pTransform != nullptr && pModel != nullptr)
         {
-            // Instantly grab pre-calculated bone position for the camera to use safely
             m_targetPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End", pTransform->GetWorldMatrix());
         }
     }
 
+    // Update Projection Matrix from Active Camera FOV
     HEIN::CameraController* activeCamera = gameContext.mainCamera;
     if (activeCamera != nullptr)
     {
@@ -381,48 +229,32 @@ void GameScene::Update(GameContext& gameContext)
         float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
         m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(activeCamera->GetFov(), aspectRatio, 0.1f, 5000.0f);
     }
+}
 
-    // // ---------------------------------------------------------
-    // MEMORY CLEANUP (Garbage Collection)
-    // ---------------------------------------------------------
-    
-    // Loop through every actor safely
-    for (const std::pair<const HEIN::ActorID, std::unique_ptr<HEIN::Actor>>& pair : m_actorManager.GetAllActors())
+void GameScene::ProcessLifecyclePhase()
+{
+    // Health & Death Evaluation
+    for (const auto& pair : m_actorManager.GetAllActors())
     {
         HEIN::Actor* currentActor = pair.second.get();
-        HEIN::HealthComponent* health = currentActor->GetComponent<HEIN::HealthComponent>();
+        if (!currentActor) continue;
 
-        // If the actor has a HealthComponent AND its health is 0 or less
+        auto* health = currentActor->GetComponent<HEIN::HealthComponent>();
         if (health != nullptr && health->isDead())
         {
-            // Tell the manager to queue this actor for destruction!
             m_actorManager.DestroyID(currentActor->GetID());
         }
     }
-    // Delete any Actors whose health dropped to 0 this frame.
+
     m_actorManager.CleanUpDestroyedActors();
 }
 
+// --------------------------------------------------------------------------------------
+// Render Phase Implementations
+// --------------------------------------------------------------------------------------
 
-// --------------------------------------------------------------------------------------
-// 描画 (Render)
-// --------------------------------------------------------------------------------------
-void GameScene::Render(GameContext& gameContext)
+void GameScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext* context)
 {
-    ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
-    DirectX::SimpleMath::Matrix view = DirectX::SimpleMath::Matrix::Identity;
-    
-    HEIN::CameraController* activeCamera = gameContext.mainCamera;
-    if (activeCamera != nullptr)
-    {
-        view = activeCamera->GetView();
-    }
-
-    gameContext.actorManager = &m_actorManager;
-    gameContext.shadowSystem = &m_shadowSystem;
-    gameContext.isEditorMode = (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()));
-
-    // Find Active Light
     HEIN::LightComponent* activeLight = nullptr;
     for (auto& pair : m_actorManager.GetAllActors())
     {
@@ -433,45 +265,56 @@ void GameScene::Render(GameContext& gameContext)
     DirectX::SimpleMath::Vector3 lightDir(0.5f, -1.0f, 0.5f);
     DirectX::SimpleMath::Vector3 lightPos(-500.0f, 1000.0f, -500.0f);
     float projSize = 150.0f;
-    
+
     if (activeLight)
     {
-        lightDir = activeLight->GetOwner()->GetComponent<HEIN::TransformComponent>()->GetForward();
-        if (activeLight->GetLightType() == HEIN::LightType::Directional)
+        if (auto* lightOwner = activeLight->GetOwner())
         {
-            // Center the shadow orthographic projection around the player
-            HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
-            DirectX::SimpleMath::Vector3 targetCenter = DirectX::SimpleMath::Vector3::Zero;
-            if (player)
+            if (auto* lightTransform = lightOwner->GetComponent<HEIN::TransformComponent>())
             {
-                targetCenter = player->GetComponent<HEIN::TransformComponent>()->GetPosition();
+                lightDir = lightTransform->GetForward();
+                if (activeLight->GetLightType() == HEIN::LightType::Directional)
+                {
+                    HEIN::Actor* player = GetPlayerActor();
+                    DirectX::SimpleMath::Vector3 targetCenter = DirectX::SimpleMath::Vector3::Zero;
+                    if (player)
+                    {
+                        if (auto* trans = player->GetComponent<HEIN::TransformComponent>())
+                        {
+                            targetCenter = trans->GetPosition();
+                        }
+                    }
+                    lightPos = targetCenter - lightDir * 500.0f;
+                    projSize = 40.0f;
+                }
+                else
+                {
+                    lightPos = lightTransform->GetPosition();
+                    projSize = activeLight->GetRange();
+                }
             }
-            lightPos = targetCenter - lightDir * 500.0f;
-            projSize = 40.0f; 
-        }
-        else
-        {
-            // For point/spot light, use its actual position
-            lightPos = activeLight->GetOwner()->GetComponent<HEIN::TransformComponent>()->GetPosition();
-            projSize = activeLight->GetRange();
         }
     }
     lightDir.Normalize();
-    
+
     DirectX::SimpleMath::Vector3 targetPos = lightPos + lightDir * 500.0f;
     DirectX::SimpleMath::Vector3 up = DirectX::SimpleMath::Vector3::Up;
     if (std::abs(lightDir.Dot(up)) > 0.999f)
     {
         up = DirectX::SimpleMath::Vector3::Right;
     }
+
     DirectX::SimpleMath::Matrix viewMat = DirectX::SimpleMath::Matrix::CreateLookAt(lightPos, targetPos, up);
     DirectX::SimpleMath::Matrix projMat = DirectX::SimpleMath::Matrix::CreateOrthographic(projSize, projSize, 0.1f, 1000.0f);
     DirectX::SimpleMath::Matrix lightViewProj = viewMat * projMat;
     m_shadowSystem.SetLightViewProj(lightViewProj);
-    
+
     m_shadowSystem.BindShadowMap(context);
     m_actorManager.DrawAllShadows(gameContext, lightViewProj);
+}
 
+void GameScene::RenderMainPassPhase(GameContext& gameContext, ID3D11DeviceContext* context, const DirectX::SimpleMath::Matrix& view)
+{
     // Restore Main Render Target
     ID3D11RenderTargetView* rtv = gameContext.deviceResources.GetRenderTargetView();
     ID3D11DepthStencilView* dsv = gameContext.deviceResources.GetDepthStencilView();
@@ -491,100 +334,361 @@ void GameScene::Render(GameContext& gameContext)
     // Bind Comparison Sampler for shaders (slot 1)
     ID3D11SamplerState* shadowSampler = m_shadowSystem.GetShadowSampler();
     context->PSSetSamplers(1, 1, &shadowSampler);
-    // Tell the Manager to draw all active entities
+
+    // Draw all active entities
     m_actorManager.DrawAll(gameContext, view, m_proj);
 
     // Unbind Shadow Map SRV and Sampler
     ID3D11ShaderResourceView* nullSRV = nullptr;
     context->PSSetShaderResources(4, 1, &nullSRV);
-    
+
     ID3D11SamplerState* nullSampler = nullptr;
     context->PSSetSamplers(1, 1, &nullSampler);
 
-    HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
-    HEIN::Actor* enemy = m_actorManager.GetActor(m_enemyID);
-    // COMBAT UI
-    if (m_isPlaying && !m_debugDisplay->isVisible())
-    {
-        ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Always);
-
-        // Set up flags to make the window static (No moving, No resizing, No collapsing, No inputs)
-        ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoInputs;
-
-        // Begin the window with the new flags
-        ImGui::Begin("Combat Status", nullptr, flags);
-        if (player != nullptr)
-        {
-            HEIN::HealthComponent* pHealth = player->GetComponent<HEIN::HealthComponent>();
-            if (pHealth != nullptr)
-            {
-                ImGui::Text("Player Health");
-                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-                ImGui::ProgressBar(pHealth->GetCurrentHealth() / pHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
-                ImGui::PopStyleColor();
-            }
-
-            HEIN::CombatBlackBoard* pBB = player->GetComponent<HEIN::CombatBlackBoard>();
-            if (pBB != nullptr)
-            {
-                if (pBB->isBlockBroken)
-                {
-                    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // Red bar
-                    ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
-                    ImGui::PopStyleColor();
-                }
-                else
-                {
-                    ImGui::Text("Block Stamina");
-                    ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
-                }
-
-                ImGui::Separator();
-
-                if (pBB->dodgeCooldownTimer > 0.0f)
-                {
-                    ImGui::Text("Dodge Recharging...");
-                    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-                    ImGui::ProgressBar(1.0f - (pBB->dodgeCooldownTimer / pBB->maxDodgeCooldown), ImVec2(200.0f, 20.0f), "");
-                    ImGui::PopStyleColor();
-                }
-                else
-                {
-                    ImGui::Text("Dodge Ready");
-                    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 0.8f, 1.0f, 1.0f));
-                    ImGui::ProgressBar(1.0f, ImVec2(200.0f, 20.0f), "");
-                    ImGui::PopStyleColor();
-                }
-            }
-        }
-        else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "PLAYER DEAD");
-
-        ImGui::Separator();
-
-        if (enemy != nullptr)
-        {
-            HEIN::HealthComponent* eHealth = enemy->GetComponent<HEIN::HealthComponent>();
-            if (eHealth != nullptr)
-            {
-                ImGui::Text("Enemy Health");
-                ImGui::ProgressBar(eHealth->GetCurrentHealth() / eHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
-            }
-        }
-        else ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "ENEMY DEAD");
-        ImGui::End();
-    }
-    // Transparent Pipeline Setup
+    // Transparent Pipeline Setup & Reset to Opaque Defaults
     ID3D11SamplerState* wrapSampler = gameContext.commonStates.LinearWrap();
     context->RSSetState(gameContext.commonStates.CullNone());
     context->PSSetSamplers(0, 1, &wrapSampler);
     context->OMSetBlendState(gameContext.commonStates.AlphaBlend(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthRead(), 0);
 
-    // Cleanup and reset states back to normal for the next frame
     context->RSSetState(gameContext.commonStates.CullCounterClockwise());
     context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
+}
 
-    // ImGui / Debug Pass
-    m_debugDisplay->Render(gameContext, m_actorManager, m_skybox.get(), view, m_proj);
+void GameScene::RenderUIPhase()
+{
+    if (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()))
+    {
+        return;
+    }
+
+    HEIN::Actor* player = GetPlayerActor();
+    HEIN::Actor* enemy = GetEnemyActor();
+
+    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Always);
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoInputs;
+
+    ImGui::Begin("Combat Status", nullptr, flags);
+    if (player != nullptr)
+    {
+        auto* pHealth = player->GetComponent<HEIN::HealthComponent>();
+        if (pHealth != nullptr)
+        {
+            ImGui::Text("Player Health");
+            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+            ImGui::ProgressBar(pHealth->GetCurrentHealth() / pHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
+            ImGui::PopStyleColor();
+        }
+
+        auto* pBB = player->GetComponent<HEIN::CombatBlackBoard>();
+        if (pBB != nullptr)
+        {
+            if (pBB->isBlockBroken)
+            {
+                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
+                ImGui::PopStyleColor();
+            }
+            else
+            {
+                ImGui::Text("Block Stamina");
+                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
+            }
+
+            ImGui::Separator();
+
+            if (pBB->dodgeCooldownTimer > 0.0f)
+            {
+                ImGui::Text("Dodge Recharging...");
+                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+                ImGui::ProgressBar(1.0f - (pBB->dodgeCooldownTimer / pBB->maxDodgeCooldown), ImVec2(200.0f, 20.0f), "");
+                ImGui::PopStyleColor();
+            }
+            else
+            {
+                ImGui::Text("Dodge Ready");
+                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 0.8f, 1.0f, 1.0f));
+                ImGui::ProgressBar(1.0f, ImVec2(200.0f, 20.0f), "");
+                ImGui::PopStyleColor();
+            }
+        }
+    }
+    else
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "PLAYER DEAD");
+    }
+
+    ImGui::Separator();
+
+    if (enemy != nullptr)
+    {
+        auto* eHealth = enemy->GetComponent<HEIN::HealthComponent>();
+        if (eHealth != nullptr)
+        {
+            ImGui::Text("Enemy Health");
+            ImGui::ProgressBar(eHealth->GetCurrentHealth() / eHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
+        }
+    }
+    else
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "ENEMY DEAD");
+    }
+
+    ImGui::End();
+}
+
+// --------------------------------------------------------------------------------------
+// Editor & Scene Management
+// --------------------------------------------------------------------------------------
+
+void GameScene::HandleEditorActions(GameContext& gameContext)
+{
+    HEIN::EditorAction uiAction = m_debugDisplay->GetUIAction();
+
+    if (uiAction == HEIN::EditorAction::PlayPressed || !m_debugDisplay->isVisible())
+    {
+        m_isPlaying = true;
+    }
+    else if (uiAction == HEIN::EditorAction::StopPressed)
+    {
+        m_isPlaying = false;
+    }
+    else if (uiAction == HEIN::EditorAction::LoadPressed)
+    {
+        WCHAR szFile[260] = { 0 };
+        OPENFILENAMEW ofn = { 0 };
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = gameContext.deviceResources.GetWindow();
+        ofn.lpstrFile = szFile;
+        ofn.nMaxFile = sizeof(szFile) / sizeof(WCHAR);
+        ofn.lpstrFilter = L"JSON Files\0*.json\0Scene Files\0*.Scene\0All Files\0*.*\0";
+        ofn.nFilterIndex = 1;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+        if (GetOpenFileNameW(&ofn) == TRUE)
+        {
+            std::ifstream file(szFile);
+            if (file.is_open())
+            {
+                nlohmann::json j;
+                file >> j;
+
+                gameContext.mainCamera = nullptr;
+                m_actorManager.Deserialize(j);
+                m_actorManager.InitializeAfterDeserialize(gameContext);
+
+                UpdateDebugTargets();
+                m_isPlaying = true;
+            }
+        }
+    }
+    else if (uiAction == HEIN::EditorAction::NewScenePressed)
+    {
+        gameContext.mainCamera = nullptr;
+        m_actorManager.ClearAllActors();
+        m_playerID = HEIN::INVALID_ACTOR_ID;
+        m_enemyID = HEIN::INVALID_ACTOR_ID;
+        m_cameraID = HEIN::INVALID_ACTOR_ID;
+        UpdateDebugTargets();
+    }
+    else if (uiAction == HEIN::EditorAction::SavePressed)
+    {
+        WCHAR szFile[260] = { 0 };
+        OPENFILENAMEW ofn = { 0 };
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = gameContext.deviceResources.GetWindow();
+        ofn.lpstrFile = szFile;
+        ofn.nMaxFile = sizeof(szFile) / sizeof(WCHAR);
+        ofn.lpstrFilter = L"JSON Files\0*.json\0Scene Files\0*.Scene\0All Files\0*.*\0";
+        ofn.nFilterIndex = 1;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+        ofn.lpstrDefExt = L"json";
+
+        if (GetSaveFileNameW(&ofn) == TRUE)
+        {
+            std::ofstream file(szFile);
+            if (file.is_open())
+            {
+                nlohmann::json j = m_actorManager.Serialize();
+                file << j.dump(4);
+            }
+            std::ofstream autoSave("AutoSave.json");
+            if (autoSave.is_open())
+            {
+                nlohmann::json j = m_actorManager.Serialize();
+                autoSave << j.dump(4);
+            }
+        }
+    }
+    else if (uiAction == HEIN::EditorAction::AutoSavePressed)
+    {
+        std::ofstream autoSave("AutoSave.json");
+        if (autoSave.is_open())
+        {
+            nlohmann::json j = m_actorManager.Serialize();
+            autoSave << j.dump(4);
+        }
+    }
+    else if (uiAction == HEIN::EditorAction::CreateStagePressed)
+    {
+        HEIN::ActorID stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
+        if (m_debugDisplay != nullptr && stageID != HEIN::INVALID_ACTOR_ID)
+        {
+            m_debugDisplay->GetDebugUI().SetSelectedActor(m_actorManager.GetActor(stageID));
+        }
+        UpdateDebugTargets();
+    }
+}
+
+void GameScene::LoadAutoSave(GameContext& gameContext)
+{
+    std::ifstream autoSaveFile("AutoSave.json");
+    if (autoSaveFile.is_open())
+    {
+        nlohmann::json j;
+        autoSaveFile >> j;
+        m_actorManager.Deserialize(j);
+        m_actorManager.InitializeAfterDeserialize(gameContext);
+    }
+}
+
+void GameScene::UpdateDebugTargets()
+{
+    if (!m_debugDisplay) return;
+
+    auto GetIDByName = [this](const std::wstring& name) -> HEIN::ActorID {
+        auto* a = m_actorManager.GetActorByName(name);
+        return a ? a->GetID() : HEIN::INVALID_ACTOR_ID;
+    };
+
+    m_debugDisplay->SetDebugTargets(
+        GetIDByName(L"Player"),
+        GetIDByName(L"Sword"),
+        GetIDByName(L"Axe"),
+        GetIDByName(L"StageRoot"),
+        GetIDByName(L"Enemy")
+    );
+}
+
+// --------------------------------------------------------------------------------------
+// Entity & Component Accessors
+// --------------------------------------------------------------------------------------
+
+HEIN::Actor* GameScene::GetPlayerActor()
+{
+    HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
+    if (!player)
+    {
+        player = m_actorManager.GetActorByName(L"Player");
+        if (player) m_playerID = player->GetID();
+    }
+    return player;
+}
+
+HEIN::Actor* GameScene::GetEnemyActor()
+{
+    HEIN::Actor* enemy = m_actorManager.GetActor(m_enemyID);
+    if (!enemy)
+    {
+        enemy = m_actorManager.GetActorByName(L"Enemy");
+        if (enemy) m_enemyID = enemy->GetID();
+    }
+    return enemy;
+}
+
+HEIN::CameraController* GameScene::GetActiveCameraController(GameContext& gameContext)
+{
+    HEIN::Actor* cameraActor = m_actorManager.GetActor(m_cameraID);
+    if (cameraActor != nullptr)
+    {
+        auto* cam = cameraActor->GetComponent<HEIN::CameraController>();
+        if (cam != nullptr)
+        {
+            gameContext.mainCamera = cam;
+            return cam;
+        }
+    }
+
+    // Dynamic search for any entity equipped with a CameraController
+    for (const auto& pair : m_actorManager.GetAllActors())
+    {
+        if (auto* cam = pair.second->GetComponent<HEIN::CameraController>())
+        {
+            m_cameraID = pair.first;
+            gameContext.mainCamera = cam;
+            return cam;
+        }
+    }
+
+    gameContext.mainCamera = nullptr;
+    return nullptr;
+}
+
+// --------------------------------------------------------------------------------------
+// Camera Modes Registration
+// --------------------------------------------------------------------------------------
+
+void GameScene::SetupCameraModes(GameContext& gameContext, HEIN::CameraController* cameraComp, HEIN::SkinnedModelComponent* modelPointer)
+{
+    if (!cameraComp) return;
+
+    gameContext.mainCamera = cameraComp;
+
+    HEIN::Actor* player = GetPlayerActor();
+    if (player != nullptr)
+    {
+        auto* playerTransform = player->GetComponent<HEIN::TransformComponent>();
+
+        // Safe defensive null checks against uninitialized models/transforms
+        if (modelPointer != nullptr && playerTransform != nullptr)
+        {
+            modelPointer->Update(0.0f);
+            m_targetPos = modelPointer->GetBoneWorldPosition(L"mixamorig:HeadTop_End", playerTransform->GetWorldMatrix());
+        }
+
+        cameraComp->RegisterCamera(
+            HEIN::CameraType::FirstPerson,
+            [this, modelPointer]()
+            {
+                return std::make_unique<HEIN::FirstPersonMode>(
+                    &m_actorManager, m_playerID, &m_targetPos, modelPointer, modelPointer);
+            }
+        );
+
+        cameraComp->RegisterCamera(
+            HEIN::CameraType::ThirdPerson,
+            [this, modelPointer]()
+            {
+                return std::make_unique<HEIN::ThirdPersonMode>(
+                    &m_actorManager, m_playerID, &m_targetPos, modelPointer, modelPointer);
+            }
+        );
+
+        cameraComp->RegisterCamera(
+            HEIN::CameraType::Spring,
+            [this]()
+            {
+                return std::make_unique<HEIN::SpringCameraMode>(
+                    &m_actorManager, m_playerID, &m_targetPos);
+            }
+        );
+
+        cameraComp->RegisterCamera(
+            HEIN::CameraType::LockOn,
+            [this]()
+            {
+                return std::make_unique<HEIN::LockOnCameraMode>(
+                    &m_actorManager, m_playerID, m_enemyID);
+            }
+        );
+    }
+
+    cameraComp->RegisterCamera(
+        HEIN::CameraType::Debug,
+        []() { return std::make_unique<HEIN::DebugCameraMode>(); }
+    );
+
+    cameraComp->SetFirstCamera(HEIN::CameraType::Spring);
 }
