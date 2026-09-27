@@ -285,7 +285,7 @@ void GameScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext*
                         }
                     }
                     lightPos = targetCenter - lightDir * 500.0f;
-                    projSize = 40.0f;
+                    projSize = (activeLight->GetRange() > 0.1f) ? activeLight->GetRange() : 150.0f;
                 }
                 else
                 {
