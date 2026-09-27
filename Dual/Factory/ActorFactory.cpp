@@ -59,13 +59,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     spawnData.tpsModel->Initialize(gameContext,
         L"Resources/Models/knight/knight.sdkmesh", // normal model
         L"Resources/Models/knight");
-    spawnData.tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/idle.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("Dodge", L"Resources/Models/knight/Dodge.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("StrafeL", L"Resources/Models/knight/strafeL.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("StrafeR", L"Resources/Models/knight/strafeR.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("Block", L"Resources/Models/knight/block.sdkmesh_anim");
+  
 
     // FirstPersonCamera model
     //spawnData.fpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
@@ -77,98 +71,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     //spawnData.fpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
 
 
-    // Head Collider
-    HEIN::CapsuleColliderComponent* HeadCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    HeadCapsule->Initialize(1.5f, 1.0f);
-    HeadCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
-    HeadCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
-    HeadCapsule->SetColliderTag(L"HeadCollider");
-    HEIN::BoneLinkComponent* HeadLink = playerActor->AddComponent<HEIN::BoneLinkComponent>();
-    HeadLink->Initialize(spawnData.tpsModel, L"mixamorig:Head");
-    HeadLink->LinkTo(HeadCapsule);
-
-    // Body Collider
-    HEIN::CapsuleColliderComponent* BodyCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    BodyCapsule->Initialize(2.0f, 0.0f);
-    BodyCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
-    BodyCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
-    BodyCapsule->SetColliderTag(L"BodyCollider");
-    HEIN::TwoBoneLinkComponent* BodyLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    BodyLink->Initialize(spawnData.tpsModel, L"mixamorig:Spine2", L"mixamorig:Hips");
-    BodyLink->LinkTo(BodyCapsule);
-
-    // Right Arm Collider
-    HEIN::CapsuleColliderComponent* RightarmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightarmCapsule->Initialize(1.0f, 1.0f);
-    RightarmCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
-    RightarmCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
-    RightarmCapsule->SetColliderTag(L"RarmCollider");
-    HEIN::TwoBoneLinkComponent* RightarmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    RightarmLink->Initialize(spawnData.tpsModel, L"mixamorig:RightArm", L"mixamorig:RightForeArm");
-    RightarmLink->LinkTo(RightarmCapsule);
-    HEIN::CapsuleColliderComponent* RightforearmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightforearmCapsule->Initialize(0.6f, 1.0f);
-    RightforearmCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
-    RightforearmCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
-    RightforearmCapsule->SetColliderTag(L"RforearmCollider");
-    HEIN::TwoBoneLinkComponent* RightforearmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    RightforearmLink->Initialize(spawnData.tpsModel, L"mixamorig:RightForeArm", L"mixamorig:RightHand");
-    RightforearmLink->LinkTo(RightforearmCapsule);
-
-
-    // Left Arm Collider
-    HEIN::CapsuleColliderComponent* LeftarmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftarmCapsule->Initialize(1.0f, 1.0f);
-    LeftarmCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
-    LeftarmCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
-    LeftarmCapsule->SetColliderTag(L"LarmCollider");
-    HEIN::TwoBoneLinkComponent* LeftarmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    LeftarmLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftArm", L"mixamorig:LeftForeArm");
-    LeftarmLink->LinkTo(LeftarmCapsule);
-    HEIN::CapsuleColliderComponent* LeftforearmCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftforearmCapsule->Initialize(0.6f, 1.0f);
-    LeftforearmCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
-    LeftforearmCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
-    LeftforearmCapsule->SetColliderTag(L"LforearmCollider");
-    HEIN::TwoBoneLinkComponent* LeftforearmLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    LeftforearmLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftForeArm", L"mixamorig:LeftHand");
-    LeftforearmLink->LinkTo(LeftforearmCapsule);
-
-    // Right Leg Collider
-    HEIN::CapsuleColliderComponent* RightupLegCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightupLegCapsule->Initialize(1.0f, 0.0f);
-    RightupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
-    RightupLegCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
-    RightupLegCapsule->SetColliderTag(L"RupLegCollider");
-    HEIN::TwoBoneLinkComponent* RightupLegLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    RightupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightUpLeg", L"mixamorig:RightLeg");
-    RightupLegLink->LinkTo(RightupLegCapsule);
-    HEIN::CapsuleColliderComponent* RightLegCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    RightLegCapsule->Initialize(0.7f, 0.0f);
-    RightLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
-    RightLegCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
-    RightLegCapsule->SetColliderTag(L"RLegCollider");
-    HEIN::TwoBoneLinkComponent* RightLegLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    RightLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightLeg", L"mixamorig:RightFoot");
-    RightLegLink->LinkTo(RightLegCapsule);
-   
-    // Left Leg Collider
-    HEIN::CapsuleColliderComponent* LeftupLegCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftupLegCapsule->Initialize(1.0f, 0.0f);
-    LeftupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
-    LeftupLegCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
-    LeftupLegCapsule->SetColliderTag(L"LupLegCollider");
-    HEIN::TwoBoneLinkComponent* LeftupLegLink = playerActor->AddComponent<HEIN::TwoBoneLinkComponent>();
-    LeftupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftUpLeg", L"mixamorig:LeftLeg");
-    LeftupLegLink->LinkTo(LeftupLegCapsule);
-    HEIN::CapsuleColliderComponent* LeftLegCapsule = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    LeftLegCapsule->Initialize(0.7f, 0.0f);
-    LeftLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Player);
-    LeftLegCapsule->SetCollisionMask(CollisionLayer::Layer_Enemy | CollisionLayer::Layer_EnemyWeapon);
-    LeftLegCapsule->SetColliderTag(L"LLegCollider");
-    HEIN::TwoBoneLinkComponent* LeftLegLink = playerActor->AddComponent < HEIN::TwoBoneLinkComponent>();
-    LeftLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftLeg", L"mixamorig:LeftFoot");
-    LeftLegLink->LinkTo(LeftLegCapsule);
+  \
     
     // Socket
     HEIN::SocketComponent* socketComp = playerActor->AddComponent<HEIN::SocketComponent>();
@@ -180,31 +83,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     );
     socketComp->AddSocket(weaponSocket);
 
-    HEIN::RigidBodyComponent* rigidBody = playerActor->AddComponent<HEIN::RigidBodyComponent>();
-    rigidBody->Initialize(80.0f, true, false);
-    HEIN::CapsuleColliderComponent* rootPushbox = playerActor->AddComponent<HEIN::CapsuleColliderComponent>();
-    rootPushbox->Initialize(3.0f, 12.0f); // Adjust height to match knight model proportions
-    rootPushbox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
-    rootPushbox->SetTrigger(false);      // This one physically hits the floor
-    rootPushbox->SetColliderTag(L"PlayerRoot");
-    rootPushbox->SetCollisionLayer(CollisionLayer::Layer_Player);
-    rootPushbox->SetCollisionMask(CollisionLayer::Layer_Environment | CollisionLayer::Layer_Enemy);
-  
-
-    // SET BONES TO TRIGGERS 
-    HeadCapsule->SetTrigger(true);
-    BodyCapsule->SetTrigger(true);
-    RightarmCapsule->SetTrigger(true);
-    RightforearmCapsule->SetTrigger(true);
-    LeftarmCapsule->SetTrigger(true);
-    LeftforearmCapsule->SetTrigger(true);
-    RightupLegCapsule->SetTrigger(true);
-    RightLegCapsule->SetTrigger(true);
-    //RightFoot->SetTrigger(true);
-    LeftupLegCapsule->SetTrigger(true);
-    LeftLegCapsule->SetTrigger(true);
-    //LeftFoot->SetTrigger(true);
-
+ 
    
     HEIN::CombatStateMachineComponent* fsm = playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
 
@@ -601,7 +480,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     std::unique_ptr<HEIN::BTSelector> aiBrain = std::make_unique<HEIN::BTSelector>();
 
     // ---------------------------------------------------------
-    // 1. LEASHING SEQUENCE (Highest Priority - Checked First!)
+    // LEASHING SEQUENCE (Highest Priority - Checked First!)
     // ---------------------------------------------------------
     std::unique_ptr<HEIN::BTSequence> leashSequence = std::make_unique<HEIN::BTSequence>();
     // If enemy wanders > 40m from spawn (OR is currently returning), this succeeds
@@ -612,7 +491,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
 
     // ---------------------------------------------------------
-    // 2. COMBAT SEQUENCE (The Aggro Zone)
+    // COMBAT SEQUENCE (The Aggro Zone)
     // ---------------------------------------------------------
     std::unique_ptr<HEIN::BTSequence> combatSequence = std::make_unique<HEIN::BTSequence>();
 
@@ -642,7 +521,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
 
     // ---------------------------------------------------------
-    // 3. IDLE NODE (Fallback)
+    // IDLE NODE (Fallback)
     // ---------------------------------------------------------
     // If we are NOT leashing, AND the player is > 20m away... stand perfectly still!
     aiBrain->AddChild(std::make_unique<HEIN::BTIdleNode>());
