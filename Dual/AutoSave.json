@@ -7,13 +7,13 @@
                     "Data": {
                         "BlendDuration": 1.0,
                         "Fov": 0.8726646304130554,
-                        "PosX": 1256.8719482421875,
-                        "PosY": -29.052152633666992,
-                        "PosZ": -1293.180419921875,
-                        "RotW": -0.3534003794193268,
-                        "RotX": 0.001531012007035315,
-                        "RotY": -0.9354621171951294,
-                        "RotZ": -0.004052638076245785
+                        "PosX": 1209.0205078125,
+                        "PosY": -10.077276229858398,
+                        "PosZ": -1235.8323974609375,
+                        "RotW": 0.9144741296768188,
+                        "RotX": -0.22217141091823578,
+                        "RotY": -0.3286367356777191,
+                        "RotZ": -0.07984226197004318
                     },
                     "Type": "CameraController"
                 }
@@ -56,6 +56,7 @@
                         },
                         {
                             "Data": {
+                                "CastShadows": true,
                                 "ModelPath": "Resources/Models/knight/sword.sdkmesh",
                                 "TextureDir": "Resources/Models/knight"
                             },
@@ -104,12 +105,12 @@
                 {
                     "Data": {
                         "Position": [
-                            1233.532470703125,
+                            1233.4483642578125,
                             -44.17103576660156,
-                            -1263.0062255859375
+                            -1263.09033203125
                         ],
                         "Rotation": [
-                            -0.0,
+                            0.0,
                             -0.39020204544067383,
                             0.0,
                             -0.9207292795181274
@@ -187,7 +188,7 @@
                 {
                     "Data": {
                         "ColliderTag": "BodyCollider",
-                        "Height": 3.718219518661499,
+                        "Height": 3.7202165126800537,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -213,7 +214,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RarmCollider",
-                        "Height": 2.5574212074279785,
+                        "Height": 2.5574843883514404,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -239,7 +240,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RforearmCollider",
-                        "Height": 2.160322427749634,
+                        "Height": 2.1603221893310547,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -265,7 +266,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LarmCollider",
-                        "Height": 2.557450294494629,
+                        "Height": 2.5574378967285156,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -291,7 +292,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LforearmCollider",
-                        "Height": 2.1603810787200928,
+                        "Height": 2.16034197807312,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -317,7 +318,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RupLegCollider",
-                        "Height": 4.170193672180176,
+                        "Height": 4.170225143432617,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -343,7 +344,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RLegCollider",
-                        "Height": 3.69809627532959,
+                        "Height": 3.698082447052002,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -369,7 +370,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LupLegCollider",
-                        "Height": 4.170224189758301,
+                        "Height": 4.170234680175781,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -395,7 +396,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LLegCollider",
-                        "Height": 3.698106050491333,
+                        "Height": 3.6980831623077393,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -540,6 +541,7 @@
                         },
                         {
                             "Data": {
+                                "CastShadows": true,
                                 "ModelPath": "Resources/Models/boss/axe.sdkmesh",
                                 "TextureDir": "Resources/Models/boss"
                             },
@@ -685,7 +687,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 6.4817047119140625,
+                        "Height": 6.514263153076172,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -711,7 +713,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.3951826095581055,
+                        "Height": 7.395232200622559,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -737,7 +739,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.740752696990967,
+                        "Height": 4.74075984954834,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -763,7 +765,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.395195007324219,
+                        "Height": 7.395183086395264,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -789,7 +791,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.740737438201904,
+                        "Height": 4.740746021270752,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -841,7 +843,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.902589797973633,
+                        "Height": 4.902597904205322,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -867,7 +869,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 5.742464542388916,
+                        "Height": 5.742455959320068,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -893,7 +895,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.902605056762695,
+                        "Height": 4.902612209320068,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1044,6 +1046,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1078,6 +1081,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1112,6 +1116,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1146,6 +1151,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1180,6 +1186,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1214,6 +1221,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/wall.cmo",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1248,6 +1256,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/wall.cmo",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1282,6 +1291,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/wall.cmo",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1301,9 +1311,9 @@
                                             -9.77020263671875
                                         ],
                                         "Rotation": [
-                                            -0.0,
                                             0.0,
-                                            -0.0,
+                                            0.0,
+                                            0.0,
                                             1.0
                                         ],
                                         "Scale": [
@@ -1316,6 +1326,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/wall.cmo",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1335,9 +1346,9 @@
                                             -9.681427001953125
                                         ],
                                         "Rotation": [
-                                            -0.0,
                                             0.0,
-                                            -0.0,
+                                            0.0,
+                                            0.0,
                                             1.0
                                         ],
                                         "Scale": [
@@ -1350,6 +1361,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/wall.cmo",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1369,9 +1381,9 @@
                                             -9.70062255859375
                                         ],
                                         "Rotation": [
-                                            -0.0,
                                             0.0,
-                                            -0.0,
+                                            0.0,
+                                            0.0,
                                             1.0
                                         ],
                                         "Scale": [
@@ -1384,6 +1396,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/wall.cmo",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1403,9 +1416,9 @@
                                             -9.6529541015625
                                         ],
                                         "Rotation": [
-                                            -0.0,
                                             0.0,
-                                            -0.0,
+                                            0.0,
+                                            0.0,
                                             1.0
                                         ],
                                         "Scale": [
@@ -1418,6 +1431,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/wall.cmo",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1452,6 +1466,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/wall.cmo",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1486,6 +1501,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/wall.cmo",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1520,6 +1536,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/wall.cmo",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1554,6 +1571,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/wall.cmo",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1588,6 +1606,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1622,6 +1641,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1656,6 +1676,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1690,6 +1711,7 @@
                                 },
                                 {
                                     "Data": {
+                                        "CastShadows": false,
                                         "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
                                         "TextureDir": "Resources/Models/stage/"
                                     },
@@ -1709,9 +1731,9 @@
                                             0.0
                                         ],
                                         "Rotation": [
-                                            -0.0,
                                             0.0,
-                                            -0.0,
+                                            0.0,
+                                            0.0,
                                             1.0
                                         ],
                                         "Scale": [
@@ -1755,9 +1777,9 @@
                                             -0.0255584716796875
                                         ],
                                         "Rotation": [
-                                            -0.0,
                                             0.0,
-                                            -0.0,
+                                            0.0,
+                                            0.0,
                                             1.0
                                         ],
                                         "Scale": [
@@ -1801,9 +1823,9 @@
                                             -9.74664306640625
                                         ],
                                         "Rotation": [
-                                            -0.0,
                                             0.0,
-                                            -0.0,
+                                            0.0,
+                                            0.0,
                                             1.0
                                         ],
                                         "Scale": [
@@ -1847,9 +1869,9 @@
                                             -8.90185546875
                                         ],
                                         "Rotation": [
-                                            -0.0,
                                             0.0,
-                                            -0.0,
+                                            0.0,
+                                            0.0,
                                             1.0
                                         ],
                                         "Scale": [
@@ -1893,9 +1915,9 @@
                                             8.75115966796875
                                         ],
                                         "Rotation": [
-                                            -0.0,
                                             0.0,
-                                            -0.0,
+                                            0.0,
+                                            0.0,
                                             1.0
                                         ],
                                         "Scale": [
@@ -1939,9 +1961,9 @@
                                             8.819076538085938
                                         ],
                                         "Rotation": [
-                                            -0.0,
                                             0.0,
-                                            -0.0,
+                                            0.0,
+                                            0.0,
                                             1.0
                                         ],
                                         "Scale": [
@@ -1985,9 +2007,9 @@
                                             -8.9102783203125
                                         ],
                                         "Rotation": [
-                                            -0.0,
                                             0.0,
-                                            -0.0,
+                                            0.0,
+                                            0.0,
                                             1.0
                                         ],
                                         "Scale": [
@@ -2030,9 +2052,9 @@
                                     -113.50982666015625
                                 ],
                                 "Rotation": [
-                                    -0.0,
                                     0.0,
-                                    -0.0,
+                                    0.0,
+                                    0.0,
                                     1.0
                                 ],
                                 "Scale": [
@@ -2045,6 +2067,7 @@
                         },
                         {
                             "Data": {
+                                "CastShadows": false,
                                 "ModelPath": "Resources/Models/stage/floor1.sdkmesh",
                                 "TextureDir": "Resources/Models/stage"
                             },
@@ -2081,9 +2104,9 @@
                                     42.7905387878418
                                 ],
                                 "Rotation": [
-                                    -0.0,
                                     0.0,
-                                    -0.0,
+                                    0.0,
+                                    0.0,
                                     1.0
                                 ],
                                 "Scale": [
@@ -2161,9 +2184,9 @@
                             -427.8970947265625
                         ],
                         "Rotation": [
-                            -0.0,
                             0.0,
-                            -0.0,
+                            0.0,
+                            0.0,
                             1.0
                         ],
                         "Scale": [
@@ -2205,6 +2228,7 @@
                         },
                         {
                             "Data": {
+                                "CastShadows": false,
                                 "ModelPath": "Resources/Models/stage/signs.sdkmesh",
                                 "TextureDir": "Resources/Models/stage/"
                             },
@@ -2239,6 +2263,7 @@
                         },
                         {
                             "Data": {
+                                "CastShadows": false,
                                 "ModelPath": "Resources/Models/stage/signs.sdkmesh",
                                 "TextureDir": "Resources/Models/stage/"
                             },
@@ -2273,6 +2298,7 @@
                         },
                         {
                             "Data": {
+                                "CastShadows": false,
                                 "ModelPath": "Resources/Models/stage/signs.sdkmesh",
                                 "TextureDir": "Resources/Models/stage/"
                             },
@@ -2291,9 +2317,9 @@
                             -1162.031982421875
                         ],
                         "Rotation": [
-                            -0.0,
                             0.0,
-                            -0.0,
+                            0.0,
+                            0.0,
                             1.0
                         ],
                         "Scale": [
@@ -2306,6 +2332,49 @@
                 }
             ],
             "Name": "Signs"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Rotation": [
+                            -0.30901700258255005,
+                            0.0,
+                            0.0,
+                            0.9510565400123596
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "CastShadows": false,
+                        "Color": [
+                            1.0,
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "Intensity": 1.0,
+                        "LightType": 0,
+                        "Range": 50.0,
+                        "SpotAngle": 45.0
+                    },
+                    "Type": "LightComponent"
+                }
+            ],
+            "Name": "GameObject"
         }
     ]
 }

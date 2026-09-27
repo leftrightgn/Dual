@@ -11,6 +11,7 @@
 #include "../../../External/Engine/Common/PhysicsSystem.h"
 #include "../../../External/Engine/Common/DamageSystem.h"
 #include "../../../External/Engine/DebugingTools/DebugDisplayController.h"
+#include "../../../External/Engine/Common/ShadowSystem.h"
 
 /**
  * @class GameScene
@@ -55,6 +56,7 @@ private:
 	HEIN::ActorID m_cameraID = HEIN::INVALID_ACTOR_ID;
 
 	HEIN::ActorManager m_actorManager;
+	HEIN::ShadowSystem m_shadowSystem;
 
 	std::unique_ptr<HEIN::DebugDisplayController> m_debugDisplay;
 	bool m_isPlaying = true;

@@ -2216,6 +2216,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
 
     HEIN::StaticModelComponent* floorModel = floorActor->AddComponent<HEIN::StaticModelComponent>();
     floorModel->Initialize(gameContext, L"Resources/Models/stage/floor1.sdkmesh", L"Resources/Models/stage");
+    floorModel->m_castShadows = false;
     HEIN::MeshColliderComponent* floorPhysics = floorActor->AddComponent<HEIN::MeshColliderComponent>();
     floorPhysics->LoadFromObj(L"Resources/Models/stage/floor1.obj");
     floorPhysics->SetCollisionLayer(CollisionLayer::Layer_Environment);
@@ -3014,6 +3015,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     m_skybox = std::make_unique<HEIN::Skybox>();
     m_skybox->Initialize(gameContext, L"Resources/Textures/skybox.dds");
 
+    m_shadowSystem.Initialize(gameContext.deviceResources.GetD3DDevice(), 2048, 2048);
+
     // Default Projection
     D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
     float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
@@ -3137,6 +3140,7 @@ void GameScene::OnEnter(GameContext& gameContext)
         nlohmann::json j;
         autoSaveFile >> j;
         m_actorManager.Deserialize(j);
+        m_actorManager.InitializeAfterDeserialize(gameContext);
     }
 }
 
@@ -3175,6 +3179,7 @@ void GameScene::Update(GameContext& gameContext)
                 gameContext.mainCamera = nullptr; 
                 // Retain existing actor instances; merge serialized state overlay-style
                 m_actorManager.Deserialize(j);
+                m_actorManager.InitializeAfterDeserialize(gameContext);
                 
                 auto player = m_actorManager.GetActorByName(L"Player");
                 if(player) m_playerID = player->GetID();
@@ -3386,6 +3391,76 @@ void GameScene::Render(GameContext& gameContext)
     {
         view = activeCamera->GetView();
     }
+
+    gameContext.actorManager = &m_actorManager;
+    gameContext.shadowSystem = &m_shadowSystem;
+    gameContext.isEditorMode = (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()));
+
+    // Find Active Light
+    HEIN::LightComponent* activeLight = nullptr;
+    for (auto& pair : m_actorManager.GetAllActors())
+    {
+        activeLight = pair.second->GetComponent<HEIN::LightComponent>();
+        if (activeLight && activeLight->CastsShadows()) break;
+    }
+
+    DirectX::SimpleMath::Vector3 lightDir(0.5f, -1.0f, 0.5f);
+    DirectX::SimpleMath::Vector3 lightPos(-500.0f, 1000.0f, -500.0f);
+    float projSize = 150.0f;
+    
+    if (activeLight)
+    {
+        lightDir = activeLight->GetOwner()->GetComponent<HEIN::TransformComponent>()->GetForward();
+        if (activeLight->GetLightType() == HEIN::LightType::Directional)
+        {
+            // Center the shadow orthographic projection around the player
+            HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
+            DirectX::SimpleMath::Vector3 targetCenter = DirectX::SimpleMath::Vector3::Zero;
+            if (player)
+            {
+                targetCenter = player->GetComponent<HEIN::TransformComponent>()->GetPosition();
+            }
+            lightPos = targetCenter - lightDir * 500.0f;
+            projSize = 400.0f; // Restored to 400 to cover the combat arena
+        }
+        else
+        {
+            // For point/spot light, use its actual position
+            lightPos = activeLight->GetOwner()->GetComponent<HEIN::TransformComponent>()->GetPosition();
+            projSize = activeLight->GetRange();
+        }
+    }
+    lightDir.Normalize();
+    
+    DirectX::SimpleMath::Vector3 targetPos = lightPos + lightDir * 500.0f;
+    DirectX::SimpleMath::Vector3 up = DirectX::SimpleMath::Vector3::Up;
+    if (std::abs(lightDir.Dot(up)) > 0.999f)
+    {
+        up = DirectX::SimpleMath::Vector3::Right;
+    }
+    DirectX::SimpleMath::Matrix viewMat = DirectX::SimpleMath::Matrix::CreateLookAt(lightPos, targetPos, up);
+    DirectX::SimpleMath::Matrix projMat = DirectX::SimpleMath::Matrix::CreateOrthographic(projSize, projSize, 0.1f, 1000.0f);
+    DirectX::SimpleMath::Matrix lightViewProj = viewMat * projMat;
+    m_shadowSystem.SetLightViewProj(lightViewProj);
+    
+    m_shadowSystem.BindShadowMap(context);
+    m_actorManager.DrawAllShadows(gameContext, lightViewProj);
+
+    // Restore Main Render Target
+    ID3D11RenderTargetView* rtv = gameContext.deviceResources.GetRenderTargetView();
+    ID3D11DepthStencilView* dsv = gameContext.deviceResources.GetDepthStencilView();
+    context->OMSetRenderTargets(1, &rtv, dsv);
+    D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
+    context->RSSetViewports(1, &viewport);
+
+    // Bind Shadow Map SRV for shaders (slot 4)
+    ID3D11ShaderResourceView* shadowSRV = m_shadowSystem.GetShadowMapSRV();
+    context->PSSetShaderResources(4, 1, &shadowSRV);
+    
+    // Bind Comparison Sampler for shaders (slot 1)
+    ID3D11SamplerState* shadowSampler = m_shadowSystem.GetShadowSampler();
+    context->PSSetSamplers(1, 1, &shadowSampler);
+
     if (m_skybox)
     {
         m_skybox->Draw(gameContext, view, m_proj);
@@ -3393,6 +3468,14 @@ void GameScene::Render(GameContext& gameContext)
 
     // Tell the Manager to draw all active entities
     m_actorManager.DrawAll(gameContext, view, m_proj);
+
+    // Unbind Shadow Map SRV and Sampler
+    ID3D11ShaderResourceView* nullSRV = nullptr;
+    context->PSSetShaderResources(4, 1, &nullSRV);
+    
+    ID3D11SamplerState* nullSampler = nullptr;
+    context->PSSetSamplers(1, 1, &nullSampler);
+
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
     HEIN::Actor* enemy = m_actorManager.GetActor(m_enemyID);
     // COMBAT UI
@@ -3499,6 +3582,7 @@ FILE: Dual\Scene\GameScene\GameScene.h
 #include "../../../External/Engine/Common/PhysicsSystem.h"
 #include "../../../External/Engine/Common/DamageSystem.h"
 #include "../../../External/Engine/DebugingTools/DebugDisplayController.h"
+#include "../../../External/Engine/Common/ShadowSystem.h"
 
 /**
  * @class GameScene
@@ -3543,6 +3627,7 @@ private:
 	HEIN::ActorID m_cameraID = HEIN::INVALID_ACTOR_ID;
 
 	HEIN::ActorManager m_actorManager;
+	HEIN::ShadowSystem m_shadowSystem;
 
 	std::unique_ptr<HEIN::DebugDisplayController> m_debugDisplay;
 	bool m_isPlaying = true;
@@ -9497,6 +9582,139 @@ namespace HEIN
 }
 
 ================================================================================
+FILE: External\Engine\Common\ShaderStructures.h
+================================================================================
+
+#pragma once
+#include <SimpleMath.h>
+
+namespace HEIN
+{
+    // __declspec(align(16)) forces the CPU to align this data perfectly for the GPU
+    __declspec(align(16)) struct CB_Matrices
+    {
+        DirectX::SimpleMath::Matrix WorldViewProj;
+        DirectX::SimpleMath::Matrix World;
+        DirectX::SimpleMath::Matrix LightViewProj; // Used to project vertices into the shadow map
+        DirectX::SimpleMath::Matrix BoneTransforms[256]; // Max 256 bones for modern models
+    };
+
+    __declspec(align(16)) struct CB_Lighting
+    {
+        // 16 bytes: Vector3 (12 bytes) + int (4 bytes)
+        DirectX::SimpleMath::Vector3 LightPos;
+        int LightType; // 0 = Directional, 1 = Point, 2 = Spot
+
+        // 16 bytes: Vector3 (12 bytes) + float (4 bytes)
+        DirectX::SimpleMath::Vector3 LightDir;
+        float LightIntensity;
+
+        // 16 bytes: Vector4 (16 bytes)
+        DirectX::SimpleMath::Vector4 LightColor;
+
+        // 16 bytes: float (4 bytes) + float (4 bytes) + Vector2 (8 bytes)
+        float LightRange;
+        float LightSpotAngle;
+        DirectX::SimpleMath::Vector2 Padding; // Dead space to reach the 16-byte boundary
+    };
+}
+
+================================================================================
+FILE: External\Engine\Common\ShadowSystem.cpp
+================================================================================
+
+#include "pch.h"
+#include "ShadowSystem.h"
+
+namespace HEIN {
+    void ShadowSystem::Initialize(ID3D11Device* device, int width, int height) {
+        m_width = width;
+        m_height = height;
+
+        D3D11_TEXTURE2D_DESC texDesc = {};
+        texDesc.Width = width;
+        texDesc.Height = height;
+        texDesc.MipLevels = 1;
+        texDesc.ArraySize = 1;
+        texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+        texDesc.SampleDesc.Count = 1;
+        texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+
+        device->CreateTexture2D(&texDesc, nullptr, m_shadowMap.ReleaseAndGetAddressOf());
+
+        D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+        dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+        device->CreateDepthStencilView(m_shadowMap.Get(), &dsvDesc, m_shadowDSV.ReleaseAndGetAddressOf());
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        device->CreateShaderResourceView(m_shadowMap.Get(), &srvDesc, m_shadowSRV.ReleaseAndGetAddressOf());
+
+        D3D11_SAMPLER_DESC sampDesc = {};
+        sampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+        sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+        sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+        sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+        sampDesc.BorderColor[0] = 1.0f;
+        sampDesc.BorderColor[1] = 1.0f;
+        sampDesc.BorderColor[2] = 1.0f;
+        sampDesc.BorderColor[3] = 1.0f;
+        sampDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
+        device->CreateSamplerState(&sampDesc, m_shadowSampler.ReleaseAndGetAddressOf());
+
+        m_shadowViewport.TopLeftX = 0.0f;
+        m_shadowViewport.TopLeftY = 0.0f;
+        m_shadowViewport.Width = static_cast<float>(width);
+        m_shadowViewport.Height = static_cast<float>(height);
+        m_shadowViewport.MinDepth = 0.0f;
+        m_shadowViewport.MaxDepth = 1.0f;
+    }
+
+    void ShadowSystem::BindShadowMap(ID3D11DeviceContext* context) {
+        ID3D11RenderTargetView* nullRTV = nullptr;
+        context->OMSetRenderTargets(1, &nullRTV, m_shadowDSV.Get());
+        context->RSSetViewports(1, &m_shadowViewport);
+        context->ClearDepthStencilView(m_shadowDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+    }
+
+}
+
+
+================================================================================
+FILE: External\Engine\Common\ShadowSystem.h
+================================================================================
+
+#pragma once
+#include <d3d11.h>
+#include <wrl/client.h>
+#include <SimpleMath.h>
+
+namespace HEIN {
+    class ShadowSystem {
+    public:
+        void Initialize(ID3D11Device* device, int width, int height);
+        void BindShadowMap(ID3D11DeviceContext* context);
+        ID3D11ShaderResourceView* GetShadowMapSRV() const { return m_shadowSRV.Get(); }
+        void SetLightViewProj(const DirectX::SimpleMath::Matrix& matrix) { m_lightViewProj = matrix; }
+        DirectX::SimpleMath::Matrix GetLightViewProj() const { return m_lightViewProj; }
+        ID3D11SamplerState* GetShadowSampler() const { return m_shadowSampler.Get(); }
+
+    private:
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> m_shadowMap;
+        Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_shadowDSV;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shadowSRV;
+        Microsoft::WRL::ComPtr<ID3D11SamplerState> m_shadowSampler;
+        D3D11_VIEWPORT m_shadowViewport;
+        int m_width, m_height;
+        DirectX::SimpleMath::Matrix m_lightViewProj;
+    };
+}
+
+
+================================================================================
 FILE: External\Engine\Common\StepTimer.h
 ================================================================================
 
@@ -10732,6 +10950,91 @@ namespace HEIN
 
 
 ================================================================================
+FILE: External\Engine\Components\FogComponent.cpp
+================================================================================
+
+#include "pch.h"
+#include "FogComponent.h"
+#include <ImGui/imgui.h>
+
+namespace HEIN
+{
+	FogComponent::FogComponent(Actor* owner)
+		: IComponent(owner)
+	{
+	}
+
+	nlohmann::json FogComponent::Serialize()
+	{
+		nlohmann::json data = IComponent::Serialize();
+
+		data["FogStart"] = m_fogStart;
+		data["FogEnd"] = m_fogEnd;
+		data["FogColor"] = nlohmann::json::array({ m_fogColor.x, m_fogColor.y, m_fogColor.z, m_fogColor.w });
+
+		return data;
+	}
+
+	void FogComponent::Deserialize(const nlohmann::json& data)
+	{
+		IComponent::Deserialize(data);
+
+		if (data.contains("FogStart")) m_fogStart = data["FogStart"];
+		if (data.contains("FogEnd")) m_fogEnd = data["FogEnd"];
+		if (data.contains("FogColor"))
+		{
+			m_fogColor = DirectX::SimpleMath::Vector4(
+				data["FogColor"][0], 
+				data["FogColor"][1], 
+				data["FogColor"][2], 
+				data["FogColor"][3]
+			);
+		}
+	}
+
+	void FogComponent::OnInspectorGUI(GameContext& gameContext)
+	{
+		if (ImGui::CollapsingHeader("Fog Component", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::DragFloat("Fog Start", &m_fogStart, 5.0f, 0.0f, 5000.0f);
+			ImGui::DragFloat("Fog End", &m_fogEnd, 5.0f, 0.0f, 5000.0f);
+			ImGui::ColorEdit4("Fog Color", &m_fogColor.x);
+		}
+	}
+}
+
+
+================================================================================
+FILE: External\Engine\Components\FogComponent.h
+================================================================================
+
+#pragma once
+#include "IComponent.h"
+#include <SimpleMath.h>
+#include <Common/json.hpp>
+
+namespace HEIN
+{
+	class FogComponent : public IComponent
+	{
+	public:
+		float m_fogStart = 100.0f;
+		float m_fogEnd = 800.0f;
+		DirectX::SimpleMath::Vector4 m_fogColor = DirectX::SimpleMath::Vector4(0.5f, 0.6f, 0.7f, 1.0f);
+
+		FogComponent(Actor* owner);
+
+		void Update(float deltaTime) override {}
+
+		std::string GetComponentName() const override { return "FogComponent"; }
+		nlohmann::json Serialize() override;
+		void Deserialize(const nlohmann::json& data) override;
+		void OnInspectorGUI(GameContext& gameContext) override;
+	};
+}
+
+
+================================================================================
 FILE: External\Engine\Components\HealthComponent.cpp
 ================================================================================
 
@@ -10929,6 +11232,10 @@ namespace HEIN
 			const DirectX::SimpleMath::Matrix& /*proj*/
 		) {}
 
+		virtual void DrawShadow(
+			GameContext& gameContext, 
+			const DirectX::SimpleMath::Matrix& lightViewProj
+		) {}
 		/** @brief Checks if this component requires 2D drawing. */
 		virtual bool Is2D() const { return false; }
 		
@@ -10961,6 +11268,191 @@ namespace HEIN
 	};
 }
 
+
+================================================================================
+FILE: External\Engine\Components\LightComponent.cpp
+================================================================================
+
+#include "pch.h"
+#include "LightComponent.h"
+#include <ImGui/imgui.h>
+#include "Framework/GameContext.h"
+#include "Entities/Actor.h"
+#include "Components/TransformComponent.h"
+
+namespace HEIN
+{
+    LightComponent::LightComponent(Actor* owner)
+        : IComponent(owner)
+    {
+    }
+
+    nlohmann::json LightComponent::Serialize()
+    {
+        nlohmann::json data = IComponent::Serialize();
+        data["LightType"] = static_cast<int>(m_lightType);
+        data["Color"] = { m_color.x, m_color.y, m_color.z, m_color.w };
+        data["Intensity"] = m_intensity;
+        data["Range"] = m_range;
+        data["SpotAngle"] = m_spotAngle;
+        data["CastShadows"] = m_castShadows;
+        return data;
+    }
+
+    void LightComponent::Deserialize(const nlohmann::json& data)
+    {
+        IComponent::Deserialize(data);
+        if (data.contains("LightType")) m_lightType = static_cast<LightType>(data["LightType"]);
+
+        if (data.contains("Color") && data["Color"].is_array() && data["Color"].size() == 4)
+        {
+            m_color = DirectX::SimpleMath::Vector4(data["Color"][0], data["Color"][1], data["Color"][2], data["Color"][3]);
+        }
+
+        if (data.contains("Intensity")) m_intensity = data["Intensity"];
+        if (data.contains("Range")) m_range = data["Range"];
+        if (data.contains("SpotAngle")) m_spotAngle = data["SpotAngle"];
+        if (data.contains("CastShadows")) m_castShadows = data["CastShadows"];
+    }
+
+    void LightComponent::OnInspectorGUI(GameContext& gameContext)
+    {
+        if (ImGui::CollapsingHeader("Light Component", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            const char* types[] = { "Directional", "Point", "Spot" };
+            int typeIdx = static_cast<int>(m_lightType);
+            if (ImGui::Combo("Light Type", &typeIdx, types, 3))
+            {
+                m_lightType = static_cast<LightType>(typeIdx);
+            }
+
+            ImGui::ColorEdit4("Color", &m_color.x);
+            ImGui::DragFloat("Intensity", &m_intensity, 0.1f, 0.0f, 100.0f);
+
+            // Only show Range for Point and Spot lights
+            if (m_lightType == LightType::Point || m_lightType == LightType::Spot)
+            {
+                ImGui::DragFloat("Range", &m_range, 0.5f, 0.1f, 500.0f);
+            }
+
+            // Only show Spot Angle for Spot lights
+            if (m_lightType == LightType::Spot)
+            {
+                ImGui::DragFloat("Spot Angle", &m_spotAngle, 0.5f, 1.0f, 179.0f);
+            }
+
+            ImGui::Checkbox("Cast Shadows", &m_castShadows);
+        }
+    }
+
+    void LightComponent::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj)
+    {
+        if (!gameContext.isEditorMode) return;
+
+        if (gameContext.debugRenderer)
+        {
+            gameContext.debugRenderer->Begin(view, proj);
+
+            DirectX::SimpleMath::Vector3 pos = m_owner->GetComponent<TransformComponent>()->GetPosition();
+            DirectX::SimpleMath::Vector4 debugColor = m_color * m_intensity;
+            DirectX::XMVECTOR vColor = DirectX::XMVectorSet(debugColor.x, debugColor.y, debugColor.z, 1.0f);
+
+            if (m_lightType == LightType::Point)
+            {
+                DirectX::BoundingSphere sphere(pos, m_range);
+                gameContext.debugRenderer->DrawSphere(sphere, vColor);
+            }
+            else if (m_lightType == LightType::Spot)
+            {
+                DirectX::SimpleMath::Vector3 dir = m_owner->GetComponent<TransformComponent>()->GetForward();
+                // Just draw a line to indicate direction and range
+                gameContext.debugRenderer->DrawLine(pos, pos + dir * m_range, vColor);
+
+                // Draw a simple ring at the end to indicate the cone
+                float radius = m_range * tanf(DirectX::XMConvertToRadians(m_spotAngle / 2.0f));
+                DirectX::SimpleMath::Vector3 right = m_owner->GetComponent<TransformComponent>()->GetRight();
+                DirectX::SimpleMath::Vector3 up = m_owner->GetComponent<TransformComponent>()->GetUp();
+                gameContext.debugRenderer->DrawRing(pos + dir * m_range, right * radius, up * radius, vColor);
+            }
+            else if (m_lightType == LightType::Directional)
+            {
+                DirectX::SimpleMath::Vector3 dir = m_owner->GetComponent<TransformComponent>()->GetForward();
+                DirectX::SimpleMath::Vector3 right = m_owner->GetComponent<TransformComponent>()->GetRight();
+                DirectX::SimpleMath::Vector3 up = m_owner->GetComponent<TransformComponent>()->GetUp();
+                
+                // Draw a circle at the source to represent the directional light
+                float radius = 2.0f;
+                gameContext.debugRenderer->DrawRing(pos, right * radius, up * radius, vColor);
+                
+                // Draw central line
+                gameContext.debugRenderer->DrawLine(pos, pos + dir * 10.0f, vColor);
+
+                // Draw 4 parallel lines coming out of the circle edge
+                gameContext.debugRenderer->DrawLine(pos + up * radius, pos + up * radius + dir * 10.0f, vColor);
+                gameContext.debugRenderer->DrawLine(pos - up * radius, pos - up * radius + dir * 10.0f, vColor);
+                gameContext.debugRenderer->DrawLine(pos + right * radius, pos + right * radius + dir * 10.0f, vColor);
+                gameContext.debugRenderer->DrawLine(pos - right * radius, pos - right * radius + dir * 10.0f, vColor);
+            }
+
+            gameContext.debugRenderer->End();
+        }
+    }
+}
+
+================================================================================
+FILE: External\Engine\Components\LightComponent.h
+================================================================================
+
+#pragma once
+#include "Components/IComponent.h"
+#include <SimpleMath.h>
+
+namespace HEIN
+{
+    // Defines the Unity-style light types
+    enum class LightType : int
+    {
+        Directional = 0,
+        Point = 1,
+        Spot = 2
+    };
+
+    class LightComponent : public IComponent
+    {
+    private:
+        LightType m_lightType = LightType::Directional;
+        DirectX::SimpleMath::Vector4 m_color = DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+        float m_intensity = 1.0f;
+
+        // Properties used specifically for Point and Spot lights
+        float m_range = 50.0f;
+        float m_spotAngle = 45.0f;
+
+        bool m_castShadows = true;
+
+    public:
+        LightComponent(Actor* owner);
+        ~LightComponent() override = default;
+
+        void Start() override {}
+        void Update(float deltaTime) override {}
+        void Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj) override;
+
+        // Getters for the Render System
+        LightType GetLightType() const { return m_lightType; }
+        DirectX::SimpleMath::Vector4 GetColor() const { return m_color; }
+        float GetIntensity() const { return m_intensity; }
+        float GetRange() const { return m_range; }
+        float GetSpotAngle() const { return m_spotAngle; }
+        bool CastsShadows() const { return m_castShadows; }
+
+        // Core Engine Integrations
+        std::string GetComponentName() const override { return "LightComponent"; }
+        nlohmann::json Serialize() override;
+        void Deserialize(const nlohmann::json& data) override;
+        void OnInspectorGUI(GameContext& gameContext) override;
+    };
+}
 
 ================================================================================
 FILE: External\Engine\Components\ProceduralAnimationComponent.cpp
@@ -11899,6 +12391,12 @@ FILE: External\Engine\Components\SkinnedModelComponent.cpp
 #include "DebugingTools/EditorUtils.h"
 #include <string>
 #include <filesystem>
+#include <d3dcompiler.h>
+#include "TransformComponent.h"
+#include "Common/ShadowSystem.h"
+#include "Entities/ActorManager.h"
+#include "Common/ShaderStructures.h"
+#include "LightComponent.h"
 
 
 std::shared_ptr<DirectX::EffectFactory> HEIN::SkinnedModelComponent::s_fxFactory = nullptr;
@@ -11970,9 +12468,13 @@ namespace HEIN
 		m_shapShotBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 		m_blendedLocalBones = DirectX::ModelBone::MakeArray(m_model->bones.size());
 
-		// Ensure it never holds uninitialized memory from the start
+		// Ensure they never hold uninitialized memory from the start
 		for (size_t i = 0; i < m_model->bones.size(); ++i)
 		{
+			m_drawBones[i] = DirectX::SimpleMath::Matrix::Identity;
+			m_skinBones[i] = DirectX::SimpleMath::Matrix::Identity;
+			m_targetBones[i] = DirectX::SimpleMath::Matrix::Identity;
+			m_shapShotBones[i] = DirectX::SimpleMath::Matrix::Identity;
 			m_blendedLocalBones[i] = DirectX::SimpleMath::Matrix::Identity;
 		}
 
@@ -11986,7 +12488,142 @@ namespace HEIN
 		}
 		OutputDebugStringW(L"--- BONE LIST END ---\n");*/
 
+		// Device is already declared above
 
+		// 1. Compile Shaders
+		Microsoft::WRL::ComPtr<ID3DBlob> vsBlob, psBlob, errorBlob;
+		HRESULT hr = D3DCompileFromFile(L"../External/Engine/Shaders/CustomSkinned.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", 0, 0, &vsBlob, &errorBlob);
+		if (FAILED(hr))
+		{
+			hr = D3DCompileFromFile(L"External/Engine/Shaders/CustomSkinned.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", 0, 0, &vsBlob, &errorBlob);
+		}
+		if (FAILED(hr))
+		{
+			if (errorBlob) {
+				FILE* f;
+				if (fopen_s(&f, "ShaderError.txt", "w") == 0) {
+					fprintf(f, "%s", (char*)errorBlob->GetBufferPointer());
+					fclose(f);
+				}
+			}
+			return; // Gracefully fail
+		}
+		device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_vertexShader.ReleaseAndGetAddressOf());
+
+		hr = D3DCompileFromFile(L"../External/Engine/Shaders/CustomSkinned.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", 0, 0, &psBlob, &errorBlob);
+		if (FAILED(hr))
+		{
+			hr = D3DCompileFromFile(L"External/Engine/Shaders/CustomSkinned.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", 0, 0, &psBlob, &errorBlob);
+		}
+		if (FAILED(hr))
+		{
+			if (errorBlob) OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+			return; // Gracefully fail
+		}
+		device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pixelShader.ReleaseAndGetAddressOf());
+
+		// 2. Create Constant Buffers (moved up so they are always created even if layout fails)
+		D3D11_BUFFER_DESC cbDesc = {};
+		cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+		cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+		cbDesc.ByteWidth = sizeof(CB_Matrices);
+		device->CreateBuffer(&cbDesc, nullptr, m_cbMatrices.ReleaseAndGetAddressOf());
+
+		cbDesc.ByteWidth = sizeof(CB_Lighting);
+		device->CreateBuffer(&cbDesc, nullptr, m_cbLighting.ReleaseAndGetAddressOf());
+
+		// 3. Create Input Layout explicitly to match CustomSkinned.hlsl shader using the actual vertex declaration from the model!
+		bool layoutCreated = false;
+		if (!m_model->meshes.empty())
+		{
+			for (const auto& mesh : m_model->meshes)
+			{
+				for (const auto& part : mesh->meshParts)
+				{
+					if (dynamic_cast<DirectX::IEffectSkinning*>(part->effect.get()))
+					{
+						auto& decl = part->vbDecl;
+						if (decl)
+						{
+							std::vector<D3D11_INPUT_ELEMENT_DESC> modifiedDecl = *decl;
+							for (auto& element : modifiedDecl)
+							{
+								if (strcmp(element.SemanticName, "SV_Position") == 0 || strcmp(element.SemanticName, "SV_POSITION") == 0)
+								{
+									element.SemanticName = "POSITION";
+								}
+							}
+
+							FILE* f;
+							if (fopen_s(&f, "VBDecl_Log.txt", "w") == 0)
+							{
+								fprintf(f, "--- SKINNED MESH VB DECL ---\n");
+								for (const auto& element : modifiedDecl)
+								{
+									fprintf(f, "Semantic: %s, Index: %d, Format: %d, Offset: %d\n", element.SemanticName, element.SemanticIndex, element.Format, element.AlignedByteOffset);
+								}
+								fprintf(f, "----------------------------\n");
+								fclose(f);
+							}
+
+							OutputDebugStringA("--- SKINNED MESH VB DECL ---\n");
+							for (const auto& element : modifiedDecl)
+							{
+								char buf[256];
+								sprintf_s(buf, "Semantic: %s, Index: %d, Format: %d, Offset: %d\n", element.SemanticName, element.SemanticIndex, element.Format, element.AlignedByteOffset);
+								OutputDebugStringA(buf);
+							}
+							OutputDebugStringA("----------------------------\n");
+
+							HRESULT hrLayout = device->CreateInputLayout(
+								modifiedDecl.data(),
+								(UINT)modifiedDecl.size(),
+								vsBlob->GetBufferPointer(),
+								vsBlob->GetBufferSize(),
+								m_inputLayout.ReleaseAndGetAddressOf()
+							);
+							if (SUCCEEDED(hrLayout))
+							{
+								FILE* f;
+								if (fopen_s(&f, "VBDecl_Log.txt", "a") == 0) {
+									fprintf(f, "SUCCESS: CreateInputLayout succeeded!\n");
+									fclose(f);
+								}
+								layoutCreated = true;
+								break;
+							}
+							else
+							{
+								char err[256];
+								sprintf_s(err, "CreateInputLayout FAILED with HRESULT 0x%X\n", hrLayout);
+								OutputDebugStringA(err);
+								FILE* f;
+								if (fopen_s(&f, "VBDecl_Log.txt", "a") == 0) {
+									fprintf(f, "%s", err);
+									fclose(f);
+								}
+							}
+						}
+					}
+				}
+				if (layoutCreated) break;
+			}
+		}
+
+		if (!layoutCreated)
+		{
+			OutputDebugStringA("ERROR: Failed to create input layout for CustomSkinned shader. Vertex format mismatch.\n");
+		}
+
+		// 4. Create Sampler State
+		D3D11_SAMPLER_DESC sampDesc = {};
+		sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		device->CreateSamplerState(&sampDesc, m_samplerState.ReleaseAndGetAddressOf());
 
 	}
 
@@ -12082,27 +12719,295 @@ namespace HEIN
 		const DirectX::SimpleMath::Matrix& proj
 	)
 	{
-		if (m_needsReload)
-		{
-			if (m_textureDir.empty() && !m_modelPath.empty())
-			{
-				std::filesystem::path p(m_modelPath);
-				m_textureDir = p.parent_path().wstring() + L"/";
-			}
-
-			// Re-initialize the model from the newly set paths
-			Initialize(gameContext, m_modelPath.c_str(), m_textureDir.c_str());
-			m_needsReload = false;
-		}
-
-		if (!m_isVisible) return;
-
-		if (!m_model) return;
+		if (!m_model || !m_isVisible) return;
 
 		ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
-		DirectX::DX11::CommonStates& states = gameContext.commonStates;
 
-		m_model->DrawSkinned(context, states, m_model->bones.size(), m_skinBones.get(), world, view, proj);
+		// The Matrix Buffer update has been moved inside the mesh loop
+
+		// 2. Update Lighting Buffer
+		HEIN::LightComponent* activeLight = nullptr;
+		for (auto& pair : gameContext.actorManager->GetAllActors())
+		{
+			activeLight = pair.second->GetComponent<HEIN::LightComponent>();
+			if (activeLight) break;
+		}
+
+		if (m_cbLighting)
+		{
+			D3D11_MAPPED_SUBRESOURCE mapped;
+			if (SUCCEEDED(context->Map(m_cbLighting.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+			{
+				CB_Lighting* cbLight = (CB_Lighting*)mapped.pData;
+				if (activeLight)
+				{
+					HEIN::TransformComponent* lightTrans = activeLight->GetOwner()->GetComponent<HEIN::TransformComponent>();
+
+					cbLight->LightPos = lightTrans->GetPosition();
+					cbLight->LightDir = lightTrans->GetWorldMatrix().Forward();
+					// Ensure LightDir is never exactly zero to prevent normalize(0) -> NaN in shader
+					if (cbLight->LightDir.LengthSquared() < 0.0001f) cbLight->LightDir = DirectX::SimpleMath::Vector3(0, -1, 0);
+					
+					cbLight->LightType = static_cast<int>(activeLight->GetLightType());
+					cbLight->LightColor = activeLight->GetColor();
+					cbLight->LightIntensity = activeLight->GetIntensity();
+					cbLight->LightRange = activeLight->GetRange();
+					cbLight->LightSpotAngle = DirectX::XMConvertToRadians(activeLight->GetSpotAngle());
+				}
+				else
+				{
+					// Fallback if no LightComponent is in the scene so the model doesn't turn invisible (NaN)
+					cbLight->LightPos = DirectX::SimpleMath::Vector3(0, 10, 0);
+					cbLight->LightDir = DirectX::SimpleMath::Vector3(0, -1, 1); // Not zero!
+					cbLight->LightType = 0; // Directional
+					cbLight->LightColor = DirectX::SimpleMath::Color(1, 1, 1, 1);
+					cbLight->LightIntensity = 1.0f;
+					cbLight->LightRange = 100.0f;
+					cbLight->LightSpotAngle = 0.785f;
+				}
+				context->Unmap(m_cbLighting.Get(), 0);
+			}
+		}
+
+		// 3. Bind Pipeline
+		context->IASetInputLayout(m_inputLayout.Get());
+		context->VSSetShader(m_vertexShader.Get(), nullptr, 0);
+		context->PSSetShader(m_pixelShader.Get(), nullptr, 0);
+
+		ID3D11Buffer* cbs[] = { m_cbMatrices.Get() };
+		context->VSSetConstantBuffers(0, 1, cbs);
+
+		ID3D11Buffer* lightCbs[] = { m_cbLighting.Get() };
+		context->PSSetConstantBuffers(1, 1, lightCbs);
+
+		ID3D11SamplerState* samplers[] = { m_samplerState.Get(), m_samplerState.Get() };
+		context->PSSetSamplers(0, 2, samplers);
+
+		// 4. Draw Mesh Parts
+		for (const auto& mesh : m_model->meshes)
+		{
+			// UPDATE MATRIX BUFFER FOR THIS SPECIFIC MESH
+			if (m_cbMatrices)
+			{
+				D3D11_MAPPED_SUBRESOURCE mapped;
+				if (SUCCEEDED(context->Map(m_cbMatrices.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+				{
+					CB_Matrices* cb = (CB_Matrices*)mapped.pData;
+					cb->World = XMMatrixTranspose(world);
+					cb->WorldViewProj = XMMatrixTranspose(world * view * proj);
+
+					// This requires access to the shadow system from GameContext
+					cb->LightViewProj = XMMatrixTranspose(gameContext.shadowSystem->GetLightViewProj());
+
+					// Populate the bone matrices using the mesh's specific bone palette (boneInfluences)
+					for (size_t i = 0; i < 256; ++i)
+					{
+						cb->BoneTransforms[i] = DirectX::XMMatrixIdentity();
+					}
+
+					if (!mesh->boneInfluences.empty())
+					{
+						for (size_t i = 0; i < mesh->boneInfluences.size() && i < 256; ++i)
+						{
+							uint32_t globalBoneIndex = mesh->boneInfluences[i];
+							if (globalBoneIndex < m_model->bones.size())
+							{
+								cb->BoneTransforms[i] = XMMatrixTranspose(m_skinBones[globalBoneIndex]);
+							}
+						}
+					}
+					else
+					{
+						// Fallback if no palette is used
+						for (size_t i = 0; i < m_model->bones.size() && i < 256; ++i)
+						{
+							cb->BoneTransforms[i] = XMMatrixTranspose(m_skinBones[i]);
+						}
+					}
+					context->Unmap(m_cbMatrices.Get(), 0);
+				}
+			}
+
+			for (const auto& part : mesh->meshParts)
+			{
+				UINT stride = part->vertexStride;
+				UINT offset = 0;
+				context->IASetVertexBuffers(0, 1, part->vertexBuffer.GetAddressOf(), &stride, &offset);
+				context->IASetIndexBuffer(part->indexBuffer.Get(), part->indexFormat, 0);
+				context->IASetPrimitiveTopology(part->primitiveType);
+
+				auto skinnedEffect = dynamic_cast<DirectX::IEffectSkinning*>(part->effect.get());
+				if (skinnedEffect)
+				{
+					part->effect->Apply(context);
+					
+					if (!m_staticInputLayouts[part.get()])
+					{
+						part->CreateInputLayout(gameContext.deviceResources.GetD3DDevice(), part->effect.get(), m_staticInputLayouts[part.get()].GetAddressOf());
+					}
+					if (m_staticInputLayouts[part.get()])
+					{
+						context->IASetInputLayout(m_staticInputLayouts[part.get()].Get());
+					}
+
+					// Override with our custom shaders and buffers
+					context->IASetInputLayout(m_inputLayout.Get());
+					context->VSSetShader(m_vertexShader.Get(), nullptr, 0);
+					context->PSSetShader(m_pixelShader.Get(), nullptr, 0);
+					context->VSSetConstantBuffers(0, 1, m_cbMatrices.GetAddressOf());
+					context->PSSetConstantBuffers(1, 1, m_cbLighting.GetAddressOf());
+					ID3D11SamplerState* mySamplers[] = { m_samplerState.Get(), m_samplerState.Get() };
+					context->PSSetSamplers(0, 2, mySamplers);
+				}
+				else if (part->effect)
+				{
+					// For non-skinned parts (like weapons), just use the default effect
+					part->effect->Apply(context);
+					
+					if (!m_staticInputLayouts[part.get()])
+					{
+						part->CreateInputLayout(gameContext.deviceResources.GetD3DDevice(), part->effect.get(), m_staticInputLayouts[part.get()].GetAddressOf());
+					}
+					if (m_staticInputLayouts[part.get()])
+					{
+						context->IASetInputLayout(m_staticInputLayouts[part.get()].Get());
+					}
+				}
+
+				// Force CullNone to guarantee we don't cull the front faces by accident!
+				context->RSSetState(gameContext.commonStates.CullNone());
+
+				// CRITICAL: Ensure Depth Testing and Opaque Blending are enabled!
+				// Without this, the character will render inside-out because back faces will draw over front faces!
+				context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
+				context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
+
+				context->DrawIndexed(part->indexCount, part->startIndex, part->vertexOffset);
+			}
+		}
+	}
+
+	// Add the new DrawShadow method
+	void SkinnedModelComponent::DrawShadow(GameContext& gameContext, const DirectX::SimpleMath::Matrix& lightViewProj)
+	{
+		if (!m_model || !m_isVisible) return;
+
+		ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
+
+		for (const auto& mesh : m_model->meshes)
+		{
+			// UPDATE MATRIX BUFFER FOR THIS SPECIFIC MESH
+			if (m_cbMatrices)
+			{
+				D3D11_MAPPED_SUBRESOURCE mapped;
+				if (SUCCEEDED(context->Map(m_cbMatrices.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+				{
+					CB_Matrices* cb = (CB_Matrices*)mapped.pData;
+					cb->WorldViewProj = XMMatrixTranspose(m_owner->GetComponent<TransformComponent>()->GetWorldMatrix() * lightViewProj);
+
+					cb->World = DirectX::XMMatrixIdentity();
+					cb->LightViewProj = DirectX::XMMatrixIdentity();
+
+					// Populate the bone matrices using the mesh's specific bone palette (boneInfluences)
+					for (size_t i = 0; i < 256; ++i)
+					{
+						cb->BoneTransforms[i] = DirectX::XMMatrixIdentity();
+					}
+
+					if (!mesh->boneInfluences.empty())
+					{
+						for (size_t i = 0; i < mesh->boneInfluences.size() && i < 256; ++i)
+						{
+							uint32_t globalBoneIndex = mesh->boneInfluences[i];
+							if (globalBoneIndex < m_model->bones.size())
+							{
+								cb->BoneTransforms[i] = XMMatrixTranspose(m_skinBones[globalBoneIndex]);
+							}
+						}
+					}
+					else
+					{
+						for (size_t i = 0; i < m_model->bones.size() && i < 256; ++i)
+						{
+							cb->BoneTransforms[i] = XMMatrixTranspose(m_skinBones[i]);
+						}
+					}
+					context->Unmap(m_cbMatrices.Get(), 0);
+				}
+			}
+
+			for (const auto& part : mesh->meshParts)
+			{
+				if (part->isAlpha)
+				{
+					continue; // Skip transparent quads (like blob shadows/auras) in shadow pass
+				}
+
+				UINT stride = part->vertexStride;
+				UINT offset = 0;
+				context->IASetVertexBuffers(0, 1, part->vertexBuffer.GetAddressOf(), &stride, &offset);
+				context->IASetIndexBuffer(part->indexBuffer.Get(), part->indexFormat, 0);
+				context->IASetPrimitiveTopology(part->primitiveType);
+
+				auto skinnedEffect = dynamic_cast<DirectX::IEffectSkinning*>(part->effect.get());
+				if (skinnedEffect)
+				{
+					// Apply effect to bind textures, then immediately overwrite shaders/buffers with ours
+					part->effect->Apply(context);
+
+					context->IASetInputLayout(m_inputLayout.Get());
+					context->VSSetShader(m_vertexShader.Get(), nullptr, 0);
+					context->PSSetShader(m_pixelShader.Get(), nullptr, 0);
+					context->VSSetConstantBuffers(0, 1, m_cbMatrices.GetAddressOf());
+					
+					ID3D11SamplerState* mySamplers[] = { m_samplerState.Get(), m_samplerState.Get() };
+					context->PSSetSamplers(0, 2, mySamplers);
+
+					Microsoft::WRL::ComPtr<ID3D11InfoQueue> infoQueue;
+					if (SUCCEEDED(gameContext.deviceResources.GetD3DDevice()->QueryInterface(IID_PPV_ARGS(&infoQueue))))
+					{
+						infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, FALSE);
+						infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, FALSE);
+						infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_WARNING, FALSE);
+						infoQueue->ClearStoredMessages();
+					}
+
+					// Force CullNone
+					context->RSSetState(gameContext.commonStates.CullNone());
+
+					// Shadows also need depth testing enabled to calculate proper occlusions!
+					context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
+					context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
+
+					context->DrawIndexed(part->indexCount, part->startIndex, part->vertexOffset);
+
+					if (infoQueue)
+					{
+						UINT64 numMessages = infoQueue->GetNumStoredMessages();
+						if (numMessages > 0)
+						{
+							FILE* f;
+							if (fopen_s(&f, "D3D11_Crash_Log.txt", "a") == 0)
+							{
+								for (UINT64 i = 0; i < numMessages; ++i)
+								{
+									SIZE_T messageLength = 0;
+									infoQueue->GetMessage(i, nullptr, &messageLength);
+									if (messageLength > 0)
+									{
+										D3D11_MESSAGE* pMessage = (D3D11_MESSAGE*)malloc(messageLength);
+										infoQueue->GetMessage(i, pMessage, &messageLength);
+										fprintf(f, "D3D11_Shadow: %s\n", pMessage->pDescription);
+										free(pMessage);
+									}
+								}
+								fclose(f);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	DirectX::SimpleMath::Vector3 SkinnedModelComponent::GetBoneWorldPosition(
@@ -12203,12 +13108,19 @@ namespace HEIN
 			DX::ThrowIfFailed(newAnim->Load(safePath.c_str()));
 			newAnim->Bind(*m_model);
 
+			bool wasCurrent = (m_currentAnimation != nullptr && m_animations.find(name) != m_animations.end() && m_currentAnimation == m_animations[name].get());
+			bool wasTarget = (m_targetAnimation != nullptr && m_animations.find(name) != m_animations.end() && m_targetAnimation == m_animations[name].get());
+
 			m_animations[name] = std::move(newAnim);
 			m_animationPaths[name] = animPath;
 
-			if (m_currentAnimation == nullptr)
+			if (m_currentAnimation == nullptr || wasCurrent)
 			{
 				m_currentAnimation = m_animations[name].get();
+			}
+			if (wasTarget)
+			{
+				m_targetAnimation = m_animations[name].get();
 			}
 		}
 		catch (const std::exception& e)
@@ -12475,6 +13387,7 @@ FILE: External\Engine\Components\SkinnedModelComponent.h
 #pragma once
 #include "IComponent.h"
 #include "DirectXTK_Utilities/Animation.h"
+#include <map>
 
 namespace HEIN
 {
@@ -12518,6 +13431,14 @@ namespace HEIN
 		
 		bool m_needsReload = false;
 
+		Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vertexShader;
+		Microsoft::WRL::ComPtr<ID3D11PixelShader> m_pixelShader;
+		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout; // For CustomSkinned.hlsl
+		std::map<void*, Microsoft::WRL::ComPtr<ID3D11InputLayout>> m_staticInputLayouts; // For non-skinned parts (uses void* to avoid missing includes)
+		Microsoft::WRL::ComPtr<ID3D11Buffer> m_cbMatrices;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> m_cbLighting;
+		Microsoft::WRL::ComPtr<ID3D11SamplerState> m_samplerState;
+
 	public:
 		
 		SkinnedModelComponent(Actor* owner);
@@ -12535,6 +13456,11 @@ namespace HEIN
 			const DirectX::SimpleMath::Matrix& world, 
 			const DirectX::SimpleMath::Matrix& view,
 			const DirectX::SimpleMath::Matrix& proj
+		) override;
+
+		void DrawShadow(
+			GameContext& gameContext, 
+			const DirectX::SimpleMath::Matrix& lightViewProj
 		) override;
 
 		DirectX::SimpleMath::Vector3 GetBoneWorldPosition(
@@ -13617,6 +14543,7 @@ FILE: External\Engine\Components\StaticModelComponent.cpp
 #include <string>
 #include <vector>
 #include <filesystem>
+#include "TransformComponent.h"
 
 namespace HEIN
 {
@@ -13771,13 +14698,28 @@ namespace HEIN
             ID3D11ShaderResourceView** textureView
         ) override
         {
-            try
+            std::wstring wname = name ? name : L"";
+            std::wstring cand1 = m_dir + wname;
+            std::wstring cand2 = wname;
+            
+            bool exists = false;
+            if (!wname.empty())
             {
-                DirectX::DGSLEffectFactory::CreateTexture(name, deviceContext, textureView);
-                if (textureView && *textureView) return;
+                if (std::filesystem::exists(cand1) || std::filesystem::exists(cand2) ||
+                    std::filesystem::exists(cand1 + L".dds") || std::filesystem::exists(cand2 + L".dds"))
+                {
+                    exists = true;
+                }
             }
-            catch (...)
+
+            if (exists)
             {
+                try
+                {
+                    DirectX::DGSLEffectFactory::CreateTexture(name, deviceContext, textureView);
+                    if (textureView && *textureView) return;
+                }
+                catch (...) {}
             }
 
             TryLoadTexture(m_pDevice, m_dir, name, textureView);
@@ -13808,13 +14750,28 @@ namespace HEIN
             ID3D11ShaderResourceView** textureView
         ) override
         {
-            try
+            std::wstring wname = name ? name : L"";
+            std::wstring cand1 = m_dir + wname;
+            std::wstring cand2 = wname;
+            
+            bool exists = false;
+            if (!wname.empty())
             {
-                DirectX::EffectFactory::CreateTexture(name, deviceContext, textureView);
-                if (textureView && *textureView) return;
+                if (std::filesystem::exists(cand1) || std::filesystem::exists(cand2) ||
+                    std::filesystem::exists(cand1 + L".dds") || std::filesystem::exists(cand2 + L".dds"))
+                {
+                    exists = true;
+                }
             }
-            catch (...)
+
+            if (exists)
             {
+                try
+                {
+                    DirectX::EffectFactory::CreateTexture(name, deviceContext, textureView);
+                    if (textureView && *textureView) return;
+                }
+                catch (...) {}
             }
 
             TryLoadTexture(m_pDevice, m_dir, name, textureView);
@@ -13977,6 +14934,41 @@ void HEIN::StaticModelComponent::Draw(
     {
         m_model->Draw(context, states, world, view, proj);
     }
+}
+
+void HEIN::StaticModelComponent::DrawShadow(
+    GameContext& gameContext,
+    const DirectX::SimpleMath::Matrix& lightViewProj
+)
+{
+    if (!m_isVisible || !m_model || !m_castShadows) return;
+
+    ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
+    DirectX::DX11::CommonStates& states = gameContext.commonStates;
+
+    DirectX::SimpleMath::Matrix world = m_owner->GetComponent<TransformComponent>()->GetWorldMatrix();
+    DirectX::SimpleMath::Matrix view = DirectX::SimpleMath::Matrix::Identity;
+
+    // We can use the standard Draw method but with lightViewProj as the projection matrix.
+    // The DirectXTK effects will output to the shadow map (since GameScene bound the depth buffer).
+    // The pixel shader will still execute, but its color output is discarded by the pipeline, leaving only depth!
+    
+    // NOTE: DirectXTK effects might set their own Rasterizer/Blend states.
+    // We should restore the shadow states after drawing just in case, but Draw() itself binds states.
+    
+    if (!m_model->bones.empty() && m_drawBones)
+    {
+        m_model->Draw(context, states, m_model->bones.size(), m_drawBones.get(), world, view, lightViewProj);
+    }
+    else
+    {
+        m_model->Draw(context, states, world, view, lightViewProj);
+    }
+    
+    // Restore states for shadow mapping if DirectXTK modified them
+    context->RSSetState(gameContext.commonStates.CullNone());
+    context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
+    context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
 }
 
 DirectX::SimpleMath::Vector3 HEIN::StaticModelComponent::GetBoneWorldPosition(
@@ -14162,6 +15154,7 @@ nlohmann::json HEIN::StaticModelComponent::Serialize()
     std::string narrowTextureDir(m_textureDir.begin(), m_textureDir.end());
     data["ModelPath"] = narrowModelPath;
     data["TextureDir"] = narrowTextureDir;
+    data["CastShadows"] = m_castShadows;
     return data;
 }
 
@@ -14178,6 +15171,10 @@ void HEIN::StaticModelComponent::Deserialize(const nlohmann::json& data)
         std::string narrowTextureDir = data["TextureDir"];
         m_textureDir = std::wstring(narrowTextureDir.begin(), narrowTextureDir.end());
     }
+    if (data.contains("CastShadows"))
+    {
+        m_castShadows = data["CastShadows"];
+    }
 }
 
 void HEIN::StaticModelComponent::InitializeAfterDeserialize(GameContext& gameContext)
@@ -14193,6 +15190,16 @@ void HEIN::StaticModelComponent::InitializeAfterDeserialize(GameContext& gameCon
                 m_textureDir = parent + L"/";
             }
         }
+        
+        // Force disable shadows on all stage props (walls, floors, pillars, bridges) regardless of old save file state
+        // to prevent them from blocking the sun and casting a giant eclipse shadow over the entire map bounds
+        if (m_modelPath.find(L"stage") != std::wstring::npos || 
+            m_modelPath.find(L"floor1") != std::wstring::npos ||
+            m_modelPath.find(L"wall") != std::wstring::npos)
+        {
+            m_castShadows = false;
+        }
+
         Initialize(gameContext, m_modelPath.c_str(), m_textureDir.empty() ? nullptr : m_textureDir.c_str());
     }
 }
@@ -14221,10 +15228,10 @@ namespace HEIN
 		bool m_isVisible = true;
 		bool m_needsReload = false;
 		std::string m_lastError;
-
 	public:
 		std::wstring m_modelPath;
 		std::wstring m_textureDir;
+		bool m_castShadows = true;
 
 		StaticModelComponent(Actor* owner);
 
@@ -14241,6 +15248,11 @@ namespace HEIN
 			const DirectX::SimpleMath::Matrix& world, 
 			const DirectX::SimpleMath::Matrix& view, 
 			const DirectX::SimpleMath::Matrix& proj
+		) override;
+
+		void DrawShadow(
+			GameContext& gameContext,
+			const DirectX::SimpleMath::Matrix& lightViewProj
 		) override;
 
 		std::string GetComponentName() const override { return "StaticModelComponent"; }
@@ -14486,8 +15498,12 @@ FILE: External\Engine\Components\TerrainComponent.cpp
 #include "pch.h"
 #include "TerrainComponent.h"
 #include "Entities/Actor.h"
+#include "Entities/ActorManager.h"
 #include "Framework/GameContext.h"
 #include "TransformComponent.h"
+#include "Common/ShadowSystem.h"
+#include "FogComponent.h"
+#include "LightComponent.h"
 #include "DebugingTools/DebugUIManager.h"
 #include "DebugingTools/EditorUtils.h"
 #include <ImGui/imgui_stdlib.h>
@@ -14802,6 +15818,7 @@ void HEIN::TerrainComponent::Draw(
 		dataPtr->world = finalworld.Transpose();
 		dataPtr->view = view.Transpose();
 		dataPtr->projection = proj.Transpose();
+		dataPtr->lightViewProj = gameContext.shadowSystem->GetLightViewProj().Transpose();
 		context->Unmap(m_matrixBuffer.Get(), 0);
 	}
 	context->VSSetConstantBuffers(0, 1, m_matrixBuffer.GetAddressOf());
@@ -14810,21 +15827,48 @@ void HEIN::TerrainComponent::Draw(
 	{
 		LightBufferType* dataPtr = (LightBufferType*)mappedResource.pData;
 
+		HEIN::LightComponent* activeLight = nullptr;
+		for (auto& pair : gameContext.actorManager->GetAllActors())
+		{
+			activeLight = pair.second->GetComponent<HEIN::LightComponent>();
+			if (activeLight) break;
+		}
+
 		DirectX::SimpleMath::Vector3 safeLightDir = m_lightDirection;
+		DirectX::SimpleMath::Vector4 safeDiffuseColor = DirectX::SimpleMath::Vector4(m_diffuseColor.x, m_diffuseColor.y, m_diffuseColor.z, 1.0f);
+
+		if (activeLight)
+		{
+			safeLightDir = activeLight->GetOwner()->GetComponent<HEIN::TransformComponent>()->GetForward();
+			DirectX::SimpleMath::Vector4 c = activeLight->GetColor();
+			safeDiffuseColor = DirectX::SimpleMath::Vector4(c.x, c.y, c.z, 1.0f) * activeLight->GetIntensity();
+		}
+		
 		safeLightDir.Normalize();
 
-		dataPtr->diffuseColor = DirectX::SimpleMath::Vector4(m_diffuseColor.x, m_diffuseColor.y, m_diffuseColor.z, 1.0f);
+		dataPtr->diffuseColor = safeDiffuseColor;
 		dataPtr->lightDirection = safeLightDir;
 		dataPtr->hasTexture = m_texture ? 1.0f : 0.0f;
 		dataPtr->textureTiling = m_texutreTiling;
 		dataPtr->hasNormalMap = m_normalTexture ? 1.0f : 0.0f;
 		dataPtr->hasAlphaMap = m_alphaTexture ? 1.0f : 0.0f;
 		dataPtr->hasTexture2 = m_texture2 ? 1.0f : 0.0f;
-		dataPtr->fogStart = m_fogStart;
-		dataPtr->fogEnd = m_fogEnd;
+		
+		if (FogComponent* fog = m_owner->GetComponent<FogComponent>())
+		{
+			dataPtr->fogStart = fog->m_fogStart;
+			dataPtr->fogEnd = fog->m_fogEnd;
+			dataPtr->fogColor = fog->m_fogColor;
+		}
+		else
+		{
+			// Default fog settings if no FogComponent is attached (disabled)
+			dataPtr->fogStart = 100000.0f;
+			dataPtr->fogEnd = 200000.0f;
+			dataPtr->fogColor = DirectX::SimpleMath::Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+		}
 		dataPtr->padding1 = 0.0f;
 		dataPtr->padding2 = 0.0f;
-		dataPtr->fogColor = m_fogColor;
 		context->Unmap(m_lightBuffer.Get(), 0);
 	}
 	context->PSSetConstantBuffers(1, 1, m_lightBuffer.GetAddressOf());
@@ -14961,9 +16005,6 @@ nlohmann::json HEIN::TerrainComponent::Serialize()
 	data["IsVisible"] = m_isVisible;
 	data["LightDirection"] = nlohmann::json::array({ m_lightDirection.x, m_lightDirection.y, m_lightDirection.z });
 	data["DiffuseColor"] = nlohmann::json::array({ m_diffuseColor.x, m_diffuseColor.y, m_diffuseColor.z });
-	data["FogStart"] = m_fogStart;
-	data["FogEnd"] = m_fogEnd;
-	data["FogColor"] = nlohmann::json::array({ m_fogColor.x, m_fogColor.y, m_fogColor.z, m_fogColor.w });
 
 	return data;
 }
@@ -15036,12 +16077,6 @@ void HEIN::TerrainComponent::Deserialize(const nlohmann::json& data)
 	{
 		m_diffuseColor = DirectX::SimpleMath::Vector3(data["DiffuseColor"][0], data["DiffuseColor"][1], data["DiffuseColor"][2]);
 	}
-	if (data.contains("FogStart")) m_fogStart = data["FogStart"];
-	if (data.contains("FogEnd")) m_fogEnd = data["FogEnd"];
-	if (data.contains("FogColor"))
-	{
-		m_fogColor = DirectX::SimpleMath::Vector4(data["FogColor"][0], data["FogColor"][1], data["FogColor"][2], data["FogColor"][3]);
-	}
 	
 	m_needsReload = true; 
 }
@@ -15104,13 +16139,9 @@ void HEIN::TerrainComponent::OnInspectorGUI(GameContext& gameContext)
 		}
 
 		ImGui::Separator();
-		ImGui::Text("Lighting & Fog");
+		ImGui::Text("Lighting");
 		ImGui::DragFloat3("Light Direction", &m_lightDirection.x, 0.05f, -1.0f, 1.0f);
 		ImGui::ColorEdit3("Diffuse Color", &m_diffuseColor.x);
-		
-		ImGui::DragFloat("Fog Start", &m_fogStart, 5.0f, 0.0f, 5000.0f);
-		ImGui::DragFloat("Fog End", &m_fogEnd, 5.0f, 0.0f, 5000.0f);
-		ImGui::ColorEdit4("Fog Color", &m_fogColor.x);
 		
 		ImGui::Separator();
 
@@ -15656,6 +16687,7 @@ namespace HEIN
 			DirectX::XMMATRIX world;
 			DirectX::XMMATRIX view;
 			DirectX::XMMATRIX projection;
+			DirectX::XMMATRIX lightViewProj;
 		};
 
 		struct LightBufferType
@@ -15731,10 +16763,7 @@ namespace HEIN
 		DirectX::SimpleMath::Vector3 m_lightDirection = DirectX::SimpleMath::Vector3(-0.5f, -1.0f, 0.5f);
 		DirectX::SimpleMath::Vector3 m_diffuseColor = DirectX::SimpleMath::Vector3(1.0f, 1.0f, 1.0f);
 
-		// Fog Controls
-		float m_fogStart = 100.0f;
-		float m_fogEnd = 800.0f;
-		DirectX::SimpleMath::Vector4 m_fogColor = DirectX::SimpleMath::Vector4(0.5f, 0.6f, 0.7f, 1.0f);
+		// Fog controls are now separated into FogComponent
 
 		bool m_isVisible = true;
 		bool m_isWireFrame = false;
@@ -15892,6 +16921,10 @@ void HEIN::TransformComponent::DrawGizmo(
             SetRotation(rot);
             SetScale(scale);
         }
+        else
+        {
+            OutputDebugStringA("WARNING: Decompose failed in TransformComponent::DrawGizmo!\n");
+        }
     }
 }
 
@@ -16034,6 +17067,14 @@ namespace HEIN
         DirectX::SimpleMath::Vector3 GetForward() const
         {
             return DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Forward, m_rotation);
+        }
+        DirectX::SimpleMath::Vector3 GetRight() const
+        {
+            return DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Right, m_rotation);
+        }
+        DirectX::SimpleMath::Vector3 GetUp() const
+        {
+            return DirectX::SimpleMath::Vector3::Transform(DirectX::SimpleMath::Vector3::Up, m_rotation);
         }
    
         void SetRotationEuler(const DirectX::SimpleMath::Vector3& eulerAngles);
@@ -22288,6 +23329,19 @@ void HEIN::ActorManager::DrawAll(
     }
 }
 
+void HEIN::ActorManager::DrawAllShadows(GameContext& gameContext, const DirectX::SimpleMath::Matrix& lightViewProj)
+{
+    for (auto& pair : m_actors)
+    {
+        auto components = pair.second->GetComponents<IComponent>();
+        for (auto* comp : components)
+        {
+            // Call the new DrawShadow method from IComponent
+            comp->DrawShadow(gameContext, lightViewProj);
+        }
+    }
+}
+
 void HEIN::ActorManager::DeleteActor(ActorID id)
 {
     DestroyID(id);
@@ -22632,6 +23686,11 @@ namespace HEIN
 			const DirectX::SimpleMath::Matrix& proj
 		);
 
+		void DrawAllShadows(
+			GameContext& gameContext, 
+			const DirectX::SimpleMath::Matrix& lightViewProj
+		);
+
 		// Called at the end of the frame (Phase D) to safely delete all queued actors.
 		void CleanUpDestroyedActors();
 
@@ -22685,8 +23744,10 @@ FILE: External\Engine\Factory\ComponentFactory.h
 #include <Components/ColliderComponent/TerrainColliderComponent.h>
 #include <Components/UIButtonComponent.h>
 #include <Components/TerrainComponent.h>
+#include <Components/LightComponent.h>
 #include <Components/SlidingDoorComponent.h>
 #include <Components/ProceduralAnimationComponent.h>
+#include <Components/FogComponent.h>
 
 namespace HEIN
 {
@@ -22775,8 +23836,10 @@ namespace HEIN
 			RegisterComponent<UIButtonComponent>("UIButtonComponent");
 			RegisterComponent<TerrainComponent>("TerrainComponent");
 			RegisterComponent<TerrainColliderComponent>("TerrainColliderComponent");
+			RegisterComponent<LightComponent>("LightComponent");
 			RegisterComponent<SlidingDoorComponent>("SlidingDoorComponent");
 			RegisterComponent<ProceduralAnimationComponent>("ProceduralAnimationComponent");
+			RegisterComponent<FogComponent>("FogComponent");
 		}
 	};
 }
@@ -23247,6 +24310,8 @@ namespace HEIN {
 	class CameraController; 
 	class InputManager;
 	class SceneManager;
+	class ShadowSystem;
+	class ActorManager;
 }
 
 /**
@@ -23294,6 +24359,11 @@ struct GameContext
 
 	/// @brief Scene manager
 	HEIN::SceneManager* sceneManager = nullptr;
+
+	HEIN::ActorManager* actorManager = nullptr;
+	HEIN::ShadowSystem* shadowSystem = nullptr;
+
+	bool isEditorMode = false;
 };
 
 
@@ -23888,4 +24958,560 @@ namespace HEIN
         void Update(GameContext& context);
         void Render(GameContext& context);
     };
+}
+
+================================================================================
+FILE: External\Engine\Shaders\CustomSkinned.hlsl
+================================================================================
+
+// CustomSkinned.hlsl
+
+// ==============================================================================
+// 1. CONSTANT BUFFERS (Data from C++)
+// ==============================================================================
+cbuffer cbMatrices : register(b0)
+{
+    matrix WorldViewProj;
+    matrix World;
+    matrix LightViewProj; // Matrix from the Light's perspective for Shadows
+    matrix BoneTransforms[256]; // Animation bone matrices
+};
+
+cbuffer cbLighting : register(b1)
+{
+    float3 LightPos;
+    int LightType; // 0 = Directional, 1 = Point, 2 = Spot
+    
+    float3 LightDir;
+    float LightIntensity;
+    
+    float4 LightColor;
+    
+    float LightRange;
+    float LightSpotAngle; // Passed in radians
+    float2 Padding;
+};
+
+// ==============================================================================
+// 2. TEXTURES & SAMPLERS
+// ==============================================================================
+Texture2D DiffuseMap : register(t0); // The model's texture
+Texture2D ShadowMap : register(t4); // The generated shadow map
+SamplerState LinearSampler : register(s0);
+SamplerComparisonState ShadowSampler : register(s1); // Sampler for shadow filtering
+
+// ==============================================================================
+// 3. STRUCTURES
+// ==============================================================================
+struct VSInput
+{
+    float3 Pos : POSITION;
+    float3 Normal : NORMAL;
+    float2 TexCoord : TEXCOORD0;
+    uint4 BoneIndices : BLENDINDICES0;
+    float4 BoneWeights : BLENDWEIGHT0;
+};
+
+struct VSOutput
+{
+    float4 Pos : SV_POSITION;
+    float3 WorldPos : POSITION1;
+    float3 Normal : NORMAL;
+    float2 TexCoord : TEXCOORD0;
+    float4 LightSpacePos : TEXCOORD1; // Position from the Light's point of view
+};
+
+// ==============================================================================
+// 4. VERTEX SHADER
+// ==============================================================================
+VSOutput VSMain(VSInput input)
+{
+    VSOutput output;
+
+    // Normalize weights just in case the model exporter left them unnormalized
+    float totalWeight = input.BoneWeights.x + input.BoneWeights.y + input.BoneWeights.z + input.BoneWeights.w;
+    if (totalWeight > 0.0f)
+    {
+        input.BoneWeights /= totalWeight;
+    }
+
+    // Skinning Calculation
+    matrix skinTransform =
+        BoneTransforms[input.BoneIndices.x] * input.BoneWeights.x +
+        BoneTransforms[input.BoneIndices.y] * input.BoneWeights.y +
+        BoneTransforms[input.BoneIndices.z] * input.BoneWeights.z +
+        BoneTransforms[input.BoneIndices.w] * input.BoneWeights.w;
+
+    // Apply Skinning to Local Position and Normal
+    float4 localPos = mul(float4(input.Pos, 1.0f), skinTransform);
+    float3 localNormal = mul(input.Normal, (float3x3) skinTransform);
+
+    // Transform to Screen Space for Camera
+    output.WorldPos = mul(localPos, World).xyz;
+    output.Pos = mul(localPos, WorldViewProj);
+    
+    // Pass data to Pixel Shader
+    output.Normal = normalize(mul(localNormal, (float3x3) World));
+    output.TexCoord = input.TexCoord;
+    
+    // Transform to Light Space for Shadow Calculation
+    output.LightSpacePos = mul(localPos, LightViewProj);
+
+    return output;
+}
+
+// ==============================================================================
+// 5. SHADOW CALCULATION
+// ==============================================================================
+float CalculateShadow(float4 lightSpacePos)
+{
+    // Perspective Divide (Clip Space to NDC)
+    float3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
+    
+    // Convert NDC [-1, 1] to Texture UV [0, 1]
+    projCoords.x = projCoords.x * 0.5f + 0.5f;
+    projCoords.y = -projCoords.y * 0.5f + 0.5f;
+
+    // Ignore shadow if outside the map bounds
+    if (projCoords.x < 0 || projCoords.x > 1 || projCoords.y < 0 || projCoords.y > 1)
+        return 1.0f;
+
+    float currentDepth = projCoords.z;
+    float shadow = 0.0f;
+    float bias = 0.0005f; // Reduced bias for better precision with small objects
+    
+    // Hardware PCF using SampleCmpLevelZero
+    float2 texelSize = 1.0f / 2048.0f;
+    
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            float2 uv = projCoords.xy + float2(x, y) * texelSize;
+            float pcfResult = ShadowMap.SampleCmpLevelZero(ShadowSampler, uv, currentDepth - bias).r;
+            // SampleCmpLevelZero returns 1.0f if the depth in texture >= currentDepth - bias. (lit)
+            // It returns 0.0f if the depth in texture < currentDepth - bias. (shadowed)
+            // The 'shadow' variable is accumulating '1.0' for light and '0.0' for shadow.
+            shadow += pcfResult;
+        }
+    }
+    shadow /= 9.0f; // Average the samples
+    
+    return shadow; // Returns 0.0 for shadow, 1.0 for light
+}
+
+// ==============================================================================
+// 6. PIXEL SHADER
+// ==============================================================================
+float4 PSMain(VSOutput input) : SV_TARGET
+{
+    float4 baseColor = DiffuseMap.Sample(LinearSampler, input.TexCoord);
+    
+    // Optional Alpha Clipping in main pass if needed
+    clip(baseColor.a - 0.05f);
+
+    float3 norm = normalize(input.Normal);
+    
+    float3 lightVector = LightPos - input.WorldPos;
+    float distanceToLight = length(lightVector);
+    
+    // 1. Determine Light Direction (L)
+    float3 L = (LightType == 0) ? normalize(-LightDir) : normalize(lightVector);
+
+    // 2. Base Diffuse Calculation
+    float diff = max(dot(norm, L), 0.0f);
+    
+    // 3. Attenuation (Falloff over distance for Point/Spot lights)
+    float attenuation = 1.0f;
+    if (LightType == 1 || LightType == 2)
+    {
+        attenuation = 1.0f - saturate(distanceToLight / LightRange);
+        attenuation *= attenuation; // Quadratic falloff
+    }
+
+    // 4. Spot Light Cone Calculation
+    if (LightType == 2)
+    {
+        float theta = dot(L, normalize(-LightDir));
+        float cosHalfAngle = cos(LightSpotAngle * 0.5f);
+        
+        if (theta < cosHalfAngle)
+            attenuation = 0.0f;
+        else
+            attenuation *= smoothstep(cosHalfAngle, cosHalfAngle + 0.05f, theta);
+    }
+
+    // 5. Shadow Mapping (Only calculate shadows if attenuation > 0)
+    float shadowFactor = 1.0f;
+    if (attenuation > 0.0f && LightType == 0) // Currently shadows only for Directional
+    {
+        shadowFactor = CalculateShadow(input.LightSpacePos);
+    }
+
+    // 6. Final Color Combination
+    float3 finalColor = baseColor.rgb * LightColor.rgb * diff * LightIntensity * attenuation * shadowFactor;
+    
+    // Add ambient light so shadows aren't pitch black
+    float3 ambient = baseColor.rgb * 0.4f;
+    finalColor += ambient;
+
+    return float4(finalColor, baseColor.a);
+}
+
+================================================================================
+FILE: External\Engine\Shaders\SkyboxEffect_PS.hlsl
+================================================================================
+
+#include "SkyboxEffect_Common.hlsli"
+
+TextureCube<float4> CubeMap : register(t0);
+SamplerState Sampler : register(s0);
+
+float4 main(float3 texCoord : TEXCOORD0) : SV_TARGET0
+{
+    return CubeMap.Sample(Sampler, normalize(texCoord));
+}
+
+================================================================================
+FILE: External\Engine\Shaders\SkyboxEffect_VS.hlsl
+================================================================================
+
+#include "SkyboxEffect_Common.hlsli"
+
+VSOutput main(float4 position : POSITION)
+{
+    VSOutput vout;
+
+    vout.PositionPS = mul(position, WorldViewProj);
+    vout.PositionPS.z = vout.PositionPS.w; // Draw on far plane
+    vout.TexCoord = position.xyz;
+    //vout.TexCoord.y -= 0.002f;
+    return vout;
+}
+
+================================================================================
+FILE: External\Engine\Shaders\Terrain_PS.hlsl
+================================================================================
+
+#include "Terrain_Common.hlsli"
+
+Texture2D shaderTexture : register(t0);
+Texture2D normalTexture : register(t1);
+Texture2D alphaTexture  : register(t2);
+Texture2D texture2      : register(t3);
+Texture2D shadowMap     : register(t4);
+SamplerState SampleType : register(s0);
+SamplerComparisonState ShadowSampler : register(s1);
+
+float4 main(PixelInputType input) : SV_Target
+{
+    float4 textureColor;
+    float4 bumpMap;
+    float3 bumpNormal;
+    float3 lightDir;
+    float  lightIntensity;
+    float4 color;
+    
+    if (hasTexture > 0.5f)
+    {
+        // Sample Base Texture (Grass) using TILED UVs
+        textureColor = shaderTexture.Sample(SampleType, input.tex * textureTiling);
+        
+        // TEXTURE SPLATTING
+        if (hasAlphaMap > 0.5f && hasTexture2 > 0.5f)
+        {
+            float4 alphaMap = alphaTexture.Sample(SampleType, input.tex);
+            float4 tex2Color = texture2.Sample(SampleType, input.tex * textureTiling);
+            textureColor = lerp(textureColor, tex2Color, alphaMap.r);
+        }
+    }
+    else
+    {
+        textureColor = float4(1.0f, 1.0f, 1.0f, 1.0f); // Default white texture
+    }
+    
+    if (hasNormalMap > 0.5f)
+    {
+        bumpMap = normalTexture.Sample(SampleType, input.tex * textureTiling);
+        bumpMap = (bumpMap * 2.0f) - 1.0f;
+        
+        float3 perfectTangent = normalize(input.tangent - dot(input.tangent, input.normal) * input.normal);
+        float3 perfectBinormal = cross(input.normal, perfectTangent);
+        
+        bumpNormal = (bumpMap.x * perfectTangent) + (bumpMap.y * perfectBinormal) + (bumpMap.z * input.normal);
+        bumpNormal = normalize(bumpNormal);
+    }
+    else
+    {
+        bumpNormal = normalize(input.normal); // Fallback
+    }
+    
+    // --- SHADOW MAPPING ---
+    float shadow = 1.0f; // 1.0 = fully lit, 0.5 = shadowed
+    
+    // Convert shadow clip space to NDC
+    float3 shadowCoords = input.shadowPos.xyz / input.shadowPos.w;
+    
+    // Check if we are inside the orthographic projection box
+    if (shadowCoords.x >= -1.0f && shadowCoords.x <= 1.0f &&
+        shadowCoords.y >= -1.0f && shadowCoords.y <= 1.0f &&
+        shadowCoords.z >= 0.0f && shadowCoords.z <= 1.0f)
+    {
+        // Convert XY from [-1, 1] to [0, 1] for Texture UVs
+        float2 shadowUV;
+        shadowUV.x = shadowCoords.x * 0.5f + 0.5f;
+        shadowUV.y = -shadowCoords.y * 0.5f + 0.5f; // Invert Y because V is down
+        
+        // Hardware PCF using SampleCmpLevelZero. 
+        // This is the only 100% hardware-compliant way to read a Depth Texture without driver bugs.
+        // It returns 1.0f if the depth in the texture is >= shadowCoords.z - 0.0005f (lit), and 0.0f if not (shadowed).
+        float shadowPercent = shadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, shadowCoords.z - 0.0005f).r;
+        
+        shadow = lerp(0.5f, 1.0f, shadowPercent);
+    }
+    
+   // INVERT THE LIGHT DIRECTION!
+    lightDir = -lightDirection;
+    
+    lightIntensity = saturate(dot(bumpNormal, lightDir)) * shadow;
+    
+    //ADD AMBIENT LIGHT (So shadows aren't 100% pitch black)
+    float4 ambientColor = float4(0.3f, 0.3f, 0.3f, 1.0f);
+    color = saturate((diffuseColor * lightIntensity) + ambientColor);
+    
+    // Force the alpha channel to 1.0f so it is fully opaque
+    color = color * textureColor * input.color;
+    
+    // FOG CALCULATION
+    float fogFactor = saturate((input.viewZ - fogStart) / (fogEnd - fogStart));
+    color = lerp(color, fogColor, fogFactor);
+    
+    color.a = 1.0f;
+    
+    return color;
+}
+
+
+================================================================================
+FILE: External\Engine\Shaders\Terrain_VS.hlsl
+================================================================================
+
+#include "Terrain_Common.hlsli"
+
+PixelInputType main(VertexInputType input)
+{
+    PixelInputType output;
+    
+    input.position.w = 1.0f;
+    
+    output.position = mul(input.position, worldMatrix);
+    
+    float4 viewPos = mul(output.position, viewMatrix);
+    // In a right-handed system, objects in front of the camera have negative Z.
+    // We use abs() to get a positive distance for the fog calculation.
+    output.viewZ = abs(viewPos.z);
+    
+    output.position = mul(viewPos, projectionMatrix);
+    
+    output.tex = input.tex;
+    output.color = input.color;
+    output.normal = mul(input.normal, (float3x3) worldMatrix);
+    output.normal = normalize(output.normal);
+    
+    output.tangent = mul(input.tangent, (float3x3) worldMatrix);
+    output.tangent = normalize(output.tangent);
+    
+    output.binormal = mul(input.binormal, (float3x3) worldMatrix);
+    output.binormal = normalize(output.binormal);
+    
+    float4 worldPosition = mul(input.position, worldMatrix);
+    output.shadowPos = mul(worldPosition, lightViewProj);
+    
+    
+    return output;
+}
+
+================================================================================
+FILE: External\Engine\Shaders\WaterPs.hlsl
+================================================================================
+
+Texture2D shaderTexture : register(t0);
+Texture2D normalMapTexture : register(t1);
+SamplerState SampleType : register(s0);
+
+struct PS_INPUT
+{
+    float4 Pos : SV_POSITION;
+    float3 WorldPos : POSITION;
+    float3 Normal : NORMAL;
+    float2 Tex : TEXCOORD0;
+};
+
+
+
+cbuffer WaterSettings : register(b1)
+{
+    float3 waterColor;
+    float fresnelPower;
+    float specularPower;
+    float waveSpeed;
+    float normalBlend;
+    float padding3;
+    float uvScale;
+    float offset;
+    float multiplier;
+}
+cbuffer LightBuffer : register(b2)
+{
+    float3 lightDir;
+    float time;
+    float3 camPos;
+    float padding2;
+};
+float4 main(PS_INPUT input) : SV_TARGET
+{
+    // Base Color of the Ocean
+    //float3 waterColor = float3(0.0f, 0.3f, 0.7f);
+    
+    float4 textureColor = shaderTexture.Sample(SampleType, input.Tex);
+    float3 baseColor = waterColor * (textureColor.rgb + 0.5f);
+    
+    
+    // Dual Normal Map Synthesis Logic:
+    // Implements equation: N = normalize(N1(u + v1 t) + N2(u - v2 t))
+    // Blends two scrolling normal maps moving at different velocities and scales
+    // to simulate chaotic micro-wave interference and breaking surface tension.
+    float3 vertexNormal = normalize(input.Normal);
+    
+    // Sample the Normal Map Twice
+    float2 uv1 = input.Tex * 2.0f + float2(time * 0.03f, time * 0.01f);
+    float2 uv2 = input.Tex * 2.5f - float2(time * 0.01f, time * 0.03f);
+    
+    // Sampl NormalTexture
+    float3 normalSample1 = normalMapTexture.Sample(SampleType, uv1).rgb * 2.0f - 1.0f;
+    float3 normalSample2 = normalMapTexture.Sample(SampleType, uv2).rgb * 2.0f - 1.0f;
+    
+    // Combine the NormalMap with vertex normal
+    float3 combineNormal = normalize(vertexNormal + (normalSample1 + normalSample2) * normalBlend);
+    
+    float3 light = normalize(-lightDir);
+    float3 viewDir = normalize(camPos - input.WorldPos);
+    
+    // Ambient light
+    float3 ambient = baseColor * 0.2f;
+    
+    // Diffuse the sunlight
+    float diffIntensity = saturate(dot(combineNormal, light));
+    float3 diffuse = baseColor * diffIntensity;
+    
+    // Specular
+    float3 reflectDir = reflect(-light, combineNormal);
+    float specIntensity = pow(saturate(dot(viewDir, reflectDir)), specularPower);
+    float3 specular = float3(1.0f, 1.0f, 1.0f) * specIntensity * 0.3f;
+    
+    // Fresnel Reflection Calculation:
+    // Implements Schlick's approximation: F = F0 + (1 - F0)(1 - V.N)^5
+    // Models the physical property where water becomes highly reflective at glancing 
+    // angles and more refractive (transparent) when viewed straight down.
+    float fresnel = pow(1.0f - saturate(dot(combineNormal, viewDir)), fresnelPower);
+    
+    float3 skyReflection = specular + float3(0.4f, 0.5f, 0.7f) ;
+    // Combine all the light
+    float3 finalColor = lerp(diffuse + ambient, skyReflection, fresnel);
+    
+    return float4(finalColor, 0.8f);
+
+}
+
+================================================================================
+FILE: External\Engine\Shaders\WaterVs.hlsl
+================================================================================
+
+Texture2D noiseMap : register(t0);
+SamplerState SampleType : register(s0);
+cbuffer WaterBuffer : register(b0)
+{
+    float time;
+    float3 padding;
+    matrix world;
+    matrix view;
+    matrix projection;
+};
+
+cbuffer WaterSetting : register(b1)
+{
+    float3 waterColor;
+    float fresnelPower;
+    float specularPower;
+    float waveSpeed;
+    float normalBlend;
+    float padding3;
+    float uvScale;
+    float offset;
+    float multiplier;
+}
+
+struct VS_INPUT
+{
+    float4 Pos : POSITION;
+    float3 Normal : NORMAL;
+    float2 Tex : TEXCOORD0;
+};
+
+struct PS_INPUT
+{
+    float4 Pos : SV_POSITION;
+    float3 WorldPos : POSITION;
+    float3 Normal : NORMAL;
+    float2 Tex : TEXCOORD0;
+};
+
+PS_INPUT main(VS_INPUT input)
+{
+    PS_INPUT output;
+    
+    float4 posWorld = mul(input.Pos, world);
+    float t = time * waveSpeed;
+    
+    
+    // scrolling
+    float2 uvScroll = float2(t * 0.03f, t * 0.02f);
+    
+    float2 centerUV = (posWorld.xz * uvScale) + uvScroll;
+    
+    // Wave Vertex Displacement Mathematics:
+    // Based on equation: y(x, z, t) = A * sin(k_x x + w t) * cos(k_z z + 0.8w t)
+    // this is achieved procedural generation by sampling a deterministic noise map (A) 
+    // across scrolling UV coordinates (time 't' and spatial 'x, z' frequencies).
+    // samples are taken slightly to the right and up to calculate the normal slope via finite differences.
+  
+    float heightCenter = noiseMap.SampleLevel(SampleType, centerUV, 0).r;
+    float heightRight = noiseMap.SampleLevel(SampleType, centerUV + float2(offset, 0.0f), 0).r;
+    float heightUp = noiseMap.SampleLevel(SampleType, centerUV + float2(0.0f, offset), 0).r;
+    
+    // Apply the height to the vertex
+    float waveHeightMutiplier = multiplier;
+    posWorld.y += heightCenter * waveHeightMutiplier;
+    
+    
+    float physicalDistance = offset / uvScale;
+    // Calculate the true Normal
+    // Calculate the slope (derivative) by comparing the center pixel to its neighbors
+    float dYdX = ((heightRight - heightCenter) * waveHeightMutiplier) / physicalDistance;
+    float dYdZ = ((heightUp - heightCenter) * waveHeightMutiplier) / physicalDistance;
+
+      
+    // Create the new normal vector facing perpendicular to the wave slope
+    float3 trueNormal = normalize(float3(-dYdX, 1.0f, -dYdZ));
+
+    // 3. Set Outputs
+    output.WorldPos = posWorld.xyz;
+    output.Pos = mul(posWorld, mul(view, projection));
+    
+    // Apply the new wave normal instead of the flat grid normal
+    output.Normal = mul(trueNormal, (float3x3) world);
+    
+    output.Tex = input.Tex + float2(t * 0.05f, t * 0.02f);
+    
+    return output;
 }
