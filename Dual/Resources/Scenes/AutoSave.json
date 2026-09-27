@@ -1,0 +1,2380 @@
+{
+    "Actors": [
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "BlendDuration": 1.0,
+                        "Fov": 0.8726646304130554,
+                        "PosX": 1209.0205078125,
+                        "PosY": -10.077276229858398,
+                        "PosZ": -1235.8323974609375,
+                        "RotW": 0.9144741296768188,
+                        "RotX": -0.22217141091823578,
+                        "RotY": -0.3286367356777191,
+                        "RotZ": -0.07984226197004318
+                    },
+                    "Type": "CameraController"
+                }
+            ],
+            "Name": "MainCamera"
+        },
+        {
+            "Children": [
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "DamageAmount": 5.0,
+                                "DamageType": 0,
+                                "IsActive": false
+                            },
+                            "Type": "DamageDealerComponent"
+                        },
+                        {
+                            "Data": {
+                                "Position": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    0.019999999552965164,
+                                    0.019999999552965164,
+                                    0.019999999552965164
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "CastShadows": true,
+                                "ModelPath": "Resources/Models/knight/sword.sdkmesh",
+                                "TextureDir": "Resources/Models/knight"
+                            },
+                            "Type": "StaticModelComponent"
+                        },
+                        {
+                            "Data": {
+                                "ColliderTag": "",
+                                "ExtentsX": 0.5516932010650635,
+                                "ExtentsY": 0.05977078527212143,
+                                "ExtentsZ": 2.910851001739502,
+                                "IsTrigger": true,
+                                "Layer": 2,
+                                "Mask": 40,
+                                "OffsetX": -0.005071967840194702,
+                                "OffsetY": -1.3597309589385986e-07,
+                                "OffsetZ": -2.9160337448120117,
+                                "RotW": 1.0,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": 0.0
+                            },
+                            "Type": "OBBColliderComponent"
+                        },
+                        {
+                            "Data": {
+                                "OwnerTag": "Player",
+                                "SocketName": "WeaponSocket"
+                            },
+                            "Type": "SocketAttachmentComponent"
+                        }
+                    ],
+                    "Name": "Sword"
+                }
+            ],
+            "Components": [
+                {
+                    "Data": {
+                        "CurrentHealth": 100.0,
+                        "IsGameplayInvincible": false,
+                        "IsInvincible": false,
+                        "MaxHealth": 100.0
+                    },
+                    "Type": "HealthComponent"
+                },
+                {
+                    "Data": {
+                        "Position": [
+                            1233.4483642578125,
+                            -44.17103576660156,
+                            -1263.09033203125
+                        ],
+                        "Rotation": [
+                            0.0,
+                            -0.39020204544067383,
+                            0.0,
+                            -0.9207292795181274
+                        ],
+                        "Scale": [
+                            0.10000001639127731,
+                            0.10000000149011612,
+                            0.10000001639127731
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "Animations": [
+                            {
+                                "Name": "Idle",
+                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Dodge",
+                                "Path": "Resources/Models/knight/Dodge.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Walk",
+                                "Path": "Resources/Models/knight/running.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "StrafeL",
+                                "Path": "Resources/Models/knight/strafeL.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "OneHand",
+                                "Path": "Resources/Models/knight/swing.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "StrafeR",
+                                "Path": "Resources/Models/knight/strafeR.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Block",
+                                "Path": "Resources/Models/knight/block.sdkmesh_anim"
+                            }
+                        ],
+                        "ModelPath": "Resources/Models/knight/knight.sdkmesh",
+                        "TextureDir": "Resources/Models/knight"
+                    },
+                    "Type": "SkinnedModelComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "HeadCollider",
+                        "Height": 1.0,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.5,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "LinkedColliderTag": "HeadCollider",
+                        "TargetBoneName": "mixamorig:Head"
+                    },
+                    "Type": "BoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "BodyCollider",
+                        "Height": 3.7202165126800537,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 2.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:Spine2",
+                        "BoneBName": "mixamorig:Hips",
+                        "LinkedColliderTag": "BodyCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RarmCollider",
+                        "Height": 2.5574843883514404,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightArm",
+                        "BoneBName": "mixamorig:RightForeArm",
+                        "LinkedColliderTag": "RarmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RforearmCollider",
+                        "Height": 2.1603221893310547,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.6000000238418579,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightForeArm",
+                        "BoneBName": "mixamorig:RightHand",
+                        "LinkedColliderTag": "RforearmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LarmCollider",
+                        "Height": 2.5574378967285156,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftArm",
+                        "BoneBName": "mixamorig:LeftForeArm",
+                        "LinkedColliderTag": "LarmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LforearmCollider",
+                        "Height": 2.16034197807312,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.6000000238418579,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftForeArm",
+                        "BoneBName": "mixamorig:LeftHand",
+                        "LinkedColliderTag": "LforearmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RupLegCollider",
+                        "Height": 4.170225143432617,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightUpLeg",
+                        "BoneBName": "RightLeg",
+                        "LinkedColliderTag": "RupLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RLegCollider",
+                        "Height": 3.698082447052002,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.699999988079071,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightLeg",
+                        "BoneBName": "mixamorig:RightFoot",
+                        "LinkedColliderTag": "RLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LupLegCollider",
+                        "Height": 4.170234680175781,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftUpLeg",
+                        "BoneBName": "mixamorig:LeftLeg",
+                        "LinkedColliderTag": "LupLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LLegCollider",
+                        "Height": 3.6980831623077393,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.699999988079071,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftLeg",
+                        "BoneBName": "mixamorig:LeftFoot",
+                        "LinkedColliderTag": "LLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "Sockets": [
+                            {
+                                "BoneName": "mixamorig:RightHand",
+                                "Name": "WeaponSocket",
+                                "PosX": -1.9500000476837158,
+                                "PosY": 0.25,
+                                "PosZ": -0.4000000059604645,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": -1.27409029006958
+                            }
+                        ]
+                    },
+                    "Type": "SocketComponent"
+                },
+                {
+                    "Data": {
+                        "IsKinematic": false,
+                        "Mass": 80.0,
+                        "NeedsInitialSnap": false,
+                        "UseGravity": true
+                    },
+                    "Type": "RigidBodyComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "PlayerRoot",
+                        "Height": 12.0,
+                        "IsTrigger": false,
+                        "Layer": 4,
+                        "Mask": 10,
+                        "OffsetX": 0.0,
+                        "OffsetY": 90.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 3.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "TargetType": 2
+                    },
+                    "Type": "TargetTrackingComponent"
+                },
+                {
+                    "Data": {
+                        "Enabled": true,
+                        "GlobalIKWeight": 1.0,
+                        "IKChains": [
+                            {
+                                "Effector": "mixamorig:LeftFoot",
+                                "HeightOffset": 0.0,
+                                "IsFoot": true,
+                                "Mid": "mixamorig:LeftLeg",
+                                "Root": "mixamorig:LeftUpLeg",
+                                "Toe": "mixamorig:LeftUpLeg                       66: mixamorig:LeftLeg                         67: mixamorig:LeftFoot                        68: mixamorig:LeftToeBase                     mixamorig:LeftToe_End",
+                                "Weight": 1.0
+                            },
+                            {
+                                "Effector": "mixamorig:RightFoot",
+                                "HeightOffset": 0.0,
+                                "IsFoot": true,
+                                "Mid": "mixamorig:RightLeg",
+                                "Root": "mixamorig:RightUpLeg",
+                                "Toe": "mixamorig:RightToe_End",
+                                "Weight": 1.0
+                            }
+                        ]
+                    },
+                    "Type": "ProceduralAnimationComponent"
+                },
+                {
+                    "Data": {
+                        "TargetType": 2
+                    },
+                    "Type": "TargetTrackingComponent"
+                }
+            ],
+            "Name": "Player"
+        },
+        {
+            "Children": [
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "DamageAmount": 20.0,
+                                "DamageType": 0,
+                                "IsActive": false
+                            },
+                            "Type": "DamageDealerComponent"
+                        },
+                        {
+                            "Data": {
+                                "Position": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    0.10000000149011612,
+                                    0.10000000149011612,
+                                    0.10000000149011612
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "CastShadows": true,
+                                "ModelPath": "Resources/Models/boss/axe.sdkmesh",
+                                "TextureDir": "Resources/Models/boss"
+                            },
+                            "Type": "StaticModelComponent"
+                        },
+                        {
+                            "Data": {
+                                "ColliderTag": "",
+                                "ExtentsX": 17.950000762939453,
+                                "ExtentsY": 27.450000762939453,
+                                "ExtentsZ": 3.4000000953674316,
+                                "IsTrigger": true,
+                                "Layer": 32,
+                                "Mask": 20,
+                                "OffsetX": -14.432999610900879,
+                                "OffsetY": 101.0770034790039,
+                                "OffsetZ": 1.1230000257492065,
+                                "RotW": 0.9998807907104492,
+                                "RotX": 0.008725827559828758,
+                                "RotY": -0.00011118090333184227,
+                                "RotZ": 0.01274007000029087
+                            },
+                            "Type": "OBBColliderComponent"
+                        },
+                        {
+                            "Data": {
+                                "ColliderTag": "",
+                                "Height": 8.0,
+                                "IsTrigger": true,
+                                "Layer": 32,
+                                "Mask": 20,
+                                "OffsetX": -0.7200000286102295,
+                                "OffsetY": 42.130001068115234,
+                                "OffsetZ": 0.2199999988079071,
+                                "Radius": 0.5,
+                                "RotW": 0.8011317849159241,
+                                "RotX": 0.01398380659520626,
+                                "RotY": -0.5982334613800049,
+                                "RotZ": 0.010442203842103481
+                            },
+                            "Type": "CapsuleColliderComponent"
+                        },
+                        {
+                            "Data": {
+                                "OwnerTag": "Enemy",
+                                "SocketName": "WeaponSocket"
+                            },
+                            "Type": "SocketAttachmentComponent"
+                        }
+                    ],
+                    "Name": "Axe"
+                }
+            ],
+            "Components": [
+                {
+                    "Data": {
+                        "CurrentHealth": 60.0,
+                        "IsGameplayInvincible": false,
+                        "IsInvincible": false,
+                        "MaxHealth": 100.0
+                    },
+                    "Type": "HealthComponent"
+                },
+                {
+                    "Data": {
+                        "Position": [
+                            -205.97555541992188,
+                            -89.92565155029297,
+                            -1553.62548828125
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.06763350963592529,
+                            0.0,
+                            0.9977102279663086
+                        ],
+                        "Scale": [
+                            0.15000054240226746,
+                            0.15000000596046448,
+                            0.15000054240226746
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "Animations": [
+                            {
+                                "Name": "Idle",
+                                "Path": "Resources/Models/Boss/idle.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Dodge",
+                                "Path": "Resources/Models/Boss/Dodge.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Walk",
+                                "Path": "Resources/Models/Boss/running.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "StrafeL",
+                                "Path": "Resources/Models/Boss/strafeL.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "OneHand",
+                                "Path": "Resources/Models/Boss/swing2.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "StrafeR",
+                                "Path": "Resources/Models/Boss/strafeR.sdkmesh_anim"
+                            }
+                        ],
+                        "ModelPath": "Resources/Models/Boss/Boss.sdkmesh",
+                        "TextureDir": "Resources/Models/Boss"
+                    },
+                    "Type": "SkinnedModelComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 1.0,
+                        "IsTrigger": true,
+                        "Layer": 8,
+                        "Mask": 4294967295,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 3.5,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "LinkedColliderTag": "",
+                        "TargetBoneName": "mixamorig:Head"
+                    },
+                    "Type": "BoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 6.514263153076172,
+                        "IsTrigger": true,
+                        "Layer": 8,
+                        "Mask": 4294967295,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 6.5,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:Spine2",
+                        "BoneBName": "mixamorig:Hips",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 7.395232200622559,
+                        "IsTrigger": true,
+                        "Layer": 8,
+                        "Mask": 4294967295,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 3.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightArm",
+                        "BoneBName": "mixamorig:RightForeArm",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 4.74075984954834,
+                        "IsTrigger": true,
+                        "Layer": 8,
+                        "Mask": 4294967295,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 2.5,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightForeArm",
+                        "BoneBName": "mixamorig:RightHand",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 7.395183086395264,
+                        "IsTrigger": true,
+                        "Layer": 8,
+                        "Mask": 4294967295,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 3.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftArm",
+                        "BoneBName": "mixamorig:LeftForeArm",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 4.740746021270752,
+                        "IsTrigger": true,
+                        "Layer": 8,
+                        "Mask": 4294967295,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 2.5,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftForeArm",
+                        "BoneBName": "mixamorig:LeftHand",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 5.742445945739746,
+                        "IsTrigger": true,
+                        "Layer": 8,
+                        "Mask": 4294967295,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 2.799999952316284,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightUpLeg",
+                        "BoneBName": "RightLeg",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 4.902597904205322,
+                        "IsTrigger": true,
+                        "Layer": 8,
+                        "Mask": 4294967295,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.7999999523162842,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightLeg",
+                        "BoneBName": "mixamorig:RightFoot",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 5.742455959320068,
+                        "IsTrigger": true,
+                        "Layer": 8,
+                        "Mask": 4294967295,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 2.299999952316284,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftUpLeg",
+                        "BoneBName": "mixamorig:LeftLeg",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "",
+                        "Height": 4.902612209320068,
+                        "IsTrigger": true,
+                        "Layer": 8,
+                        "Mask": 4294967295,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.7999999523162842,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftLeg",
+                        "BoneBName": "mixamorig:LeftFoot",
+                        "LinkedColliderTag": ""
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "Sockets": [
+                            {
+                                "BoneName": "mixamorig:RightHand",
+                                "Name": "WeaponSocket",
+                                "PosX": 1.0,
+                                "PosY": 3.0,
+                                "PosZ": -1.0,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": 4.659034252166748
+                            }
+                        ]
+                    },
+                    "Type": "SocketComponent"
+                },
+                {
+                    "Data": {
+                        "IsKinematic": false,
+                        "Mass": 80.0,
+                        "NeedsInitialSnap": false,
+                        "UseGravity": true
+                    },
+                    "Type": "RigidBodyComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "EnemyRoot",
+                        "Height": 17.0,
+                        "IsTrigger": false,
+                        "Layer": 8,
+                        "Mask": 6,
+                        "OffsetX": 0.0,
+                        "OffsetY": 90.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 5.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "TargetType": 1
+                    },
+                    "Type": "TargetTrackingComponent"
+                },
+                {
+                    "Data": {
+                        "aggroRange": 200.0,
+                        "hasSetSpawnPosition": true,
+                        "spawnPosition": [
+                            -205.97555541992188,
+                            -90.49786376953125,
+                            -1553.62548828125
+                        ]
+                    },
+                    "Type": "BehaviourTreeComponent"
+                },
+                {
+                    "Data": {
+                        "Enabled": true,
+                        "GlobalIKWeight": 1.0,
+                        "IKChains": [
+                            {
+                                "Effector": "mixamorig:LeftFoot",
+                                "HeightOffset": 0.0,
+                                "IsFoot": true,
+                                "Mid": "mixamorig:LeftLeg",
+                                "Root": "mixamorig:LeftUpLeg",
+                                "Toe": "",
+                                "Weight": 1.0
+                            },
+                            {
+                                "Effector": "mixamorig:RightFoot",
+                                "HeightOffset": 0.0,
+                                "IsFoot": true,
+                                "Mid": "mixamorig:RightLeg",
+                                "Root": "mixamorig:RightUpLeg",
+                                "Toe": "",
+                                "Weight": 1.0
+                            }
+                        ]
+                    },
+                    "Type": "ProceduralAnimationComponent"
+                },
+                {
+                    "Data": {
+                        "TargetType": 1
+                    },
+                    "Type": "TargetTrackingComponent"
+                }
+            ],
+            "Name": "Enemy"
+        },
+        {
+            "Children": [
+                {
+                    "Children": [
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.117324829101563,
+                                            -0.3120765686035156,
+                                            -9.03546142578125
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.7071068286895752
+                                        ],
+                                        "Scale": [
+                                            0.010001489892601967,
+                                            0.010001489892601967,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "Pillar1"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.167684555053711,
+                                            7.2536163330078125,
+                                            -9.05792236328125
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.7071068286895752
+                                        ],
+                                        "Scale": [
+                                            0.0100020170211792,
+                                            0.0100020170211792,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "Pillar2"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            8.795610427856445,
+                                            7.254142761230469,
+                                            -9.0408935546875
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.7071068286895752
+                                        ],
+                                        "Scale": [
+                                            0.010002604685723782,
+                                            0.010002604685723782,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "Pillar3"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            8.993502616882324,
+                                            7.254661560058594,
+                                            8.80511474609375
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.7071068286895752
+                                        ],
+                                        "Scale": [
+                                            0.010003183037042618,
+                                            0.010003183037042618,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "Pillar4"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.047988891601563,
+                                            7.255289077758789,
+                                            8.8131103515625
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.7071068286895752
+                                        ],
+                                        "Scale": [
+                                            0.010003883391618729,
+                                            0.010003883391618729,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "Pillar5"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.510152816772461,
+                                            -3.04708194732666,
+                                            -6.878662109375
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall1"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.60208511352539,
+                                            -3.04708194732666,
+                                            -2.586700439453125
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall2"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.650592803955078,
+                                            -3.04708194732666,
+                                            1.67938232421875
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall3"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -6.848514556884766,
+                                            -5.114645957946777,
+                                            -9.77020263671875
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.7000000476837158,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall4"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -2.7947731018066406,
+                                            -5.114645957946777,
+                                            -9.681427001953125
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.7000000476837158,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall5"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            1.4567108154296875,
+                                            -5.114645957946777,
+                                            -9.70062255859375
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.7000000476837158,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall6"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            5.71348762512207,
+                                            -5.114645957946777,
+                                            -9.6529541015625
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.7000000476837158,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall7"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.855563163757324,
+                                            -2.9937524795532227,
+                                            -4.2269287109375
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall8"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.971148490905762,
+                                            -2.9937524795532227,
+                                            -0.465576171875
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall9"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.988070487976074,
+                                            -2.9937524795532227,
+                                            3.8179931640625
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall10"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.970038414001465,
+                                            -2.9937524795532227,
+                                            6.79254150390625
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.7071068286895752,
+                                            0.0,
+                                            0.7071067094802856
+                                        ],
+                                        "Scale": [
+                                            0.9999999403953552,
+                                            1.0,
+                                            0.9999999403953552
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/wall.cmo",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "wall11"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            8.964982986450195,
+                                            -0.5184574127197266,
+                                            -9.517822265625
+                                        ],
+                                        "Rotation": [
+                                            1.0,
+                                            0.0,
+                                            0.0,
+                                            -1.1920930376163597e-07
+                                        ],
+                                        "Scale": [
+                                            0.008999999612569809,
+                                            0.009999999776482582,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "bridge1"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.142142295837402,
+                                            -0.5179967880249023,
+                                            9.193115234375
+                                        ],
+                                        "Rotation": [
+                                            1.0,
+                                            0.0,
+                                            0.0,
+                                            -1.1920930376163597e-07
+                                        ],
+                                        "Scale": [
+                                            0.008999999612569809,
+                                            0.009999999776482582,
+                                            0.009999999776482582
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "bridge2"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.51416301727295,
+                                            -0.5174264907836914,
+                                            -8.848831176757813
+                                        ],
+                                        "Rotation": [
+                                            0.7071068286895752,
+                                            -1.6858589901858068e-07,
+                                            -0.7071068286895752,
+                                            -1.1174034787730935e-11
+                                        ],
+                                        "Scale": [
+                                            0.009000259451568127,
+                                            0.010001882910728455,
+                                            0.010000672191381454
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "bridge3"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.106058120727539,
+                                            -0.516998291015625,
+                                            -9.0535888671875
+                                        ],
+                                        "Rotation": [
+                                            0.7071068286895752,
+                                            -1.6858481899362232e-07,
+                                            -0.7071068286895752,
+                                            -1.929832335600956e-11
+                                        ],
+                                        "Scale": [
+                                            0.009000737220048904,
+                                            0.010003221221268177,
+                                            0.010001149959862232
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "CastShadows": false,
+                                        "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
+                                        "TextureDir": "Resources/Models/stage/"
+                                    },
+                                    "Type": "StaticModelComponent"
+                                }
+                            ],
+                            "Name": "bridge4"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.659709930419922,
+                                            -0.45280933380126953,
+                                            0.0
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 0.10000000149011612,
+                                        "ExtentsY": 3.0,
+                                        "ExtentsZ": 10.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "wallcol1"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            9.966057777404785,
+                                            -0.452301025390625,
+                                            -0.0255584716796875
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 0.10000000149011612,
+                                        "ExtentsY": 3.0,
+                                        "ExtentsZ": 10.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "wallcol2"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            0.07563591003417969,
+                                            -0.4519224166870117,
+                                            -9.74664306640625
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 10.0,
+                                        "ExtentsY": 3.0,
+                                        "ExtentsZ": 0.10000000149011612,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "wallcol3"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -8.947956085205078,
+                                            0.42067909240722656,
+                                            -8.90185546875
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 1.0,
+                                        "ExtentsY": 7.050000190734863,
+                                        "ExtentsZ": 1.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "pillarcol1"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            -9.145334243774414,
+                                            0.4210519790649414,
+                                            8.75115966796875
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 1.0,
+                                        "ExtentsY": 7.050000190734863,
+                                        "ExtentsZ": 1.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "pillarcol2"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            8.9647855758667,
+                                            0.42147254943847656,
+                                            8.819076538085938
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 1.0,
+                                        "ExtentsY": 7.050000190734863,
+                                        "ExtentsZ": 1.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "pillarcol3"
+                        },
+                        {
+                            "Children": [],
+                            "Components": [
+                                {
+                                    "Data": {
+                                        "Position": [
+                                            8.812884330749512,
+                                            0.4217815399169922,
+                                            -8.9102783203125
+                                        ],
+                                        "Rotation": [
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            1.0
+                                        ],
+                                        "Scale": [
+                                            1.0,
+                                            1.0,
+                                            1.0
+                                        ]
+                                    },
+                                    "Type": "TransformComponent"
+                                },
+                                {
+                                    "Data": {
+                                        "ColliderTag": "",
+                                        "ExtentsX": 1.0,
+                                        "ExtentsY": 7.050000190734863,
+                                        "ExtentsZ": 1.0,
+                                        "IsTrigger": false,
+                                        "Layer": 2,
+                                        "Mask": 4294967295,
+                                        "OffsetX": 0.0,
+                                        "OffsetY": 0.0,
+                                        "OffsetZ": 0.0,
+                                        "RotW": 1.0,
+                                        "RotX": 0.0,
+                                        "RotY": 0.0,
+                                        "RotZ": 0.0
+                                    },
+                                    "Type": "AABBColliderComponent"
+                                }
+                            ],
+                            "Name": "pillarcol4"
+                        }
+                    ],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -30.759504318237305,
+                                    -9.560141563415527,
+                                    -113.50982666015625
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "CastShadows": false,
+                                "ModelPath": "Resources/Models/stage/floor1.sdkmesh",
+                                "TextureDir": "Resources/Models/stage"
+                            },
+                            "Type": "StaticModelComponent"
+                        },
+                        {
+                            "Data": {
+                                "ColliderTag": "",
+                                "IsTrigger": false,
+                                "Layer": 2,
+                                "Mask": 4294967295,
+                                "ObjPath": "Resources/Models/stage/floor1.obj",
+                                "OffsetX": 0.0,
+                                "OffsetY": 0.0,
+                                "OffsetZ": 0.0,
+                                "RotW": 1.0,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": 0.0
+                            },
+                            "Type": "MeshColliderComponent"
+                        }
+                    ],
+                    "Name": "Floor"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -10.192133903503418,
+                                    -24.385000228881836,
+                                    42.7905387878418
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "AlphaMapPath": "",
+                                "ColorMapPath": "Resources/Textures/colormap_with_road.bmp",
+                                "DiffuseColor": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "HeightMapPath": "Resources/Textures/heightmap_with_road.bmp",
+                                "HeightScale": 35.0,
+                                "IsVisible": true,
+                                "LightDirection": [
+                                    -1.0,
+                                    -1.0,
+                                    -0.6499999761581421
+                                ],
+                                "NormalMapPath": "",
+                                "Texture2Path": "",
+                                "TexturePath": "Resources/Textures/dirt01d.dds",
+                                "TextureTiling": 10.5,
+                                "isWiredFrame": false
+                            },
+                            "Type": "TerrainComponent"
+                        },
+                        {
+                            "Data": {
+                                "ColliderTag": "",
+                                "IsTrigger": false,
+                                "Layer": 2,
+                                "Mask": 4294967295,
+                                "OffsetX": 0.0,
+                                "OffsetY": 0.0,
+                                "OffsetZ": 0.0,
+                                "RotW": 1.0,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": 0.0
+                            },
+                            "Type": "TerrainColliderComponent"
+                        },
+                        {
+                            "Data": {
+                                "FogColor": [
+                                    0.5,
+                                    0.6000000238418579,
+                                    0.699999988079071,
+                                    1.0
+                                ],
+                                "FogEnd": 800.0,
+                                "FogStart": 100.0
+                            },
+                            "Type": "FogComponent"
+                        }
+                    ],
+                    "Name": "Terrain"
+                }
+            ],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            102.52690124511719,
+                            -10.321025848388672,
+                            -427.8970947265625
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            10.0,
+                            10.0,
+                            10.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                }
+            ],
+            "Name": "StageRoot"
+        },
+        {
+            "Children": [
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -36.7049560546875,
+                                    11.00506591796875,
+                                    -83.579345703125
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.9772846698760986,
+                                    0.0,
+                                    -0.2119309902191162
+                                ],
+                                "Scale": [
+                                    0.20000194013118744,
+                                    0.20000000298023224,
+                                    0.20000194013118744
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "CastShadows": false,
+                                "ModelPath": "Resources/Models/stage/signs.sdkmesh",
+                                "TextureDir": "Resources/Models/stage/"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "sign1"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -520.9781494140625,
+                                    -5.092891693115234,
+                                    -83.4515380859375
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.9772846698760986,
+                                    0.0,
+                                    -0.21193087100982666
+                                ],
+                                "Scale": [
+                                    0.20000213384628296,
+                                    0.20000000298023224,
+                                    0.20000213384628296
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "CastShadows": false,
+                                "ModelPath": "Resources/Models/stage/signs.sdkmesh",
+                                "TextureDir": "Resources/Models/stage/"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "sign2"
+                },
+                {
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    -1063.58447265625,
+                                    -30.034320831298828,
+                                    -73.8465576171875
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.9974987506866455,
+                                    0.0,
+                                    0.07068398594856262
+                                ],
+                                "Scale": [
+                                    0.20000365376472473,
+                                    0.20000000298023224,
+                                    0.20000365376472473
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "CastShadows": false,
+                                "ModelPath": "Resources/Models/stage/signs.sdkmesh",
+                                "TextureDir": "Resources/Models/stage/"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "Name": "sign2_Copy"
+                }
+            ],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            1194.0362548828125,
+                            -61.390079498291016,
+                            -1162.031982421875
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                }
+            ],
+            "Name": "Signs"
+        },
+        {
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Rotation": [
+                            -0.30901700258255005,
+                            0.0,
+                            0.0,
+                            0.9510565400123596
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "CastShadows": false,
+                        "Color": [
+                            1.0,
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "Intensity": 1.0,
+                        "LightType": 0,
+                        "Range": 50.0,
+                        "SpotAngle": 45.0
+                    },
+                    "Type": "LightComponent"
+                }
+            ],
+            "Name": "GameObject"
+        }
+    ]
+}

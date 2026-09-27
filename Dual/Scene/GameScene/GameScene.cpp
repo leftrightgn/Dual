@@ -483,7 +483,7 @@ void GameScene::Render(GameContext& gameContext)
     {
         m_skybox->Draw(gameContext, view, m_proj);
     }
-    // MOVE THESE LINES HERE (After the Skybox, right before DrawAll)
+
     // Bind Shadow Map SRV for shaders (slot 4)
     ID3D11ShaderResourceView* shadowSRV = m_shadowSystem.GetShadowMapSRV();
     context->PSSetShaderResources(4, 1, &shadowSRV);
