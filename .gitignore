@@ -370,3 +370,7 @@ FodyWeavers.xsd
 
 Dual/Resources/Models/stage/*.dds
 Dual/Resources/Models/stage/*.sdkmesh
+/crash_log.txt
+/combined_code.txt
+/Dual/VBDecl_Log.txt
+/Dual/D3D11_Crash_Log.txt

@@ -86,14 +86,14 @@
     <ClInclude Include="Components\PlayerInputComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="States\CombatStates.h">
-      <Filter>States</Filter>
-    </ClInclude>
     <ClInclude Include="States\ICombatState.h">
       <Filter>States</Filter>
     </ClInclude>
     <ClInclude Include="BlackBoard\CombatBlackBoard.h">
       <Filter>BlackBoard</Filter>
+    </ClInclude>
+    <ClInclude Include="States\CombatStates.h">
+      <Filter>States</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
