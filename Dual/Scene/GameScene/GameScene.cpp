@@ -311,6 +311,7 @@ void GameScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext*
 
     m_shadowSystem.BindShadowMap(context);
     m_actorManager.DrawAllShadows(gameContext, lightViewProj);
+    m_shadowSystem.UnbindShadowMap(context);
 }
 
 void GameScene::RenderMainPassPhase(GameContext& gameContext, ID3D11DeviceContext* context, const DirectX::SimpleMath::Matrix& view)
