@@ -2228,7 +2228,7 @@
                         },
                         {
                             "Data": {
-                                "CastShadows": false,
+                                "CastShadows": true,
                                 "ModelPath": "Resources/Models/stage/signs.sdkmesh",
                                 "TextureDir": "Resources/Models/stage/"
                             },
@@ -2263,7 +2263,7 @@
                         },
                         {
                             "Data": {
-                                "CastShadows": false,
+                                "CastShadows": true,
                                 "ModelPath": "Resources/Models/stage/signs.sdkmesh",
                                 "TextureDir": "Resources/Models/stage/"
                             },
@@ -2298,7 +2298,7 @@
                         },
                         {
                             "Data": {
-                                "CastShadows": false,
+                                "CastShadows": true,
                                 "ModelPath": "Resources/Models/stage/signs.sdkmesh",
                                 "TextureDir": "Resources/Models/stage/"
                             },
@@ -2368,7 +2368,7 @@
                         ],
                         "Intensity": 1.0,
                         "LightType": 0,
-                        "Range": 50.0,
+                        "Range": 150.0,
                         "SpotAngle": 45.0
                     },
                     "Type": "LightComponent"

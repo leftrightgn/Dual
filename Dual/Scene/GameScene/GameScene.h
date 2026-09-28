@@ -13,26 +13,51 @@
 #include "../../../External/Engine/DebugingTools/DebugDisplayController.h"
 #include "../../../External/Engine/Common/ShadowSystem.h"
 
+namespace HEIN
+{
+	class CameraController;
+	class SkinnedModelComponent;
+}
+
 /**
  * @class GameScene
- * @brief Manages the main gameplay loop, physical world simulation, and actor instances.
+ * @brief Coordinates the gameplay world, executing ECS pipeline phases.
  * 
- * Responsible for initializing the primary game environment, loading actors
- * (player, enemies, stage) via the factory, and coordinating the camera, 
- * UI, and physics/damage systems during active gameplay.
+ * Orchestrates entity lifecycles, physics simulation, camera tracking,
+ * and rendering passes through clean system phases.
  */
 class GameScene : public HEIN::IScene
 {
 public:
 
-	// 更新
+	void OnEnter(GameContext& gameContext) override;
 	void Update(GameContext& gameContext) override;
-
-	// 描画
 	void Render(GameContext& gameContext) override;
 
-	// シーン切り替え時に呼び出される関数
-	void OnEnter(GameContext& gameContext) override;
+private:
+
+	// --- ECS Update Pipeline Phases ---
+	void ProcessInputPhase(GameContext& gameContext);
+	void ProcessSimulationPhase(GameContext& gameContext, float deltaTime);
+	void ProcessLifecyclePhase();
+
+	// --- Render Pipeline Phases ---
+	void RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext* context);
+	void RenderMainPassPhase(GameContext& gameContext, ID3D11DeviceContext* context, const DirectX::SimpleMath::Matrix& view);
+	void RenderUIPhase();
+
+	// --- Editor & Scene Management ---
+	void HandleEditorActions(GameContext& gameContext);
+	void LoadAutoSave(GameContext& gameContext);
+	void UpdateDebugTargets();
+
+	// --- Entity & Component Accessors ---
+	HEIN::Actor* GetPlayerActor();
+	HEIN::Actor* GetEnemyActor();
+	HEIN::CameraController* GetActiveCameraController(GameContext& gameContext);
+
+	// --- Setup Helpers ---
+	void SetupCameraModes(GameContext& gameContext, HEIN::CameraController* cameraComp, HEIN::SkinnedModelComponent* modelPointer);
 
 private:
 
@@ -47,12 +72,9 @@ private:
 	DirectX::SimpleMath::Vector3 m_targetPos;
 	DirectX::SimpleMath::Vector3 m_springEyePos;
 
-	// --- Handle-Based Entity Memory System ---
+	// Cached Entity IDs for quick O(1) lookup
 	HEIN::ActorID m_playerID = HEIN::INVALID_ACTOR_ID;
-	HEIN::ActorID m_playerSwordID = HEIN::INVALID_ACTOR_ID;
-	HEIN::ActorID m_stageID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_enemyID = HEIN::INVALID_ACTOR_ID;
-	HEIN::ActorID m_enemySwordID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_cameraID = HEIN::INVALID_ACTOR_ID;
 
 	HEIN::ActorManager m_actorManager;

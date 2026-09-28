@@ -26,7 +26,7 @@ HEIN::BTNodeState HEIN::BTCheckTetherNode::Tick(HEIN::Actor* self, HEIN::ActorMa
 		blackboard->isLeashing = false; // Player is in range, awake!
 	}
 
-	// If the leash is snapped, we MUST return success to force them to walk home.
+	// When tether boundary is exceeded, return Success to trigger the return sequence.
 	if (blackboard->isLeashing)
 	{
 		return BTNodeState::Success;

@@ -21,7 +21,7 @@ HEIN::BTNodeState HEIN::BTReturnToSpawnNode::Tick(HEIN::Actor* self, HEIN::Actor
 	DirectX::SimpleMath::Vector3 currentPos = transform->GetPosition();
 	DirectX::SimpleMath::Vector3 dirToHome = blackboard->spawnPosition - currentPos;
 
-	// Ignore hills/verticality when calculating how far from home we are
+	// Evaluate horizontal distance on the XZ plane, ignoring vertical displacement
 	dirToHome.y = 0.0f;
 	float distanceToHome = dirToHome.Length();
 

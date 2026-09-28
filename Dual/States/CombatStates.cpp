@@ -19,7 +19,7 @@ void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*state
 	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
 	for (HEIN::SkinnedModelComponent* model : models)
 	{
-		model->CrossfadeAnimation(m_config.animationName, 0.2f);
+		model->CrossfadeAnimation(m_config.animationName, 0.3f);
 	}
 }
 

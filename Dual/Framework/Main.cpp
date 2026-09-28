@@ -336,8 +336,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_MENUCHAR:
-        // A menu is active and the user presses a key that does not correspond
-        // to any mnemonic or accelerator key. Ignore so we don't produce an error beep.
+        // Suppress default system error beep for unmatched mnemonic/accelerator keystrokes
         return MAKELRESULT(0, MNC_CLOSE);
     
     case WM_ACTIVATE:
