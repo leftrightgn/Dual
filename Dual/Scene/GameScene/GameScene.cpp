@@ -18,7 +18,6 @@
 #include <Components/PlayerInputComponent.h>
 #include <Factory/ActorFactory.h>
 #include "../../../External/Engine/Components/HealthComponent.h"
-#include <BlackBoard/CombatBlackBoard.h>
 #include "../../../External/Engine/ImGui/imgui.h"
 #include "../../../External/Engine/ImGui/ImGuizmo.h"
 #include "../../../External/Engine/Common/Event.h"
@@ -129,10 +128,7 @@ void GameScene::Render(GameContext& gameContext)
     // Pass 2: Main Color & Scene Drawing Pass
     RenderMainPassPhase(gameContext, context, view);
 
-    // Pass 3: In-Game Combat Status HUD Pass
-    RenderUIPhase();
-
-    // Pass 4: ImGui Editor & Gizmo Overlay Pass
+    // Pass 3: ImGui Editor & Gizmo Overlay Pass
     m_debugDisplay->Render(gameContext, m_actorManager, m_skybox.get(), view, m_proj);
 }
 
@@ -356,88 +352,6 @@ void GameScene::RenderMainPassPhase(GameContext& gameContext, ID3D11DeviceContex
     context->RSSetState(gameContext.commonStates.CullCounterClockwise());
     context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
-}
-
-void GameScene::RenderUIPhase()
-{
-    if (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()))
-    {
-        return;
-    }
-
-    HEIN::Actor* player = GetPlayerActor();
-    HEIN::Actor* enemy = GetEnemyActor();
-
-    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Always);
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoInputs;
-
-    ImGui::Begin("Combat Status", nullptr, flags);
-    if (player != nullptr)
-    {
-        auto* pHealth = player->GetComponent<HEIN::HealthComponent>();
-        if (pHealth != nullptr)
-        {
-            ImGui::Text("Player Health");
-            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-            ImGui::ProgressBar(pHealth->GetCurrentHealth() / pHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
-            ImGui::PopStyleColor();
-        }
-
-        auto* pBB = player->GetComponent<HEIN::CombatBlackBoard>();
-        if (pBB != nullptr)
-        {
-            if (pBB->isBlockBroken)
-            {
-                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
-                ImGui::PopStyleColor();
-            }
-            else
-            {
-                ImGui::Text("Block Stamina");
-                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
-            }
-
-            ImGui::Separator();
-
-            if (pBB->dodgeCooldownTimer > 0.0f)
-            {
-                ImGui::Text("Dodge Recharging...");
-                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-                ImGui::ProgressBar(1.0f - (pBB->dodgeCooldownTimer / pBB->maxDodgeCooldown), ImVec2(200.0f, 20.0f), "");
-                ImGui::PopStyleColor();
-            }
-            else
-            {
-                ImGui::Text("Dodge Ready");
-                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 0.8f, 1.0f, 1.0f));
-                ImGui::ProgressBar(1.0f, ImVec2(200.0f, 20.0f), "");
-                ImGui::PopStyleColor();
-            }
-        }
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "PLAYER DEAD");
-    }
-
-    ImGui::Separator();
-
-    if (enemy != nullptr)
-    {
-        auto* eHealth = enemy->GetComponent<HEIN::HealthComponent>();
-        if (eHealth != nullptr)
-        {
-            ImGui::Text("Enemy Health");
-            ImGui::ProgressBar(eHealth->GetCurrentHealth() / eHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
-        }
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "ENEMY DEAD");
-    }
-
-    ImGui::End();
 }
 
 // --------------------------------------------------------------------------------------

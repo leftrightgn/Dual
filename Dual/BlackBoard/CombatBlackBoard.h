@@ -84,7 +84,7 @@ namespace HEIN
 		{
 		}
 
-		void Update(float /*deltaTime*/) override {} // does nothing just hold data
+		void Update(float deltaTime) override;
 
 	};
 }
