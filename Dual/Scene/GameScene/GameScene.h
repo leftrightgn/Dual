@@ -44,7 +44,6 @@ private:
 	// --- Render Pipeline Phases ---
 	void RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext* context);
 	void RenderMainPassPhase(GameContext& gameContext, ID3D11DeviceContext* context, const DirectX::SimpleMath::Matrix& view);
-	void RenderUIPhase();
 
 	// --- Editor & Scene Management ---
 	void HandleEditorActions(GameContext& gameContext);
