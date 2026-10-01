@@ -47,6 +47,7 @@
     <ClCompile Include="States\CombatStates.cpp">
       <Filter>States</Filter>
     </ClCompile>
+    <ClCompile Include="BlackBoard\CombatBlackBoard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -111,9 +112,6 @@
     </Filter>
     <Filter Include="DirectXTK_Utilities">
       <UniqueIdentifier>{c86a2feb-a710-4e0f-8e6f-fabd949787bc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ImaseLib">
-      <UniqueIdentifier>{373fa7de-bb0c-473d-acc2-b72816c8a5ad}</UniqueIdentifier>
     </Filter>
     <Filter Include="Scene">
       <UniqueIdentifier>{6ee32f6a-f298-4e46-bb2f-07cf73db150a}</UniqueIdentifier>

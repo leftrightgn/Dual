@@ -46,6 +46,11 @@ namespace HEIN
 		DirectX::SimpleMath::Vector3 dirToTarget = DirectX::SimpleMath::Vector3::Zero;
 		float distanceToTarget = 0.0f;
 
+		// Root Motion State
+		bool hasRootMotion = false;
+		DirectX::SimpleMath::Vector3 rootMotionVelocity = DirectX::SimpleMath::Vector3::Zero;
+		DirectX::SimpleMath::Vector3 rootMotionDelta = DirectX::SimpleMath::Vector3::Zero;
+
 		bool isLockedOn = false;
 		HEIN::ActorID lockedTargetID = HEIN::INVALID_ACTOR_ID;
 

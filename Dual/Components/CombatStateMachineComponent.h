@@ -3,10 +3,12 @@
 #include "../../External/Engine/Components/IComponent.h"
 #include "../../External/Engine/Message/IObserver.h"
 #include "../../External/Engine/Message/Message.h"
+#include <States/CombatStates.h>
 #include <vector>
 #include <unordered_map>
 #include <string>
 #include <memory>
+#include "../../External/Engine/Common/json.hpp"
 
 namespace HEIN
 {
@@ -37,12 +39,18 @@ namespace HEIN
 	private:
 		/// @brief The currently active combat state.
 		ICombatState* m_currentState = nullptr;
-
+		
 		/// @brief The next state to transition to, queued up for processing.
 		ICombatState* m_pendingState = nullptr;
 
+		float m_pendingBlendDuration = 0.2f;
+
+		std::string m_currentStateName = "Idle";
+		std::string m_defaultStateName = "Idle";
 		/// @brief A map of all available states, keyed by their string name.
 		std::unordered_map<std::string, std::unique_ptr<ICombatState>> m_states;
+
+		std::unordered_map<std::string, StateConfig> m_stateConfigs;
 
 		/// @brief Buffer storing incoming messages/inputs for combat (e.g. for combos).
 		std::vector<Message::MessageID> m_messageBuffer;
@@ -64,11 +72,16 @@ namespace HEIN
 
 		void Update(float deltaTime) override;
 
+
+		std::string GetComponentName() const override { return "CombatStateMachineComponent"; }
+		nlohmann::json Serialize() override;
+		void Deserialize(const nlohmann::json& data) override;
+		void OnInspectorGUI(GameContext& gameContext) override;
 		/**
 		 * @brief Requests a transition to a new combat state.
 		 * @param stateName The string identifier for the target state.
 		 */
-		void ChangeState(const std::string& stateName);
+		void ChangeState(const std::string& stateName, float blendDuration = 0.2f);
 
 		/**
 		 * @brief Applies the queued m_pendingState, calling OnExit for the old 
@@ -81,7 +94,8 @@ namespace HEIN
 		 * @param stateName The name used to look up this state.
 		 * @param state Unique pointer to the instantiated state object.
 		 */
-		void AddState(const std::string& stateName, std::unique_ptr<ICombatState> state);
+		void AddState(const std::string& stateName, std::unique_ptr<ICombatState> state, const StateConfig& config);
+		void AddState(const StateConfig& config);
 
 		/**
 		 * @brief Handles incoming messages and potentially adds them to the input buffer.
@@ -101,11 +115,15 @@ namespace HEIN
 		/// @brief Checks if the actor is currently in a blocking state.
 		bool IsBlocking() const;
 		
+		const std::string& GetCurrentStateName() const { return m_currentStateName; }
+		const std::unordered_map<std::string, StateConfig>& GetConfigs() const { return m_stateConfigs; }
 	private:
 		/**
 		 * @brief Callback triggered when an overlap event occurs (e.g. hit detection).
 		 * @param payLoad Data containing information about the overlap event.
 		 */
 		void OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad);
+
+		void RebuildAllStates();
 	};
 }

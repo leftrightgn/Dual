@@ -829,6 +829,45 @@ namespace HEIN
 
 
 ================================================================================
+FILE: Dual\BlackBoard\CombatBlackBoard.cpp
+================================================================================
+
+#include "pch.h"
+#include "CombatBlackBoard.h"
+#include <Components/GaugeComponent.h>
+
+// ============================================================================
+// Update: Push Dodge/Block values to GaugeComponent if present on owner actor.
+// HP is handled by GaugeComponent::SyncBoundBars (engine-side pull).
+// ============================================================================
+void HEIN::CombatBlackBoard::Update(float /*deltaTime*/)
+{
+    auto* gauge = m_owner->GetComponent<GaugeComponent>();
+    if (!gauge) return;
+
+    for (int i = 0; i < gauge->GetBarCount(); i++)
+    {
+        GaugeBarDef* bar = gauge->GetBar(i);
+        if (!bar || !bar->autoBind) continue;
+
+        if (bar->gaugeType == GaugeType::Block)
+        {
+            bar->currentValue = currentBlockStamina;
+            bar->maxValue = maxBlockStamina;
+        }
+        else if (bar->gaugeType == GaugeType::Dodge)
+        {
+            // Inverted: show readiness (full = ready, empty = on cooldown)
+            bar->currentValue = (dodgeCooldownTimer > 0.0f)
+                ? (maxDodgeCooldown - dodgeCooldownTimer)
+                : maxDodgeCooldown;
+            bar->maxValue = maxDodgeCooldown;
+        }
+    }
+}
+
+
+================================================================================
 FILE: Dual\BlackBoard\CombatBlackBoard.h
 ================================================================================
 
@@ -918,7 +957,7 @@ namespace HEIN
 		{
 		}
 
-		void Update(float /*deltaTime*/) override {} // does nothing just hold data
+		void Update(float deltaTime) override;
 
 	};
 }
@@ -1283,221 +1322,400 @@ FILE: Dual\Components\CombatStateMachineComponent.cpp
 #include <States/ICombatState.h>
 #include "../../../External/Engine/Entities/Actor.h"
 #include "../../External/Engine/Components/ColliderComponent/ColliderComponent.h"
-#include <memory>
 #include "../../External/Engine/Message/Messenger.h" 
 #include <BlackBoard/CombatBlackBoard.h>
 #include "../../External/Engine/Components/DamageDealerComponent.h"
 #include "../../External/Engine/Components/HealthComponent.h"
 #include "../../External/Engine/Components/TargetTrackingComponent.h"
+#include <ImGui/imgui.h>
 
-
-HEIN::CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner)
-	: IComponent(owner)
-{
-}
+HEIN::CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner) : IComponent(owner) {}
 
 void HEIN::CombatStateMachineComponent::Start()
 {
-	Messenger::GetInstance()->Register(m_owner->GetID(), this);
+    Messenger::GetInstance()->Register(m_owner->GetID(), this);
 }
-
 
 void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 {
-	ApplyPendingState();
+    ApplyPendingState();
+    ProcessBuffer(deltaTime);
 
-	ProcessBuffer(deltaTime);
+    if (m_pendingState != nullptr) return;
 
-	// Stop updating current state if a transition is pending
-	if (m_pendingState != nullptr) return;
+    if (m_currentState)
+    {
+        m_currentState->Update(m_owner, this, deltaTime);
+    }
 
-	if (m_currentState)
-	{
-		m_currentState->Update(m_owner, this, deltaTime);
-	}
+    Messenger::GetInstance()->Notify(m_owner->GetID(), IsAttacking() ? Message::SET_WEAPON_ACTIVE : Message::SET_WEAPON_INACTIVE);
 
-	// Sync attack/block states with relevant gameplay components
-	Messenger::GetInstance()->Notify(m_owner->GetID(), IsAttacking() ? Message::SET_WEAPON_ACTIVE : Message::SET_WEAPON_INACTIVE);
+    HEIN::HealthComponent* health = m_owner->GetComponent<HEIN::HealthComponent>();
+    if (health) health->SetGameplayInvincible(IsBlocking());
 
-	HEIN::HealthComponent* health = m_owner->GetComponent<HEIN::HealthComponent>();
-	if (health) health->SetGameplayInvincible(IsBlocking());
+    HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
+    if (blackboard)
+    {
+        if (!IsBlocking() && blackboard->currentBlockStamina < blackboard->maxBlockStamina)
+        {
+            blackboard->currentBlockStamina += blackboard->blockRecoveryRate * deltaTime;
+            if (blackboard->currentBlockStamina >= blackboard->maxBlockStamina)
+            {
+                blackboard->currentBlockStamina = blackboard->maxBlockStamina;
+                blackboard->isBlockBroken = false;
+            }
+        }
 
-	HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
-	if (blackboard)
-	{
-		if (!IsBlocking())
-		{
-			// Regenerate block stamina over time when not actively blocking
-			if (blackboard->currentBlockStamina < blackboard->maxBlockStamina)
-			{
-				blackboard->currentBlockStamina += blackboard->blockRecoveryRate * deltaTime;
-				if (blackboard->currentBlockStamina >= blackboard->maxBlockStamina)
-				{
-					blackboard->currentBlockStamina = blackboard->maxBlockStamina;
-					blackboard->isBlockBroken = false;
-				}
-			}
-		}
+        if (blackboard->dodgeCooldownTimer > 0.0f)
+        {
+            blackboard->dodgeCooldownTimer -= deltaTime;
+            if (blackboard->dodgeCooldownTimer < 0.0f) blackboard->dodgeCooldownTimer = 0.0f;
+        }
 
-		if (blackboard->dodgeCooldownTimer > 0.0f)
-		{
-			blackboard->dodgeCooldownTimer -= deltaTime;
-			if (blackboard->dodgeCooldownTimer < 0.0f)
-			{
-				blackboard->dodgeCooldownTimer = 0.0f;
-			}
-		}
-
-		HEIN::TargetTrackingComponent* tracking = m_owner->GetComponent<HEIN::TargetTrackingComponent>();
-		if (tracking)
-		{
-			tracking->SetLockedOn(blackboard->isLockedOn);
-			blackboard->lockedTargetID = tracking->GetTargetID();
-			blackboard->dirToTarget = tracking->GetDirToTarget();
-			blackboard->distanceToTarget = tracking->GetDistanceToTarget();
-			blackboard->isLockedOn = tracking->IsLockedOn();
-		}
-	}
+        HEIN::TargetTrackingComponent* tracking = m_owner->GetComponent<HEIN::TargetTrackingComponent>();
+        if (tracking)
+        {
+            tracking->SetLockedOn(blackboard->isLockedOn);
+            blackboard->lockedTargetID = tracking->GetTargetID();
+            blackboard->dirToTarget = tracking->GetDirToTarget();
+            blackboard->distanceToTarget = tracking->GetDistanceToTarget();
+            blackboard->isLockedOn = tracking->IsLockedOn();
+        }
+    }
 }
 
-void HEIN::CombatStateMachineComponent::ChangeState(const std::string& stateName)
+void HEIN::CombatStateMachineComponent::ChangeState(const std::string& stateName, float blendDuration)
 {
-	std::unordered_map<std::string, std::unique_ptr<ICombatState>>::iterator it = m_states.find(stateName);
-
-	if (it != m_states.end())
-	{
-		m_pendingState = it->second.get();
-	}
+    auto it = m_states.find(stateName);
+    if (it != m_states.end())
+    {
+        m_pendingState = it->second.get();
+        m_pendingBlendDuration = blendDuration;
+    }
 }
-
 
 void HEIN::CombatStateMachineComponent::ApplyPendingState()
 {
-	// if there is nothing waiting do nothing and leave
-	if (m_pendingState == nullptr) return;
-	// safely exit the oldstate
-	if (m_currentState != nullptr)
-	{
-		m_currentState->OnExit(m_owner, this);
-	}
-    // swap the state
-	m_currentState = m_pendingState;
+    if (m_pendingState == nullptr) return;
 
-	// Empty the waiting room
-	m_pendingState = nullptr;
+    if (m_currentState != nullptr)
+    {
+        m_currentState->OnExit(m_owner, this);
+    }
 
-	if (m_currentState != nullptr)
-	{
-		m_currentState->OnEnter(m_owner, this);
-	}
+    m_currentState = m_pendingState;
+    m_pendingState = nullptr;
+
+    for (const auto& [name, statePtr] : m_states)
+    {
+        if (statePtr.get() == m_currentState)
+        {
+            m_currentStateName = name;
+            break;
+        }
+    }
+
+    if (m_currentState != nullptr)
+    {
+        // Inject the precise blend duration specific to the arrow that caused this transition
+        m_currentState->OnEnter(m_owner, this, m_pendingBlendDuration);
+    }
 }
 
-void HEIN::CombatStateMachineComponent::AddState(const std::string& stateName, std::unique_ptr<ICombatState> state)
+void HEIN::CombatStateMachineComponent::AddState(const StateConfig& config)
 {
-	m_states[stateName] = std::move(state);
+    m_stateConfigs[config.stateName] = config;
+    m_states[config.stateName] = CreateCombatStateFromConfig(config);
 
-	if (m_currentState == nullptr && m_pendingState == nullptr)
-	{
-		ChangeState(stateName);
-	}
+    if (m_currentState == nullptr && m_pendingState == nullptr)
+    {
+        m_defaultStateName = config.stateName;
+        ChangeState(config.stateName, 0.0f); // Instant snap on first frame spawn
+    }
+}
+
+void HEIN::CombatStateMachineComponent::AddState(const std::string& stateName, std::unique_ptr<ICombatState> state, const StateConfig& config)
+{
+    m_stateConfigs[stateName] = config;
+    m_states[stateName] = std::move(state);
+
+    if (m_currentState == nullptr && m_pendingState == nullptr)
+    {
+        m_defaultStateName = stateName;
+        ChangeState(stateName, 0.0f);
+    }
+}
+
+void HEIN::CombatStateMachineComponent::RebuildAllStates()
+{
+    m_states.clear();
+    m_currentState = nullptr;
+    m_pendingState = nullptr;
+
+    for (const auto& [name, config] : m_stateConfigs)
+    {
+        m_states[name] = CreateCombatStateFromConfig(config);
+    }
+
+    if (!m_defaultStateName.empty() && m_states.contains(m_defaultStateName))
+    {
+        ChangeState(m_defaultStateName, 0.0f);
+        ApplyPendingState();
+    }
 }
 
 void HEIN::CombatStateMachineComponent::OnMessageAccepted(Message::MessageID messageID)
 {
-	if (messageID == Message::PLAYER_ACTION_ATTACK ||
-		messageID == Message::PLAYER_ACTION_BLOCK ||
-		messageID == Message::PLAYER_STOP_BLOCK ||
-		messageID == Message::PLAYER_ACTION_DODGE)
-	{
-		if (messageID == Message::PLAYER_ACTION_DODGE)
-		{
-			// Ignore dodge inputs if the ability is still on cooldown
-			HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
-			if (blackboard && blackboard->dodgeCooldownTimer > 0.0f)
-			{
-				return;
-			}
-		}
+    if (messageID == Message::PLAYER_ACTION_ATTACK ||
+        messageID == Message::PLAYER_ACTION_BLOCK ||
+        messageID == Message::PLAYER_STOP_BLOCK ||
+        messageID == Message::PLAYER_ACTION_DODGE)
+    {
+        if (messageID == Message::PLAYER_ACTION_DODGE)
+        {
+            HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
+            if (blackboard && blackboard->dodgeCooldownTimer > 0.0f) return;
+        }
 
-		m_messageBuffer.clear();
-
-		m_messageBuffer.push_back(messageID);
-
-		m_bufferTime = MAX_BUFFER_TIME;
-	}
+        m_messageBuffer.clear();
+        m_messageBuffer.push_back(messageID);
+        m_bufferTime = MAX_BUFFER_TIME;
+    }
 }
 
 void HEIN::CombatStateMachineComponent::ProcessBuffer(float deltaTime)
 {
-	if (m_messageBuffer.empty()) return;
+    if (m_messageBuffer.empty()) return;
 
-	m_bufferTime -= deltaTime;
+    m_bufferTime -= deltaTime;
+    if (m_bufferTime <= 0.0f)
+    {
+        m_messageBuffer.clear();
+        return;
+    }
 
-	if (m_bufferTime <= 0.0f)
-	{
-		m_messageBuffer.clear();
-		return;
-	}
-
-	Message::MessageID currentMessage = m_messageBuffer.front();
-
-	if (m_currentState != nullptr)
-	{
-		bool wasHandled = m_currentState->HandleMessage(m_owner, this, currentMessage);
-		if (wasHandled)
-		{
-			m_messageBuffer.clear();
-		}
-	}
-
+    Message::MessageID currentMessage = m_messageBuffer.front();
+    if (m_currentState != nullptr)
+    {
+        bool wasHandled = m_currentState->HandleMessage(m_owner, this, currentMessage);
+        if (wasHandled)
+        {
+            m_messageBuffer.clear();
+        }
+    }
 }
 
 bool HEIN::CombatStateMachineComponent::IsAttacking() const
 {
-	if (m_currentState != nullptr)
-	{
-		return m_currentState->IsAttackState();
-	}
-	return false;
+    if (m_currentState != nullptr) return m_currentState->IsAttackState();
+    return false;
 }
 
 bool HEIN::CombatStateMachineComponent::IsBlocking() const
 {
-	if (m_currentState != nullptr)
-	{
-		return m_currentState->IsBlockState();
-	}
-	return false;
+    if (m_currentState != nullptr) return m_currentState->IsBlockState();
+    return false;
 }
 
 void HEIN::CombatStateMachineComponent::OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad)
 {
-	if (payLoad.triggerA->GetOwner() != GetOwner() && payLoad.triggerB->GetOwner() != GetOwner())
-	{
-		return;
-	}
+    // Keeping your original hit detection payload stub
+    if (payLoad.triggerA->GetOwner() != GetOwner() && payLoad.triggerB->GetOwner() != GetOwner()) return;
 
-	HEIN::ColliderComponent* myHurtBox = nullptr;
-	HEIN::ColliderComponent* enemyHitBox = nullptr;
+    HEIN::ColliderComponent* myHurtBox = nullptr;
+    HEIN::ColliderComponent* enemyHitBox = nullptr;
 
-	if (payLoad.triggerA->GetOwner() == GetOwner())
-	{
-		myHurtBox = payLoad.triggerA;
-		enemyHitBox = payLoad.triggerB;
-	}
-	else
-	{
-		myHurtBox = payLoad.triggerB;
-		enemyHitBox = payLoad.triggerA;
-	}
+    if (payLoad.triggerA->GetOwner() == GetOwner())
+    {
+        myHurtBox = payLoad.triggerA;
+        enemyHitBox = payLoad.triggerB;
+    }
+    else
+    {
+        myHurtBox = payLoad.triggerB;
+        enemyHitBox = payLoad.triggerA;
+    }
 
-	if (enemyHitBox->GetColliderTag() == L"SwordHitbox")
-	{
-		// Process damage, change to flinch state, subtract HP!
-	}
+    if (enemyHitBox->GetColliderTag() == L"SwordHitbox") {}
 }
 
+nlohmann::json HEIN::CombatStateMachineComponent::Serialize()
+{
+    nlohmann::json data = IComponent::Serialize();
 
+    data["defaultState"] = m_defaultStateName;
+    data["states"] = nlohmann::json::array();
+
+    for (const auto& [name, cfg] : m_stateConfigs)
+    {
+        nlohmann::json stateJson;
+        stateJson["name"] = cfg.stateName;
+        stateJson["type"] = cfg.stateType;
+        stateJson["animationName"] = cfg.animationName;
+        stateJson["secondaryAnimationName"] = cfg.secondaryAnimationName;
+        stateJson["moveSpeed"] = cfg.moveSpeed;
+        stateJson["stateDuration"] = cfg.stateDuration;
+
+        stateJson["transitions"] = nlohmann::json::object();
+        for (const auto& [eventKey, transition] : cfg.transitions)
+        {
+            stateJson["transitions"][eventKey] = {
+                {"targetState", transition.targetState},
+                {"blendDuration", transition.blendDuration}
+            };
+        }
+
+        stateJson["comboEndTimes"] = cfg.comboEndTimes;
+        stateJson["comboWindowStarts"] = cfg.comboWindowStarts;
+
+        data["states"].push_back(stateJson);
+    }
+    return data;
+}
+
+void HEIN::CombatStateMachineComponent::Deserialize(const nlohmann::json& data)
+{
+    IComponent::Deserialize(data);
+
+    m_stateConfigs.clear();
+
+    if (data.contains("defaultState") && data["defaultState"].is_string())
+    {
+        m_defaultStateName = data["defaultState"].get<std::string>();
+    }
+
+    if (data.contains("states") && data["states"].is_array())
+    {
+        for (const auto& stateJson : data["states"])
+        {
+            StateConfig cfg;
+
+            if (stateJson.contains("name")) cfg.stateName = stateJson["name"].get<std::string>();
+            if (stateJson.contains("type")) cfg.stateType = stateJson["type"].get<std::string>();
+            if (stateJson.contains("animationName")) cfg.animationName = stateJson["animationName"].get<std::string>();
+            if (stateJson.contains("secondaryAnimationName")) cfg.secondaryAnimationName = stateJson["secondaryAnimationName"].get<std::string>();
+            if (stateJson.contains("moveSpeed")) cfg.moveSpeed = stateJson["moveSpeed"].get<float>();
+            if (stateJson.contains("stateDuration")) cfg.stateDuration = stateJson["stateDuration"].get<float>();
+
+            if (stateJson.contains("transitions") && stateJson["transitions"].is_object())
+            {
+                for (auto it = stateJson["transitions"].begin(); it != stateJson["transitions"].end(); ++it)
+                {
+                    TransitionData tData;
+                    if (it.value().contains("targetState")) tData.targetState = it.value()["targetState"].get<std::string>();
+                    if (it.value().contains("blendDuration")) tData.blendDuration = it.value()["blendDuration"].get<float>();
+
+                    cfg.transitions[it.key()] = tData;
+                }
+            }
+
+            if (stateJson.contains("comboEndTimes") && stateJson["comboEndTimes"].is_array())
+            {
+                cfg.comboEndTimes = stateJson["comboEndTimes"].get<std::vector<float>>();
+            }
+
+            if (stateJson.contains("comboWindowStarts") && stateJson["comboWindowStarts"].is_array())
+            {
+                cfg.comboWindowStarts = stateJson["comboWindowStarts"].get<std::vector<float>>();
+            }
+
+            m_stateConfigs[cfg.stateName] = cfg;
+        }
+    }
+    RebuildAllStates();
+}
+
+void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContext*/)
+{
+    if (ImGui::CollapsingHeader("Combat State Machine Component", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Active State: %s", m_currentStateName.c_str());
+        ImGui::Separator();
+
+        bool configChanged = false;
+
+        for (auto& [name, cfg] : m_stateConfigs)
+        {
+            ImGui::PushID(name.c_str());
+            if (ImGui::TreeNode(name.c_str()))
+            {
+                char animBuf[128];
+                strcpy_s(animBuf, cfg.animationName.c_str());
+                if (ImGui::InputText("Primary Animation", animBuf, sizeof(animBuf)))
+                {
+                    cfg.animationName = animBuf;
+                    configChanged = true;
+                }
+
+                char secAnimBuf[128];
+                strcpy_s(secAnimBuf, cfg.secondaryAnimationName.c_str());
+                if (ImGui::InputText("Secondary Animation", secAnimBuf, sizeof(secAnimBuf)))
+                {
+                    cfg.secondaryAnimationName = secAnimBuf;
+                    configChanged = true;
+                }
+
+                if (ImGui::DragFloat("Move Speed", &cfg.moveSpeed, 0.5f, 0.0f, 100.0f)) configChanged = true;
+                if (ImGui::DragFloat("State Duration", &cfg.stateDuration, 0.05f, 0.0f, 10.0f)) configChanged = true;
+
+                if (ImGui::TreeNode("Transitions (Arrows)"))
+                {
+                    for (auto& [eventTag, transition] : cfg.transitions)
+                    {
+                        ImGui::PushID(eventTag.c_str());
+                        ImGui::TextColored(ImVec4(1, 0.8f, 0, 1), "[ %s ]", eventTag.c_str());
+
+                        char targetBuf[128];
+                        strcpy_s(targetBuf, transition.targetState.c_str());
+                        if (ImGui::InputText("Target State", targetBuf, sizeof(targetBuf)))
+                        {
+                            transition.targetState = targetBuf;
+                            configChanged = true;
+                        }
+
+                        if (ImGui::DragFloat("Blend Duration", &transition.blendDuration, 0.01f, 0.0f, 2.0f, "%.2f s"))
+                        {
+                            configChanged = true;
+                        }
+
+                        ImGui::Separator();
+                        ImGui::PopID();
+                    }
+                    ImGui::TreePop();
+                }
+
+                if (!cfg.comboEndTimes.empty() && ImGui::TreeNode("Combo Windows"))
+                {
+                    for (size_t i = 0; i < cfg.comboEndTimes.size(); ++i)
+                    {
+                        ImGui::PushID(static_cast<int>(i));
+                        ImGui::Text("Stage %zu:", i + 1);
+
+                        if (i < cfg.comboWindowStarts.size())
+                        {
+                            if (ImGui::DragFloat("Window Open", &cfg.comboWindowStarts[i], 0.05f, 0.0f, 10.0f))
+                                configChanged = true;
+                        }
+
+                        if (ImGui::DragFloat("Stage End", &cfg.comboEndTimes[i], 0.05f, 0.0f, 10.0f))
+                            configChanged = true;
+
+                        ImGui::PopID();
+                    }
+                    ImGui::TreePop();
+                }
+
+                ImGui::TreePop();
+            }
+            ImGui::PopID();
+        }
+
+        if (configChanged)
+        {
+            RebuildAllStates();
+        }
+    }
+}
 
 ================================================================================
 FILE: Dual\Components\CombatStateMachineComponent.h
@@ -1508,10 +1726,12 @@ FILE: Dual\Components\CombatStateMachineComponent.h
 #include "../../External/Engine/Components/IComponent.h"
 #include "../../External/Engine/Message/IObserver.h"
 #include "../../External/Engine/Message/Message.h"
+#include <States/CombatStates.h>
 #include <vector>
 #include <unordered_map>
 #include <string>
 #include <memory>
+#include "../../External/Engine/Common/json.hpp"
 
 namespace HEIN
 {
@@ -1542,12 +1762,18 @@ namespace HEIN
 	private:
 		/// @brief The currently active combat state.
 		ICombatState* m_currentState = nullptr;
-
+		
 		/// @brief The next state to transition to, queued up for processing.
 		ICombatState* m_pendingState = nullptr;
 
+		float m_pendingBlendDuration = 0.2f;
+
+		std::string m_currentStateName = "Idle";
+		std::string m_defaultStateName = "Idle";
 		/// @brief A map of all available states, keyed by their string name.
 		std::unordered_map<std::string, std::unique_ptr<ICombatState>> m_states;
+
+		std::unordered_map<std::string, StateConfig> m_stateConfigs;
 
 		/// @brief Buffer storing incoming messages/inputs for combat (e.g. for combos).
 		std::vector<Message::MessageID> m_messageBuffer;
@@ -1569,11 +1795,16 @@ namespace HEIN
 
 		void Update(float deltaTime) override;
 
+
+		std::string GetComponentName() const override { return "CombatStateMachineComponent"; }
+		nlohmann::json Serialize() override;
+		void Deserialize(const nlohmann::json& data) override;
+		void OnInspectorGUI(GameContext& gameContext) override;
 		/**
 		 * @brief Requests a transition to a new combat state.
 		 * @param stateName The string identifier for the target state.
 		 */
-		void ChangeState(const std::string& stateName);
+		void ChangeState(const std::string& stateName, float blendDuration = 0.2f);
 
 		/**
 		 * @brief Applies the queued m_pendingState, calling OnExit for the old 
@@ -1586,7 +1817,8 @@ namespace HEIN
 		 * @param stateName The name used to look up this state.
 		 * @param state Unique pointer to the instantiated state object.
 		 */
-		void AddState(const std::string& stateName, std::unique_ptr<ICombatState> state);
+		void AddState(const std::string& stateName, std::unique_ptr<ICombatState> state, const StateConfig& config);
+		void AddState(const StateConfig& config);
 
 		/**
 		 * @brief Handles incoming messages and potentially adds them to the input buffer.
@@ -1606,12 +1838,16 @@ namespace HEIN
 		/// @brief Checks if the actor is currently in a blocking state.
 		bool IsBlocking() const;
 		
+		const std::string& GetCurrentStateName() const { return m_currentStateName; }
+		const std::unordered_map<std::string, StateConfig>& GetConfigs() const { return m_stateConfigs; }
 	private:
 		/**
 		 * @brief Callback triggered when an overlap event occurs (e.g. hit detection).
 		 * @param payLoad Data containing information about the overlap event.
 		 */
 		void OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad);
+
+		void RebuildAllStates();
 	};
 }
 
@@ -1822,7 +2058,7 @@ FILE: Dual\Factory\ActorFactory.cpp
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ActorManager& actorManager,
-    GameContext& gameContext, 
+    GameContext& gameContext,
     DirectX::SimpleMath::Vector3* /*targetCameraOut*/
 )
 {
@@ -1843,20 +2079,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     spawnData.tpsModel->Initialize(gameContext,
         L"Resources/Models/knight/knight.sdkmesh", // normal model
         L"Resources/Models/knight");
-  
 
-    // FirstPersonCamera model
-    //spawnData.fpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
-    //spawnData.fpsModel->Initialize(gameContext,
-    //    L"Resources/Models/knight/knight.sdkmesh", // headless/arms model
-    //    L"Resources/Models/knight");
-    //spawnData.fpsModel->LoadAnimation("Idle", L"Resources/Models/knight/idle.sdkmesh_anim");
-    //spawnData.fpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
-    //spawnData.fpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
-
-
-  \
-    
     // Socket
     HEIN::SocketComponent* socketComp = playerActor->AddComponent<HEIN::SocketComponent>();
     HEIN::Socket weaponSocket(
@@ -1867,76 +2090,84 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     );
     socketComp->AddSocket(weaponSocket);
 
- 
-   
     HEIN::CombatStateMachineComponent* fsm = playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
 
     // IdleConfig
     HEIN::StateConfig idleConfig;
+    idleConfig.stateName = "Idle";
+    idleConfig.stateType = "Idle";
     idleConfig.animationName = "Idle";
-    idleConfig.transitions["OnMove"] = "Walk";
-    idleConfig.transitions["OnAttack"] = "OneHand";
-    idleConfig.transitions["OnDodge"] = "Dodge";
-    idleConfig.transitions["OnStrafe"] = "Strafe";
-    idleConfig.transitions["OnBlock"] = "Block";
-    fsm->AddState("Idle", std::make_unique<HEIN::IdleState>(idleConfig));
+    idleConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    idleConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
+    idleConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    idleConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    idleConfig.transitions["OnBlock"] = { "Block", 0.1f };
+    fsm->AddState(idleConfig);
 
     // WalkConfig
     HEIN::StateConfig walkConfig;
+    walkConfig.stateName = "Walk";
+    walkConfig.stateType = "Walk";
     walkConfig.moveSpeed = 30.0f;
     walkConfig.animationName = "Walk";
-    walkConfig.transitions["OnStop"] = "Idle";
-    walkConfig.transitions["OnAttack"] = "OneHand";
-    walkConfig.transitions["OnDodge"] = "Dodge";
-    walkConfig.transitions["OnStrafe"] = "Strafe";
-    walkConfig.transitions["OnBlock"] = "Block";
-    fsm->AddState("Walk", std::make_unique<HEIN::WalkState>(walkConfig));
+    walkConfig.transitions["OnStop"] = { "Idle", 0.2f };
+    walkConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
+    walkConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    walkConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    walkConfig.transitions["OnBlock"] = { "Block", 0.1f };
+    fsm->AddState(walkConfig);
 
     // AttackConfig
     HEIN::StateConfig attackConfig;
+    attackConfig.stateName = "OneHand";
+    attackConfig.stateType = "OneHand";
     attackConfig.moveSpeed = 5.0f;
-    attackConfig.animationName = "OneHand";
-    attackConfig.stateDuration = 4.1f;
-    attackConfig.comboEndTimes = { HEIN::OneHandAttackState::STAGE_1_END_TIME, HEIN::OneHandAttackState::STAGE_2_END_TIME, HEIN::OneHandAttackState::STAGE_3_END_TIME };
-    attackConfig.comboWindowStarts = { HEIN::OneHandAttackState::STAGE_1_WINDOW_START, HEIN::OneHandAttackState::STAGE_2_WINDOW_START, HEIN::OneHandAttackState::STAGE_3_WINDOW_START };
-    attackConfig.transitions["OnStop"] = "Idle";
-    attackConfig.transitions["OnMove"] = "Walk";
-    attackConfig.transitions["OnDodge"] = "Dodge";
-    attackConfig.transitions["OnStrafe"] = "Strafe";
-    attackConfig.transitions["OnBlock"] = "Block";
-    fsm->AddState("OneHand", std::make_unique<HEIN::OneHandAttackState>(attackConfig));
+    attackConfig.comboAnimationNames = { "Slash1", "Slash2", "Slash3"};
+    attackConfig.stateDuration = 1.1f;
+    attackConfig.transitions["OnStop"] = { "Idle", 0.3f };
+    attackConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    attackConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    attackConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    attackConfig.transitions["OnBlock"] = { "Block", 0.1f };
+    fsm->AddState(attackConfig);
 
     // DodgeConfig
     HEIN::StateConfig dodgeConfig;
+    dodgeConfig.stateName = "Dodge";
+    dodgeConfig.stateType = "Dodge";
     dodgeConfig.animationName = "Dodge";
     dodgeConfig.moveSpeed = 30.0f;
     dodgeConfig.stateDuration = 1.4f;
-    dodgeConfig.transitions["OnStop"] = "Idle";
-    dodgeConfig.transitions["OnMove"] = "Walk";
-    dodgeConfig.transitions["OnAttack"] = "OneHand";
-    dodgeConfig.transitions["OnStrafe"] = "Strafe";
-    fsm->AddState("Dodge", std::make_unique<HEIN::DodgeState>(dodgeConfig));
+    dodgeConfig.transitions["OnStop"] = { "Idle", 0.2f };
+    dodgeConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    dodgeConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
+    dodgeConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    fsm->AddState(dodgeConfig);
 
     // StrafeConfig
     HEIN::StateConfig strafeConfig;
+    strafeConfig.stateName = "Strafe";
+    strafeConfig.stateType = "Strafe";
     strafeConfig.animationName = "StrafeR";
     strafeConfig.secondaryAnimationName = "StrafeL";
     strafeConfig.moveSpeed = 5.0f;
-    strafeConfig.transitions["OnStop"] = "Idle";
-    strafeConfig.transitions["OnMove"] = "Walk";
-    strafeConfig.transitions["OnDodge"] = "Dodge";
-    fsm->AddState("Strafe", std::make_unique<HEIN::StrafeState>(strafeConfig));
-    
+    strafeConfig.transitions["OnStop"] = { "Idle", 0.2f };
+    strafeConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    strafeConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    fsm->AddState(strafeConfig);
+
     // BlockConfig
     HEIN::StateConfig blockConfig;
+    blockConfig.stateName = "Block";
+    blockConfig.stateType = "Block";
     blockConfig.animationName = "Block";
     blockConfig.moveSpeed = 4.0f;
-    blockConfig.transitions["OnMove"] = "Walk";
-    blockConfig.transitions["OnStop"] = "Idle";
-    fsm->AddState("Block", std::make_unique<HEIN::BlockState>(blockConfig));
+    blockConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    blockConfig.transitions["OnStop"] = { "Idle", 0.2f };
+    fsm->AddState(blockConfig);
 
     playerActor->AddComponent<HEIN::CombatBlackBoard>();
-    playerActor->AddComponent<HEIN::PlayerInputComponent>(&actorManager); 
+    playerActor->AddComponent<HEIN::PlayerInputComponent>(&actorManager);
     playerActor->AddComponent<HEIN::TargetTrackingComponent>(&actorManager, HEIN::ActorType::Enemy);
     playerActor->AddComponent<HEIN::CharacterMovementComponent>();
     playerActor->AddComponent<HEIN::ProceduralAnimationComponent>(&actorManager);
@@ -1947,7 +2178,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
 
 HEIN::ActorID HEIN::ActorFactory::CreateSword(
     ActorManager& actorManager,
-    GameContext& gameContext, 
+    GameContext& gameContext,
     HEIN::ActorID wielderID,
     float damage
 )
@@ -1996,7 +2227,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
 
     swordHitBox->SetCollisionLayer(weaponLayer);
     swordHitBox->SetCollisionMask(weaponMask);
-   
+
 
     HEIN::SocketAttachmentComponent* socketAttachment = sword->AddComponent<HEIN::SocketAttachmentComponent>(&actorManager);
     socketAttachment->Initialize(wielderID, L"WeaponSocket");
@@ -2009,7 +2240,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
 HEIN::ActorID HEIN::ActorFactory::CreateAxe(
     ActorManager& actorManager,
     GameContext& gameContext,
-    HEIN::ActorID wielderID, 
+    HEIN::ActorID wielderID,
     float damage
 )
 {
@@ -2091,7 +2322,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
 
     // FLOOR CHILD 
     HEIN::Actor* floorActor = actorManager.CreateActor(L"Floor");
-            floorActor->AddComponent<HEIN::TransformComponent>();
+    floorActor->AddComponent<HEIN::TransformComponent>();
 
     HEIN::StaticModelComponent* floorModel = floorActor->AddComponent<HEIN::StaticModelComponent>();
     floorModel->Initialize(gameContext, L"Resources/Models/stage/floor1.sdkmesh", L"Resources/Models/stage");
@@ -2103,9 +2334,6 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
     floorActor->SetParent(stageRoot->GetID());
     stageRoot->AddChild(floorActor->GetID());
 
-   
-   
-
     stageRoot->Start();
     floorActor->Start();
 
@@ -2113,7 +2341,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
 }
 
 HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
-    ActorManager& actorManager, 
+    ActorManager& actorManager,
     GameContext& gameContext,
     HEIN::ActorID targetID
 )
@@ -2143,7 +2371,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     spawnData.tpsModel->LoadAnimation("StrafeR", L"Resources/Models/Boss/strafeR.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("Dodge", L"Resources/Models/Boss/Dodge.sdkmesh_anim");
 
-    
+
     // Head Collider
     HEIN::CapsuleColliderComponent* HeadCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     HeadCapsule->Initialize(3.5f, 1.0f);
@@ -2202,7 +2430,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     HEIN::TwoBoneLinkComponent* RightLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightLeg", L"mixamorig:RightFoot");
     RightLegLink->LinkTo(RightLegCapsule);
-  
+
     // Left Leg Collider
     HEIN::CapsuleColliderComponent* LeftupLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     LeftupLegCapsule->Initialize(2.3f, 0.0f);
@@ -2216,8 +2444,6 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     HEIN::TwoBoneLinkComponent* LeftLegLink = enemyActor->AddComponent < HEIN::TwoBoneLinkComponent>();
     LeftLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftLeg", L"mixamorig:LeftFoot");
     LeftLegLink->LinkTo(LeftLegCapsule);
-   
-
 
     // Socket
     HEIN::SocketComponent* socketComp = enemyActor->AddComponent<HEIN::SocketComponent>();
@@ -2238,7 +2464,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     rootPushbox->SetColliderTag(L"EnemyRoot");
     rootPushbox->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     rootPushbox->SetCollisionMask(CollisionLayer::Layer_Environment | CollisionLayer::Layer_Player);
-    
+
 
     // SET BONES TO TRIGGERS (So they don't push the floor)
     HeadCapsule->SetTrigger(true);
@@ -2249,18 +2475,16 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     LeftforearmCapsule->SetTrigger(true);
     RightupLegCapsule->SetTrigger(true);
     RightLegCapsule->SetTrigger(true);
-    //RightFoot->SetTrigger(true);
     LeftupLegCapsule->SetTrigger(true);
     LeftLegCapsule->SetTrigger(true);
-    //LeftFoot->SetTrigger(true);
 
     HEIN::CombatBlackBoard* bb = enemyActor->AddComponent<HEIN::CombatBlackBoard>();
     bb->spawnPosition = ptransform->GetPosition();
     bb->hasSetSpawnPosition = true;
-    
+
     enemyActor->AddComponent<HEIN::CharacterMovementComponent>();
     enemyActor->AddComponent<HEIN::TargetTrackingComponent>(&actorManager, HEIN::ActorType::Player);
-  
+
     std::unique_ptr<HEIN::BTSelector> aiBrain = std::make_unique<HEIN::BTSelector>();
 
     // ---------------------------------------------------------
@@ -2318,57 +2542,68 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
     // IdleConfig
     HEIN::StateConfig idleConfig;
+    idleConfig.stateName = "Idle";
+    idleConfig.stateType = "Idle";
     idleConfig.animationName = "Idle";
-    idleConfig.transitions["OnMove"] = "Walk";
-    idleConfig.transitions["OnAttack"] = "OneHand";
-    idleConfig.transitions["OnStrafe"] = "Strafe";
-    idleConfig.transitions["OnDodge"] = "Dodge";
-    fsm->AddState("Idle", std::make_unique<HEIN::IdleState>(idleConfig));
+    idleConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    idleConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
+    idleConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    idleConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    fsm->AddState(idleConfig);
 
     // WalkConfig
     HEIN::StateConfig walkConfig;
+    walkConfig.stateName = "Walk";
+    walkConfig.stateType = "Walk";
     walkConfig.moveSpeed = 30.0f;
     walkConfig.animationName = "Walk";
-    walkConfig.transitions["OnStop"] = "Idle";
-    walkConfig.transitions["OnAttack"] = "OneHand";
-    walkConfig.transitions["OnStrafe"] = "Strafe";
-    walkConfig.transitions["OnDodge"] = "Dodge";
-    fsm->AddState("Walk", std::make_unique<HEIN::WalkState>(walkConfig));
+    walkConfig.transitions["OnStop"] = { "Idle", 0.2f };
+    walkConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
+    walkConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    walkConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    fsm->AddState(walkConfig);
 
     // StrafeConfig
     HEIN::StateConfig strafeConfig;
+    strafeConfig.stateName = "Strafe";
+    strafeConfig.stateType = "Strafe";
     strafeConfig.animationName = "StrafeR";
     strafeConfig.secondaryAnimationName = "StrafeL";
     strafeConfig.moveSpeed = 5.0f;
-    strafeConfig.transitions["OnStop"] = "Idle";
-    strafeConfig.transitions["OnMove"] = "Walk";
-    strafeConfig.transitions["OnAttack"] = "OneHand";
-    strafeConfig.transitions["OnDodge"] = "Dodge";
-    fsm->AddState("Strafe", std::make_unique<HEIN::StrafeState>(strafeConfig));
+    strafeConfig.transitions["OnStop"] = { "Idle", 0.2f };
+    strafeConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    strafeConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
+    strafeConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    fsm->AddState(strafeConfig);
 
     // AttackConfig
     HEIN::StateConfig attackConfig;
+    attackConfig.stateName = "OneHand";
+    attackConfig.stateType = "OneHand";
     attackConfig.moveSpeed = 5.0f;
     attackConfig.animationName = "OneHand";
     attackConfig.stateDuration = 3.4f;
     attackConfig.comboEndTimes = { 1.6f, 3.0f, 3.4f };
     attackConfig.comboWindowStarts = { 1.2f, 2.7f, 3.0f };
-    attackConfig.transitions["OnStop"] = "Idle";
-    attackConfig.transitions["OnMove"] = "Walk";
-    attackConfig.transitions["OnDodge"] = "Dodge";
-    attackConfig.transitions["OnStrafe"] = "Strafe";
-    fsm->AddState("OneHand", std::make_unique<HEIN::OneHandAttackState>(attackConfig));
+    attackConfig.comboExitBlendDuration = 0.4f;
+    attackConfig.transitions["OnStop"] = { "Idle", 0.3f };
+    attackConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    attackConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    attackConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    fsm->AddState(attackConfig);
 
     // DodgeConfig
     HEIN::StateConfig dodgeConfig;
+    dodgeConfig.stateName = "Dodge";
+    dodgeConfig.stateType = "Dodge";
     dodgeConfig.animationName = "Dodge";
     dodgeConfig.moveSpeed = 30.0f;
     dodgeConfig.stateDuration = 1.4f;
-    dodgeConfig.transitions["OnStop"] = "Idle";
-    dodgeConfig.transitions["OnMove"] = "Walk";
-    dodgeConfig.transitions["OnAttack"] = "OneHand";
-    dodgeConfig.transitions["OnStrafe"] = "Strafe";
-    fsm->AddState("Dodge", std::make_unique<HEIN::DodgeState>(dodgeConfig));
+    dodgeConfig.transitions["OnStop"] = { "Idle", 0.2f };
+    dodgeConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    dodgeConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
+    dodgeConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    fsm->AddState(dodgeConfig);
 
     enemyActor->AddComponent<HEIN::ProceduralAnimationComponent>(&actorManager);
 
@@ -2385,7 +2620,6 @@ HEIN::ActorID HEIN::ActorFactory::CreateMainCamera(ActorManager& actorManager)
     cameraActor->Start();
     return cameraActor->GetID();
 }
-
 
 ================================================================================
 FILE: Dual\Factory\ActorFactory.h
@@ -2870,7 +3104,6 @@ FILE: Dual\Scene\GameScene\GameScene.cpp
 #include <Components/PlayerInputComponent.h>
 #include <Factory/ActorFactory.h>
 #include "../../../External/Engine/Components/HealthComponent.h"
-#include <BlackBoard/CombatBlackBoard.h>
 #include "../../../External/Engine/ImGui/imgui.h"
 #include "../../../External/Engine/ImGui/ImGuizmo.h"
 #include "../../../External/Engine/Common/Event.h"
@@ -2981,10 +3214,7 @@ void GameScene::Render(GameContext& gameContext)
     // Pass 2: Main Color & Scene Drawing Pass
     RenderMainPassPhase(gameContext, context, view);
 
-    // Pass 3: In-Game Combat Status HUD Pass
-    RenderUIPhase();
-
-    // Pass 4: ImGui Editor & Gizmo Overlay Pass
+    // Pass 3: ImGui Editor & Gizmo Overlay Pass
     m_debugDisplay->Render(gameContext, m_actorManager, m_skybox.get(), view, m_proj);
 }
 
@@ -3208,88 +3438,6 @@ void GameScene::RenderMainPassPhase(GameContext& gameContext, ID3D11DeviceContex
     context->RSSetState(gameContext.commonStates.CullCounterClockwise());
     context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
     context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
-}
-
-void GameScene::RenderUIPhase()
-{
-    if (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()))
-    {
-        return;
-    }
-
-    HEIN::Actor* player = GetPlayerActor();
-    HEIN::Actor* enemy = GetEnemyActor();
-
-    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Always);
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoInputs;
-
-    ImGui::Begin("Combat Status", nullptr, flags);
-    if (player != nullptr)
-    {
-        auto* pHealth = player->GetComponent<HEIN::HealthComponent>();
-        if (pHealth != nullptr)
-        {
-            ImGui::Text("Player Health");
-            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-            ImGui::ProgressBar(pHealth->GetCurrentHealth() / pHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
-            ImGui::PopStyleColor();
-        }
-
-        auto* pBB = player->GetComponent<HEIN::CombatBlackBoard>();
-        if (pBB != nullptr)
-        {
-            if (pBB->isBlockBroken)
-            {
-                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
-                ImGui::PopStyleColor();
-            }
-            else
-            {
-                ImGui::Text("Block Stamina");
-                ImGui::ProgressBar(pBB->currentBlockStamina / pBB->maxBlockStamina, ImVec2(200.0f, 20.0f), "");
-            }
-
-            ImGui::Separator();
-
-            if (pBB->dodgeCooldownTimer > 0.0f)
-            {
-                ImGui::Text("Dodge Recharging...");
-                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-                ImGui::ProgressBar(1.0f - (pBB->dodgeCooldownTimer / pBB->maxDodgeCooldown), ImVec2(200.0f, 20.0f), "");
-                ImGui::PopStyleColor();
-            }
-            else
-            {
-                ImGui::Text("Dodge Ready");
-                ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 0.8f, 1.0f, 1.0f));
-                ImGui::ProgressBar(1.0f, ImVec2(200.0f, 20.0f), "");
-                ImGui::PopStyleColor();
-            }
-        }
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "PLAYER DEAD");
-    }
-
-    ImGui::Separator();
-
-    if (enemy != nullptr)
-    {
-        auto* eHealth = enemy->GetComponent<HEIN::HealthComponent>();
-        if (eHealth != nullptr)
-        {
-            ImGui::Text("Enemy Health");
-            ImGui::ProgressBar(eHealth->GetCurrentHealth() / eHealth->GetMaxHealth(), ImVec2(200.0f, 20.0f));
-        }
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "ENEMY DEAD");
-    }
-
-    ImGui::End();
 }
 
 // --------------------------------------------------------------------------------------
@@ -3597,7 +3745,6 @@ private:
 	// --- Render Pipeline Phases ---
 	void RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext* context);
 	void RenderMainPassPhase(GameContext& gameContext, ID3D11DeviceContext* context, const DirectX::SimpleMath::Matrix& view);
-	void RenderUIPhase();
 
 	// --- Editor & Scene Management ---
 	void HandleEditorActions(GameContext& gameContext);
@@ -4111,42 +4258,64 @@ FILE: Dual\States\CombatStates.cpp
 // ==============================================================================
 HEIN::IdleState::IdleState(const HEIN::StateConfig& config) : m_config(config) {}
 
-void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/)
+void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/, float blendDuration)
 {
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-	if (blackboard) blackboard->currentStance = CombatStance::Idle;
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+    if (blackboard) blackboard->currentStance = CombatStance::Idle;
 
-	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-	for (HEIN::SkinnedModelComponent* model : models)
-	{
-		model->CrossfadeAnimation(m_config.animationName, 0.3f);
-	}
+    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+    for (HEIN::SkinnedModelComponent* model : models)
+    {
+        model->CrossfadeAnimation(m_config.animationName, blendDuration);
+    }
 }
 
 void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float /*deltaTime*/)
 {
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-	if (!blackboard) return;
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+    if (!blackboard) return;
 
-	blackboard->currentTurnSpeed = 12.0f;
-	
-	// Only handle movement transitions in Update
-	if (blackboard->moveIntent.LengthSquared() > 0.1f)
-	{
-		if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z)) stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
-		else stateMachine->ChangeState(m_config.transitions["OnMove"]);
-	}
+    blackboard->currentTurnSpeed = 12.0f;
+
+    if (blackboard->moveIntent.LengthSquared() > 0.1f)
+    {
+        if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z))
+        {
+            auto& t = m_config.transitions["OnStrafe"];
+            stateMachine->ChangeState(t.targetState, t.blendDuration);
+        }
+        else
+        {
+            auto& t = m_config.transitions["OnMove"];
+            stateMachine->ChangeState(t.targetState, t.blendDuration);
+        }
+    }
 }
 
 bool HEIN::IdleState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
 {
-	switch (messageID)
-	{
-	case Message::PLAYER_ACTION_ATTACK: stateMachine->ChangeState(m_config.transitions["OnAttack"]); return true;
-	case Message::PLAYER_ACTION_DODGE:  stateMachine->ChangeState(m_config.transitions["OnDodge"]); return true;
-	case Message::PLAYER_ACTION_BLOCK:  stateMachine->ChangeState(m_config.transitions["OnBlock"]); return true;
-	}
-	return false;
+    switch (messageID)
+    {
+    case Message::PLAYER_ACTION_ATTACK:
+    {
+        auto& t = m_config.transitions["OnAttack"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return true;
+    }
+    case Message::PLAYER_ACTION_DODGE:
+    {
+        auto& t = m_config.transitions["OnDodge"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return true;
+    }
+    case Message::PLAYER_ACTION_BLOCK:
+    {
+        auto& t = m_config.transitions["OnBlock"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return true;
+    }
+    }
+    return false;
 }
 
 void HEIN::IdleState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/) {}
@@ -4156,51 +4325,67 @@ void HEIN::IdleState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*st
 // ==============================================================================
 HEIN::WalkState::WalkState(const HEIN::StateConfig& config) : m_config(config) {}
 
-void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/)
+void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/, float blendDuration)
 {
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-	if (blackboard)
-	{
-		blackboard->currentStance = CombatStance::Walking;
-		blackboard->currentSpeed = m_config.moveSpeed; 
-	}
-	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-	for (HEIN::SkinnedModelComponent* model : models)
-	{
-		model->CrossfadeAnimation(m_config.animationName, 0.02f);
-	}
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+    if (blackboard)
+    {
+        blackboard->currentStance = CombatStance::Walking;
+        blackboard->currentSpeed = m_config.moveSpeed;
+    }
+    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+    for (HEIN::SkinnedModelComponent* model : models)
+    {
+        model->CrossfadeAnimation(m_config.animationName, blendDuration);
+    }
 }
 
 void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float /*deltaTime*/)
 {
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-	if (!blackboard) return;
-	blackboard->currentSpeed = m_config.moveSpeed;
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+    if (!blackboard) return;
+    blackboard->currentSpeed = m_config.moveSpeed;
+    blackboard->currentTurnSpeed = 12.0f;
 
-	blackboard->currentTurnSpeed = 12.0f;
+    if (blackboard->moveIntent.LengthSquared() <= 0.1f)
+    {
+        auto& t = m_config.transitions["OnStop"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return;
+    }
 
-	if (blackboard->moveIntent.LengthSquared() <= 0.1f)
-	{
-		stateMachine->ChangeState(m_config.transitions["OnStop"]);
-		return;
-	}
-
-	if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z))
-	{
-		stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
-		return;
-	}
+    if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z))
+    {
+        auto& t = m_config.transitions["OnStrafe"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return;
+    }
 }
 
 bool HEIN::WalkState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
 {
-	switch (messageID)
-	{
-	case Message::PLAYER_ACTION_ATTACK: stateMachine->ChangeState(m_config.transitions["OnAttack"]); return true;
-	case Message::PLAYER_ACTION_DODGE:  stateMachine->ChangeState(m_config.transitions["OnDodge"]); return true;
-	case Message::PLAYER_ACTION_BLOCK:  stateMachine->ChangeState(m_config.transitions["OnBlock"]); return true;
-	}
-	return false;
+    switch (messageID)
+    {
+    case Message::PLAYER_ACTION_ATTACK:
+    {
+        auto& t = m_config.transitions["OnAttack"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return true;
+    }
+    case Message::PLAYER_ACTION_DODGE:
+    {
+        auto& t = m_config.transitions["OnDodge"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return true;
+    }
+    case Message::PLAYER_ACTION_BLOCK:
+    {
+        auto& t = m_config.transitions["OnBlock"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return true;
+    }
+    }
+    return false;
 }
 
 void HEIN::WalkState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/) {}
@@ -4210,76 +4395,128 @@ void HEIN::WalkState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*st
 // ==============================================================================
 HEIN::OneHandAttackState::OneHandAttackState(const StateConfig& config) : m_config(config) {}
 
-void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/)
+const std::string* HEIN::OneHandAttackState::StageAnim(int stage) const
 {
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-	if (blackboard)
-	{
-		blackboard->currentStance = CombatStance::OneHand;
-	}
-	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-	for (HEIN::SkinnedModelComponent* model : models)
-	{
-		model->CrossfadeAnimation(m_config.animationName, 0.3f);
-	}
-	m_timer = 0.0f;
-	m_comboStage = 0;
+    if (stage < 0 || stage >= static_cast<int>(m_config.comboAnimationNames.size())) return nullptr;
+    return &m_config.comboAnimationNames[stage];
+}
+
+float HEIN::OneHandAttackState::StageEndTime(int stage) const
+{
+    if (stage >= 0 && stage < static_cast<int>(m_config.comboEndTimes.size()))
+        return m_config.comboEndTimes[stage];
+    // Fallback: treat the whole state as a single stage's duration.
+    return m_config.stateDuration;
+}
+
+float HEIN::OneHandAttackState::StageWindowStart(int stage) const
+{
+    if (stage >= 0 && stage < static_cast<int>(m_config.comboWindowStarts.size()))
+        return m_config.comboWindowStarts[stage];
+    return StageEndTime(stage); // No window -> cannot combo past this point.
+}
+
+float HEIN::OneHandAttackState::StageBlend(int stage, float fallback) const
+{
+    if (stage >= 0 && stage < static_cast<int>(m_config.comboBlendDurations.size()))
+        return m_config.comboBlendDurations[stage];
+    return fallback;
+}
+
+void HEIN::OneHandAttackState::PlayStage(Actor* owner, int stage, float blendDuration)
+{
+    const std::string* anim = StageAnim(stage);
+    if (anim == nullptr || anim->empty()) return; // Stage not configured -> nothing to play.
+
+    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+    for (HEIN::SkinnedModelComponent* model : models)
+    {
+        model->CrossfadeAnimation(*anim, blendDuration);
+    }
+}
+
+void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/, float blendDuration)
+{
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+    if (blackboard) blackboard->currentStance = CombatStance::OneHand;
+
+    m_timer = 0.0f;
+    m_comboStage = 0;
+    m_comboQueued = false;
+
+    // Guarded: only plays if stage 0 is actually configured (fixes empty-vector crash).
+    PlayStage(owner, 0, StageBlend(0, blendDuration));
 }
 
 void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
 {
-	m_timer += deltaTime;
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+    m_timer += deltaTime;
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
 
-	if (blackboard)
-	{
-		float windUpTime = 0.3f;
-		if (m_timer < windUpTime)
-		{
-			blackboard->currentTurnSpeed = 40.0f;
-		}
-		else
-		{
-			blackboard->currentTurnSpeed = 0.1f;
-		}
-		// If the animation completely finishes the current combo stage, exit state
-		if (m_timer >= m_config.comboEndTimes[m_comboStage])
-		{
-			if (blackboard != nullptr && blackboard->moveIntent.LengthSquared() > 0.01f)
-			{
-				if (blackboard->isLockedOn) stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
-				else stateMachine->ChangeState(m_config.transitions["OnMove"]);
-			}
-			else
-			{
-				stateMachine->ChangeState(m_config.transitions["OnStop"]);
-			}
+    if (blackboard)
+    {
+        float windUpTime = 0.3f;
+        blackboard->currentTurnSpeed = (m_timer < windUpTime) ? 40.0f : 0.1f;
+        blackboard->currentSpeed = m_config.moveSpeed;
 
-		}
-		blackboard->currentSpeed = m_config.moveSpeed;
-	}
-	
+        // When the current animation stage finishes...
+        if (m_timer >= m_config.comboEndTimes[m_comboStage])
+        {
+            // WHERE TO PUT THE COMBO ADVANCEMENT:
+            if (m_comboQueued && m_comboStage < m_config.comboEndTimes.size() - 1)
+            {
+                m_comboStage++;
+                m_timer = 0.0f;           // Reset timer for the new animation file
+                m_comboQueued = false;    // Reset the queue
+
+                // Crossfade to the next standalone animation file
+                std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+                for (HEIN::SkinnedModelComponent* model : models)
+                {
+                    model->CrossfadeAnimation(m_config.comboAnimationNames[m_comboStage], 0.1f);
+                }
+                return; // Exit early so we don't trigger the state change below
+            }
+
+            // If no combo was queued, exit the attack state completely
+            if (blackboard->moveIntent.LengthSquared() > 0.01f)
+            {
+                if (blackboard->isLockedOn)
+                {
+                    auto& t = m_config.transitions["OnStrafe"];
+                    stateMachine->ChangeState(t.targetState, t.blendDuration);
+                }
+                else
+                {
+                    auto& t = m_config.transitions["OnMove"];
+                    stateMachine->ChangeState(t.targetState, t.blendDuration);
+                }
+            }
+            else
+            {
+                auto& t = m_config.transitions["OnStop"];
+                stateMachine->ChangeState(t.targetState, t.blendDuration);
+            }
+        }
+    }
 }
 
 bool HEIN::OneHandAttackState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
 {
-	// Process combo inputs dynamically
-	if (messageID == Message::PLAYER_ACTION_ATTACK)
-	{
-		if (m_comboStage < m_config.comboEndTimes.size() - 1)
-		{
-			if (m_timer >= m_config.comboWindowStarts[m_comboStage] &&
-				m_timer < m_config.comboEndTimes[m_comboStage])
-			{
-				m_comboStage++;
-				return true; // successfully combo'd! Buffer will clear this input.
-			}
-		}
-	}
-	// Note: Returning false means the buffer will "hold onto" the dodge/block input until the attack ends!
-	return false;
+    if (messageID == Message::PLAYER_ACTION_ATTACK)
+    {
+        if (m_comboStage < m_config.comboEndTimes.size() - 1)
+        {
+            if (m_timer >= m_config.comboWindowStarts[m_comboStage] &&
+                m_timer < m_config.comboEndTimes[m_comboStage])
+            {
+                m_comboQueued = true; // Queue it, don't advance yet!
+                return true;
+            }
+        }
+    }
+    return false;
 }
-
 void HEIN::OneHandAttackState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/) {}
 
 // ==============================================================================
@@ -4287,69 +4524,74 @@ void HEIN::OneHandAttackState::OnExit(Actor* /*owner*/, CombatStateMachineCompon
 // ==============================================================================
 HEIN::DodgeState::DodgeState(const StateConfig& config) : m_config(config) {}
 
-void HEIN::DodgeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine)
+void HEIN::DodgeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration)
 {
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-	if (blackboard)
-	{
-		blackboard->currentStance = CombatStance::Dodging;
-		blackboard->dodgeCooldownTimer = blackboard->maxDodgeCooldown;
-		if (blackboard->moveIntent.LengthSquared() > 0.01f)
-		{
-			m_lockedDirection = blackboard->moveIntent;
-		}
-		else
-		{
-			HEIN::TransformComponent* trans = owner->GetComponent<HEIN::TransformComponent>();
-			float currentMathematicalYaw = trans->GetRotationEuler().y;
-			float trueVisualYaw = currentMathematicalYaw - DirectX::XM_PI;
-			m_lockedDirection.x = sinf(trueVisualYaw);
-			m_lockedDirection.y = 0.0f;
-			m_lockedDirection.z = cosf(trueVisualYaw);
-
-			m_lockedDirection.Normalize();
-		}
-	}
-	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-	for (HEIN::SkinnedModelComponent* model : models)
-	{
-		model->CrossfadeAnimation(m_config.animationName, 0.3f);
-	}
-	m_timer = 0.0f;
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+    if (blackboard)
+    {
+        blackboard->currentStance = CombatStance::Dodging;
+        blackboard->dodgeCooldownTimer = blackboard->maxDodgeCooldown;
+        if (blackboard->moveIntent.LengthSquared() > 0.01f)
+        {
+            m_lockedDirection = blackboard->moveIntent;
+        }
+        else
+        {
+            HEIN::TransformComponent* trans = owner->GetComponent<HEIN::TransformComponent>();
+            float currentMathematicalYaw = trans->GetRotationEuler().y;
+            float trueVisualYaw = currentMathematicalYaw - DirectX::XM_PI;
+            m_lockedDirection.x = sinf(trueVisualYaw);
+            m_lockedDirection.y = 0.0f;
+            m_lockedDirection.z = cosf(trueVisualYaw);
+            m_lockedDirection.Normalize();
+        }
+    }
+    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+    for (HEIN::SkinnedModelComponent* model : models)
+    {
+        model->CrossfadeAnimation(m_config.animationName, blendDuration);
+    }
+    m_timer = 0.0f;
 }
 
 void HEIN::DodgeState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
 {
-	m_timer += deltaTime;
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
+    m_timer += deltaTime;
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
 
-	if (blackboard)
-	{
-		blackboard->currentTurnSpeed = 30.0f;
-		if (m_timer >= m_config.stateDuration)
-		{
-			if (blackboard->moveIntent.LengthSquared() > 0.1f)
-			{
-				if (blackboard->isLockedOn) stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
-				else stateMachine->ChangeState(m_config.transitions["OnMove"]);
-			}
-			else
-			{
-				stateMachine->ChangeState(m_config.transitions["OnStop"]);
-			}
-			return;
-		}
+    if (blackboard)
+    {
+        blackboard->currentTurnSpeed = 30.0f;
+        blackboard->currentSpeed = m_config.moveSpeed;
+        blackboard->moveIntent = m_lockedDirection;
 
-		blackboard->currentSpeed = m_config.moveSpeed;
-		blackboard->moveIntent = m_lockedDirection;
-	}
+        if (m_timer >= m_config.stateDuration)
+        {
+            if (blackboard->moveIntent.LengthSquared() > 0.1f)
+            {
+                if (blackboard->isLockedOn)
+                {
+                    auto& t = m_config.transitions["OnStrafe"];
+                    stateMachine->ChangeState(t.targetState, t.blendDuration);
+                }
+                else
+                {
+                    auto& t = m_config.transitions["OnMove"];
+                    stateMachine->ChangeState(t.targetState, t.blendDuration);
+                }
+            }
+            else
+            {
+                auto& t = m_config.transitions["OnStop"];
+                stateMachine->ChangeState(t.targetState, t.blendDuration);
+            }
+        }
+    }
 }
 
 bool HEIN::DodgeState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
 {
-	// By returning false, any attacks or dodges pressed during the dodge animation 
-	// are buffered and will execute the moment the dodge finishes.
-	return false;
+    return false;
 }
 
 void HEIN::DodgeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) {}
@@ -4359,67 +4601,80 @@ void HEIN::DodgeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMa
 // ==============================================================================
 HEIN::StrafeState::StrafeState(const StateConfig& config) : m_config(config), m_isRight(false) {}
 
-void HEIN::StrafeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine)
+void HEIN::StrafeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration)
 {
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-	if (blackboard)
-	{
-		blackboard->currentStance = CombatStance::Strafing;
-		m_isRight = blackboard->localMoveIntent.x < 0.0f;
-	}
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+    if (blackboard)
+    {
+        blackboard->currentStance = CombatStance::Strafing;
+        m_isRight = blackboard->localMoveIntent.x < 0.0f;
+    }
 
-	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-	for (HEIN::SkinnedModelComponent* model : models)
-	{
-		if (m_isRight) model->CrossfadeAnimation(m_config.animationName, 0.3f);
-		else model->CrossfadeAnimation(m_config.secondaryAnimationName, 0.3f);
-	}
-
+    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+    for (HEIN::SkinnedModelComponent* model : models)
+    {
+        model->CrossfadeAnimation(m_isRight ? m_config.animationName : m_config.secondaryAnimationName, blendDuration);
+    }
 }
 
 void HEIN::StrafeState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
 {
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
-	if (!blackboard) return;
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
+    if (!blackboard) return;
 
-	blackboard->currentSpeed = m_config.moveSpeed;
-	// Drop Lock-on or switch to forward/backward
-	if (!blackboard->isLockedOn || std::abs(blackboard->localMoveIntent.z) > std::abs(blackboard->localMoveIntent.x))
-	{
-		stateMachine->ChangeState(m_config.transitions["OnMove"]);
-		return;
-	}
+    blackboard->currentSpeed = m_config.moveSpeed;
 
-	// Stop Moving
-	if (blackboard->moveIntent.LengthSquared() <= 0.1f)
-	{
-		stateMachine->ChangeState(m_config.transitions["OnStop"]);
-		return;
-	}
+    if (!blackboard->isLockedOn || std::abs(blackboard->localMoveIntent.z) > std::abs(blackboard->localMoveIntent.x))
+    {
+        auto& t = m_config.transitions["OnMove"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return;
+    }
 
-	// Update Strafe Direction Visuals dynamically 
-	bool isRight = blackboard->localMoveIntent.x < 0.0f;
-	if (isRight != m_isRight)
-	{
-		m_isRight = isRight;
-		std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-		for (HEIN::SkinnedModelComponent* model : models)
-		{
-			if (m_isRight) model->CrossfadeAnimation(m_config.animationName, 0.3f);
-			else model->CrossfadeAnimation(m_config.secondaryAnimationName, 0.3f);
-		}
-	}
+    if (blackboard->moveIntent.LengthSquared() <= 0.1f)
+    {
+        auto& t = m_config.transitions["OnStop"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return;
+    }
+
+    bool isRight = blackboard->localMoveIntent.x < 0.0f;
+    if (isRight != m_isRight)
+    {
+        m_isRight = isRight;
+        std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+        for (HEIN::SkinnedModelComponent* model : models)
+        {
+            // Mid-state directional shift uses a fast 0.2f blend
+            model->CrossfadeAnimation(m_isRight ? m_config.animationName : m_config.secondaryAnimationName, 0.2f);
+        }
+    }
 }
 
 bool HEIN::StrafeState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
 {
-	switch (messageID)
-	{
-	case Message::PLAYER_ACTION_ATTACK: stateMachine->ChangeState(m_config.transitions["OnAttack"]); return true;
-	case Message::PLAYER_ACTION_DODGE:  stateMachine->ChangeState(m_config.transitions["OnDodge"]); return true;
-	case Message::PLAYER_ACTION_BLOCK:  stateMachine->ChangeState(m_config.transitions["OnBlock"]); return true;
-	}
-	return false;
+    switch (messageID)
+    {
+    case Message::PLAYER_ACTION_ATTACK:
+    {
+        auto& t = m_config.transitions["OnAttack"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return true;
+    }
+    case Message::PLAYER_ACTION_DODGE:
+    {
+        auto& t = m_config.transitions["OnDodge"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return true;
+    }
+    case Message::PLAYER_ACTION_BLOCK:
+    {
+        auto& t = m_config.transitions["OnBlock"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return true;
+    }
+    }
+    return false;
 }
 
 void HEIN::StrafeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) {}
@@ -4429,72 +4684,101 @@ void HEIN::StrafeState::OnExit(Actor* owner, CombatStateMachineComponent* stateM
 // ==============================================================================
 HEIN::BlockState::BlockState(const StateConfig& config) : m_config(config) {}
 
-void HEIN::BlockState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine)
+void HEIN::BlockState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration)
 {
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-	if (blackboard)
-	{
-		blackboard->currentStance = CombatStance::Blocking;
-	}
-	std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-	for (HEIN::SkinnedModelComponent* model : models)
-	{
-		model->CrossfadeAnimation(m_config.animationName, 0.3f);
-	}
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+    if (blackboard) blackboard->currentStance = CombatStance::Blocking;
+
+    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
+    for (HEIN::SkinnedModelComponent* model : models)
+    {
+        model->CrossfadeAnimation(m_config.animationName, blendDuration);
+    }
 }
 
 void HEIN::BlockState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
 {
-	HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
-	if (blackboard)
-	{
-		blackboard->currentBlockStamina -= deltaTime;
-		if (blackboard->currentBlockStamina <= 0.0f)
-		{
-			blackboard->isBlockBroken = true;
-			
-			// Force exit block
-			if (blackboard->moveIntent.LengthSquared() > 0.1f)
-			{
-				if (blackboard->isLockedOn) stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
-				else stateMachine->ChangeState(m_config.transitions["OnMove"]);
-			}
-			else
-			{
-				stateMachine->ChangeState(m_config.transitions["OnStop"]);
-			}
-		}
-		blackboard->currentSpeed = m_config.moveSpeed;
-	}
+    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
+    if (blackboard)
+    {
+        blackboard->currentBlockStamina -= deltaTime;
+        blackboard->currentSpeed = m_config.moveSpeed;
+
+        if (blackboard->currentBlockStamina <= 0.0f)
+        {
+            blackboard->isBlockBroken = true;
+
+            if (blackboard->moveIntent.LengthSquared() > 0.1f)
+            {
+                if (blackboard->isLockedOn)
+                {
+                    auto& t = m_config.transitions["OnStrafe"];
+                    stateMachine->ChangeState(t.targetState, t.blendDuration);
+                }
+                else
+                {
+                    auto& t = m_config.transitions["OnMove"];
+                    stateMachine->ChangeState(t.targetState, t.blendDuration);
+                }
+            }
+            else
+            {
+                auto& t = m_config.transitions["OnStop"];
+                stateMachine->ChangeState(t.targetState, t.blendDuration);
+            }
+        }
+    }
 }
 
 bool HEIN::BlockState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
 {
-	if (messageID == Message::PLAYER_STOP_BLOCK)
-	{
-		HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
-		if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
-		{
-			if (blackboard->isLockedOn) stateMachine->ChangeState(m_config.transitions["OnStrafe"]);
-			else stateMachine->ChangeState(m_config.transitions["OnMove"]);
-		}
-		else
-		{
-			stateMachine->ChangeState(m_config.transitions["OnStop"]);
-		}
-		return true;
-	}
+    if (messageID == Message::PLAYER_STOP_BLOCK)
+    {
+        HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
+        if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+        {
+            if (blackboard->isLockedOn)
+            {
+                auto& t = m_config.transitions["OnStrafe"];
+                stateMachine->ChangeState(t.targetState, t.blendDuration);
+            }
+            else
+            {
+                auto& t = m_config.transitions["OnMove"];
+                stateMachine->ChangeState(t.targetState, t.blendDuration);
+            }
+        }
+        else
+        {
+            auto& t = m_config.transitions["OnStop"];
+            stateMachine->ChangeState(t.targetState, t.blendDuration);
+        }
+        return true;
+    }
 
-	// Immediately transition if the player dodges while blocking
-	if (messageID == Message::PLAYER_ACTION_DODGE)
-	{
-		stateMachine->ChangeState(m_config.transitions["OnDodge"]);
-		return true;
-	}
-	return false;
+    if (messageID == Message::PLAYER_ACTION_DODGE)
+    {
+        auto& t = m_config.transitions["OnDodge"];
+        stateMachine->ChangeState(t.targetState, t.blendDuration);
+        return true;
+    }
+    return false;
 }
 
 void HEIN::BlockState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) {}
+
+std::unique_ptr<HEIN::ICombatState> HEIN::CreateCombatStateFromConfig(const StateConfig& config)
+{
+    if (config.stateType == "Idle") return std::make_unique<HEIN::IdleState>(config);
+    if (config.stateType == "Run") return std::make_unique<HEIN::WalkState>(config);
+    if (config.stateType == "Walk") return std::make_unique<HEIN::WalkState>(config);
+    if (config.stateType == "OneHand") return std::make_unique<HEIN::OneHandAttackState>(config);
+    if (config.stateType == "Dodge") return std::make_unique<HEIN::DodgeState>(config);
+    if (config.stateType == "Strafe") return std::make_unique<HEIN::StrafeState>(config);
+    if (config.stateType == "Block") return std::make_unique<HEIN::BlockState>(config);
+
+    return std::make_unique<HEIN::IdleState>(config);
+}
 
 ================================================================================
 FILE: Dual\States\CombatStates.h
@@ -4508,6 +4792,12 @@ FILE: Dual\States\CombatStates.h
 #include <vector>
 namespace HEIN
 {
+	struct TransitionData
+	{
+		std::string targetState;
+		float blendDuration = 0.2f;
+	};
+
 	/**
 	 * @struct StateConfig
 	 * @brief Configuration data for initializing a combat state.
@@ -4524,20 +4814,45 @@ namespace HEIN
 	 */
 	struct StateConfig
 	{
+		std::string stateName = "Idle";
+
+		std::string stateType = "Idle";
+
 		/// @brief The primary animation to play during this state.
-		std::string animationName;
+		std::string animationName = "Idle";
 		
 		/// @brief An optional secondary animation (e.g. for lower-body movement).
-		std::string secondaryAnimationName;
+		std::string secondaryAnimationName = "";
 
+		std::vector<std::string> comboAnimationNames;
 		/// @brief Maps an input or event (key) to the name of the next state (value).
-		std::unordered_map<std::string, std::string> transitions;
+		std::unordered_map<std::string, TransitionData> transitions;
 
 		/// @brief Timestamps indicating when this state can be canceled into a combo.
 		std::vector<float> comboEndTimes;
 		
 		/// @brief Timestamps indicating the window during which combo inputs are accepted.
 		std::vector<float> comboWindowStarts;
+
+		/// @brief Per-stage crossfade duration (seconds) used when blending INTO each combo stage.
+		/// Index i blends comboAnimationNames[i] in over comboBlendDurations[i]. If a stage has no
+		/// entry, the transition blend duration passed to OnEnter is used as a fallback.
+		std::vector<float> comboBlendDurations;
+
+		/// @brief Number of fully-defined combo stages. A stage is only usable when it has an
+		/// animation name AND both timing entries; this clamps out partially-configured stages.
+		size_t GetComboStageCount() const
+		{
+			size_t n = comboAnimationNames.size();
+			n = (n < comboEndTimes.size()) ? n : comboEndTimes.size();
+			n = (n < comboWindowStarts.size()) ? n : comboWindowStarts.size();
+			return n;
+		}
+
+		/// @brief Blend duration (seconds) used when transitioning out after a failed combo chain.
+		/// Separates the combo-exit crossfade from the generic transition blend durations,
+		/// allowing a smoother recovery animation back to idle/walk/strafe.
+		float comboExitBlendDuration = 0.3f;
 
 		/// @brief The actor's movement speed while in this state.
 		float moveSpeed = 0.0f;
@@ -4547,6 +4862,8 @@ namespace HEIN
 	};
 
 	class CombatStateMachineComponent;
+
+	std::unique_ptr<ICombatState> CreateCombatStateFromConfig(const StateConfig& config);
 	/**
 	 * @class IdleState
 	 * @brief Represents the neutral resting state of the actor.
@@ -4563,7 +4880,7 @@ namespace HEIN
 	public:
 		IdleState(const HEIN::StateConfig& config);
 
-		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
 
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
 
@@ -4588,7 +4905,7 @@ namespace HEIN
 	public:
 		WalkState(const HEIN::StateConfig& config);
 
-		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
 
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
 
@@ -4617,28 +4934,42 @@ namespace HEIN
 	class OneHandAttackState : public ICombatState
 	{
 	public:
-		// PURPOSE: Defines the specific timestamps when combo stages start and end.
-		// INTENT: Ensures that attacks flow logically with the underlying animations,
-		// allowing players to perfectly time their inputs within these windows.
-		// DESIGN DECISIONS: Extracted from config arrays to prevent magic numbers.
+		/// Existing timing defaults used by the current three-stage combo implementation.
+		/// Keep these until Update is converted to consume the per-state config values.
+		static constexpr float STAGE_1_END_TIME     = 1.60f;
+		static constexpr float STAGE_2_END_TIME     = 2.40f;
+		static constexpr float STAGE_3_END_TIME     = 4.50f;
 		static constexpr float STAGE_1_WINDOW_START = 1.20f;
-		static constexpr float STAGE_1_END_TIME = 1.60f;
-
 		static constexpr float STAGE_2_WINDOW_START = 2.20f;
-		static constexpr float STAGE_2_END_TIME = 2.40f;
-
 		static constexpr float STAGE_3_WINDOW_START = 4.20f;
-		static constexpr float STAGE_3_END_TIME = 4.50f;
 
 	private:
 		HEIN::StateConfig m_config;
 		float m_timer = 0.0f;
 		int m_comboStage = 0;
+		bool m_comboQueued = false;
+
+		/// @brief Number of fully-configured combo stages (clamped; never crashes on partial data).
+		int StageCount() const { return static_cast<int>(m_config.GetComboStageCount()); }
+
+		/// @brief Animation name for a stage, or nullptr if not configured.
+		const std::string* StageAnim(int stage) const;
+		/// @brief Timestamp (seconds) at which a stage's attack motion concludes.
+		float StageEndTime(int stage) const;
+		/// @brief Timestamp (seconds) at which the next combo input starts being accepted.
+		float StageWindowStart(int stage) const;
+		/// @brief Crossfade duration (seconds) for blending INTO a stage.
+		/// Falls back to @p fallback when the stage has no per-stage entry.
+		float StageBlend(int stage, float fallback) const;
+
+		/// @brief Crossfades all skinned models into the given stage's animation.
+		void PlayStage(Actor* owner, int stage, float blendDuration);
+
 
 	public:
 		OneHandAttackState(const StateConfig& config);
 
-		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
 
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
 
@@ -4669,7 +5000,7 @@ namespace HEIN
 	public:
 		DodgeState(const StateConfig& config);
 
-		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
 
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
 
@@ -4689,7 +5020,7 @@ namespace HEIN
 
 		StrafeState(const StateConfig& config);
 
-		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
 
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
 
@@ -4716,7 +5047,7 @@ namespace HEIN
 
 		BlockState(const StateConfig& config);
 
-		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) override;
+		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
 
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
 
@@ -4759,7 +5090,7 @@ namespace HEIN
 		 * @param owner The actor that owns the state machine.
 		 * @param stateMachine The state machine component managing this state.
 		 */
-		virtual void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) = 0;
+		virtual void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) = 0;
 
 		/**
 		 * @brief Called every frame to update the state.
@@ -9651,10 +9982,18 @@ namespace HEIN
         // 16 bytes: Vector4 (16 bytes)
         DirectX::SimpleMath::Vector4 LightColor;
 
-        // 16 bytes: float (4 bytes) + float (4 bytes) + Vector2 (8 bytes)
+        // 16 bytes: float (4 bytes) x4
         float LightRange;
         float LightSpotAngle;
-        DirectX::SimpleMath::Vector2 Padding; // Dead space to reach the 16-byte boundary
+        float FogStart;
+        float FogEnd;
+
+        // 16 bytes: Vector4 (16 bytes)
+        DirectX::SimpleMath::Vector4 FogColor;
+
+        // 16 bytes: Vector3 (12 bytes) + float (4 bytes)
+        DirectX::SimpleMath::Vector3 CameraPos;
+        float FogPadding;
     };
 }
 
@@ -13003,6 +13342,1412 @@ namespace HEIN
 }
 
 ================================================================================
+FILE: External\Engine\Components\GaugeComponent.cpp
+================================================================================
+
+#include "pch.h"
+#include "GaugeComponent.h"
+#include "Entities/Actor.h"
+#include "Entities/ActorManager.h"
+#include "Components/TransformComponent.h"
+#include "Camera/CameraController.h"
+#include "DebugingTools/EditorUtils.h"
+#include "DebugingTools/DebugUIManager.h"
+#include "HealthComponent.h"
+#include <ImGui/imgui.h>
+#include <ImGui/imgui_stdlib.h>
+#include <ImGui/ImGuizmo.h>
+#include <DDSTextureLoader.h>
+#include <WICTextureLoader.h>
+#include <algorithm>
+#include <filesystem>
+
+// ============================================================================
+// Helper: Create a 1x1 solid color texture for fallback rendering
+// ============================================================================
+namespace
+{
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> CreateSolidTex(
+        ID3D11Device* device, uint32_t abgr)
+    {
+        D3D11_TEXTURE2D_DESC desc = {};
+        desc.Width = 1;
+        desc.Height = 1;
+        desc.MipLevels = 1;
+        desc.ArraySize = 1;
+        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.SampleDesc.Count = 1;
+        desc.Usage = D3D11_USAGE_IMMUTABLE;
+        desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+        D3D11_SUBRESOURCE_DATA initData = {};
+        initData.pSysMem = &abgr;
+        initData.SysMemPitch = sizeof(uint32_t);
+
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> tex;
+        HRESULT hr = device->CreateTexture2D(&desc, &initData, tex.GetAddressOf());
+        if (FAILED(hr)) return nullptr;
+
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv;
+        hr = device->CreateShaderResourceView(tex.Get(), nullptr, srv.GetAddressOf());
+        if (FAILED(hr)) return nullptr;
+        return srv;
+    }
+
+    uint32_t Vec4ToABGR(const DirectX::SimpleMath::Vector4& c)
+    {
+        uint8_t r = static_cast<uint8_t>(std::clamp(c.x, 0.0f, 1.0f) * 255.0f);
+        uint8_t g = static_cast<uint8_t>(std::clamp(c.y, 0.0f, 1.0f) * 255.0f);
+        uint8_t b = static_cast<uint8_t>(std::clamp(c.z, 0.0f, 1.0f) * 255.0f);
+        uint8_t a = static_cast<uint8_t>(std::clamp(c.w, 0.0f, 1.0f) * 255.0f);
+        return (a << 24) | (b << 16) | (g << 8) | r;
+    }
+
+    void LoadTextureFromPath(ID3D11Device* device, const std::wstring& path,
+                             Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>& srv)
+    {
+        srv.Reset();
+        if (path.empty()) return;
+        
+        HRESULT hr = DirectX::CreateDDSTextureFromFile(
+            device, path.c_str(), nullptr, srv.ReleaseAndGetAddressOf());
+        if (FAILED(hr))
+        {
+            hr = DirectX::CreateWICTextureFromFile(
+                device, path.c_str(), nullptr, srv.ReleaseAndGetAddressOf());
+        }
+    }
+
+    const char* GaugeTypeToStr(HEIN::GaugeType t)
+    {
+        switch (t)
+        {
+            case HEIN::GaugeType::HP:     return "HP";
+            case HEIN::GaugeType::Dodge:  return "Dodge";
+            case HEIN::GaugeType::Block:  return "Block";
+            case HEIN::GaugeType::Custom: return "Custom";
+            default: return "Unknown";
+        }
+    }
+}
+
+// ============================================================================
+// Constructor
+// ============================================================================
+HEIN::GaugeComponent::GaugeComponent(Actor* owner)
+    : IComponent(owner)
+{
+}
+
+// ============================================================================
+// Initialize: Create SpriteBatch and load textures for all bars
+// ============================================================================
+void HEIN::GaugeComponent::Initialize(GameContext& gameContext)
+{
+    ID3D11Device* device = gameContext.deviceResources.GetD3DDevice();
+    ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
+
+    if (!m_spriteBatch)
+    {
+        m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(context);
+    }
+
+    for (auto& bar : m_bars)
+    {
+        LoadBarTextures(device, bar);
+    }
+}
+
+// ============================================================================
+// LoadBarTextures: Load DDS/WIC textures for a single bar definition
+// ============================================================================
+void HEIN::GaugeComponent::LoadBarTextures(ID3D11Device* device, GaugeBarDef& bar)
+{
+    LoadTextureFromPath(device, bar.backgroundTexPath, bar.backgroundTex);
+    LoadTextureFromPath(device, bar.fillTexPath, bar.fillTex);
+    LoadTextureFromPath(device, bar.borderTexPath, bar.borderTex);
+}
+
+// ============================================================================
+// CreateSolidColorTexture: Creates a 1x1 pixel texture from a Vector4 color
+// ============================================================================
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> HEIN::GaugeComponent::CreateSolidColorTexture(
+    ID3D11Device* device, const DirectX::SimpleMath::Vector4& color)
+{
+    return CreateSolidTex(device, Vec4ToABGR(color));
+}
+
+// ============================================================================
+// WorldToScreenPoint: Projects a 3D world position to 2D screen coordinates
+// ============================================================================
+bool HEIN::GaugeComponent::WorldToScreenPoint(
+    GameContext& gameContext,
+    const DirectX::SimpleMath::Vector3& worldPos,
+    float& outX, float& outY)
+{
+    if (!gameContext.mainCamera) return false;
+
+    DirectX::SimpleMath::Matrix view = gameContext.mainCamera->GetView();
+
+    D3D11_VIEWPORT vp = gameContext.deviceResources.GetScreenViewport();
+    float aspect = (vp.Height > 0.0f) ? (vp.Width / vp.Height) : (1280.0f / 720.0f);
+    float fov = gameContext.mainCamera->GetFov();
+    if (fov <= 0.0f) fov = DirectX::XM_PI / 4.0f;
+
+    DirectX::SimpleMath::Matrix proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(
+        fov, aspect, 0.1f, 5000.0f);
+
+    // Transform world -> clip space
+    DirectX::SimpleMath::Matrix viewProj = view * proj;
+    DirectX::SimpleMath::Vector4 clipPos = DirectX::SimpleMath::Vector4::Transform(
+        DirectX::SimpleMath::Vector4(worldPos.x, worldPos.y, worldPos.z, 1.0f), viewProj);
+
+    // Behind camera check
+    if (clipPos.w <= 0.001f) return false;
+
+    // NDC
+    float ndcX = clipPos.x / clipPos.w;
+    float ndcY = clipPos.y / clipPos.w;
+
+    // NDC to screen (reference canvas 1280x720)
+    outX = (ndcX * 0.5f + 0.5f) * kRefWidth;
+    outY = (-ndcY * 0.5f + 0.5f) * kRefHeight;
+
+    return true;
+}
+
+// ============================================================================
+// Helper: Get the parent enemy actor (gauge is a child actor of the enemy)
+// ============================================================================
+HEIN::Actor* HEIN::GaugeComponent::GetParentActor(GameContext& gameContext)
+{
+    if (!gameContext.actorManager) return nullptr;
+
+    ActorID parentID = m_owner->GetParentID();
+    if (parentID == INVALID_ACTOR_ID) return nullptr;
+
+    return gameContext.actorManager->GetActor(parentID);
+}
+
+// ============================================================================
+// Helper: Find the Player actor in the scene
+// ============================================================================
+HEIN::Actor* HEIN::GaugeComponent::FindPlayerActor(GameContext& gameContext)
+{
+    if (!gameContext.actorManager) return nullptr;
+
+    for (auto& pair : gameContext.actorManager->GetAllActors())
+    {
+        if (pair.second->GetActorType() == HEIN::ActorType::Player)
+        {
+            return pair.second.get();
+        }
+    }
+    return nullptr;
+}
+
+// ============================================================================
+// Helper: Get world position of the parent actor (or self if no parent)
+// Used for WorldToScreen projection and distance checks.
+// ============================================================================
+DirectX::SimpleMath::Vector3 HEIN::GaugeComponent::GetTargetWorldPosition(GameContext& gameContext)
+{
+    // First try to use the parent enemy actor's position
+    Actor* parentActor = GetParentActor(gameContext);
+    Actor* targetActor = parentActor ? parentActor : m_owner;
+
+    TransformComponent* transform = targetActor->GetComponent<TransformComponent>();
+    if (transform)
+    {
+        return transform->GetWorldMatrix().Translation();
+    }
+    return DirectX::SimpleMath::Vector3::Zero;
+}
+
+// ============================================================================
+// Start / Update
+// ============================================================================
+void HEIN::GaugeComponent::Start()
+{
+}
+
+void HEIN::GaugeComponent::Update(float /*deltaTime*/)
+{
+    // Skip range check in editor mode — always show for editing
+    // (gameContext is not available in Update, range check happens in Draw)
+}
+
+// ============================================================================
+// SyncBoundBars: Auto-sync bar values from data source components
+// HP is pulled here (engine-side). Dodge/Block are pushed by game-side code.
+// ============================================================================
+void HEIN::GaugeComponent::SyncBoundBars(GameContext& gameContext)
+{
+    for (auto& bar : m_bars)
+    {
+        if (!bar.autoBind) continue;
+
+        if (bar.gaugeType == GaugeType::HP)
+        {
+            // Look for HealthComponent on parent actor first, then owner
+            Actor* target = GetParentActor(gameContext);
+            if (!target) target = m_owner;
+
+            HealthComponent* health = target->GetComponent<HealthComponent>();
+            if (health)
+            {
+                bar.currentValue = health->GetCurrentHealth();
+                bar.maxValue = health->GetMaxHealth();
+            }
+        }
+        // GaugeType::Dodge and GaugeType::Block are pushed by game-side 
+        // CombatBlackBoard::Update() — no engine-side pull needed.
+        // GaugeType::Custom is always manual via SetValue().
+    }
+}
+
+// ============================================================================
+// Draw2D: Main rendering entry point (called by Actor::Draw2D)
+// ============================================================================
+void HEIN::GaugeComponent::Draw2D(GameContext& gameContext)
+{
+    Draw(gameContext, DirectX::SimpleMath::Matrix::Identity,
+         DirectX::SimpleMath::Matrix::Identity,
+         DirectX::SimpleMath::Matrix::Identity);
+}
+
+void HEIN::GaugeComponent::Draw(
+    GameContext& gameContext,
+    const DirectX::SimpleMath::Matrix& /*world*/,
+    const DirectX::SimpleMath::Matrix& /*view*/,
+    const DirectX::SimpleMath::Matrix& /*proj*/)
+{
+    if (!m_isVisible || m_bars.empty()) return;
+
+    // Auto-sync bound bar values from data source components
+    SyncBoundBars(gameContext);
+
+    // --- Range-based activation check ---
+    // When the gauge is a child of an enemy actor, only show it when
+    // the player is within activation range of the parent enemy.
+    if (m_useRangeActivation && !gameContext.isEditorMode)
+    {
+        Actor* playerActor = FindPlayerActor(gameContext);
+        if (playerActor)
+        {
+            TransformComponent* playerTransform = playerActor->GetComponent<TransformComponent>();
+            if (playerTransform)
+            {
+                DirectX::SimpleMath::Vector3 playerPos = playerTransform->GetWorldMatrix().Translation();
+                DirectX::SimpleMath::Vector3 targetPos = GetTargetWorldPosition(gameContext);
+                float distance = DirectX::SimpleMath::Vector3::Distance(playerPos, targetPos);
+
+                // Hysteresis: use different thresholds for entering/leaving range
+                // to prevent flickering when the player is near the boundary.
+                if (m_isInRange)
+                {
+                    // Currently visible, hide when distance > deactivationRange
+                    if (distance > m_deactivationRange)
+                    {
+                        m_isInRange = false;
+                    }
+                }
+                else
+                {
+                    // Currently hidden, show when distance < activationRange
+                    if (distance < m_activationRange)
+                    {
+                        m_isInRange = true;
+                    }
+                }
+            }
+        }
+        else
+        {
+            // No player found: don't show enemy gauges
+            m_isInRange = false;
+        }
+
+        if (!m_isInRange) return;
+    }
+
+    // Query current viewport for responsive scaling
+    D3D11_VIEWPORT vp = {};
+    UINT numVp = 1;
+    gameContext.deviceResources.GetD3DDeviceContext()->RSGetViewports(&numVp, &vp);
+    if (vp.Width <= 0.0f || vp.Height <= 0.0f)
+    {
+        vp = gameContext.deviceResources.GetScreenViewport();
+    }
+
+    m_lastScaleX = vp.Width / kRefWidth;
+    m_lastScaleY = vp.Height / kRefHeight;
+    m_lastVpX = vp.TopLeftX;
+    m_lastVpY = vp.TopLeftY;
+
+    // Determine anchor position
+    float anchorX = 0.0f;
+    float anchorY = 0.0f;
+
+    if (m_anchorMode == GaugeAnchorMode::ScreenSpace)
+    {
+        // Fixed screen position on reference canvas
+        anchorX = m_screenPosition.x;
+        anchorY = m_screenPosition.y;
+    }
+    else // WorldToScreen
+    {
+        // Use the PARENT enemy actor's world position + offset, not the child gauge actor
+        DirectX::SimpleMath::Vector3 targetWorldPos = GetTargetWorldPosition(gameContext);
+        DirectX::SimpleMath::Vector3 gaugeWorldPos = targetWorldPos + m_worldOffset;
+
+        if (!WorldToScreenPoint(gameContext, gaugeWorldPos, anchorX, anchorY))
+        {
+            return; // Behind camera, don't draw
+        }
+    }
+
+    // Draw each bar
+    for (const auto& bar : m_bars)
+    {
+        DrawBar(gameContext, bar, anchorX, anchorY, m_lastScaleX, m_lastScaleY);
+    }
+}
+
+// ============================================================================
+// DrawBar: Renders a single gauge bar (background, fill, border, label)
+// ============================================================================
+void HEIN::GaugeComponent::DrawBar(
+    GameContext& gameContext,
+    const GaugeBarDef& bar,
+    float anchorX, float anchorY,
+    float scaleX, float scaleY)
+{
+    // Compute screen-space rectangle
+    float barX = (anchorX + bar.offset.x) * scaleX;
+    float barY = (anchorY + bar.offset.y) * scaleY;
+    float barW = bar.size.x * scaleX;
+    float barH = bar.size.y * scaleY;
+
+    // Calculate fill ratio
+    float ratio = (bar.maxValue > 0.0f) ? std::clamp(bar.currentValue / bar.maxValue, 0.0f, 1.0f) : 0.0f;
+
+    ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
+    ID3D11Device* device = gameContext.deviceResources.GetD3DDevice();
+
+    // UI overlay uses DepthNone so it draws on top of 3D
+    context->OMSetDepthStencilState(gameContext.commonStates.DepthNone(), 0);
+
+    if (m_spriteBatch)
+    {
+        m_spriteBatch->Begin(DirectX::SpriteSortMode_Deferred, gameContext.commonStates.NonPremultiplied());
+
+        // 1) Background
+        {
+            RECT bgRect;
+            bgRect.left = static_cast<LONG>(barX);
+            bgRect.top = static_cast<LONG>(barY);
+            bgRect.right = static_cast<LONG>(barX + barW);
+            bgRect.bottom = static_cast<LONG>(barY + barH);
+
+            ID3D11ShaderResourceView* bgTex = bar.backgroundTex.Get();
+            Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> fallbackBg;
+            if (!bgTex)
+            {
+                fallbackBg = CreateSolidTex(device, Vec4ToABGR(bar.bgColor));
+                bgTex = fallbackBg.Get();
+            }
+
+            if (bgTex)
+            {
+                m_spriteBatch->Draw(bgTex, bgRect, nullptr,
+                    DirectX::SimpleMath::Vector4(bar.bgColor.x, bar.bgColor.y, bar.bgColor.z, bar.bgColor.w));
+            }
+        }
+
+        // 2) Fill
+        {
+            DirectX::SimpleMath::Vector4 currentFillColor = bar.fillColor;
+            if (ratio < bar.lowThreshold)
+            {
+                currentFillColor = bar.lowColor;
+            }
+
+            float fillW = barW * ratio;
+            RECT fillRect;
+
+            if (bar.fillRightToLeft)
+            {
+                fillRect.left = static_cast<LONG>(barX + barW - fillW);
+                fillRect.right = static_cast<LONG>(barX + barW);
+            }
+            else
+            {
+                fillRect.left = static_cast<LONG>(barX);
+                fillRect.right = static_cast<LONG>(barX + fillW);
+            }
+
+            fillRect.top = static_cast<LONG>(barY);
+            fillRect.bottom = static_cast<LONG>(barY + barH);
+
+            ID3D11ShaderResourceView* fTex = bar.fillTex.Get();
+            Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> fallbackFill;
+            if (!fTex)
+            {
+                fallbackFill = CreateSolidTex(device, Vec4ToABGR(currentFillColor));
+                fTex = fallbackFill.Get();
+            }
+
+            if (fTex && fillW > 0.0f)
+            {
+                m_spriteBatch->Draw(fTex, fillRect, nullptr, currentFillColor);
+            }
+        }
+
+        // 3) Border/Frame overlay (drawn on top of fill)
+        {
+            if (bar.borderTex.Get())
+            {
+                RECT borderRect;
+                borderRect.left = static_cast<LONG>(barX);
+                borderRect.top = static_cast<LONG>(barY);
+                borderRect.right = static_cast<LONG>(barX + barW);
+                borderRect.bottom = static_cast<LONG>(barY + barH);
+
+                m_spriteBatch->Draw(bar.borderTex.Get(), borderRect, nullptr,
+                    DirectX::SimpleMath::Vector4(bar.borderColor.x, bar.borderColor.y, bar.borderColor.z, bar.borderColor.w));
+            }
+        }
+
+        m_spriteBatch->End();
+    }
+
+    // Reset depth state
+    context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
+
+    // 4) Label and Value text using ImGui draw list (always on top)
+    ImDrawList* drawList = ImGui::GetForegroundDrawList();
+    if (drawList)
+    {
+        float fontSize = ImGui::GetFontSize() * bar.fontSize * scaleY;
+
+        ImU32 labelCol = IM_COL32(
+            static_cast<int>(bar.labelColor.x * 255.0f),
+            static_cast<int>(bar.labelColor.y * 255.0f),
+            static_cast<int>(bar.labelColor.z * 255.0f),
+            static_cast<int>(bar.labelColor.w * 255.0f)
+        );
+
+        if (bar.showLabel)
+        {
+            // Label: drawn to the left of the bar
+            ImVec2 labelPos(m_lastVpX + barX + 4.0f, m_lastVpY + barY + (barH - fontSize) * 0.5f);
+
+            // Drop shadow
+            drawList->AddText(ImGui::GetFont(), fontSize,
+                ImVec2(labelPos.x + 1.0f, labelPos.y + 1.0f),
+                IM_COL32(0, 0, 0, 180), bar.name.c_str());
+            drawList->AddText(ImGui::GetFont(), fontSize, labelPos, labelCol, bar.name.c_str());
+        }
+
+        if (bar.showValue)
+        {
+            // Value: drawn at the right side of the bar
+            char valBuf[64];
+            sprintf_s(valBuf, "%.0f/%.0f", bar.currentValue, bar.maxValue);
+
+            ImVec2 valSize = ImGui::CalcTextSize(valBuf);
+            valSize.x *= (bar.fontSize * scaleY / ImGui::GetFontSize() * ImGui::GetFontSize() / ImGui::GetFontSize());
+
+            ImVec2 valPos(
+                m_lastVpX + barX + barW - valSize.x * bar.fontSize * scaleY / ImGui::GetFontSize() - 4.0f,
+                m_lastVpY + barY + (barH - fontSize) * 0.5f
+            );
+
+            // Drop shadow
+            drawList->AddText(ImGui::GetFont(), fontSize,
+                ImVec2(valPos.x + 1.0f, valPos.y + 1.0f),
+                IM_COL32(0, 0, 0, 180), valBuf);
+            drawList->AddText(ImGui::GetFont(), fontSize, valPos, labelCol, valBuf);
+        }
+
+        // If no border texture, draw a thin rectangle border via ImGui
+        if (!bar.borderTex.Get())
+        {
+            ImU32 bCol = IM_COL32(
+                static_cast<int>(bar.borderColor.x * 255.0f),
+                static_cast<int>(bar.borderColor.y * 255.0f),
+                static_cast<int>(bar.borderColor.z * 255.0f),
+                static_cast<int>(bar.borderColor.w * 255.0f)
+            );
+            drawList->AddRect(
+                ImVec2(m_lastVpX + barX, m_lastVpY + barY),
+                ImVec2(m_lastVpX + barX + barW, m_lastVpY + barY + barH),
+                bCol, 0.0f, 0, 1.5f
+            );
+        }
+    }
+}
+
+// ============================================================================
+// Runtime API
+// ============================================================================
+int HEIN::GaugeComponent::AddBar(const GaugeBarDef& bar)
+{
+    m_bars.push_back(bar);
+    return static_cast<int>(m_bars.size()) - 1;
+}
+
+void HEIN::GaugeComponent::RemoveBar(int index)
+{
+    if (index >= 0 && index < static_cast<int>(m_bars.size()))
+    {
+        m_bars.erase(m_bars.begin() + index);
+    }
+}
+
+HEIN::GaugeBarDef* HEIN::GaugeComponent::GetBar(int index)
+{
+    if (index >= 0 && index < static_cast<int>(m_bars.size()))
+    {
+        return &m_bars[index];
+    }
+    return nullptr;
+}
+
+HEIN::GaugeBarDef* HEIN::GaugeComponent::FindBar(const std::string& name)
+{
+    for (auto& bar : m_bars)
+    {
+        if (bar.name == name) return &bar;
+    }
+    return nullptr;
+}
+
+void HEIN::GaugeComponent::SetValue(GaugeType type, float current, float max)
+{
+    for (auto& bar : m_bars)
+    {
+        if (bar.gaugeType == type)
+        {
+            bar.currentValue = current;
+            if (max >= 0.0f) bar.maxValue = max;
+            return;
+        }
+    }
+}
+
+void HEIN::GaugeComponent::SetValue(const std::string& name, float current, float max)
+{
+    GaugeBarDef* bar = FindBar(name);
+    if (bar)
+    {
+        bar->currentValue = current;
+        if (max >= 0.0f) bar->maxValue = max;
+    }
+}
+
+// ============================================================================
+// Serialize: Save all gauge data to JSON
+// ============================================================================
+nlohmann::json HEIN::GaugeComponent::Serialize()
+{
+    nlohmann::json data = IComponent::Serialize();
+
+    data["AnchorMode"] = static_cast<int>(m_anchorMode);
+    data["ScreenPosX"] = m_screenPosition.x;
+    data["ScreenPosY"] = m_screenPosition.y;
+    data["WorldOffsetX"] = m_worldOffset.x;
+    data["WorldOffsetY"] = m_worldOffset.y;
+    data["WorldOffsetZ"] = m_worldOffset.z;
+    data["IsVisible"] = m_isVisible;
+    data["UseRangeActivation"] = m_useRangeActivation;
+    data["ActivationRange"] = m_activationRange;
+    data["DeactivationRange"] = m_deactivationRange;
+
+    nlohmann::json barsArray = nlohmann::json::array();
+    for (const auto& bar : m_bars)
+    {
+        nlohmann::json b;
+        b["Name"] = bar.name;
+        b["GaugeType"] = static_cast<int>(bar.gaugeType);
+        b["CurrentValue"] = bar.currentValue;
+        b["MaxValue"] = bar.maxValue;
+        b["OffsetX"] = bar.offset.x;
+        b["OffsetY"] = bar.offset.y;
+        b["SizeX"] = bar.size.x;
+        b["SizeY"] = bar.size.y;
+        b["FillRightToLeft"] = bar.fillRightToLeft;
+        b["AutoBind"] = bar.autoBind;
+
+        b["FillColorR"] = bar.fillColor.x;
+        b["FillColorG"] = bar.fillColor.y;
+        b["FillColorB"] = bar.fillColor.z;
+        b["FillColorA"] = bar.fillColor.w;
+
+        b["BgColorR"] = bar.bgColor.x;
+        b["BgColorG"] = bar.bgColor.y;
+        b["BgColorB"] = bar.bgColor.z;
+        b["BgColorA"] = bar.bgColor.w;
+
+        b["BorderColorR"] = bar.borderColor.x;
+        b["BorderColorG"] = bar.borderColor.y;
+        b["BorderColorB"] = bar.borderColor.z;
+        b["BorderColorA"] = bar.borderColor.w;
+
+        b["LowThreshold"] = bar.lowThreshold;
+        b["LowColorR"] = bar.lowColor.x;
+        b["LowColorG"] = bar.lowColor.y;
+        b["LowColorB"] = bar.lowColor.z;
+        b["LowColorA"] = bar.lowColor.w;
+
+        b["BackgroundTexPath"] = std::string(bar.backgroundTexPath.begin(), bar.backgroundTexPath.end());
+        b["FillTexPath"] = std::string(bar.fillTexPath.begin(), bar.fillTexPath.end());
+        b["BorderTexPath"] = std::string(bar.borderTexPath.begin(), bar.borderTexPath.end());
+
+        b["ShowLabel"] = bar.showLabel;
+        b["ShowValue"] = bar.showValue;
+        b["FontSize"] = bar.fontSize;
+        b["LabelColorR"] = bar.labelColor.x;
+        b["LabelColorG"] = bar.labelColor.y;
+        b["LabelColorB"] = bar.labelColor.z;
+        b["LabelColorA"] = bar.labelColor.w;
+
+        barsArray.push_back(b);
+    }
+    data["Bars"] = barsArray;
+
+    return data;
+}
+
+// ============================================================================
+// Deserialize: Load gauge data from JSON
+// ============================================================================
+void HEIN::GaugeComponent::Deserialize(const nlohmann::json& data)
+{
+    IComponent::Deserialize(data);
+
+    if (data.contains("AnchorMode")) m_anchorMode = static_cast<GaugeAnchorMode>(data["AnchorMode"].get<int>());
+    if (data.contains("ScreenPosX")) m_screenPosition.x = data["ScreenPosX"];
+    if (data.contains("ScreenPosY")) m_screenPosition.y = data["ScreenPosY"];
+    if (data.contains("WorldOffsetX")) m_worldOffset.x = data["WorldOffsetX"];
+    if (data.contains("WorldOffsetY")) m_worldOffset.y = data["WorldOffsetY"];
+    if (data.contains("WorldOffsetZ")) m_worldOffset.z = data["WorldOffsetZ"];
+    if (data.contains("IsVisible")) m_isVisible = data["IsVisible"];
+    if (data.contains("UseRangeActivation")) m_useRangeActivation = data["UseRangeActivation"];
+    if (data.contains("ActivationRange")) m_activationRange = data["ActivationRange"];
+    if (data.contains("DeactivationRange")) m_deactivationRange = data["DeactivationRange"];
+
+    m_bars.clear();
+    if (data.contains("Bars"))
+    {
+        for (const auto& b : data["Bars"])
+        {
+            GaugeBarDef bar;
+            if (b.contains("Name")) bar.name = b["Name"];
+            if (b.contains("GaugeType")) bar.gaugeType = static_cast<GaugeType>(b["GaugeType"].get<int>());
+            if (b.contains("CurrentValue")) bar.currentValue = b["CurrentValue"];
+            if (b.contains("MaxValue")) bar.maxValue = b["MaxValue"];
+            if (b.contains("OffsetX")) bar.offset.x = b["OffsetX"];
+            if (b.contains("OffsetY")) bar.offset.y = b["OffsetY"];
+            if (b.contains("SizeX")) bar.size.x = b["SizeX"];
+            if (b.contains("SizeY")) bar.size.y = b["SizeY"];
+            if (b.contains("FillRightToLeft")) bar.fillRightToLeft = b["FillRightToLeft"];
+            if (b.contains("AutoBind")) bar.autoBind = b["AutoBind"];
+
+            if (b.contains("FillColorR"))
+            {
+                bar.fillColor.x = b["FillColorR"];
+                bar.fillColor.y = b["FillColorG"];
+                bar.fillColor.z = b["FillColorB"];
+                bar.fillColor.w = b.value("FillColorA", 1.0f);
+            }
+            if (b.contains("BgColorR"))
+            {
+                bar.bgColor.x = b["BgColorR"];
+                bar.bgColor.y = b["BgColorG"];
+                bar.bgColor.z = b["BgColorB"];
+                bar.bgColor.w = b.value("BgColorA", 0.8f);
+            }
+            if (b.contains("BorderColorR"))
+            {
+                bar.borderColor.x = b["BorderColorR"];
+                bar.borderColor.y = b["BorderColorG"];
+                bar.borderColor.z = b["BorderColorB"];
+                bar.borderColor.w = b.value("BorderColorA", 1.0f);
+            }
+            if (b.contains("LowThreshold")) bar.lowThreshold = b["LowThreshold"];
+            if (b.contains("LowColorR"))
+            {
+                bar.lowColor.x = b["LowColorR"];
+                bar.lowColor.y = b["LowColorG"];
+                bar.lowColor.z = b["LowColorB"];
+                bar.lowColor.w = b.value("LowColorA", 1.0f);
+            }
+
+            if (b.contains("BackgroundTexPath"))
+            {
+                std::string p = b["BackgroundTexPath"];
+                bar.backgroundTexPath = std::wstring(p.begin(), p.end());
+            }
+            if (b.contains("FillTexPath"))
+            {
+                std::string p = b["FillTexPath"];
+                bar.fillTexPath = std::wstring(p.begin(), p.end());
+            }
+            if (b.contains("BorderTexPath"))
+            {
+                std::string p = b["BorderTexPath"];
+                bar.borderTexPath = std::wstring(p.begin(), p.end());
+            }
+
+            if (b.contains("ShowLabel")) bar.showLabel = b["ShowLabel"];
+            if (b.contains("ShowValue")) bar.showValue = b["ShowValue"];
+            if (b.contains("FontSize")) bar.fontSize = b["FontSize"];
+            if (b.contains("LabelColorR"))
+            {
+                bar.labelColor.x = b["LabelColorR"];
+                bar.labelColor.y = b["LabelColorG"];
+                bar.labelColor.z = b["LabelColorB"];
+                bar.labelColor.w = b.value("LabelColorA", 1.0f);
+            }
+
+            m_bars.push_back(bar);
+        }
+    }
+}
+
+// ============================================================================
+// InitializeAfterDeserialize: Load textures after JSON load
+// ============================================================================
+void HEIN::GaugeComponent::InitializeAfterDeserialize(GameContext& gameContext)
+{
+    Initialize(gameContext);
+}
+
+// ============================================================================
+// OnInspectorGUI: ImGui editor panel (Unity-style inspector for gauge bars)
+// ============================================================================
+void HEIN::GaugeComponent::OnInspectorGUI(GameContext& gameContext)
+{
+    HWND windowHandle = gameContext.deviceResources.GetWindow();
+
+    bool isActive = (HEIN::g_ActiveGizmoTarget == this);
+    if (ImGui::RadioButton("Edit Gauge with Gizmo", isActive))
+    {
+        HEIN::g_ActiveGizmoTarget = this;
+    }
+
+    if (ImGui::CollapsingHeader("Gauge Component", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Checkbox("Visible##Gauge", &m_isVisible);
+
+        // Anchor Mode
+        const char* anchorModes[] = { "Screen Space (Player HUD)", "World To Screen (Enemy Overhead)" };
+        int anchorIdx = static_cast<int>(m_anchorMode);
+        if (ImGui::Combo("Anchor Mode", &anchorIdx, anchorModes, IM_ARRAYSIZE(anchorModes)))
+        {
+            m_anchorMode = static_cast<GaugeAnchorMode>(anchorIdx);
+        }
+
+        if (m_anchorMode == GaugeAnchorMode::ScreenSpace)
+        {
+            ImGui::DragFloat2("Screen Position (1280x720)", &m_screenPosition.x, 1.0f);
+        }
+        else
+        {
+            ImGui::DragFloat3("World Offset (X, Y, Z)", &m_worldOffset.x, 0.05f);
+            ImGui::TextColored(ImVec4(0.6f, 0.8f, 1.0f, 1.0f), 
+                "Tip: Y=2.5 places the bar above the actor's head");
+        }
+
+        // --- Range-based activation ---
+        ImGui::Separator();
+        ImGui::Text("Range-Based Activation:");
+        ImGui::Checkbox("Use Range Activation", &m_useRangeActivation);
+
+        if (m_useRangeActivation)
+        {
+            ImGui::DragFloat("Activation Range", &m_activationRange, 0.5f, 0.0f, 500.0f, "%.1f units");
+            ImGui::DragFloat("Deactivation Range", &m_deactivationRange, 0.5f, 0.0f, 500.0f, "%.1f units");
+
+            // Auto-clamp: deactivation should always be >= activation to provide hysteresis
+            if (m_deactivationRange < m_activationRange)
+            {
+                m_deactivationRange = m_activationRange + 5.0f;
+            }
+
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
+                "Gauge appears when player enters %.0f units,\nhides when player leaves %.0f units.",
+                m_activationRange, m_deactivationRange);
+
+            // Live status indicator
+            if (m_isInRange)
+            {
+                ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Status: IN RANGE (visible)");
+            }
+            else
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Status: OUT OF RANGE (hidden)");
+            }
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Gauge Bars: %d", static_cast<int>(m_bars.size()));
+
+        // Add new bar buttons
+        if (ImGui::Button("+ Add HP Bar"))
+        {
+            GaugeBarDef bar;
+            bar.name = "HP";
+            bar.gaugeType = GaugeType::HP;
+            bar.fillColor = { 0.2f, 0.8f, 0.2f, 1.0f };
+            bar.offset = { 0.0f, static_cast<float>(m_bars.size()) * 28.0f };
+            m_bars.push_back(bar);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("+ Add Dodge Bar"))
+        {
+            GaugeBarDef bar;
+            bar.name = "Dodge";
+            bar.gaugeType = GaugeType::Dodge;
+            bar.fillColor = { 0.3f, 0.5f, 0.9f, 1.0f };
+            bar.offset = { 0.0f, static_cast<float>(m_bars.size()) * 28.0f };
+            m_bars.push_back(bar);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("+ Add Block Bar"))
+        {
+            GaugeBarDef bar;
+            bar.name = "Block";
+            bar.gaugeType = GaugeType::Block;
+            bar.fillColor = { 0.85f, 0.65f, 0.2f, 1.0f };
+            bar.offset = { 0.0f, static_cast<float>(m_bars.size()) * 28.0f };
+            m_bars.push_back(bar);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("+ Add Custom"))
+        {
+            GaugeBarDef bar;
+            bar.name = "Custom";
+            bar.gaugeType = GaugeType::Custom;
+            bar.offset = { 0.0f, static_cast<float>(m_bars.size()) * 28.0f };
+            m_bars.push_back(bar);
+        }
+
+        ImGui::Separator();
+
+        // Per-bar inspector
+        int removeIdx = -1;
+        for (int i = 0; i < static_cast<int>(m_bars.size()); i++)
+        {
+            GaugeBarDef& bar = m_bars[i];
+            ImGui::PushID(i);
+
+            char headerLabel[128];
+            sprintf_s(headerLabel, "[%d] %s (%s)###Bar%d", i, bar.name.c_str(), GaugeTypeToStr(bar.gaugeType), i);
+
+            if (ImGui::CollapsingHeader(headerLabel))
+            {
+                // Name & Type
+                ImGui::InputText("Name", &bar.name);
+                const char* typeNames[] = { "HP", "Dodge", "Block", "Custom" };
+                int typeIdx = static_cast<int>(bar.gaugeType);
+                if (ImGui::Combo("Gauge Type", &typeIdx, typeNames, IM_ARRAYSIZE(typeNames)))
+                {
+                    bar.gaugeType = static_cast<GaugeType>(typeIdx);
+                }
+
+                // Values
+                ImGui::DragFloat("Current Value", &bar.currentValue, 0.5f, 0.0f, bar.maxValue);
+                ImGui::DragFloat("Max Value", &bar.maxValue, 0.5f, 1.0f, 99999.0f);
+
+                // Layout
+                ImGui::DragFloat2("Offset (X, Y)", &bar.offset.x, 1.0f);
+                ImGui::DragFloat2("Size (W, H)", &bar.size.x, 1.0f, 10.0f, 2000.0f);
+                ImGui::Checkbox("Fill Right-to-Left", &bar.fillRightToLeft);
+
+                // Auto-Bind
+                ImGui::Checkbox("Auto-Bind", &bar.autoBind);
+                if (bar.autoBind && bar.gaugeType != GaugeType::Custom)
+                {
+                    ImGui::SameLine();
+                    const char* bindTarget = "?";
+                    switch (bar.gaugeType)
+                    {
+                        case GaugeType::HP:    bindTarget = "HealthComponent"; break;
+                        case GaugeType::Dodge: bindTarget = "CombatBlackBoard.Dodge"; break;
+                        case GaugeType::Block: bindTarget = "CombatBlackBoard.Block"; break;
+                        default: break;
+                    }
+                    ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "-> %s", bindTarget);
+                }
+
+                // Colors
+                ImGui::ColorEdit4("Fill Color", &bar.fillColor.x);
+                ImGui::ColorEdit4("Background Color", &bar.bgColor.x);
+                ImGui::ColorEdit4("Border Color", &bar.borderColor.x);
+                ImGui::SliderFloat("Low HP Threshold", &bar.lowThreshold, 0.0f, 1.0f, "%.2f");
+                ImGui::ColorEdit4("Low HP Color", &bar.lowColor.x);
+
+                // Textures
+                ImGui::Separator();
+                ImGui::Text("Textures (Optional):");
+
+                // Background Texture
+                {
+                    std::string pathStr(bar.backgroundTexPath.begin(), bar.backgroundTexPath.end());
+                    if (ImGui::InputText("Background Texture", &pathStr))
+                    {
+                        bar.backgroundTexPath = std::wstring(pathStr.begin(), pathStr.end());
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Browse##BgTex"))
+                    {
+                        std::wstring file = HEIN::EditorUtils::OpenFileDialog(
+                            L"Image Files\0*.png;*.dds;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", windowHandle);
+                        if (!file.empty())
+                        {
+                            bar.backgroundTexPath = HEIN::EditorUtils::MakeRelativePath(file);
+                            LoadBarTextures(gameContext.deviceResources.GetD3DDevice(), bar);
+                        }
+                    }
+                }
+
+                // Fill Texture
+                {
+                    std::string pathStr(bar.fillTexPath.begin(), bar.fillTexPath.end());
+                    if (ImGui::InputText("Fill Texture", &pathStr))
+                    {
+                        bar.fillTexPath = std::wstring(pathStr.begin(), pathStr.end());
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Browse##FillTex"))
+                    {
+                        std::wstring file = HEIN::EditorUtils::OpenFileDialog(
+                            L"Image Files\0*.png;*.dds;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", windowHandle);
+                        if (!file.empty())
+                        {
+                            bar.fillTexPath = HEIN::EditorUtils::MakeRelativePath(file);
+                            LoadBarTextures(gameContext.deviceResources.GetD3DDevice(), bar);
+                        }
+                    }
+                }
+
+                // Border/Frame Texture
+                {
+                    std::string pathStr(bar.borderTexPath.begin(), bar.borderTexPath.end());
+                    if (ImGui::InputText("Border/Frame Texture", &pathStr))
+                    {
+                        bar.borderTexPath = std::wstring(pathStr.begin(), pathStr.end());
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Browse##BorderTex"))
+                    {
+                        std::wstring file = HEIN::EditorUtils::OpenFileDialog(
+                            L"Image Files\0*.png;*.dds;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", windowHandle);
+                        if (!file.empty())
+                        {
+                            bar.borderTexPath = HEIN::EditorUtils::MakeRelativePath(file);
+                            LoadBarTextures(gameContext.deviceResources.GetD3DDevice(), bar);
+                        }
+                    }
+                }
+
+                // Label settings
+                ImGui::Separator();
+                ImGui::Text("Label Settings:");
+                ImGui::Checkbox("Show Label", &bar.showLabel);
+                ImGui::SameLine();
+                ImGui::Checkbox("Show Value", &bar.showValue);
+                ImGui::SliderFloat("Font Size", &bar.fontSize, 0.3f, 3.0f, "%.2fx");
+                ImGui::ColorEdit4("Label Color", &bar.labelColor.x);
+
+                ImGui::Separator();
+                if (ImGui::Button("Reload Textures"))
+                {
+                    LoadBarTextures(gameContext.deviceResources.GetD3DDevice(), bar);
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Remove This Bar"))
+                {
+                    removeIdx = i;
+                }
+            }
+
+            ImGui::PopID();
+        }
+
+        if (removeIdx >= 0)
+        {
+            m_bars.erase(m_bars.begin() + removeIdx);
+        }
+    }
+}
+
+// ============================================================================
+// DrawGizmo: Visual editing of gauge position in the editor viewport
+// ============================================================================
+void HEIN::GaugeComponent::DrawGizmo(
+    const DirectX::SimpleMath::Matrix& /*view*/,
+    const DirectX::SimpleMath::Matrix& /*proj*/,
+    int operation,
+    int mode)
+{
+    if (m_anchorMode != GaugeAnchorMode::ScreenSpace) return;
+
+    ImGuizmo::SetOrthographic(true);
+    ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
+    ImGuiIO& io = ImGui::GetIO();
+    float displayW = (io.DisplaySize.x > 0.0f) ? io.DisplaySize.x : kRefWidth;
+    float displayH = (io.DisplaySize.y > 0.0f) ? io.DisplaySize.y : kRefHeight;
+
+    float scaleX = displayW / kRefWidth;
+    float scaleY = displayH / kRefHeight;
+
+    ImGuizmo::SetRect(0, 0, displayW, displayH);
+    ImGuizmo::SetGizmoSizeClipSpace(0.12f);
+
+    DirectX::SimpleMath::Matrix orthoView = DirectX::SimpleMath::Matrix::Identity;
+    DirectX::SimpleMath::Matrix orthoProj = DirectX::SimpleMath::Matrix::CreateOrthographicOffCenter(
+        0.0f, displayW, displayH, 0.0f, -1000.0f, 1000.0f
+    );
+
+    // Compute bounding box of all bars combined
+    float minX = 99999.0f, minY = 99999.0f;
+    float maxX = -99999.0f, maxY = -99999.0f;
+    for (const auto& bar : m_bars)
+    {
+        float bx = (m_screenPosition.x + bar.offset.x) * scaleX;
+        float by = (m_screenPosition.y + bar.offset.y) * scaleY;
+        float bw = bar.size.x * scaleX;
+        float bh = bar.size.y * scaleY;
+        minX = std::min(minX, bx);
+        minY = std::min(minY, by);
+        maxX = std::max(maxX, bx + bw);
+        maxY = std::max(maxY, by + bh);
+    }
+
+    if (m_bars.empty())
+    {
+        minX = m_screenPosition.x * scaleX;
+        minY = m_screenPosition.y * scaleY;
+        maxX = minX + 200.0f * scaleX;
+        maxY = minY + 20.0f * scaleY;
+    }
+
+    float groupW = maxX - minX;
+    float groupH = maxY - minY;
+
+    DirectX::SimpleMath::Vector3 centerPos((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, 0.0f);
+    DirectX::SimpleMath::Vector3 scale(groupW, groupH, 1.0f);
+    DirectX::SimpleMath::Matrix worldMat = DirectX::SimpleMath::Matrix::CreateScale(scale) *
+                                           DirectX::SimpleMath::Matrix::CreateTranslation(centerPos);
+
+    ImGuizmo::Manipulate(
+        (float*)&orthoView.m[0][0],
+        (float*)&orthoProj.m[0][0],
+        (ImGuizmo::OPERATION)operation,
+        (ImGuizmo::MODE)mode,
+        (float*)&worldMat.m[0][0]
+    );
+
+    if (ImGuizmo::IsUsing())
+    {
+        DirectX::SimpleMath::Vector3 newScale, newPos;
+        DirectX::SimpleMath::Quaternion newRot;
+        if (worldMat.Decompose(newScale, newRot, newPos))
+        {
+            float newMinX = newPos.x - std::abs(newScale.x) * 0.5f;
+            float newMinY = newPos.y - std::abs(newScale.y) * 0.5f;
+            m_screenPosition.x = newMinX / scaleX - (m_bars.empty() ? 0.0f : m_bars[0].offset.x);
+            m_screenPosition.y = newMinY / scaleY - (m_bars.empty() ? 0.0f : m_bars[0].offset.y);
+        }
+    }
+
+    // Draw editor overlay
+    ImDrawList* drawList = ImGui::GetForegroundDrawList();
+    ImU32 borderColor = IM_COL32(255, 180, 50, 255);
+    drawList->AddRect(ImVec2(minX, minY), ImVec2(maxX, maxY), borderColor, 0.0f, 0, 2.0f);
+
+    char badgeBuf[128];
+    sprintf_s(badgeBuf, "Gauge  Pos:(%.0f, %.0f)  Bars:%d",
+              m_screenPosition.x, m_screenPosition.y, static_cast<int>(m_bars.size()));
+    ImVec2 badgeSize = ImGui::CalcTextSize(badgeBuf);
+    ImVec2 bMin(minX, minY - badgeSize.y - 6.0f);
+    ImVec2 bMax(minX + badgeSize.x + 8.0f, minY - 2.0f);
+    drawList->AddRectFilled(bMin, bMax, IM_COL32(10, 20, 35, 220), 4.0f);
+    drawList->AddText(ImVec2(bMin.x + 4.0f, bMin.y + 1.0f), borderColor, badgeBuf);
+}
+
+
+
+================================================================================
+FILE: External\Engine\Components\GaugeComponent.h
+================================================================================
+
+#pragma once
+#include "Components/IComponent.h"
+#include "Framework/GameContext.h"
+#include "DebugingTools/IGizmoEditable.h"
+#include <string>
+#include <vector>
+#include <memory>
+#include <SimpleMath.h>
+#include "SpriteBatch.h"
+
+namespace HEIN
+{
+    /**
+     * @brief Defines the type of a single gauge bar within the GaugeComponent.
+     */
+    enum class GaugeType
+    {
+        HP = 0,
+        Dodge = 1,
+        Block = 2,
+        Custom = 3
+    };
+
+    /**
+     * @brief Controls how the gauge is anchored on screen.
+     * 
+     * ScreenSpace: Fixed screen coordinates (like Unity Canvas - Screen Space Overlay).
+     *              Used for player HUD elements pinned at specific screen positions.
+     * 
+     * WorldToScreen: Projects a 3D world position to screen coordinates each frame.
+     *                Used for enemy health bars that follow the actor (e.g., above the head).
+     */
+    enum class GaugeAnchorMode
+    {
+        ScreenSpace = 0,     // Fixed screen position (player HUD)
+        WorldToScreen = 1    // Follow 3D actor position projected to 2D (enemy overhead bars)
+    };
+
+    /**
+     * @brief A single gauge bar definition.
+     * 
+     * Each GaugeBarDef describes one bar (e.g., HP bar, Dodge bar, Block bar).
+     * Multiple bars can be attached to a single GaugeComponent to create
+     * complex HUD layouts like a player status panel.
+     */
+    struct GaugeBarDef
+    {
+        // Identity
+        std::string name = "HP";
+        GaugeType gaugeType = GaugeType::HP;
+
+        // Values (runtime-driven)
+        float currentValue = 100.0f;
+        float maxValue = 100.0f;
+
+        // Layout: position offset relative to the component anchor
+        // In ScreenSpace mode: absolute screen coordinates on 1280x720 reference canvas
+        // In WorldToScreen mode: pixel offset from the projected 3D position
+        DirectX::SimpleMath::Vector2 offset = { 0.0f, 0.0f };
+        DirectX::SimpleMath::Vector2 size = { 200.0f, 20.0f };
+
+        // Fill direction: false = left-to-right, true = right-to-left
+        bool fillRightToLeft = false;
+
+        // Auto-bind: when true, values are automatically synced from data source components.
+        // HP reads from HealthComponent; Dodge/Block are pushed by game-side CombatBlackBoard.
+        // Custom type always requires manual SetValue().
+        bool autoBind = true;
+
+        // Colors
+        DirectX::SimpleMath::Vector4 fillColor = { 0.2f, 0.8f, 0.2f, 1.0f };    // Green fill
+        DirectX::SimpleMath::Vector4 bgColor = { 0.15f, 0.15f, 0.15f, 0.8f };    // Dark background
+        DirectX::SimpleMath::Vector4 borderColor = { 0.9f, 0.9f, 0.9f, 1.0f };   // White border
+
+        // Low-health color threshold (fills with this color when ratio < threshold)
+        float lowThreshold = 0.25f;
+        DirectX::SimpleMath::Vector4 lowColor = { 0.9f, 0.1f, 0.1f, 1.0f };      // Red for low
+
+        // Textures (optional, override solid color rendering with textured sprites)
+        std::wstring backgroundTexPath;     // Background bar texture
+        std::wstring fillTexPath;           // Fill bar texture
+        std::wstring borderTexPath;         // Border/frame overlay texture
+
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> backgroundTex;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> fillTex;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> borderTex;
+
+        // Label
+        bool showLabel = true;
+        bool showValue = true;
+        float fontSize = 0.8f;
+        DirectX::SimpleMath::Vector4 labelColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    };
+
+    /**
+     * @class GaugeComponent
+     * @brief A Unity Canvas-style HUD gauge component for rendering HP, Dodge, Block,
+     *        and custom gauge bars.
+     * 
+     * Supports two anchor modes:
+     * - ScreenSpace: Fixed screen coordinates for player HUD (HP/Dodge/Block at bottom-left, etc.)
+     * - WorldToScreen: Projects from a 3D world offset to screen space, used for enemy overhead bars.
+     * 
+     * The component renders using SpriteBatch (textured bars) and ImGui draw lists (labels/values).
+     * All settings serialize to JSON for the level editor pipeline.
+     * 
+     * Usage examples:
+     * - Player actor: Add GaugeComponent with ScreenSpace mode, add HP/Dodge/Block bars.
+     * - Enemy actor: Add GaugeComponent with WorldToScreen mode, set worldOffset to above head.
+     *   The bars follow the enemy in 3D space, projected to 2D each frame.
+     */
+    class GaugeComponent : public IComponent, public IGizmoEditable
+    {
+    private:
+        std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch;
+
+        // Anchor settings
+        GaugeAnchorMode m_anchorMode = GaugeAnchorMode::ScreenSpace;
+
+        // For ScreenSpace mode: base position on the 1280x720 reference canvas
+        DirectX::SimpleMath::Vector2 m_screenPosition = { 50.0f, 600.0f };
+
+        // For WorldToScreen mode: 3D offset from the parent enemy actor's world position
+        // e.g., (0, 2.5, 0) to place above the head
+        DirectX::SimpleMath::Vector3 m_worldOffset = { 0.0f, 2.5f, 0.0f };
+
+        // Array of gauge bar definitions
+        std::vector<GaugeBarDef> m_bars;
+
+        // Visibility
+        bool m_isVisible = true;
+
+        // --- Range-based activation ---
+        // When the gauge is a child actor of an enemy, it should only appear
+        // when the player is within activationRange of the parent enemy.
+        bool m_useRangeActivation = true;     // Enable/disable range check
+        float m_activationRange = 20.0f;      // Distance in world units
+        float m_deactivationRange = 25.0f;    // Slightly larger to prevent flickering (hysteresis)
+        bool m_isInRange = false;             // Runtime state: currently within range?
+
+        // Reference canvas (matches UIButtonComponent for consistent scaling)
+        static constexpr float kRefWidth = 1280.0f;
+        static constexpr float kRefHeight = 720.0f;
+
+        // Cached scale factors for responsive rendering
+        float m_lastScaleX = 1.0f;
+        float m_lastScaleY = 1.0f;
+        float m_lastVpX = 0.0f;
+        float m_lastVpY = 0.0f;
+
+        // Internal helpers
+        void DrawBar(GameContext& gameContext, const GaugeBarDef& bar, 
+                     float anchorX, float anchorY, float scaleX, float scaleY);
+        void LoadBarTextures(ID3D11Device* device, GaugeBarDef& bar);
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> CreateSolidColorTexture(
+            ID3D11Device* device, const DirectX::SimpleMath::Vector4& color);
+
+        bool WorldToScreenPoint(GameContext& gameContext,
+                                const DirectX::SimpleMath::Vector3& worldPos,
+                                float& outX, float& outY);
+
+        /** @brief Finds the parent enemy actor via the owner's ParentID. */
+        Actor* GetParentActor(GameContext& gameContext);
+
+        /** @brief Finds the Player actor in the scene. */
+        Actor* FindPlayerActor(GameContext& gameContext);
+
+        /** @brief Gets the world position of the parent enemy (or self if no parent). */
+        DirectX::SimpleMath::Vector3 GetTargetWorldPosition(GameContext& gameContext);
+
+        /** @brief Auto-syncs bar values from data source components (HP from HealthComponent). */
+        void SyncBoundBars(GameContext& gameContext);
+
+    public:
+        GaugeComponent(Actor* owner);
+
+        void Initialize(GameContext& gameContext);
+
+        void Start() override;
+        void Update(float deltaTime) override;
+
+        // Renders via Draw2D path (2D overlay on top of 3D scene)
+        bool Is2D() const override { return true; }
+        void Draw2D(GameContext& gameContext) override;
+
+        // Also supports Draw() for editor preview
+        void Draw(GameContext& gameContext,
+            const DirectX::SimpleMath::Matrix& world,
+            const DirectX::SimpleMath::Matrix& view,
+            const DirectX::SimpleMath::Matrix& proj) override;
+
+        std::string GetComponentName() const override { return "GaugeComponent"; }
+        nlohmann::json Serialize() override;
+        void Deserialize(const nlohmann::json& data) override;
+        void InitializeAfterDeserialize(GameContext& gameContext) override;
+        void OnInspectorGUI(GameContext& gameContext) override;
+
+        // IGizmoEditable: Enables visual editing of gauge positions in the editor
+        void DrawGizmo(
+            const DirectX::SimpleMath::Matrix& view,
+            const DirectX::SimpleMath::Matrix& proj,
+            int operation,
+            int mode
+        ) override;
+
+        // --- Runtime API for gameplay code ---
+
+        /** @brief Adds a new gauge bar and returns its index. */
+        int AddBar(const GaugeBarDef& bar);
+
+        /** @brief Removes a bar by index. */
+        void RemoveBar(int index);
+
+        /** @brief Gets a bar by index for modification. */
+        GaugeBarDef* GetBar(int index);
+
+        /** @brief Finds a bar by name. Returns nullptr if not found. */
+        GaugeBarDef* FindBar(const std::string& name);
+
+        /** @brief Gets the number of bars. */
+        int GetBarCount() const { return static_cast<int>(m_bars.size()); }
+
+        /** @brief Convenience: Sets the current value of the first bar matching the given type. */
+        void SetValue(GaugeType type, float current, float max = -1.0f);
+
+        /** @brief Convenience: Sets the current value of a bar by name. */
+        void SetValue(const std::string& name, float current, float max = -1.0f);
+
+        // Anchor mode
+        GaugeAnchorMode GetAnchorMode() const { return m_anchorMode; }
+        void SetAnchorMode(GaugeAnchorMode mode) { m_anchorMode = mode; }
+
+        // Screen position (ScreenSpace mode)
+        DirectX::SimpleMath::Vector2 GetScreenPosition() const { return m_screenPosition; }
+        void SetScreenPosition(const DirectX::SimpleMath::Vector2& pos) { m_screenPosition = pos; }
+
+        // World offset (WorldToScreen mode)
+        DirectX::SimpleMath::Vector3 GetWorldOffset() const { return m_worldOffset; }
+        void SetWorldOffset(const DirectX::SimpleMath::Vector3& offset) { m_worldOffset = offset; }
+
+        // Visibility
+        bool IsVisible() const { return m_isVisible; }
+        void SetVisible(bool visible) { m_isVisible = visible; }
+
+        // Range-based activation (for enemy child gauges)
+        bool GetUseRangeActivation() const { return m_useRangeActivation; }
+        void SetUseRangeActivation(bool use) { m_useRangeActivation = use; }
+
+        float GetActivationRange() const { return m_activationRange; }
+        void SetActivationRange(float range) { m_activationRange = range; }
+
+        float GetDeactivationRange() const { return m_deactivationRange; }
+        void SetDeactivationRange(float range) { m_deactivationRange = range; }
+
+        /** @brief Returns true if the player is currently within activation range. */
+        bool IsInRange() const { return m_isInRange; }
+    };
+}
+
+
+
+================================================================================
 FILE: External\Engine\Components\HealthComponent.cpp
 ================================================================================
 
@@ -14308,6 +16053,7 @@ FILE: External\Engine\Components\SkinnedModelComponent.cpp
 #include "Common/ShaderStructures.h"
 #include "LightComponent.h"
 #include "Camera/CameraController.h"
+#include "FogComponent.h"
 
 
 std::shared_ptr<DirectX::EffectFactory> HEIN::SkinnedModelComponent::s_fxFactory = nullptr;
@@ -14649,10 +16395,12 @@ namespace HEIN
 
 		// Update Lighting Buffer
 		HEIN::LightComponent* activeLight = nullptr;
+		HEIN::FogComponent* fogComp = nullptr;
 		for (auto& pair : gameContext.actorManager->GetAllActors())
 		{
-			activeLight = pair.second->GetComponent<HEIN::LightComponent>();
-			if (activeLight) break;
+			if (!activeLight) activeLight = pair.second->GetComponent<HEIN::LightComponent>();
+			if (!fogComp) fogComp = pair.second->GetComponent<HEIN::FogComponent>();
+			if (activeLight && fogComp) break;
 		}
 
 		if (m_cbLighting)
@@ -14687,6 +16435,27 @@ namespace HEIN
 					cbLight->LightRange = 100.0f;
 					cbLight->LightSpotAngle = 0.785f;
 				}
+
+				// Fill fog data from global FogComponent
+				if (fogComp)
+				{
+					cbLight->FogStart = fogComp->m_fogStart;
+					cbLight->FogEnd = fogComp->m_fogEnd;
+					cbLight->FogColor = fogComp->m_fogColor;
+				}
+				else
+				{
+					// Default: push fog far away to effectively disable it
+					cbLight->FogStart = 100000.0f;
+					cbLight->FogEnd = 200000.0f;
+					cbLight->FogColor = DirectX::SimpleMath::Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+				}
+
+				// Camera position for distance-based fog in the pixel shader
+				DirectX::SimpleMath::Matrix viewInv = view.Invert();
+				cbLight->CameraPos = viewInv.Translation();
+				cbLight->FogPadding = 0.0f;
+
 				context->Unmap(m_cbLighting.Get(), 0);
 			}
 		}
@@ -16452,6 +18221,8 @@ FILE: External\Engine\Components\StaticModelComponent.cpp
 #include <vector>
 #include <filesystem>
 #include "TransformComponent.h"
+#include "FogComponent.h"
+#include "Entities/ActorManager.h"
 #include "Camera/CameraController.h"
 
 namespace HEIN
@@ -16583,58 +18354,6 @@ namespace HEIN
         return false;
     }
 
-    class SmartCMOEffectFactory : public DirectX::DGSLEffectFactory
-    {
-    private:
-        ID3D11Device* m_pDevice;
-        std::wstring m_dir;
-
-    public:
-        SmartCMOEffectFactory(ID3D11Device* device)
-            : DirectX::DGSLEffectFactory(device), m_pDevice(device)
-        {
-        }
-
-        void SetDirectory(const wchar_t* path)
-        {
-            m_dir = path ? path : L"";
-            DirectX::DGSLEffectFactory::SetDirectory(path);
-        }
-
-        void CreateTexture(
-            const wchar_t* name,
-            ID3D11DeviceContext* deviceContext,
-            ID3D11ShaderResourceView** textureView
-        ) override
-        {
-            std::wstring wname = name ? name : L"";
-            std::wstring cand1 = m_dir + wname;
-            std::wstring cand2 = wname;
-            
-            bool exists = false;
-            if (!wname.empty())
-            {
-                if (std::filesystem::exists(cand1) || std::filesystem::exists(cand2) ||
-                    std::filesystem::exists(cand1 + L".dds") || std::filesystem::exists(cand2 + L".dds"))
-                {
-                    exists = true;
-                }
-            }
-
-            if (exists)
-            {
-                try
-                {
-                    DirectX::DGSLEffectFactory::CreateTexture(name, deviceContext, textureView);
-                    if (textureView && *textureView) return;
-                }
-                catch (...) {}
-            }
-
-            TryLoadTexture(m_pDevice, m_dir, name, textureView);
-        }
-    };
-
     class SmartEffectFactory : public DirectX::EffectFactory
     {
     private:
@@ -16735,20 +18454,22 @@ void HEIN::StaticModelComponent::Initialize(
 
             if (ext == L".cmo")
             {
-                SmartCMOEffectFactory dgslFactory(device);
+                // Use EffectFactory (not DGSLEffectFactory) so the model gets BasicEffect
+                // which supports IEffectFog for fog blending. DGSLEffect does not support IEffectFog.
+                SmartEffectFactory cmoFactory(device);
                 if (!m_textureDir.empty())
                 {
-                    dgslFactory.SetDirectory(m_textureDir.c_str());
+                    cmoFactory.SetDirectory(m_textureDir.c_str());
                 }
                 else
                 {
-                    dgslFactory.SetDirectory(nullptr);
+                    cmoFactory.SetDirectory(nullptr);
                 }
 
                 m_model = DirectX::Model::CreateFromCMO(
                     device,
                     m_modelPath.c_str(),
-                    dgslFactory,
+                    cmoFactory,
                     static_cast<DirectX::ModelLoaderFlags>(
                         DirectX::ModelLoader_CounterClockwise |
                         DirectX::ModelLoader_IncludeBones
@@ -16891,6 +18612,42 @@ void HEIN::StaticModelComponent::Draw(
 
     ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
     DirectX::DX11::CommonStates& states = gameContext.commonStates;
+
+    // Find global FogComponent (same pattern as LightComponent search)
+    HEIN::FogComponent* fogComp = nullptr;
+    for (auto& pair : gameContext.actorManager->GetAllActors())
+    {
+        fogComp = pair.second->GetComponent<HEIN::FogComponent>();
+        if (fogComp) break;
+    }
+
+    // Apply fog to DirectXTK built-in effects (BasicEffect, SkinnedEffect, etc.)
+    for (const auto& mesh : m_model->meshes)
+    {
+        for (const auto& part : mesh->meshParts)
+        {
+            auto fogEffect = dynamic_cast<DirectX::IEffectFog*>(part->effect.get());
+            if (fogEffect)
+            {
+                if (fogComp)
+                {
+                    fogEffect->SetFogEnabled(true);
+                    fogEffect->SetFogStart(fogComp->m_fogStart);
+                    fogEffect->SetFogEnd(fogComp->m_fogEnd);
+                    fogEffect->SetFogColor(DirectX::XMVectorSet(
+                        fogComp->m_fogColor.x,
+                        fogComp->m_fogColor.y,
+                        fogComp->m_fogColor.z,
+                        1.0f
+                    ));
+                }
+                else
+                {
+                    fogEffect->SetFogEnabled(false);
+                }
+            }
+        }
+    }
 
     if (!m_model->bones.empty() && m_drawBones)
     {
@@ -25730,6 +27487,7 @@ FILE: External\Engine\Factory\ComponentFactory.h
 #include <Components/ProceduralAnimationComponent.h>
 #include <Components/FogComponent.h>
 #include <Components/FoliageComponent.h>
+#include <Components/GaugeComponent.h>
 
 namespace HEIN
 {
@@ -25823,6 +27581,7 @@ namespace HEIN
 			RegisterComponent<ProceduralAnimationComponent>("ProceduralAnimationComponent");
 			RegisterComponent<FogComponent>("FogComponent");
 			RegisterComponent<FoliageComponent>("FoliageComponent");
+			RegisterComponent<GaugeComponent>("GaugeComponent");
 		}
 	};
 }
@@ -26972,7 +28731,13 @@ cbuffer cbLighting : register(b1)
     
     float LightRange;
     float LightSpotAngle; // Passed in radians
-    float2 Padding;
+    float FogStart;
+    float FogEnd;
+    
+    float4 FogColor;
+    
+    float3 CameraPos;
+    float FogPadding;
 };
 
 // ==============================================================================
@@ -27137,6 +28902,11 @@ float4 PSMain(VSOutput input) : SV_TARGET
     // Add ambient light so shadows aren't pitch black
     float3 ambient = baseColor.rgb * 0.4f;
     finalColor += ambient;
+
+    // FOG CALCULATION (distance-based)
+    float dist = length(input.WorldPos - CameraPos);
+    float fogFactor = saturate((dist - FogStart) / (FogEnd - FogStart));
+    finalColor = lerp(finalColor, FogColor.rgb, fogFactor);
 
     return float4(finalColor, baseColor.a);
 }

@@ -38,7 +38,7 @@
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ActorManager& actorManager,
-    GameContext& gameContext, 
+    GameContext& gameContext,
     DirectX::SimpleMath::Vector3* /*targetCameraOut*/
 )
 {
@@ -54,25 +54,26 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 4.0f, -40.0f));
     ptransform->SetScale(DirectX::SimpleMath::Vector3(0.10f));
 
-    // ThirdPersonCamera model
+    // Single Hybrid Skinned Model (Blend of Root Motion and In-Place animations)
     spawnData.tpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
     spawnData.tpsModel->Initialize(gameContext,
-        L"Resources/Models/knight/knight.sdkmesh", // normal model
+        L"Resources/Models/knight/knight.sdkmesh",
         L"Resources/Models/knight");
-  
 
-    // FirstPersonCamera model
-    //spawnData.fpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
-    //spawnData.fpsModel->Initialize(gameContext,
-    //    L"Resources/Models/knight/knight.sdkmesh", // headless/arms model
-    //    L"Resources/Models/knight");
-    //spawnData.fpsModel->LoadAnimation("Idle", L"Resources/Models/knight/idle.sdkmesh_anim");
-    //spawnData.fpsModel->LoadAnimation("Walk", L"Resources/Models/knight/running.sdkmesh_anim");
-    //spawnData.fpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
+    // Load knight animations
+    spawnData.tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/idle.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/RunRoot.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Dodge", L"Resources/Models/knight/Dodge.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("StrafeL", L"Resources/Models/knight/strafeL.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("StrafeR", L"Resources/Models/knight/strafeR.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Block", L"Resources/Models/knight/block.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Slash1", L"Resources/Models/knight/slash1.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Slash2", L"Resources/Models/knight/slash2.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Slash3", L"Resources/Models/knight/slash3.sdkmesh_anim");
+    spawnData.tpsModel->SetEnableRootMotion(true); // Root Motion enabled for hybrid walk & attacks
+    spawnData.tpsModel->SetVisible(true);
 
-
-  \
-    
     // Socket
     HEIN::SocketComponent* socketComp = playerActor->AddComponent<HEIN::SocketComponent>();
     HEIN::Socket weaponSocket(
@@ -83,76 +84,140 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     );
     socketComp->AddSocket(weaponSocket);
 
- 
-   
     HEIN::CombatStateMachineComponent* fsm = playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
 
     // IdleConfig
     HEIN::StateConfig idleConfig;
+    idleConfig.stateName = "Idle";
+    idleConfig.stateType = "Idle";
     idleConfig.animationName = "Idle";
-    idleConfig.transitions["OnMove"] = "Walk";
-    idleConfig.transitions["OnAttack"] = "OneHand";
-    idleConfig.transitions["OnDodge"] = "Dodge";
-    idleConfig.transitions["OnStrafe"] = "Strafe";
-    idleConfig.transitions["OnBlock"] = "Block";
-    fsm->AddState("Idle", std::make_unique<HEIN::IdleState>(idleConfig));
+    idleConfig.isLooping = true;
+    idleConfig.turnSpeed = 12.0f;
+    idleConfig.transitions["OnMove"] = { "Walk", 0.2f, "OnMove" };
+    idleConfig.transitions["OnAttack"] = { "Slash1", 0.1f, "OnAttack" };
+    idleConfig.transitions["OnDodge"] = { "Dodge", 0.1f, "OnDodge" };
+    idleConfig.transitions["OnStrafe"] = { "Strafe", 0.2f, "OnStrafe" };
+    idleConfig.transitions["OnBlock"] = { "Block", 0.1f, "OnBlock" };
+    fsm->AddState(idleConfig);
 
     // WalkConfig
     HEIN::StateConfig walkConfig;
+    walkConfig.stateName = "Walk";
+    walkConfig.stateType = "Walk";
     walkConfig.moveSpeed = 30.0f;
     walkConfig.animationName = "Walk";
-    walkConfig.transitions["OnStop"] = "Idle";
-    walkConfig.transitions["OnAttack"] = "OneHand";
-    walkConfig.transitions["OnDodge"] = "Dodge";
-    walkConfig.transitions["OnStrafe"] = "Strafe";
-    walkConfig.transitions["OnBlock"] = "Block";
-    fsm->AddState("Walk", std::make_unique<HEIN::WalkState>(walkConfig));
+    walkConfig.isLooping = true;
+    walkConfig.turnSpeed = 12.0f;
+    walkConfig.transitions["OnStop"] = { "Idle", 0.2f, "OnStop" };
+    walkConfig.transitions["OnAttack"] = { "Slash1", 0.1f, "OnAttack" };
+    walkConfig.transitions["OnDodge"] = { "Dodge", 0.1f, "OnDodge" };
+    walkConfig.transitions["OnStrafe"] = { "Strafe", 0.2f, "OnStrafe" };
+    walkConfig.transitions["OnBlock"] = { "Block", 0.1f, "OnBlock" };
+    fsm->AddState(walkConfig);
 
-    // AttackConfig
-    HEIN::StateConfig attackConfig;
-    attackConfig.moveSpeed = 5.0f;
-    attackConfig.animationName = "OneHand";
-    attackConfig.stateDuration = 4.1f;
-    attackConfig.comboEndTimes = { HEIN::OneHandAttackState::STAGE_1_END_TIME, HEIN::OneHandAttackState::STAGE_2_END_TIME, HEIN::OneHandAttackState::STAGE_3_END_TIME };
-    attackConfig.comboWindowStarts = { HEIN::OneHandAttackState::STAGE_1_WINDOW_START, HEIN::OneHandAttackState::STAGE_2_WINDOW_START, HEIN::OneHandAttackState::STAGE_3_WINDOW_START };
-    attackConfig.transitions["OnStop"] = "Idle";
-    attackConfig.transitions["OnMove"] = "Walk";
-    attackConfig.transitions["OnDodge"] = "Dodge";
-    attackConfig.transitions["OnStrafe"] = "Strafe";
-    attackConfig.transitions["OnBlock"] = "Block";
-    fsm->AddState("OneHand", std::make_unique<HEIN::OneHandAttackState>(attackConfig));
+    // Discrete Attack States: Slash1 -> Slash2 -> Slash3 with Instant Cancel / Skip on Press
+    HEIN::StateConfig slash1Config;
+    slash1Config.stateName = "Slash1";
+    slash1Config.stateType = "Slash1";
+    slash1Config.animationName = "Slash1";
+    slash1Config.moveSpeed = 8.0f;
+    slash1Config.stateDuration = 1.10f;
+    slash1Config.turnSpeed = 5.0f;
+    slash1Config.isAttack = true;
+    slash1Config.isLooping = false;
+    slash1Config.transitions["OnAttack"] = { "Slash2", 0.12f, "OnAttack", false, 0.0f, 999.0f, true }; // canInterrupt = true: skips Slash1 & plays Slash2 instantly!
+    slash1Config.transitions["OnDodge"] = { "Dodge", 0.1f, "OnDodge", false, 0.0f, 999.0f, true };
+    slash1Config.transitions["OnMove"] = { "Walk", 0.2f, "OnMove", false, 0.40f, 1.10f, false }; // Moving cancels recovery after hit
+    slash1Config.transitions["Exit"] = { "Idle", 0.25f, "", true };
+    fsm->AddState(slash1Config);
+
+    // Slash2 State
+    HEIN::StateConfig slash2Config;
+    slash2Config.stateName = "Slash2";
+    slash2Config.stateType = "Slash2";
+    slash2Config.animationName = "Slash2";
+    slash2Config.moveSpeed = 6.0f;
+    slash2Config.stateDuration = 1.20f;
+    slash2Config.turnSpeed = 5.0f;
+    slash2Config.isAttack = true;
+    slash2Config.isLooping = false;
+    slash2Config.transitions["OnAttack"] = { "Slash3", 0.12f, "OnAttack", false, 0.0f, 999.0f, true }; // canInterrupt = true: skips Slash2 & plays Slash3 instantly!
+    slash2Config.transitions["OnDodge"] = { "Dodge", 0.1f, "OnDodge", false, 0.0f, 999.0f, true };
+    slash2Config.transitions["OnMove"] = { "Walk", 0.2f, "OnMove", false, 0.40f, 1.20f, false };
+    slash2Config.transitions["Exit"] = { "Idle", 0.25f, "", true };
+    fsm->AddState(slash2Config);
+
+    // Slash3 State
+    HEIN::StateConfig slash3Config;
+    slash3Config.stateName = "Slash3";
+    slash3Config.stateType = "Slash3";
+    slash3Config.animationName = "Slash3";
+    slash3Config.moveSpeed = 4.0f;
+    slash3Config.stateDuration = 2.20f;
+    slash3Config.turnSpeed = 3.0f;
+    slash3Config.isAttack = true;
+    slash3Config.isLooping = false;
+    slash3Config.transitions["OnAttack"] = { "Slash1", 0.15f, "OnAttack", false, 0.90f, 2.20f, false }; // Loop combo back to Slash1
+    slash3Config.transitions["OnDodge"] = { "Dodge", 0.1f, "OnDodge", false, 0.0f, 999.0f, true };
+    slash3Config.transitions["OnMove"] = { "Walk", 0.2f, "OnMove", false, 0.90f, 2.20f, false };
+    slash3Config.transitions["Exit"] = { "Idle", 0.35f, "", true };
+    fsm->AddState(slash3Config);
+
+    // Backward-compatible alias for OneHand -> Slash1
+    HEIN::StateConfig oneHandAlias = slash1Config;
+    oneHandAlias.stateName = "OneHand";
+    fsm->AddState(oneHandAlias);
 
     // DodgeConfig
     HEIN::StateConfig dodgeConfig;
+    dodgeConfig.stateName = "Dodge";
+    dodgeConfig.stateType = "Dodge";
     dodgeConfig.animationName = "Dodge";
     dodgeConfig.moveSpeed = 30.0f;
     dodgeConfig.stateDuration = 1.4f;
-    dodgeConfig.transitions["OnStop"] = "Idle";
-    dodgeConfig.transitions["OnMove"] = "Walk";
-    dodgeConfig.transitions["OnAttack"] = "OneHand";
-    dodgeConfig.transitions["OnStrafe"] = "Strafe";
-    fsm->AddState("Dodge", std::make_unique<HEIN::DodgeState>(dodgeConfig));
+    dodgeConfig.turnSpeed = 0.0f;
+    dodgeConfig.lockMovementDirection = true;
+    dodgeConfig.invincibilityStart = 0.05f;
+    dodgeConfig.invincibilityEnd = 0.8f;
+    dodgeConfig.isLooping = false;
+    dodgeConfig.transitions["Exit"] = { "Idle", 0.2f, "", true };
+    dodgeConfig.transitions["OnStop"] = { "Idle", 0.2f, "OnStop" };
+    dodgeConfig.transitions["OnMove"] = { "Walk", 0.2f, "OnMove", false, 0.9f, 1.4f };
+    dodgeConfig.transitions["OnAttack"] = { "Slash1", 0.15f, "OnAttack", false, 0.9f, 1.4f };
+    dodgeConfig.transitions["OnStrafe"] = { "Strafe", 0.2f, "OnStrafe", false, 0.9f, 1.4f };
+    fsm->AddState(dodgeConfig);
 
     // StrafeConfig
     HEIN::StateConfig strafeConfig;
+    strafeConfig.stateName = "Strafe";
+    strafeConfig.stateType = "Strafe";
     strafeConfig.animationName = "StrafeR";
     strafeConfig.secondaryAnimationName = "StrafeL";
     strafeConfig.moveSpeed = 5.0f;
-    strafeConfig.transitions["OnStop"] = "Idle";
-    strafeConfig.transitions["OnMove"] = "Walk";
-    strafeConfig.transitions["OnDodge"] = "Dodge";
-    fsm->AddState("Strafe", std::make_unique<HEIN::StrafeState>(strafeConfig));
-    
+    strafeConfig.isLooping = true;
+    strafeConfig.turnSpeed = 12.0f;
+    strafeConfig.transitions["OnStop"] = { "Idle", 0.2f, "OnStop" };
+    strafeConfig.transitions["OnMove"] = { "Walk", 0.2f, "OnMove" };
+    strafeConfig.transitions["OnAttack"] = { "Slash1", 0.1f, "OnAttack" };
+    strafeConfig.transitions["OnDodge"] = { "Dodge", 0.1f, "OnDodge" };
+    fsm->AddState(strafeConfig);
+
     // BlockConfig
     HEIN::StateConfig blockConfig;
+    blockConfig.stateName = "Block";
+    blockConfig.stateType = "Block";
     blockConfig.animationName = "Block";
     blockConfig.moveSpeed = 4.0f;
-    blockConfig.transitions["OnMove"] = "Walk";
-    blockConfig.transitions["OnStop"] = "Idle";
-    fsm->AddState("Block", std::make_unique<HEIN::BlockState>(blockConfig));
+    blockConfig.isBlock = true;
+    blockConfig.isLooping = true;
+    blockConfig.turnSpeed = 8.0f;
+    blockConfig.transitions["OnStopBlock"] = { "Idle", 0.2f, "OnStopBlock" };
+    blockConfig.transitions["OnStop"] = { "Idle", 0.2f, "OnStop" };
+    blockConfig.transitions["OnMove"] = { "Walk", 0.2f, "OnMove" };
+    fsm->AddState(blockConfig);
 
     playerActor->AddComponent<HEIN::CombatBlackBoard>();
-    playerActor->AddComponent<HEIN::PlayerInputComponent>(&actorManager); 
+    playerActor->AddComponent<HEIN::PlayerInputComponent>(&actorManager);
     playerActor->AddComponent<HEIN::TargetTrackingComponent>(&actorManager, HEIN::ActorType::Enemy);
     playerActor->AddComponent<HEIN::CharacterMovementComponent>();
     playerActor->AddComponent<HEIN::ProceduralAnimationComponent>(&actorManager);
@@ -163,7 +228,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
 
 HEIN::ActorID HEIN::ActorFactory::CreateSword(
     ActorManager& actorManager,
-    GameContext& gameContext, 
+    GameContext& gameContext,
     HEIN::ActorID wielderID,
     float damage
 )
@@ -212,7 +277,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
 
     swordHitBox->SetCollisionLayer(weaponLayer);
     swordHitBox->SetCollisionMask(weaponMask);
-   
+
 
     HEIN::SocketAttachmentComponent* socketAttachment = sword->AddComponent<HEIN::SocketAttachmentComponent>(&actorManager);
     socketAttachment->Initialize(wielderID, L"WeaponSocket");
@@ -225,7 +290,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
 HEIN::ActorID HEIN::ActorFactory::CreateAxe(
     ActorManager& actorManager,
     GameContext& gameContext,
-    HEIN::ActorID wielderID, 
+    HEIN::ActorID wielderID,
     float damage
 )
 {
@@ -307,7 +372,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
 
     // FLOOR CHILD 
     HEIN::Actor* floorActor = actorManager.CreateActor(L"Floor");
-            floorActor->AddComponent<HEIN::TransformComponent>();
+    floorActor->AddComponent<HEIN::TransformComponent>();
 
     HEIN::StaticModelComponent* floorModel = floorActor->AddComponent<HEIN::StaticModelComponent>();
     floorModel->Initialize(gameContext, L"Resources/Models/stage/floor1.sdkmesh", L"Resources/Models/stage");
@@ -319,9 +384,6 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
     floorActor->SetParent(stageRoot->GetID());
     stageRoot->AddChild(floorActor->GetID());
 
-   
-   
-
     stageRoot->Start();
     floorActor->Start();
 
@@ -329,7 +391,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
 }
 
 HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
-    ActorManager& actorManager, 
+    ActorManager& actorManager,
     GameContext& gameContext,
     HEIN::ActorID targetID
 )
@@ -359,7 +421,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     spawnData.tpsModel->LoadAnimation("StrafeR", L"Resources/Models/Boss/strafeR.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("Dodge", L"Resources/Models/Boss/Dodge.sdkmesh_anim");
 
-    
+
     // Head Collider
     HEIN::CapsuleColliderComponent* HeadCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     HeadCapsule->Initialize(3.5f, 1.0f);
@@ -418,7 +480,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     HEIN::TwoBoneLinkComponent* RightLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightLeg", L"mixamorig:RightFoot");
     RightLegLink->LinkTo(RightLegCapsule);
-  
+
     // Left Leg Collider
     HEIN::CapsuleColliderComponent* LeftupLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     LeftupLegCapsule->Initialize(2.3f, 0.0f);
@@ -432,8 +494,6 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     HEIN::TwoBoneLinkComponent* LeftLegLink = enemyActor->AddComponent < HEIN::TwoBoneLinkComponent>();
     LeftLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftLeg", L"mixamorig:LeftFoot");
     LeftLegLink->LinkTo(LeftLegCapsule);
-   
-
 
     // Socket
     HEIN::SocketComponent* socketComp = enemyActor->AddComponent<HEIN::SocketComponent>();
@@ -454,7 +514,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     rootPushbox->SetColliderTag(L"EnemyRoot");
     rootPushbox->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     rootPushbox->SetCollisionMask(CollisionLayer::Layer_Environment | CollisionLayer::Layer_Player);
-    
+
 
     // SET BONES TO TRIGGERS (So they don't push the floor)
     HeadCapsule->SetTrigger(true);
@@ -465,18 +525,16 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     LeftforearmCapsule->SetTrigger(true);
     RightupLegCapsule->SetTrigger(true);
     RightLegCapsule->SetTrigger(true);
-    //RightFoot->SetTrigger(true);
     LeftupLegCapsule->SetTrigger(true);
     LeftLegCapsule->SetTrigger(true);
-    //LeftFoot->SetTrigger(true);
 
     HEIN::CombatBlackBoard* bb = enemyActor->AddComponent<HEIN::CombatBlackBoard>();
     bb->spawnPosition = ptransform->GetPosition();
     bb->hasSetSpawnPosition = true;
-    
+
     enemyActor->AddComponent<HEIN::CharacterMovementComponent>();
     enemyActor->AddComponent<HEIN::TargetTrackingComponent>(&actorManager, HEIN::ActorType::Player);
-  
+
     std::unique_ptr<HEIN::BTSelector> aiBrain = std::make_unique<HEIN::BTSelector>();
 
     // ---------------------------------------------------------
@@ -534,57 +592,69 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
 
     // IdleConfig
     HEIN::StateConfig idleConfig;
+    idleConfig.stateName = "Idle";
+    idleConfig.stateType = "Idle";
     idleConfig.animationName = "Idle";
-    idleConfig.transitions["OnMove"] = "Walk";
-    idleConfig.transitions["OnAttack"] = "OneHand";
-    idleConfig.transitions["OnStrafe"] = "Strafe";
-    idleConfig.transitions["OnDodge"] = "Dodge";
-    fsm->AddState("Idle", std::make_unique<HEIN::IdleState>(idleConfig));
+    idleConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    idleConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
+    idleConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    idleConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    fsm->AddState(idleConfig);
 
     // WalkConfig
     HEIN::StateConfig walkConfig;
+    walkConfig.stateName = "Walk";
+    walkConfig.stateType = "Walk";
     walkConfig.moveSpeed = 30.0f;
     walkConfig.animationName = "Walk";
-    walkConfig.transitions["OnStop"] = "Idle";
-    walkConfig.transitions["OnAttack"] = "OneHand";
-    walkConfig.transitions["OnStrafe"] = "Strafe";
-    walkConfig.transitions["OnDodge"] = "Dodge";
-    fsm->AddState("Walk", std::make_unique<HEIN::WalkState>(walkConfig));
+    walkConfig.transitions["OnStop"] = { "Idle", 0.2f };
+    walkConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
+    walkConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    walkConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    fsm->AddState(walkConfig);
 
     // StrafeConfig
     HEIN::StateConfig strafeConfig;
+    strafeConfig.stateName = "Strafe";
+    strafeConfig.stateType = "Strafe";
     strafeConfig.animationName = "StrafeR";
     strafeConfig.secondaryAnimationName = "StrafeL";
     strafeConfig.moveSpeed = 5.0f;
-    strafeConfig.transitions["OnStop"] = "Idle";
-    strafeConfig.transitions["OnMove"] = "Walk";
-    strafeConfig.transitions["OnAttack"] = "OneHand";
-    strafeConfig.transitions["OnDodge"] = "Dodge";
-    fsm->AddState("Strafe", std::make_unique<HEIN::StrafeState>(strafeConfig));
+    strafeConfig.transitions["OnStop"] = { "Idle", 0.2f };
+    strafeConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    strafeConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
+    strafeConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    fsm->AddState(strafeConfig);
 
     // AttackConfig
     HEIN::StateConfig attackConfig;
+    attackConfig.stateName = "OneHand";
+    attackConfig.stateType = "OneHand";
     attackConfig.moveSpeed = 5.0f;
     attackConfig.animationName = "OneHand";
+    attackConfig.comboAnimationNames = { "OneHand" };
     attackConfig.stateDuration = 3.4f;
     attackConfig.comboEndTimes = { 1.6f, 3.0f, 3.4f };
     attackConfig.comboWindowStarts = { 1.2f, 2.7f, 3.0f };
-    attackConfig.transitions["OnStop"] = "Idle";
-    attackConfig.transitions["OnMove"] = "Walk";
-    attackConfig.transitions["OnDodge"] = "Dodge";
-    attackConfig.transitions["OnStrafe"] = "Strafe";
-    fsm->AddState("OneHand", std::make_unique<HEIN::OneHandAttackState>(attackConfig));
+    attackConfig.comboExitBlendDuration = 0.4f;
+    attackConfig.transitions["OnStop"] = { "Idle", 0.3f };
+    attackConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    attackConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
+    attackConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    fsm->AddState(attackConfig);
 
     // DodgeConfig
     HEIN::StateConfig dodgeConfig;
+    dodgeConfig.stateName = "Dodge";
+    dodgeConfig.stateType = "Dodge";
     dodgeConfig.animationName = "Dodge";
     dodgeConfig.moveSpeed = 30.0f;
     dodgeConfig.stateDuration = 1.4f;
-    dodgeConfig.transitions["OnStop"] = "Idle";
-    dodgeConfig.transitions["OnMove"] = "Walk";
-    dodgeConfig.transitions["OnAttack"] = "OneHand";
-    dodgeConfig.transitions["OnStrafe"] = "Strafe";
-    fsm->AddState("Dodge", std::make_unique<HEIN::DodgeState>(dodgeConfig));
+    dodgeConfig.transitions["OnStop"] = { "Idle", 0.2f };
+    dodgeConfig.transitions["OnMove"] = { "Walk", 0.2f };
+    dodgeConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
+    dodgeConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
+    fsm->AddState(dodgeConfig);
 
     enemyActor->AddComponent<HEIN::ProceduralAnimationComponent>(&actorManager);
 

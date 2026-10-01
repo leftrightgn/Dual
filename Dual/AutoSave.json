@@ -7,13 +7,13 @@
                     "Data": {
                         "BlendDuration": 1.0,
                         "Fov": 0.8726646304130554,
-                        "PosX": 1216.9356689453125,
-                        "PosY": -28.269676208496094,
-                        "PosZ": -1113.2877197265625,
-                        "RotW": 0.9756324291229248,
-                        "RotX": -0.1427977830171585,
-                        "RotY": 0.16482773423194885,
-                        "RotZ": 0.02412489987909794
+                        "PosX": 1058.9476318359375,
+                        "PosY": -34.058937072753906,
+                        "PosZ": -1051.9757080078125,
+                        "RotW": -0.9148462414741516,
+                        "RotX": 0.2412465363740921,
+                        "RotY": 0.31311163306236267,
+                        "RotZ": 0.08256807923316956
                     },
                     "Type": "CameraController"
                 }
@@ -105,15 +105,15 @@
                 {
                     "Data": {
                         "Position": [
-                            1203.4764404296875,
-                            -55.26592254638672,
-                            -1149.15576171875
+                            1083.2769775390625,
+                            -68.5099868774414,
+                            -1079.727294921875
                         ],
                         "Rotation": [
-                            0.0,
-                            0.39656397700309753,
                             -0.0,
-                            -0.9180070757865906
+                            -0.5025611519813538,
+                            0.0,
+                            -0.8645416498184204
                         ],
                         "Scale": [
                             0.10000001639127731,
@@ -132,7 +132,7 @@
                             },
                             {
                                 "Name": "Walk",
-                                "Path": "Resources/Models/knight/running.sdkmesh_anim"
+                                "Path": "Resources/Models/knight/RunRoot.sdkmesh_anim"
                             },
                             {
                                 "Name": "Dodge",
@@ -153,9 +153,25 @@
                             {
                                 "Name": "Block",
                                 "Path": "Resources/Models/knight/block.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Slash1",
+                                "Path": "Resources/Models/knight/slash1.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Slash2",
+                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Slash3",
+                                "Path": "Resources/Models/knight/slash3.sdkmesh_anim"
                             }
                         ],
+                        "EnableRootMotion": true,
+                        "IsVisible": true,
                         "ModelPath": "Resources/Models/knight/knight.sdkmesh",
+                        "RootBoneName": "",
+                        "RootMotionExtractY": false,
                         "TextureDir": "Resources/Models/knight"
                     },
                     "Type": "SkinnedModelComponent"
@@ -176,6 +192,536 @@
                         ]
                     },
                     "Type": "SocketComponent"
+                },
+                {
+                    "Data": {
+                        "defaultState": "Idle",
+                        "states": [
+                            {
+                                "animationName": "Idle",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": false,
+                                "isBlock": false,
+                                "isLooping": true,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 0.0,
+                                "name": "Idle",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 1.0,
+                                "transitions": {
+                                    "OnAttack": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Slash1",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnBlock": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Block",
+                                        "triggerEvent": "OnBlock",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnDodge": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Dodge",
+                                        "triggerEvent": "OnDodge",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStrafe": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Strafe",
+                                        "triggerEvent": "OnStrafe",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    }
+                                },
+                                "turnSpeed": 10.0,
+                                "type": "Idle"
+                            },
+                            {
+                                "animationName": "Walk",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": false,
+                                "isBlock": false,
+                                "isLooping": true,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 30.0,
+                                "name": "Walk",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 1.2999999523162842,
+                                "transitions": {
+                                    "OnAttack": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Slash1",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnBlock": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Block",
+                                        "triggerEvent": "OnBlock",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnDodge": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Dodge",
+                                        "triggerEvent": "OnDodge",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStop": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "OnStop",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStrafe": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Strafe",
+                                        "triggerEvent": "OnStrafe",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    }
+                                },
+                                "turnSpeed": 5.0,
+                                "type": "Walk"
+                            },
+                            {
+                                "animationName": "Dodge",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": false,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 30.0,
+                                "name": "Dodge",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 1.399999976158142,
+                                "transitions": {
+                                    "OnAttack": {
+                                        "blendDuration": 0.15000000596046448,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Slash1",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStop": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "OnStop",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStrafe": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Strafe",
+                                        "triggerEvent": "OnStrafe",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    }
+                                },
+                                "turnSpeed": 10.0,
+                                "type": "Dodge"
+                            },
+                            {
+                                "animationName": "StrafeR",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": false,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 5.0,
+                                "name": "Strafe",
+                                "secondaryAnimationName": "StrafeL",
+                                "stateDuration": 1.0,
+                                "transitions": {
+                                    "OnAttack": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Slash1",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnDodge": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Dodge",
+                                        "triggerEvent": "OnDodge",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStop": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "OnStop",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    }
+                                },
+                                "turnSpeed": 10.0,
+                                "type": "Strafe"
+                            },
+                            {
+                                "animationName": "Slash1",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": true,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 8.0,
+                                "name": "Slash1",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 1.149999976158142,
+                                "transitions": {
+                                    "Exit": {
+                                        "blendDuration": 0.550000011920929,
+                                        "canInterrupt": false,
+                                        "hasExitTime": true,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnAttack": {
+                                        "blendDuration": 0.3199999928474426,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Slash2",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 1.100000023841858,
+                                        "windowStart": 0.949999988079071
+                                    },
+                                    "OnDodge": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": true,
+                                        "hasExitTime": false,
+                                        "targetState": "Dodge",
+                                        "triggerEvent": "OnDodge",
+                                        "windowEnd": 1.100000023841858,
+                                        "windowStart": 0.6000000238418579
+                                    },
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 1.100000023841858,
+                                        "windowStart": 0.4000000059604645
+                                    }
+                                },
+                                "turnSpeed": 5.0,
+                                "type": "Slash1"
+                            },
+                            {
+                                "animationName": "Slash2",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": true,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 6.0,
+                                "name": "Slash2",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 1.2000000476837158,
+                                "transitions": {
+                                    "Exit": {
+                                        "blendDuration": 0.25,
+                                        "canInterrupt": false,
+                                        "hasExitTime": true,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnAttack": {
+                                        "blendDuration": 0.30000001192092896,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Slash3",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 1.2000000476837158,
+                                        "windowStart": 1.100000023841858
+                                    },
+                                    "OnDodge": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": true,
+                                        "hasExitTime": false,
+                                        "targetState": "Dodge",
+                                        "triggerEvent": "OnDodge",
+                                        "windowEnd": 1.2000000476837158,
+                                        "windowStart": 0.6000000238418579
+                                    },
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 1.2000000476837158,
+                                        "windowStart": 0.4000000059604645
+                                    }
+                                },
+                                "turnSpeed": 5.0,
+                                "type": "Slash2"
+                            },
+                            {
+                                "animationName": "Slash3",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": true,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 4.0,
+                                "name": "Slash3",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 2.200000047683716,
+                                "transitions": {
+                                    "Exit": {
+                                        "blendDuration": 0.3499999940395355,
+                                        "canInterrupt": false,
+                                        "hasExitTime": true,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnAttack": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Slash1",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 2.200000047683716,
+                                        "windowStart": 2.0
+                                    },
+                                    "OnDodge": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": true,
+                                        "hasExitTime": false,
+                                        "targetState": "Dodge",
+                                        "triggerEvent": "OnDodge",
+                                        "windowEnd": 2.200000047683716,
+                                        "windowStart": 1.2000000476837158
+                                    },
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 2.200000047683716,
+                                        "windowStart": 0.8999999761581421
+                                    }
+                                },
+                                "turnSpeed": 3.0,
+                                "type": "Slash3"
+                            },
+                            {
+                                "animationName": "Slash1",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": true,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 8.0,
+                                "name": "OneHand",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 1.100000023841858,
+                                "transitions": {
+                                    "Exit": {
+                                        "blendDuration": 0.25,
+                                        "canInterrupt": false,
+                                        "hasExitTime": true,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnAttack": {
+                                        "blendDuration": 0.11999999731779099,
+                                        "canInterrupt": true,
+                                        "hasExitTime": false,
+                                        "targetState": "Slash2",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnDodge": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": true,
+                                        "hasExitTime": false,
+                                        "targetState": "Dodge",
+                                        "triggerEvent": "OnDodge",
+                                        "windowEnd": 1.100000023841858,
+                                        "windowStart": 0.6000000238418579
+                                    },
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 1.100000023841858,
+                                        "windowStart": 0.4000000059604645
+                                    }
+                                },
+                                "turnSpeed": 5.0,
+                                "type": "OneHand"
+                            },
+                            {
+                                "animationName": "Block",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": false,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 4.0,
+                                "name": "Block",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 1.0,
+                                "transitions": {
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStop": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "OnStop",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    }
+                                },
+                                "turnSpeed": 10.0,
+                                "type": "Block"
+                            }
+                        ]
+                    },
+                    "Type": "CombatStateMachineComponent"
                 },
                 {
                     "Data": {
@@ -280,7 +826,7 @@
                 {
                     "Data": {
                         "ColliderTag": "BodyCollider",
-                        "Height": 3.7031044960021973,
+                        "Height": 3.7171740531921387,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -306,7 +852,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RarmCollider",
-                        "Height": 2.5573978424072266,
+                        "Height": 2.557451009750366,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -332,7 +878,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RforearmCollider",
-                        "Height": 2.160334587097168,
+                        "Height": 2.1603970527648926,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -358,7 +904,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LarmCollider",
-                        "Height": 2.5574705600738525,
+                        "Height": 2.557471513748169,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -384,7 +930,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LforearmCollider",
-                        "Height": 2.1603431701660156,
+                        "Height": 2.160342216491699,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -410,7 +956,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RupLegCollider",
-                        "Height": 4.170231819152832,
+                        "Height": 4.170218467712402,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -436,7 +982,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RLegCollider",
-                        "Height": 3.6981801986694336,
+                        "Height": 3.6979899406433105,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -462,7 +1008,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LupLegCollider",
-                        "Height": 4.170302867889404,
+                        "Height": 4.170233249664307,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -488,7 +1034,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LLegCollider",
-                        "Height": 3.6981019973754883,
+                        "Height": 3.698122501373291,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -880,7 +1426,11 @@
                                 "Path": "Resources/Models/Boss/strafeR.sdkmesh_anim"
                             }
                         ],
+                        "EnableRootMotion": false,
+                        "IsVisible": true,
                         "ModelPath": "Resources/Models/Boss/Boss.sdkmesh",
+                        "RootBoneName": "",
+                        "RootMotionExtractY": false,
                         "TextureDir": "Resources/Models/Boss"
                     },
                     "Type": "SkinnedModelComponent"
@@ -913,7 +1463,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 6.509313583374023,
+                        "Height": 6.51256799697876,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -939,7 +1489,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.39519739151001,
+                        "Height": 7.395235538482666,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -965,7 +1515,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.740748405456543,
+                        "Height": 4.740762233734131,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -991,7 +1541,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 7.3952155113220215,
+                        "Height": 7.3951945304870605,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1017,7 +1567,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.740722179412842,
+                        "Height": 4.740732669830322,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1043,7 +1593,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 5.742444038391113,
+                        "Height": 5.742434024810791,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1069,7 +1619,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.9026594161987305,
+                        "Height": 4.902596473693848,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1095,7 +1645,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 5.742514133453369,
+                        "Height": 5.742465972900391,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1121,7 +1671,7 @@
                 {
                     "Data": {
                         "ColliderTag": "",
-                        "Height": 4.902609348297119,
+                        "Height": 4.902608394622803,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1205,6 +1755,312 @@
                         ]
                     },
                     "Type": "BehaviourTreeComponent"
+                },
+                {
+                    "Data": {
+                        "defaultState": "Idle",
+                        "states": [
+                            {
+                                "animationName": "Idle",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": false,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 0.0,
+                                "name": "Idle",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 1.0,
+                                "transitions": {
+                                    "OnAttack": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "OneHand",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnDodge": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Dodge",
+                                        "triggerEvent": "OnDodge",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStrafe": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Strafe",
+                                        "triggerEvent": "OnStrafe",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    }
+                                },
+                                "turnSpeed": 10.0,
+                                "type": "Idle"
+                            },
+                            {
+                                "animationName": "Walk",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": false,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 30.0,
+                                "name": "Walk",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 1.0,
+                                "transitions": {
+                                    "OnAttack": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "OneHand",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnDodge": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Dodge",
+                                        "triggerEvent": "OnDodge",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStop": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "OnStop",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStrafe": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Strafe",
+                                        "triggerEvent": "OnStrafe",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    }
+                                },
+                                "turnSpeed": 10.0,
+                                "type": "Walk"
+                            },
+                            {
+                                "animationName": "Dodge",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": false,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 30.0,
+                                "name": "Dodge",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 1.399999976158142,
+                                "transitions": {
+                                    "OnAttack": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "OneHand",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStop": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "OnStop",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStrafe": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Strafe",
+                                        "triggerEvent": "OnStrafe",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    }
+                                },
+                                "turnSpeed": 10.0,
+                                "type": "Dodge"
+                            },
+                            {
+                                "animationName": "StrafeR",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": false,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 5.0,
+                                "name": "Strafe",
+                                "secondaryAnimationName": "StrafeL",
+                                "stateDuration": 1.0,
+                                "transitions": {
+                                    "OnAttack": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "OneHand",
+                                        "triggerEvent": "OnAttack",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnDodge": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Dodge",
+                                        "triggerEvent": "OnDodge",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStop": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "OnStop",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    }
+                                },
+                                "turnSpeed": 10.0,
+                                "type": "Strafe"
+                            },
+                            {
+                                "animationName": "OneHand",
+                                "comboAnimationNames": [],
+                                "comboBlendDurations": [],
+                                "comboEndTimes": [
+                                    1.600000023841858,
+                                    3.0,
+                                    3.4000000953674316
+                                ],
+                                "comboExitBlendDuration": 0.30000001192092896,
+                                "comboWindowStarts": [
+                                    1.2000000476837158,
+                                    2.700000047683716,
+                                    3.0
+                                ],
+                                "invincibilityEnd": 0.0,
+                                "invincibilityStart": 0.0,
+                                "isAttack": false,
+                                "isBlock": false,
+                                "isLooping": false,
+                                "lockMovementDirection": false,
+                                "moveSpeed": 5.0,
+                                "name": "OneHand",
+                                "secondaryAnimationName": "",
+                                "stateDuration": 3.4000000953674316,
+                                "transitions": {
+                                    "OnDodge": {
+                                        "blendDuration": 0.10000000149011612,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Dodge",
+                                        "triggerEvent": "OnDodge",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnMove": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Walk",
+                                        "triggerEvent": "OnMove",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStop": {
+                                        "blendDuration": 0.30000001192092896,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Idle",
+                                        "triggerEvent": "OnStop",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    },
+                                    "OnStrafe": {
+                                        "blendDuration": 0.20000000298023224,
+                                        "canInterrupt": false,
+                                        "hasExitTime": false,
+                                        "targetState": "Strafe",
+                                        "triggerEvent": "OnStrafe",
+                                        "windowEnd": 999.0,
+                                        "windowStart": 0.0
+                                    }
+                                },
+                                "turnSpeed": 10.0,
+                                "type": "OneHand"
+                            }
+                        ]
+                    },
+                    "Type": "CombatStateMachineComponent"
                 },
                 {
                     "Data": {

@@ -24,7 +24,7 @@ namespace HEIN
 		 * @param owner The actor that owns the state machine.
 		 * @param stateMachine The state machine component managing this state.
 		 */
-		virtual void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine) = 0;
+		virtual void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) = 0;
 
 		/**
 		 * @brief Called every frame to update the state.

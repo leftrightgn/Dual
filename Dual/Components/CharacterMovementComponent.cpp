@@ -24,27 +24,45 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 {
 	if (!m_transform || !m_blackboard) return;
 
-	if (m_blackboard->currentStance == HEIN::CombatStance::AttackRelese ||
-		m_blackboard->currentStance == HEIN::CombatStance::Staggered)
+	// Check if root motion is actively driving movement (e.g. active root-motion model during attacks)
+	if (m_blackboard->hasRootMotion)
 	{
-		// Cancel movement if the character is currently attacking or staggered
-		m_blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+		m_blackboard->currentVelocity = m_blackboard->rootMotionVelocity;
+
+		HEIN::RigidBodyComponent* rb = m_owner->GetComponent<HEIN::RigidBodyComponent>();
+		if (rb != nullptr && !rb->isKinematic())
+		{
+			rb->SetHorizontalVelocity(m_blackboard->currentVelocity);
+		}
+		else if (m_transform != nullptr)
+		{
+			m_transform->SetPosition(m_transform->GetPosition() + m_blackboard->currentVelocity * deltaTime);
+		}
 	}
-
-	// Dynamic Speed: Calculate desired velocity and apply friction interpolation
-	DirectX::SimpleMath::Vector3 desiredVelocity = m_blackboard->moveIntent * m_blackboard->currentSpeed;
-
-	m_blackboard->currentVelocity = DirectX::SimpleMath::Vector3::Lerp(
-		m_blackboard->currentVelocity,
-		desiredVelocity,
-		deltaTime * m_friction
-	);
-
-	// Move the actor
-	HEIN::RigidBodyComponent* rb = m_owner->GetComponent<HEIN::RigidBodyComponent>();
-	if (rb != nullptr)
+	else
 	{
-		rb->SetHorizontalVelocity(m_blackboard->currentVelocity);
+		if (m_blackboard->currentStance == HEIN::CombatStance::AttackRelese ||
+			m_blackboard->currentStance == HEIN::CombatStance::Staggered)
+		{
+			// Cancel movement if the character is currently attacking or staggered
+			m_blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+		}
+
+		// Dynamic Speed: Calculate desired velocity and apply friction interpolation
+		DirectX::SimpleMath::Vector3 desiredVelocity = m_blackboard->moveIntent * m_blackboard->currentSpeed;
+
+		m_blackboard->currentVelocity = DirectX::SimpleMath::Vector3::Lerp(
+			m_blackboard->currentVelocity,
+			desiredVelocity,
+			deltaTime * m_friction
+		);
+
+		// Move the actor
+		HEIN::RigidBodyComponent* rb = m_owner->GetComponent<HEIN::RigidBodyComponent>();
+		if (rb != nullptr)
+		{
+			rb->SetHorizontalVelocity(m_blackboard->currentVelocity);
+		}
 	}
 	if (m_blackboard->isLockedOn && m_blackboard->currentStance == HEIN::CombatStance::Strafing &&  m_blackboard->dirToTarget.LengthSquared() > 0.001f)
 	{
@@ -79,7 +97,7 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 		while (difference < -DirectX::XM_PI) difference += DirectX::XM_2PI;
 		while (difference > DirectX::XM_PI) difference -= DirectX::XM_2PI;
 
-		float turnSpeed = 10.0f;
+		float turnSpeed = (m_blackboard->currentTurnSpeed > 0.0f) ? m_blackboard->currentTurnSpeed : 10.0f;
 		currentRot.y += difference * turnSpeed * deltaTime;
 
 		currentRot.x = 0.0f;

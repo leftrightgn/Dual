@@ -73,6 +73,15 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 
 void HEIN::PlayerInputComponent::OnMessageAccepted(Message::MessageID messageID)
 {
+	if (messageID == Message::PLAYER_TOGGLE_MODEL)
+	{
+		if (m_owner != nullptr)
+		{
+			m_owner->ToggleSkinnedModel();
+		}
+		return;
+	}
+
 	// Accumulate local directional inputs from messages
 	switch (messageID)
 	{

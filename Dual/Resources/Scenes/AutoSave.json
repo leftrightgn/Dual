@@ -136,7 +136,7 @@
                             },
                             {
                                 "Name": "Walk",
-                                "Path": "Resources/Models/knight/running.sdkmesh_anim"
+                                "Path": "Resources/Models/knight/RunRoot.sdkmesh_anim"
                             },
                             {
                                 "Name": "StrafeL",
@@ -153,9 +153,25 @@
                             {
                                 "Name": "Block",
                                 "Path": "Resources/Models/knight/block.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Slash1",
+                                "Path": "Resources/Models/knight/slash1.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Slash2",
+                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Slash3",
+                                "Path": "Resources/Models/knight/slash3.sdkmesh_anim"
                             }
                         ],
+                        "EnableRootMotion": true,
+                        "IsVisible": true,
                         "ModelPath": "Resources/Models/knight/knight.sdkmesh",
+                        "RootBoneName": "",
+                        "RootMotionExtractY": false,
                         "TextureDir": "Resources/Models/knight"
                     },
                     "Type": "SkinnedModelComponent"
@@ -1026,7 +1042,7 @@
                                 {
                                     "Data": {
                                         "Position": [
-                                            -9.117324829101563,
+                                            -9.117324829101562,
                                             -0.3120765686035156,
                                             -9.03546142578125
                                         ],
@@ -1166,7 +1182,7 @@
                                 {
                                     "Data": {
                                         "Position": [
-                                            -9.047988891601563,
+                                            -9.047988891601562,
                                             7.255289077758789,
                                             8.8131103515625
                                         ],
@@ -1658,7 +1674,7 @@
                                         "Position": [
                                             9.51416301727295,
                                             -0.5174264907836914,
-                                            -8.848831176757813
+                                            -8.848831176757812
                                         ],
                                         "Rotation": [
                                             0.7071068286895752,
