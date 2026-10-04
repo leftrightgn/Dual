@@ -16,6 +16,7 @@
 #include "../../../External/Engine/Components/LightComponent.h"
 #include "../../../External/Engine/FrameWork/GameContext.h"
 #include <Components/PlayerInputComponent.h>
+#include <Components/CombatStateMachineComponent.h>
 #include <Factory/ActorFactory.h>
 #include "../../../External/Engine/Components/HealthComponent.h"
 #include "../../../External/Engine/ImGui/imgui.h"
@@ -210,10 +211,28 @@ void GameScene::ProcessSimulationPhase(GameContext& gameContext, float deltaTime
     {
         auto* pTransform = player->GetComponent<HEIN::TransformComponent>();
         auto* pModel = player->GetComponent<HEIN::SkinnedModelComponent>();
+        auto* pSM = player->GetComponent<HEIN::CombatStateMachineComponent>();
 
         if (pTransform != nullptr && pModel != nullptr)
         {
-            m_targetPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End", pTransform->GetWorldMatrix());
+            DirectX::SimpleMath::Vector3 headPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End", pTransform->GetWorldMatrix());
+            float heightAboveRoot = headPos.y - pTransform->GetPosition().y;
+
+            static float s_standingHeight = 15.0f;
+            bool isDodging = (pSM && pSM->GetCurrentStateName() == "Dodge") || (heightAboveRoot < 6.0f);
+
+            if (!isDodging && heightAboveRoot > 8.0f)
+            {
+                s_standingHeight = heightAboveRoot;
+            }
+
+            if (isDodging)
+            {
+                // When dodging, maintain camera target at stable standing height above root position
+                headPos.y = pTransform->GetPosition().y + s_standingHeight;
+            }
+
+            m_targetPos = headPos;
         }
     }
 
