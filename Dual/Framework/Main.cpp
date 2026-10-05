@@ -6,6 +6,7 @@
 #include "../../../External/Engine/ImGui/imgui_impl_win32.h"
 #include <Scene/GameScene/GameScene.h>
 #include <Scene/TitleScene/TitleScene.h>
+#include <Factory/ActorFactory.h>
 #include "../../../External/Engine/Framework/Game.h"
 
 using namespace DirectX;
@@ -109,6 +110,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
             GetClientRect(hwnd, &rc);
 
             g_game->Initialize(hwnd, rc.right - rc.left, rc.bottom - rc.top);
+
+            // Register game reflection components
+            HEIN::ActorFactory::RegisterGameComponents();
 
             // Register game scenes. The Game class uses a string-based mapping to instantiate these scenes when requested.
             g_game->RegisterScene<TitleScene>("TitleScene");

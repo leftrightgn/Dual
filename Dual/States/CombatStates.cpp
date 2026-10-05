@@ -7,641 +7,6 @@
 #include "../../../External/Engine/Components/HealthComponent.h"
 #include <cmath>
 
-// ==============================================================================
-// IDLE STATE
-// ==============================================================================
-HEIN::IdleState::IdleState(const HEIN::StateConfig& config) : m_config(config) {}
-
-void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/, float blendDuration)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (blackboard) blackboard->currentStance = CombatStance::Idle;
-
-    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-    for (HEIN::SkinnedModelComponent* model : models)
-    {
-        model->CrossfadeAnimation(m_config.animationName, blendDuration);
-    }
-}
-
-void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float /*deltaTime*/)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (!blackboard) return;
-
-    blackboard->currentTurnSpeed = 12.0f;
-
-    if (blackboard->moveIntent.LengthSquared() > 0.1f)
-    {
-        if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z))
-        {
-            auto& t = m_config.transitions["OnStrafe"];
-            stateMachine->ChangeState(t.targetState, t.blendDuration);
-        }
-        else
-        {
-            auto& t = m_config.transitions["OnMove"];
-            stateMachine->ChangeState(t.targetState, t.blendDuration);
-        }
-    }
-}
-
-bool HEIN::IdleState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
-{
-    switch (messageID)
-    {
-    case Message::PLAYER_ACTION_ATTACK:
-    {
-        auto& t = m_config.transitions["OnAttack"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_DODGE:
-    {
-        auto& t = m_config.transitions["OnDodge"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_BLOCK:
-    {
-        auto& t = m_config.transitions["OnBlock"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    }
-    return false;
-}
-
-void HEIN::IdleState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/) {}
-
-// ==============================================================================
-// WALK STATE
-// ==============================================================================
-HEIN::WalkState::WalkState(const HEIN::StateConfig& config) : m_config(config) {}
-
-void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/, float blendDuration)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (blackboard)
-    {
-        blackboard->currentStance = CombatStance::Walking;
-        blackboard->currentSpeed = m_config.moveSpeed;
-    }
-    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-    for (HEIN::SkinnedModelComponent* model : models)
-    {
-        model->CrossfadeAnimation(m_config.animationName, blendDuration);
-    }
-}
-
-void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float /*deltaTime*/)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (!blackboard) return;
-    blackboard->currentSpeed = m_config.moveSpeed;
-    blackboard->currentTurnSpeed = 12.0f;
-
-    if (blackboard->moveIntent.LengthSquared() <= 0.1f)
-    {
-        auto& t = m_config.transitions["OnStop"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return;
-    }
-
-    if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z))
-    {
-        auto& t = m_config.transitions["OnStrafe"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return;
-    }
-}
-
-bool HEIN::WalkState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
-{
-    switch (messageID)
-    {
-    case Message::PLAYER_ACTION_ATTACK:
-    {
-        auto& t = m_config.transitions["OnAttack"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_DODGE:
-    {
-        auto& t = m_config.transitions["OnDodge"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_BLOCK:
-    {
-        auto& t = m_config.transitions["OnBlock"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    }
-    return false;
-}
-
-void HEIN::WalkState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/) {}
-
-// ==============================================================================
-// ONE HAND ATTACK STATE
-// ==============================================================================
-HEIN::OneHandAttackState::OneHandAttackState(const StateConfig& config) : m_config(config) {}
-
-int HEIN::OneHandAttackState::GetTotalStages(Actor* /*owner*/) const
-{
-    if (!m_config.comboAnimationNames.empty())
-    {
-        return static_cast<int>(m_config.comboAnimationNames.size());
-    }
-    if (!m_config.comboEndTimes.empty())
-    {
-        return static_cast<int>(m_config.comboEndTimes.size());
-    }
-    if (!m_config.animationName.empty())
-    {
-        return 1;
-    }
-    return 0;
-}
-
-const std::string* HEIN::OneHandAttackState::StageAnim(int stage) const
-{
-    if (stage >= 0 && stage < static_cast<int>(m_config.comboAnimationNames.size()))
-    {
-        return &m_config.comboAnimationNames[stage];
-    }
-    if (stage == 0 && !m_config.animationName.empty())
-    {
-        return &m_config.animationName;
-    }
-    // If comboAnimationNames is empty, fallback to primary animation
-    if (m_config.comboAnimationNames.empty() && !m_config.animationName.empty())
-    {
-        return &m_config.animationName;
-    }
-    return nullptr;
-}
-
-float HEIN::OneHandAttackState::StageEndTime(int stage, Actor* owner) const
-{
-    if (stage >= 0 && stage < static_cast<int>(m_config.comboEndTimes.size()) && m_config.comboEndTimes[stage] > 0.0f)
-    {
-        return m_config.comboEndTimes[stage];
-    }
-
-    // Try auto-detecting duration from SkinnedModelComponent
-    if (owner != nullptr)
-    {
-        const std::string* anim = StageAnim(stage);
-        if (anim != nullptr && !anim->empty())
-        {
-            auto* model = owner->GetComponent<SkinnedModelComponent>();
-            if (model != nullptr)
-            {
-                float duration = model->GetAnimationDuration(*anim);
-                if (duration > 0.05f)
-                {
-                    return duration;
-                }
-            }
-        }
-    }
-
-    // Built-in defaults for standard stages if available
-    if (stage == 0) return STAGE_1_END_TIME;
-    if (stage == 1) return STAGE_2_END_TIME;
-    if (stage == 2) return STAGE_3_END_TIME;
-
-    if (m_config.stateDuration > 0.0f)
-    {
-        return m_config.stateDuration;
-    }
-
-    return 1.2f;
-}
-
-float HEIN::OneHandAttackState::StageWindowStart(int stage, Actor* owner) const
-{
-    if (stage >= 0 && stage < static_cast<int>(m_config.comboWindowStarts.size()) && m_config.comboWindowStarts[stage] > 0.0f)
-    {
-        return m_config.comboWindowStarts[stage];
-    }
-
-    // Built-in defaults for standard stages if available
-    if (stage == 0 && m_config.comboWindowStarts.empty()) return STAGE_1_WINDOW_START;
-    if (stage == 1 && m_config.comboWindowStarts.size() <= 1) return STAGE_2_WINDOW_START;
-    if (stage == 2 && m_config.comboWindowStarts.size() <= 2) return STAGE_3_WINDOW_START;
-
-    // Dynamically calculate window start based on stage end time
-    float endTime = StageEndTime(stage, owner);
-    float windowStart = (endTime > 0.8f) ? 0.40f : (endTime * 0.40f);
-    if (windowStart < 0.0f) windowStart = 0.0f;
-    return windowStart;
-}
-
-float HEIN::OneHandAttackState::StageBlend(int stage, float fallback) const
-{
-    if (stage >= 0 && stage < static_cast<int>(m_config.comboBlendDurations.size()) && m_config.comboBlendDurations[stage] >= 0.0f)
-    {
-        return m_config.comboBlendDurations[stage];
-    }
-    return fallback;
-}
-
-void HEIN::OneHandAttackState::PlayStage(Actor* owner, int stage, float blendDuration)
-{
-    if (!owner) return;
-    const std::string* anim = StageAnim(stage);
-    if (anim == nullptr || anim->empty()) return;
-
-    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-    for (HEIN::SkinnedModelComponent* model : models)
-    {
-        if (model)
-        {
-            model->CrossfadeAnimation(*anim, blendDuration, true);
-        }
-    }
-}
-
-void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/, float blendDuration)
-{
-    HEIN::CombatBlackBoard* blackboard = owner ? owner->GetComponent<CombatBlackBoard>() : nullptr;
-    if (blackboard) blackboard->currentStance = CombatStance::OneHand;
-
-    m_timer = 0.0f;
-    m_comboStage = 0;
-    m_comboQueued = false;
-
-    float blend = StageBlend(0, blendDuration);
-    PlayStage(owner, 0, blend);
-}
-
-void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
-{
-    if (!owner || !stateMachine) return;
-
-    m_timer += deltaTime;
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-
-    int totalStages = GetTotalStages(owner);
-    if (totalStages <= 0)
-    {
-        auto it = m_config.transitions.find("OnStop");
-        std::string target = (it != m_config.transitions.end()) ? it->second.targetState : "Idle";
-        float blend = (it != m_config.transitions.end()) ? it->second.blendDuration : 0.2f;
-        stateMachine->ChangeState(target, blend);
-        return;
-    }
-
-    if (blackboard)
-    {
-        float windUpTime = 0.3f;
-        blackboard->currentTurnSpeed = (m_timer < windUpTime) ? 40.0f : 0.1f;
-        blackboard->currentSpeed = m_config.moveSpeed;
-    }
-
-    float stageEnd = StageEndTime(m_comboStage, owner);
-
-    // When the current animation stage finishes...
-    if (m_timer >= stageEnd)
-    {
-        // Advance combo if queued AND there are more stages ahead
-        if (m_comboQueued && m_comboStage < totalStages - 1)
-        {
-            m_comboStage++;
-            m_timer = 0.0f;        // Reset timer for the next animation stage
-            m_comboQueued = false; // Reset the queue flag
-
-            float blend = StageBlend(m_comboStage, 0.1f);
-            PlayStage(owner, m_comboStage, blend);
-            return; // Exit early to remain in OneHandAttackState
-        }
-
-        // Exit attack state completely
-        float exitBlend = (m_config.comboExitBlendDuration > 0.0f) ? m_config.comboExitBlendDuration : 0.3f;
-
-        if (blackboard && blackboard->moveIntent.LengthSquared() > 0.01f)
-        {
-            if (blackboard->isLockedOn)
-            {
-                auto it = m_config.transitions.find("OnStrafe");
-                if (it != m_config.transitions.end())
-                {
-                    stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
-                    return;
-                }
-            }
-
-            auto it = m_config.transitions.find("OnMove");
-            if (it != m_config.transitions.end())
-            {
-                stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
-                return;
-            }
-        }
-
-        auto it = m_config.transitions.find("OnStop");
-        if (it != m_config.transitions.end())
-        {
-            stateMachine->ChangeState(it->second.targetState, exitBlend);
-        }
-        else
-        {
-            stateMachine->ChangeState("Idle", exitBlend);
-        }
-    }
-}
-
-bool HEIN::OneHandAttackState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
-{
-    if (messageID == Message::PLAYER_ACTION_ATTACK)
-    {
-        int totalStages = GetTotalStages(owner);
-        // Only accept/queue combo if there is a next stage to advance to
-        if (m_comboStage < totalStages - 1)
-        {
-            float windowStart = StageWindowStart(m_comboStage, owner);
-            float stageEnd = StageEndTime(m_comboStage, owner);
-
-            if (m_timer >= windowStart && m_timer < stageEnd)
-            {
-                m_comboQueued = true;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    if (messageID == Message::PLAYER_ACTION_DODGE)
-    {
-        auto it = m_config.transitions.find("OnDodge");
-        if (it != m_config.transitions.end())
-        {
-            stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void HEIN::OneHandAttackState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/)
-{
-    m_comboQueued = false;
-    m_comboStage = 0;
-    m_timer = 0.0f;
-}
-
-// ==============================================================================
-// DODGE STATE
-// ==============================================================================
-HEIN::DodgeState::DodgeState(const StateConfig& config) : m_config(config) {}
-
-void HEIN::DodgeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (blackboard)
-    {
-        blackboard->currentStance = CombatStance::Dodging;
-        blackboard->dodgeCooldownTimer = blackboard->maxDodgeCooldown;
-        if (blackboard->moveIntent.LengthSquared() > 0.01f)
-        {
-            m_lockedDirection = blackboard->moveIntent;
-        }
-        else
-        {
-            HEIN::TransformComponent* trans = owner->GetComponent<HEIN::TransformComponent>();
-            float currentMathematicalYaw = trans->GetRotationEuler().y;
-            float trueVisualYaw = currentMathematicalYaw - DirectX::XM_PI;
-            m_lockedDirection.x = sinf(trueVisualYaw);
-            m_lockedDirection.y = 0.0f;
-            m_lockedDirection.z = cosf(trueVisualYaw);
-            m_lockedDirection.Normalize();
-        }
-    }
-    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-    for (HEIN::SkinnedModelComponent* model : models)
-    {
-        model->CrossfadeAnimation(m_config.animationName, blendDuration);
-    }
-    m_timer = 0.0f;
-}
-
-void HEIN::DodgeState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
-{
-    m_timer += deltaTime;
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
-
-    if (blackboard)
-    {
-        blackboard->currentTurnSpeed = 30.0f;
-        blackboard->currentSpeed = m_config.moveSpeed;
-        blackboard->moveIntent = m_lockedDirection;
-
-        if (m_timer >= m_config.stateDuration)
-        {
-            if (blackboard->moveIntent.LengthSquared() > 0.1f)
-            {
-                if (blackboard->isLockedOn)
-                {
-                    auto& t = m_config.transitions["OnStrafe"];
-                    stateMachine->ChangeState(t.targetState, t.blendDuration);
-                }
-                else
-                {
-                    auto& t = m_config.transitions["OnMove"];
-                    stateMachine->ChangeState(t.targetState, t.blendDuration);
-                }
-            }
-            else
-            {
-                auto& t = m_config.transitions["OnStop"];
-                stateMachine->ChangeState(t.targetState, t.blendDuration);
-            }
-        }
-    }
-}
-
-bool HEIN::DodgeState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
-{
-    return false;
-}
-
-void HEIN::DodgeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) {}
-
-// ==============================================================================
-// STRAFE STATE
-// ==============================================================================
-HEIN::StrafeState::StrafeState(const StateConfig& config) : m_config(config), m_isRight(false) {}
-
-void HEIN::StrafeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (blackboard)
-    {
-        blackboard->currentStance = CombatStance::Strafing;
-        m_isRight = blackboard->localMoveIntent.x < 0.0f;
-    }
-
-    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-    for (HEIN::SkinnedModelComponent* model : models)
-    {
-        model->CrossfadeAnimation(m_isRight ? m_config.animationName : m_config.secondaryAnimationName, blendDuration);
-    }
-}
-
-void HEIN::StrafeState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
-    if (!blackboard) return;
-
-    blackboard->currentSpeed = m_config.moveSpeed;
-
-    if (!blackboard->isLockedOn || std::abs(blackboard->localMoveIntent.z) > std::abs(blackboard->localMoveIntent.x))
-    {
-        auto& t = m_config.transitions["OnMove"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return;
-    }
-
-    if (blackboard->moveIntent.LengthSquared() <= 0.1f)
-    {
-        auto& t = m_config.transitions["OnStop"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return;
-    }
-
-    bool isRight = blackboard->localMoveIntent.x < 0.0f;
-    if (isRight != m_isRight)
-    {
-        m_isRight = isRight;
-        std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-        for (HEIN::SkinnedModelComponent* model : models)
-        {
-            // Mid-state directional shift uses a fast 0.2f blend
-            model->CrossfadeAnimation(m_isRight ? m_config.animationName : m_config.secondaryAnimationName, 0.2f);
-        }
-    }
-}
-
-bool HEIN::StrafeState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
-{
-    switch (messageID)
-    {
-    case Message::PLAYER_ACTION_ATTACK:
-    {
-        auto& t = m_config.transitions["OnAttack"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_DODGE:
-    {
-        auto& t = m_config.transitions["OnDodge"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_BLOCK:
-    {
-        auto& t = m_config.transitions["OnBlock"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    }
-    return false;
-}
-
-void HEIN::StrafeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) {}
-
-// ==============================================================================
-// BLOCK STATE
-// ==============================================================================
-HEIN::BlockState::BlockState(const StateConfig& config) : m_config(config) {}
-
-void HEIN::BlockState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (blackboard) blackboard->currentStance = CombatStance::Blocking;
-
-    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-    for (HEIN::SkinnedModelComponent* model : models)
-    {
-        model->CrossfadeAnimation(m_config.animationName, blendDuration);
-    }
-}
-
-void HEIN::BlockState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
-    if (blackboard)
-    {
-        blackboard->currentBlockStamina -= deltaTime;
-        blackboard->currentSpeed = m_config.moveSpeed;
-
-        if (blackboard->currentBlockStamina <= 0.0f)
-        {
-            blackboard->isBlockBroken = true;
-
-            if (blackboard->moveIntent.LengthSquared() > 0.1f)
-            {
-                if (blackboard->isLockedOn)
-                {
-                    auto& t = m_config.transitions["OnStrafe"];
-                    stateMachine->ChangeState(t.targetState, t.blendDuration);
-                }
-                else
-                {
-                    auto& t = m_config.transitions["OnMove"];
-                    stateMachine->ChangeState(t.targetState, t.blendDuration);
-                }
-            }
-            else
-            {
-                auto& t = m_config.transitions["OnStop"];
-                stateMachine->ChangeState(t.targetState, t.blendDuration);
-            }
-        }
-    }
-}
-
-bool HEIN::BlockState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
-{
-    if (messageID == Message::PLAYER_STOP_BLOCK)
-    {
-        HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
-        if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
-        {
-            if (blackboard->isLockedOn)
-            {
-                auto& t = m_config.transitions["OnStrafe"];
-                stateMachine->ChangeState(t.targetState, t.blendDuration);
-            }
-            else
-            {
-                auto& t = m_config.transitions["OnMove"];
-                stateMachine->ChangeState(t.targetState, t.blendDuration);
-            }
-        }
-        else
-        {
-            auto& t = m_config.transitions["OnStop"];
-            stateMachine->ChangeState(t.targetState, t.blendDuration);
-        }
-        return true;
-    }
-
-    if (messageID == Message::PLAYER_ACTION_DODGE)
-    {
-        auto& t = m_config.transitions["OnDodge"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    return false;
-}
-
-void HEIN::BlockState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) {}
 
 // ==============================================================================
 // UNIVERSAL DATA-DRIVEN COMBAT STATE
@@ -660,7 +25,10 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
     auto* blackboard = owner->GetComponent<CombatBlackBoard>();
     if (blackboard)
     {
-        if (m_config.isBlock)
+        bool isBlockState = (m_config.isBlock || m_config.stateName == "Block" || m_config.stateType == "Block");
+        bool isDodgeState = (m_config.lockMovementDirection || m_config.invincibilityEnd > 0.0f || m_config.stateName == "Dodge" || m_config.stateType == "Dodge");
+
+        if (isBlockState)
         {
             blackboard->currentStance = CombatStance::Blocking;
         }
@@ -668,9 +36,10 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
         {
             blackboard->currentStance = CombatStance::AttackRelese;
         }
-        else if (m_config.lockMovementDirection || m_config.invincibilityEnd > 0.0f)
+        else if (isDodgeState)
         {
             blackboard->currentStance = CombatStance::Dodging;
+            blackboard->dodgeCooldownTimer = blackboard->maxDodgeCooldown;
         }
         else if (m_config.stateName == "Strafe")
         {
@@ -688,7 +57,7 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
         blackboard->currentSpeed = m_config.moveSpeed;
         blackboard->currentTurnSpeed = m_config.turnSpeed;
 
-        if (m_config.lockMovementDirection)
+        if (m_config.lockMovementDirection || isDodgeState)
         {
             if (blackboard->moveIntent.LengthSquared() > 0.01f)
             {
@@ -732,12 +101,14 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     m_timer += deltaTime;
 
     auto* blackboard = owner->GetComponent<CombatBlackBoard>();
+    bool isDodge = (m_config.lockMovementDirection || m_config.invincibilityEnd > 0.0f || m_config.stateName == "Dodge" || m_config.stateType == "Dodge");
+
     if (blackboard)
     {
         blackboard->currentSpeed = m_config.moveSpeed;
         blackboard->currentTurnSpeed = m_config.turnSpeed;
 
-        if (m_config.lockMovementDirection)
+        if (m_config.lockMovementDirection || isDodge)
         {
             blackboard->moveIntent = m_lockedDirection;
         }
@@ -749,12 +120,13 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
         bool isInvincible = (m_config.invincibilityEnd > 0.0f &&
                              m_timer >= m_config.invincibilityStart &&
                              m_timer <= m_config.invincibilityEnd);
-        health->SetGameplayInvincible(isInvincible || m_config.isBlock);
+        health->SetGameplayInvincible(isInvincible);
     }
 
-    if (m_config.isBlock && blackboard)
+    bool isBlockState = (m_config.isBlock || m_config.stateName == "Block" || m_config.stateType == "Block");
+    if (isBlockState && blackboard)
     {
-        if (blackboard->currentBlockStamina <= 0.0f)
+        if (blackboard->currentBlockStamina <= 0.0f || blackboard->isBlockBroken)
         {
             blackboard->isBlockBroken = true;
             auto itStop = m_config.transitions.find("OnStop");
@@ -778,13 +150,14 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     }
 
     // Movement cancellation for non-looping states (e.g. holding W cancels attack recovery window)
-    if (!m_config.isLooping && blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+    // Dodge states must NOT be movement-cancelled; transitions with hasExitTime must wait for exit time
+    if (!m_config.isLooping && !isDodge && blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
     {
         auto itMove = m_config.transitions.find("OnMove");
         if (itMove != m_config.transitions.end())
         {
             const auto& t = itMove->second;
-            if (t.canInterrupt || (m_timer >= t.windowStart && m_timer <= t.windowEnd))
+            if (!t.hasExitTime && (t.canInterrupt || (m_timer >= t.windowStart && m_timer <= t.windowEnd)))
             {
                 stateMachine->ChangeState(t.targetState, t.blendDuration);
                 return;
@@ -796,7 +169,7 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     if (!m_config.isLooping && m_timer >= m_actualDuration)
     {
         // If moving when animation concludes, prefer OnMove over Idle
-        if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+        if (blackboard && (blackboard->localMoveIntent.LengthSquared() > 0.1f || (!isDodge && blackboard->moveIntent.LengthSquared() > 0.1f)))
         {
             auto itMove = m_config.transitions.find("OnMove");
             if (itMove != m_config.transitions.end())
@@ -970,13 +343,4 @@ bool HEIN::UniversalCombatState::HandleMessage(Actor* owner, CombatStateMachineC
     }
 
     return false;
-}
-
-std::unique_ptr<HEIN::ICombatState> HEIN::CreateCombatStateFromConfig(const StateConfig& config)
-{
-    if (config.stateType == "OneHand" && !config.comboAnimationNames.empty())
-    {
-        return std::make_unique<HEIN::OneHandAttackState>(config);
-    }
-    return std::make_unique<HEIN::UniversalCombatState>(config);
 }

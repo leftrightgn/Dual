@@ -54,6 +54,20 @@ void HEIN::BehaviourTreeComponent::Update(float deltaTime)
 
 			if (blackboard->distanceToTarget > 0.001f) dir.Normalize();
 			blackboard->dirToTarget = dir;
+
+			if (auto* targetBB = target->GetComponent<HEIN::CombatBlackBoard>())
+			{
+				blackboard->targetStance = targetBB->currentStance;
+				blackboard->targetHealth = targetBB->currentHealth;
+				blackboard->isTargetAttacking = (targetBB->currentStance == CombatStance::OneHand ||
+					targetBB->currentStance == CombatStance::AttackRelese ||
+					targetBB->currentStance == CombatStance::AttackRecovery);
+			}
+		}
+
+		if (blackboard && blackboard->actionCooldownTimer > 0.0f)
+		{
+			blackboard->actionCooldownTimer -= deltaTime;
 		}
 
 		m_rootNode->Tick(GetOwner(), m_actorManager, m_targetID, deltaTime);

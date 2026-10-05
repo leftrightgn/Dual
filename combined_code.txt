@@ -919,6 +919,11 @@ namespace HEIN
 		DirectX::SimpleMath::Vector3 dirToTarget = DirectX::SimpleMath::Vector3::Zero;
 		float distanceToTarget = 0.0f;
 
+		// Root Motion State
+		bool hasRootMotion = false;
+		DirectX::SimpleMath::Vector3 rootMotionVelocity = DirectX::SimpleMath::Vector3::Zero;
+		DirectX::SimpleMath::Vector3 rootMotionDelta = DirectX::SimpleMath::Vector3::Zero;
+
 		bool isLockedOn = false;
 		HEIN::ActorID lockedTargetID = HEIN::INVALID_ACTOR_ID;
 
@@ -1198,27 +1203,45 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 {
 	if (!m_transform || !m_blackboard) return;
 
-	if (m_blackboard->currentStance == HEIN::CombatStance::AttackRelese ||
-		m_blackboard->currentStance == HEIN::CombatStance::Staggered)
+	// Check if root motion is actively driving movement (e.g. active root-motion model during attacks)
+	if (m_blackboard->hasRootMotion)
 	{
-		// Cancel movement if the character is currently attacking or staggered
-		m_blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+		m_blackboard->currentVelocity = m_blackboard->rootMotionVelocity;
+
+		HEIN::RigidBodyComponent* rb = m_owner->GetComponent<HEIN::RigidBodyComponent>();
+		if (rb != nullptr && !rb->isKinematic())
+		{
+			rb->SetHorizontalVelocity(m_blackboard->currentVelocity);
+		}
+		else if (m_transform != nullptr)
+		{
+			m_transform->SetPosition(m_transform->GetPosition() + m_blackboard->currentVelocity * deltaTime);
+		}
 	}
-
-	// Dynamic Speed: Calculate desired velocity and apply friction interpolation
-	DirectX::SimpleMath::Vector3 desiredVelocity = m_blackboard->moveIntent * m_blackboard->currentSpeed;
-
-	m_blackboard->currentVelocity = DirectX::SimpleMath::Vector3::Lerp(
-		m_blackboard->currentVelocity,
-		desiredVelocity,
-		deltaTime * m_friction
-	);
-
-	// Move the actor
-	HEIN::RigidBodyComponent* rb = m_owner->GetComponent<HEIN::RigidBodyComponent>();
-	if (rb != nullptr)
+	else
 	{
-		rb->SetHorizontalVelocity(m_blackboard->currentVelocity);
+		if (m_blackboard->currentStance == HEIN::CombatStance::AttackRelese ||
+			m_blackboard->currentStance == HEIN::CombatStance::Staggered)
+		{
+			// Cancel movement if the character is currently attacking or staggered
+			m_blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+		}
+
+		// Dynamic Speed: Calculate desired velocity and apply friction interpolation
+		DirectX::SimpleMath::Vector3 desiredVelocity = m_blackboard->moveIntent * m_blackboard->currentSpeed;
+
+		m_blackboard->currentVelocity = DirectX::SimpleMath::Vector3::Lerp(
+			m_blackboard->currentVelocity,
+			desiredVelocity,
+			deltaTime * m_friction
+		);
+
+		// Move the actor
+		HEIN::RigidBodyComponent* rb = m_owner->GetComponent<HEIN::RigidBodyComponent>();
+		if (rb != nullptr)
+		{
+			rb->SetHorizontalVelocity(m_blackboard->currentVelocity);
+		}
 	}
 	if (m_blackboard->isLockedOn && m_blackboard->currentStance == HEIN::CombatStance::Strafing &&  m_blackboard->dirToTarget.LengthSquared() > 0.001f)
 	{
@@ -1253,7 +1276,7 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 		while (difference < -DirectX::XM_PI) difference += DirectX::XM_2PI;
 		while (difference > DirectX::XM_PI) difference -= DirectX::XM_2PI;
 
-		float turnSpeed = 10.0f;
+		float turnSpeed = (m_blackboard->currentTurnSpeed > 0.0f) ? m_blackboard->currentTurnSpeed : 10.0f;
 		currentRot.y += difference * turnSpeed * deltaTime;
 
 		currentRot.x = 0.0f;
@@ -1555,18 +1578,33 @@ nlohmann::json HEIN::CombatStateMachineComponent::Serialize()
         stateJson["secondaryAnimationName"] = cfg.secondaryAnimationName;
         stateJson["moveSpeed"] = cfg.moveSpeed;
         stateJson["stateDuration"] = cfg.stateDuration;
+        stateJson["turnSpeed"] = cfg.turnSpeed;
+        stateJson["isLooping"] = cfg.isLooping;
+        stateJson["isAttack"] = cfg.isAttack;
+        stateJson["isBlock"] = cfg.isBlock;
+        stateJson["lockMovementDirection"] = cfg.lockMovementDirection;
+        stateJson["invincibilityStart"] = cfg.invincibilityStart;
+        stateJson["invincibilityEnd"] = cfg.invincibilityEnd;
 
         stateJson["transitions"] = nlohmann::json::object();
         for (const auto& [eventKey, transition] : cfg.transitions)
         {
             stateJson["transitions"][eventKey] = {
                 {"targetState", transition.targetState},
-                {"blendDuration", transition.blendDuration}
+                {"blendDuration", transition.blendDuration},
+                {"triggerEvent", transition.triggerEvent},
+                {"hasExitTime", transition.hasExitTime},
+                {"windowStart", transition.windowStart},
+                {"windowEnd", transition.windowEnd},
+                {"canInterrupt", transition.canInterrupt}
             };
         }
 
+        stateJson["comboAnimationNames"] = cfg.comboAnimationNames;
         stateJson["comboEndTimes"] = cfg.comboEndTimes;
         stateJson["comboWindowStarts"] = cfg.comboWindowStarts;
+        stateJson["comboBlendDurations"] = cfg.comboBlendDurations;
+        stateJson["comboExitBlendDuration"] = cfg.comboExitBlendDuration;
 
         data["states"].push_back(stateJson);
     }
@@ -1596,6 +1634,13 @@ void HEIN::CombatStateMachineComponent::Deserialize(const nlohmann::json& data)
             if (stateJson.contains("secondaryAnimationName")) cfg.secondaryAnimationName = stateJson["secondaryAnimationName"].get<std::string>();
             if (stateJson.contains("moveSpeed")) cfg.moveSpeed = stateJson["moveSpeed"].get<float>();
             if (stateJson.contains("stateDuration")) cfg.stateDuration = stateJson["stateDuration"].get<float>();
+            if (stateJson.contains("turnSpeed")) cfg.turnSpeed = stateJson["turnSpeed"].get<float>();
+            if (stateJson.contains("isLooping")) cfg.isLooping = stateJson["isLooping"].get<bool>();
+            if (stateJson.contains("isAttack")) cfg.isAttack = stateJson["isAttack"].get<bool>();
+            if (stateJson.contains("isBlock")) cfg.isBlock = stateJson["isBlock"].get<bool>();
+            if (stateJson.contains("lockMovementDirection")) cfg.lockMovementDirection = stateJson["lockMovementDirection"].get<bool>();
+            if (stateJson.contains("invincibilityStart")) cfg.invincibilityStart = stateJson["invincibilityStart"].get<float>();
+            if (stateJson.contains("invincibilityEnd")) cfg.invincibilityEnd = stateJson["invincibilityEnd"].get<float>();
 
             if (stateJson.contains("transitions") && stateJson["transitions"].is_object())
             {
@@ -1604,9 +1649,20 @@ void HEIN::CombatStateMachineComponent::Deserialize(const nlohmann::json& data)
                     TransitionData tData;
                     if (it.value().contains("targetState")) tData.targetState = it.value()["targetState"].get<std::string>();
                     if (it.value().contains("blendDuration")) tData.blendDuration = it.value()["blendDuration"].get<float>();
+                    if (it.value().contains("triggerEvent")) tData.triggerEvent = it.value()["triggerEvent"].get<std::string>();
+                    else tData.triggerEvent = it.key();
+                    if (it.value().contains("hasExitTime")) tData.hasExitTime = it.value()["hasExitTime"].get<bool>();
+                    if (it.value().contains("windowStart")) tData.windowStart = it.value()["windowStart"].get<float>();
+                    if (it.value().contains("windowEnd")) tData.windowEnd = it.value()["windowEnd"].get<float>();
+                    if (it.value().contains("canInterrupt")) tData.canInterrupt = it.value()["canInterrupt"].get<bool>();
 
                     cfg.transitions[it.key()] = tData;
                 }
+            }
+
+            if (stateJson.contains("comboAnimationNames") && stateJson["comboAnimationNames"].is_array())
+            {
+                cfg.comboAnimationNames = stateJson["comboAnimationNames"].get<std::vector<std::string>>();
             }
 
             if (stateJson.contains("comboEndTimes") && stateJson["comboEndTimes"].is_array())
@@ -1617,6 +1673,16 @@ void HEIN::CombatStateMachineComponent::Deserialize(const nlohmann::json& data)
             if (stateJson.contains("comboWindowStarts") && stateJson["comboWindowStarts"].is_array())
             {
                 cfg.comboWindowStarts = stateJson["comboWindowStarts"].get<std::vector<float>>();
+            }
+
+            if (stateJson.contains("comboBlendDurations") && stateJson["comboBlendDurations"].is_array())
+            {
+                cfg.comboBlendDurations = stateJson["comboBlendDurations"].get<std::vector<float>>();
+            }
+
+            if (stateJson.contains("comboExitBlendDuration") && stateJson["comboExitBlendDuration"].is_number())
+            {
+                cfg.comboExitBlendDuration = stateJson["comboExitBlendDuration"].get<float>();
             }
 
             m_stateConfigs[cfg.stateName] = cfg;
@@ -1633,6 +1699,7 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
         ImGui::Separator();
 
         bool configChanged = false;
+        std::string stateToRemove = "";
 
         for (auto& [name, cfg] : m_stateConfigs)
         {
@@ -1657,9 +1724,41 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
 
                 if (ImGui::DragFloat("Move Speed", &cfg.moveSpeed, 0.5f, 0.0f, 100.0f)) configChanged = true;
                 if (ImGui::DragFloat("State Duration", &cfg.stateDuration, 0.05f, 0.0f, 10.0f)) configChanged = true;
+                if (ImGui::DragFloat("Turn Speed", &cfg.turnSpeed, 0.5f, 0.0f, 50.0f)) configChanged = true;
 
-                if (ImGui::TreeNode("Transitions (Arrows)"))
+                if (ImGui::Checkbox("Is Looping", &cfg.isLooping)) configChanged = true;
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Is Attack", &cfg.isAttack)) configChanged = true;
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Is Block", &cfg.isBlock)) configChanged = true;
+                if (ImGui::Checkbox("Lock Direction", &cfg.lockMovementDirection)) configChanged = true;
+
+                if (ImGui::DragFloatRange2("Invincibility Window", &cfg.invincibilityStart, &cfg.invincibilityEnd, 0.05f, 0.0f, 10.0f, "Start: %.2f", "End: %.2f"))
                 {
+                    configChanged = true;
+                }
+
+                if (ImGui::TreeNode("Transitions (Arrows / Links)"))
+                {
+                    if (ImGui::Button("Quick: Set ALL to Instant Cancel (Skip Anim)"))
+                    {
+                        for (auto& [k, t] : cfg.transitions)
+                        {
+                            if (!t.hasExitTime) t.canInterrupt = true;
+                        }
+                        configChanged = true;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Quick: Reset to Timed Windows"))
+                    {
+                        for (auto& [k, t] : cfg.transitions)
+                        {
+                            if (!t.hasExitTime) { t.canInterrupt = false; t.windowStart = 0.4f; t.windowEnd = 1.1f; }
+                        }
+                        configChanged = true;
+                    }
+
+                    std::string transitionToRemove = "";
                     for (auto& [eventTag, transition] : cfg.transitions)
                     {
                         ImGui::PushID(eventTag.c_str());
@@ -1673,41 +1772,206 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
                             configChanged = true;
                         }
 
+                        char triggerBuf[128];
+                        strcpy_s(triggerBuf, transition.triggerEvent.c_str());
+                        if (ImGui::InputText("Trigger Event", triggerBuf, sizeof(triggerBuf)))
+                        {
+                            transition.triggerEvent = triggerBuf;
+                            configChanged = true;
+                        }
+
                         if (ImGui::DragFloat("Blend Duration", &transition.blendDuration, 0.01f, 0.0f, 2.0f, "%.2f s"))
                         {
                             configChanged = true;
                         }
 
+                        if (ImGui::Checkbox("Has Exit Time", &transition.hasExitTime))
+                        {
+                            configChanged = true;
+                        }
+
+                        if (!transition.hasExitTime)
+                        {
+                            if (ImGui::Checkbox("Instant Cancel (Skip Animation on Press)", &transition.canInterrupt))
+                            {
+                                configChanged = true;
+                            }
+
+                            if (transition.canInterrupt)
+                            {
+                                ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.4f, 1.0f), "  -> Mode: Instant Skip on Input");
+                            }
+                            else
+                            {
+                                if (ImGui::DragFloatRange2("Combo Window", &transition.windowStart, &transition.windowEnd, 0.05f, 0.0f, 10.0f, "Open: %.2f", "Close: %.2f"))
+                                {
+                                    configChanged = true;
+                                }
+                            }
+                        }
+
+                        if (ImGui::Button("Delete Transition"))
+                        {
+                            transitionToRemove = eventTag;
+                        }
+
                         ImGui::Separator();
                         ImGui::PopID();
                     }
+
+                    if (!transitionToRemove.empty())
+                    {
+                        cfg.transitions.erase(transitionToRemove);
+                        configChanged = true;
+                    }
+
+                    static char newEventTagBuf[64] = "OnAttack";
+                    static char newTargetStateBuf[64] = "Slash1";
+                    ImGui::InputText("New Event Key", newEventTagBuf, sizeof(newEventTagBuf));
+                    ImGui::InputText("New Target State", newTargetStateBuf, sizeof(newTargetStateBuf));
+                    if (ImGui::Button("+ Add Transition Link"))
+                    {
+                        if (strlen(newEventTagBuf) > 0 && strlen(newTargetStateBuf) > 0)
+                        {
+                            TransitionData tData;
+                            tData.targetState = newTargetStateBuf;
+                            tData.triggerEvent = newEventTagBuf;
+                            tData.blendDuration = 0.2f;
+                            cfg.transitions[newEventTagBuf] = tData;
+                            configChanged = true;
+                        }
+                    }
+
                     ImGui::TreePop();
                 }
 
-                if (!cfg.comboEndTimes.empty() && ImGui::TreeNode("Combo Windows"))
+                bool isComboState = (cfg.stateType == "OneHand" || !cfg.comboAnimationNames.empty() || !cfg.comboEndTimes.empty());
+                if (isComboState && ImGui::TreeNode("Combo Settings (Multi-Stage)"))
                 {
-                    for (size_t i = 0; i < cfg.comboEndTimes.size(); ++i)
+                    size_t stageCount = cfg.comboAnimationNames.size();
+                    if (stageCount == 0 && !cfg.comboEndTimes.empty())
+                    {
+                        stageCount = cfg.comboEndTimes.size();
+                    }
+
+                    int toRemoveIndex = -1;
+                    for (size_t i = 0; i < stageCount; ++i)
                     {
                         ImGui::PushID(static_cast<int>(i));
                         ImGui::Text("Stage %zu:", i + 1);
 
-                        if (i < cfg.comboWindowStarts.size())
+                        // Animation name
+                        if (i < cfg.comboAnimationNames.size())
                         {
-                            if (ImGui::DragFloat("Window Open", &cfg.comboWindowStarts[i], 0.05f, 0.0f, 10.0f))
+                            char animBuf[64];
+                            strcpy_s(animBuf, cfg.comboAnimationNames[i].c_str());
+                            if (ImGui::InputText("Anim Name", animBuf, sizeof(animBuf)))
+                            {
+                                cfg.comboAnimationNames[i] = animBuf;
                                 configChanged = true;
+                            }
                         }
 
+                        // Window Start
+                        if (i >= cfg.comboWindowStarts.size())
+                        {
+                            cfg.comboWindowStarts.resize(i + 1, 1.0f);
+                        }
+                        if (ImGui::DragFloat("Window Open", &cfg.comboWindowStarts[i], 0.05f, 0.0f, 10.0f))
+                            configChanged = true;
+
+                        // Stage End
+                        if (i >= cfg.comboEndTimes.size())
+                        {
+                            cfg.comboEndTimes.resize(i + 1, 1.5f);
+                        }
                         if (ImGui::DragFloat("Stage End", &cfg.comboEndTimes[i], 0.05f, 0.0f, 10.0f))
                             configChanged = true;
 
+                        // Blend duration
+                        if (i >= cfg.comboBlendDurations.size())
+                        {
+                            cfg.comboBlendDurations.resize(i + 1, 0.1f);
+                        }
+                        if (ImGui::DragFloat("Blend In", &cfg.comboBlendDurations[i], 0.02f, 0.0f, 2.0f))
+                            configChanged = true;
+
+                        if (ImGui::Button("Remove Stage"))
+                        {
+                            toRemoveIndex = static_cast<int>(i);
+                        }
+
+                        ImGui::Separator();
                         ImGui::PopID();
                     }
+
+                    if (toRemoveIndex >= 0)
+                    {
+                        if (toRemoveIndex < static_cast<int>(cfg.comboAnimationNames.size()))
+                            cfg.comboAnimationNames.erase(cfg.comboAnimationNames.begin() + toRemoveIndex);
+                        if (toRemoveIndex < static_cast<int>(cfg.comboWindowStarts.size()))
+                            cfg.comboWindowStarts.erase(cfg.comboWindowStarts.begin() + toRemoveIndex);
+                        if (toRemoveIndex < static_cast<int>(cfg.comboEndTimes.size()))
+                            cfg.comboEndTimes.erase(cfg.comboEndTimes.begin() + toRemoveIndex);
+                        if (toRemoveIndex < static_cast<int>(cfg.comboBlendDurations.size()))
+                            cfg.comboBlendDurations.erase(cfg.comboBlendDurations.begin() + toRemoveIndex);
+                        configChanged = true;
+                    }
+
+                    if (ImGui::Button("+ Add Combo Stage"))
+                    {
+                        std::string newAnim = "Slash" + std::to_string(cfg.comboAnimationNames.size() + 1);
+                        cfg.comboAnimationNames.push_back(newAnim);
+                        cfg.comboWindowStarts.push_back(1.0f);
+                        cfg.comboEndTimes.push_back(1.5f);
+                        cfg.comboBlendDurations.push_back(0.1f);
+                        configChanged = true;
+                    }
+
+                    if (ImGui::DragFloat("Combo Exit Blend", &cfg.comboExitBlendDuration, 0.02f, 0.0f, 2.0f))
+                        configChanged = true;
+
                     ImGui::TreePop();
+                }
+
+                if (ImGui::Button("Delete This State"))
+                {
+                    stateToRemove = name;
                 }
 
                 ImGui::TreePop();
             }
             ImGui::PopID();
+        }
+
+        if (!stateToRemove.empty())
+        {
+            m_stateConfigs.erase(stateToRemove);
+            configChanged = true;
+        }
+
+        static char newStateNameBuf[64] = "Slash4";
+        ImGui::Separator();
+        ImGui::InputText("New State Name", newStateNameBuf, sizeof(newStateNameBuf));
+        if (ImGui::Button("+ Add New Combat State"))
+        {
+            if (strlen(newStateNameBuf) > 0 && !m_stateConfigs.contains(newStateNameBuf))
+            {
+                StateConfig newCfg;
+                newCfg.stateName = newStateNameBuf;
+                newCfg.stateType = "DataDriven";
+                newCfg.animationName = newStateNameBuf;
+                newCfg.isAttack = true;
+                newCfg.stateDuration = 1.0f;
+                TransitionData exitT;
+                exitT.targetState = "Idle";
+                exitT.hasExitTime = true;
+                exitT.blendDuration = 0.2f;
+                newCfg.transitions["Exit"] = exitT;
+
+                m_stateConfigs[newStateNameBuf] = newCfg;
+                configChanged = true;
+            }
         }
 
         if (configChanged)
@@ -1931,6 +2195,15 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 
 void HEIN::PlayerInputComponent::OnMessageAccepted(Message::MessageID messageID)
 {
+	if (messageID == Message::PLAYER_TOGGLE_MODEL)
+	{
+		if (m_owner != nullptr)
+		{
+			m_owner->ToggleSkinnedModel();
+		}
+		return;
+	}
+
 	// Accumulate local directional inputs from messages
 	switch (messageID)
 	{
@@ -2074,11 +2347,25 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ptransform->SetPosition(DirectX::SimpleMath::Vector3(0.0f, 4.0f, -40.0f));
     ptransform->SetScale(DirectX::SimpleMath::Vector3(0.10f));
 
-    // ThirdPersonCamera model
+    // Single Hybrid Skinned Model (Blend of Root Motion and In-Place animations)
     spawnData.tpsModel = playerActor->AddComponent<HEIN::SkinnedModelComponent>();
     spawnData.tpsModel->Initialize(gameContext,
-        L"Resources/Models/knight/knight.sdkmesh", // normal model
+        L"Resources/Models/knight/knight.sdkmesh",
         L"Resources/Models/knight");
+
+    // Load knight animations
+    spawnData.tpsModel->LoadAnimation("Idle", L"Resources/Models/knight/idle.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Walk", L"Resources/Models/knight/RunRoot.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Dodge", L"Resources/Models/knight/Dodge.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("StrafeL", L"Resources/Models/knight/strafeL.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("StrafeR", L"Resources/Models/knight/strafeR.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Block", L"Resources/Models/knight/block.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("OneHand", L"Resources/Models/knight/swing.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Slash1", L"Resources/Models/knight/slash1.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Slash2", L"Resources/Models/knight/slash2.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Slash3", L"Resources/Models/knight/slash3.sdkmesh_anim");
+    spawnData.tpsModel->SetEnableRootMotion(true); // Root Motion enabled for hybrid walk & attacks
+    spawnData.tpsModel->SetVisible(true);
 
     // Socket
     HEIN::SocketComponent* socketComp = playerActor->AddComponent<HEIN::SocketComponent>();
@@ -2090,81 +2377,8 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     );
     socketComp->AddSocket(weaponSocket);
 
-    HEIN::CombatStateMachineComponent* fsm = playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
-
-    // IdleConfig
-    HEIN::StateConfig idleConfig;
-    idleConfig.stateName = "Idle";
-    idleConfig.stateType = "Idle";
-    idleConfig.animationName = "Idle";
-    idleConfig.transitions["OnMove"] = { "Walk", 0.2f };
-    idleConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
-    idleConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
-    idleConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
-    idleConfig.transitions["OnBlock"] = { "Block", 0.1f };
-    fsm->AddState(idleConfig);
-
-    // WalkConfig
-    HEIN::StateConfig walkConfig;
-    walkConfig.stateName = "Walk";
-    walkConfig.stateType = "Walk";
-    walkConfig.moveSpeed = 30.0f;
-    walkConfig.animationName = "Walk";
-    walkConfig.transitions["OnStop"] = { "Idle", 0.2f };
-    walkConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
-    walkConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
-    walkConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
-    walkConfig.transitions["OnBlock"] = { "Block", 0.1f };
-    fsm->AddState(walkConfig);
-
-    // AttackConfig
-    HEIN::StateConfig attackConfig;
-    attackConfig.stateName = "OneHand";
-    attackConfig.stateType = "OneHand";
-    attackConfig.moveSpeed = 5.0f;
-    attackConfig.comboAnimationNames = { "Slash1", "Slash2", "Slash3"};
-    attackConfig.stateDuration = 1.1f;
-    attackConfig.transitions["OnStop"] = { "Idle", 0.3f };
-    attackConfig.transitions["OnMove"] = { "Walk", 0.2f };
-    attackConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
-    attackConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
-    attackConfig.transitions["OnBlock"] = { "Block", 0.1f };
-    fsm->AddState(attackConfig);
-
-    // DodgeConfig
-    HEIN::StateConfig dodgeConfig;
-    dodgeConfig.stateName = "Dodge";
-    dodgeConfig.stateType = "Dodge";
-    dodgeConfig.animationName = "Dodge";
-    dodgeConfig.moveSpeed = 30.0f;
-    dodgeConfig.stateDuration = 1.4f;
-    dodgeConfig.transitions["OnStop"] = { "Idle", 0.2f };
-    dodgeConfig.transitions["OnMove"] = { "Walk", 0.2f };
-    dodgeConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
-    dodgeConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
-    fsm->AddState(dodgeConfig);
-
-    // StrafeConfig
-    HEIN::StateConfig strafeConfig;
-    strafeConfig.stateName = "Strafe";
-    strafeConfig.stateType = "Strafe";
-    strafeConfig.animationName = "StrafeR";
-    strafeConfig.secondaryAnimationName = "StrafeL";
-    strafeConfig.moveSpeed = 5.0f;
-    strafeConfig.transitions["OnStop"] = { "Idle", 0.2f };
-    strafeConfig.transitions["OnMove"] = { "Walk", 0.2f };
-    strafeConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
-    fsm->AddState(strafeConfig);
-
-    // BlockConfig
-    HEIN::StateConfig blockConfig;
-    blockConfig.stateName = "Block";
-    blockConfig.stateType = "Block";
-    blockConfig.animationName = "Block";
-    blockConfig.moveSpeed = 4.0f;
-    blockConfig.transitions["OnMove"] = { "Walk", 0.2f };
-    blockConfig.transitions["OnStop"] = { "Idle", 0.2f };
-    fsm->AddState(blockConfig);
+    // Data-driven combat state machine (states, transitions, and combos loaded via AutoSave.json DOD)
+    playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
 
     playerActor->AddComponent<HEIN::CombatBlackBoard>();
     playerActor->AddComponent<HEIN::PlayerInputComponent>(&actorManager);
@@ -2538,72 +2752,8 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     btComp->Initialize(std::move(aiBrain), &actorManager, targetID);
 
 
-    HEIN::CombatStateMachineComponent* fsm = enemyActor->AddComponent<HEIN::CombatStateMachineComponent>();
-
-    // IdleConfig
-    HEIN::StateConfig idleConfig;
-    idleConfig.stateName = "Idle";
-    idleConfig.stateType = "Idle";
-    idleConfig.animationName = "Idle";
-    idleConfig.transitions["OnMove"] = { "Walk", 0.2f };
-    idleConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
-    idleConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
-    idleConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
-    fsm->AddState(idleConfig);
-
-    // WalkConfig
-    HEIN::StateConfig walkConfig;
-    walkConfig.stateName = "Walk";
-    walkConfig.stateType = "Walk";
-    walkConfig.moveSpeed = 30.0f;
-    walkConfig.animationName = "Walk";
-    walkConfig.transitions["OnStop"] = { "Idle", 0.2f };
-    walkConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
-    walkConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
-    walkConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
-    fsm->AddState(walkConfig);
-
-    // StrafeConfig
-    HEIN::StateConfig strafeConfig;
-    strafeConfig.stateName = "Strafe";
-    strafeConfig.stateType = "Strafe";
-    strafeConfig.animationName = "StrafeR";
-    strafeConfig.secondaryAnimationName = "StrafeL";
-    strafeConfig.moveSpeed = 5.0f;
-    strafeConfig.transitions["OnStop"] = { "Idle", 0.2f };
-    strafeConfig.transitions["OnMove"] = { "Walk", 0.2f };
-    strafeConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
-    strafeConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
-    fsm->AddState(strafeConfig);
-
-    // AttackConfig
-    HEIN::StateConfig attackConfig;
-    attackConfig.stateName = "OneHand";
-    attackConfig.stateType = "OneHand";
-    attackConfig.moveSpeed = 5.0f;
-    attackConfig.animationName = "OneHand";
-    attackConfig.stateDuration = 3.4f;
-    attackConfig.comboEndTimes = { 1.6f, 3.0f, 3.4f };
-    attackConfig.comboWindowStarts = { 1.2f, 2.7f, 3.0f };
-    attackConfig.comboExitBlendDuration = 0.4f;
-    attackConfig.transitions["OnStop"] = { "Idle", 0.3f };
-    attackConfig.transitions["OnMove"] = { "Walk", 0.2f };
-    attackConfig.transitions["OnDodge"] = { "Dodge", 0.1f };
-    attackConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
-    fsm->AddState(attackConfig);
-
-    // DodgeConfig
-    HEIN::StateConfig dodgeConfig;
-    dodgeConfig.stateName = "Dodge";
-    dodgeConfig.stateType = "Dodge";
-    dodgeConfig.animationName = "Dodge";
-    dodgeConfig.moveSpeed = 30.0f;
-    dodgeConfig.stateDuration = 1.4f;
-    dodgeConfig.transitions["OnStop"] = { "Idle", 0.2f };
-    dodgeConfig.transitions["OnMove"] = { "Walk", 0.2f };
-    dodgeConfig.transitions["OnAttack"] = { "OneHand", 0.1f };
-    dodgeConfig.transitions["OnStrafe"] = { "Strafe", 0.2f };
-    fsm->AddState(dodgeConfig);
+    // Data-driven combat state machine (states and transitions loaded via AutoSave.json DOD)
+    enemyActor->AddComponent<HEIN::CombatStateMachineComponent>();
 
     enemyActor->AddComponent<HEIN::ProceduralAnimationComponent>(&actorManager);
 
@@ -3102,6 +3252,7 @@ FILE: Dual\Scene\GameScene\GameScene.cpp
 #include "../../../External/Engine/Components/LightComponent.h"
 #include "../../../External/Engine/FrameWork/GameContext.h"
 #include <Components/PlayerInputComponent.h>
+#include <Components/CombatStateMachineComponent.h>
 #include <Factory/ActorFactory.h>
 #include "../../../External/Engine/Components/HealthComponent.h"
 #include "../../../External/Engine/ImGui/imgui.h"
@@ -3296,10 +3447,28 @@ void GameScene::ProcessSimulationPhase(GameContext& gameContext, float deltaTime
     {
         auto* pTransform = player->GetComponent<HEIN::TransformComponent>();
         auto* pModel = player->GetComponent<HEIN::SkinnedModelComponent>();
+        auto* pSM = player->GetComponent<HEIN::CombatStateMachineComponent>();
 
         if (pTransform != nullptr && pModel != nullptr)
         {
-            m_targetPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End", pTransform->GetWorldMatrix());
+            DirectX::SimpleMath::Vector3 headPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End", pTransform->GetWorldMatrix());
+            float heightAboveRoot = headPos.y - pTransform->GetPosition().y;
+
+            static float s_standingHeight = 15.0f;
+            bool isDodging = (pSM && pSM->GetCurrentStateName() == "Dodge") || (heightAboveRoot < 6.0f);
+
+            if (!isDodging && heightAboveRoot > 8.0f)
+            {
+                s_standingHeight = heightAboveRoot;
+            }
+
+            if (isDodging)
+            {
+                // When dodging, maintain camera target at stable standing height above root position
+                headPos.y = pTransform->GetPosition().y + s_standingHeight;
+            }
+
+            m_targetPos = headPos;
         }
     }
 
@@ -4251,252 +4420,216 @@ FILE: Dual\States\CombatStates.cpp
 #include <BlackBoard/CombatBlackBoard.h>
 #include "../../../External/Engine/Components/SkinnedModelComponent.h"
 #include "../../../External/Engine/Components/TransformComponent.h"
+#include "../../../External/Engine/Components/HealthComponent.h"
 #include <cmath>
-
-// ==============================================================================
-// IDLE STATE
-// ==============================================================================
-HEIN::IdleState::IdleState(const HEIN::StateConfig& config) : m_config(config) {}
-
-void HEIN::IdleState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/, float blendDuration)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (blackboard) blackboard->currentStance = CombatStance::Idle;
-
-    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-    for (HEIN::SkinnedModelComponent* model : models)
-    {
-        model->CrossfadeAnimation(m_config.animationName, blendDuration);
-    }
-}
-
-void HEIN::IdleState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float /*deltaTime*/)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (!blackboard) return;
-
-    blackboard->currentTurnSpeed = 12.0f;
-
-    if (blackboard->moveIntent.LengthSquared() > 0.1f)
-    {
-        if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z))
-        {
-            auto& t = m_config.transitions["OnStrafe"];
-            stateMachine->ChangeState(t.targetState, t.blendDuration);
-        }
-        else
-        {
-            auto& t = m_config.transitions["OnMove"];
-            stateMachine->ChangeState(t.targetState, t.blendDuration);
-        }
-    }
-}
-
-bool HEIN::IdleState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
-{
-    switch (messageID)
-    {
-    case Message::PLAYER_ACTION_ATTACK:
-    {
-        auto& t = m_config.transitions["OnAttack"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_DODGE:
-    {
-        auto& t = m_config.transitions["OnDodge"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_BLOCK:
-    {
-        auto& t = m_config.transitions["OnBlock"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    }
-    return false;
-}
-
-void HEIN::IdleState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/) {}
-
-// ==============================================================================
-// WALK STATE
-// ==============================================================================
-HEIN::WalkState::WalkState(const HEIN::StateConfig& config) : m_config(config) {}
-
-void HEIN::WalkState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/, float blendDuration)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (blackboard)
-    {
-        blackboard->currentStance = CombatStance::Walking;
-        blackboard->currentSpeed = m_config.moveSpeed;
-    }
-    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-    for (HEIN::SkinnedModelComponent* model : models)
-    {
-        model->CrossfadeAnimation(m_config.animationName, blendDuration);
-    }
-}
-
-void HEIN::WalkState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float /*deltaTime*/)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (!blackboard) return;
-    blackboard->currentSpeed = m_config.moveSpeed;
-    blackboard->currentTurnSpeed = 12.0f;
-
-    if (blackboard->moveIntent.LengthSquared() <= 0.1f)
-    {
-        auto& t = m_config.transitions["OnStop"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return;
-    }
-
-    if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z))
-    {
-        auto& t = m_config.transitions["OnStrafe"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return;
-    }
-}
-
-bool HEIN::WalkState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
-{
-    switch (messageID)
-    {
-    case Message::PLAYER_ACTION_ATTACK:
-    {
-        auto& t = m_config.transitions["OnAttack"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_DODGE:
-    {
-        auto& t = m_config.transitions["OnDodge"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_BLOCK:
-    {
-        auto& t = m_config.transitions["OnBlock"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    }
-    return false;
-}
-
-void HEIN::WalkState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/) {}
 
 // ==============================================================================
 // ONE HAND ATTACK STATE
 // ==============================================================================
 HEIN::OneHandAttackState::OneHandAttackState(const StateConfig& config) : m_config(config) {}
 
+int HEIN::OneHandAttackState::GetTotalStages(Actor* /*owner*/) const
+{
+    if (!m_config.comboAnimationNames.empty())
+    {
+        return static_cast<int>(m_config.comboAnimationNames.size());
+    }
+    if (!m_config.comboEndTimes.empty())
+    {
+        return static_cast<int>(m_config.comboEndTimes.size());
+    }
+    if (!m_config.animationName.empty())
+    {
+        return 1;
+    }
+    return 0;
+}
+
 const std::string* HEIN::OneHandAttackState::StageAnim(int stage) const
 {
-    if (stage < 0 || stage >= static_cast<int>(m_config.comboAnimationNames.size())) return nullptr;
-    return &m_config.comboAnimationNames[stage];
+    if (stage >= 0 && stage < static_cast<int>(m_config.comboAnimationNames.size()))
+    {
+        return &m_config.comboAnimationNames[stage];
+    }
+    if (stage == 0 && !m_config.animationName.empty())
+    {
+        return &m_config.animationName;
+    }
+    // If comboAnimationNames is empty, fallback to primary animation
+    if (m_config.comboAnimationNames.empty() && !m_config.animationName.empty())
+    {
+        return &m_config.animationName;
+    }
+    return nullptr;
 }
 
-float HEIN::OneHandAttackState::StageEndTime(int stage) const
+float HEIN::OneHandAttackState::StageEndTime(int stage, Actor* owner) const
 {
-    if (stage >= 0 && stage < static_cast<int>(m_config.comboEndTimes.size()))
+    if (stage >= 0 && stage < static_cast<int>(m_config.comboEndTimes.size()) && m_config.comboEndTimes[stage] > 0.0f)
+    {
         return m_config.comboEndTimes[stage];
-    // Fallback: treat the whole state as a single stage's duration.
-    return m_config.stateDuration;
+    }
+
+    // Try auto-detecting duration from SkinnedModelComponent
+    if (owner != nullptr)
+    {
+        const std::string* anim = StageAnim(stage);
+        if (anim != nullptr && !anim->empty())
+        {
+            auto* model = owner->GetComponent<SkinnedModelComponent>();
+            if (model != nullptr)
+            {
+                float duration = model->GetAnimationDuration(*anim);
+                if (duration > 0.05f)
+                {
+                    return duration;
+                }
+            }
+        }
+    }
+
+    // Built-in defaults for standard stages if available
+    if (stage == 0) return STAGE_1_END_TIME;
+    if (stage == 1) return STAGE_2_END_TIME;
+    if (stage == 2) return STAGE_3_END_TIME;
+
+    if (m_config.stateDuration > 0.0f)
+    {
+        return m_config.stateDuration;
+    }
+
+    return 1.2f;
 }
 
-float HEIN::OneHandAttackState::StageWindowStart(int stage) const
+float HEIN::OneHandAttackState::StageWindowStart(int stage, Actor* owner) const
 {
-    if (stage >= 0 && stage < static_cast<int>(m_config.comboWindowStarts.size()))
+    if (stage >= 0 && stage < static_cast<int>(m_config.comboWindowStarts.size()) && m_config.comboWindowStarts[stage] > 0.0f)
+    {
         return m_config.comboWindowStarts[stage];
-    return StageEndTime(stage); // No window -> cannot combo past this point.
+    }
+
+    // Built-in defaults for standard stages if available
+    if (stage == 0 && m_config.comboWindowStarts.empty()) return STAGE_1_WINDOW_START;
+    if (stage == 1 && m_config.comboWindowStarts.size() <= 1) return STAGE_2_WINDOW_START;
+    if (stage == 2 && m_config.comboWindowStarts.size() <= 2) return STAGE_3_WINDOW_START;
+
+    // Dynamically calculate window start based on stage end time
+    float endTime = StageEndTime(stage, owner);
+    float windowStart = (endTime > 0.8f) ? 0.40f : (endTime * 0.40f);
+    if (windowStart < 0.0f) windowStart = 0.0f;
+    return windowStart;
 }
 
 float HEIN::OneHandAttackState::StageBlend(int stage, float fallback) const
 {
-    if (stage >= 0 && stage < static_cast<int>(m_config.comboBlendDurations.size()))
+    if (stage >= 0 && stage < static_cast<int>(m_config.comboBlendDurations.size()) && m_config.comboBlendDurations[stage] >= 0.0f)
+    {
         return m_config.comboBlendDurations[stage];
+    }
     return fallback;
 }
 
 void HEIN::OneHandAttackState::PlayStage(Actor* owner, int stage, float blendDuration)
 {
+    if (!owner) return;
     const std::string* anim = StageAnim(stage);
-    if (anim == nullptr || anim->empty()) return; // Stage not configured -> nothing to play.
+    if (anim == nullptr || anim->empty()) return;
 
     std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
     for (HEIN::SkinnedModelComponent* model : models)
     {
-        model->CrossfadeAnimation(*anim, blendDuration);
+        if (model)
+        {
+            model->CrossfadeAnimation(*anim, blendDuration, true);
+        }
     }
 }
 
 void HEIN::OneHandAttackState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/, float blendDuration)
 {
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+    HEIN::CombatBlackBoard* blackboard = owner ? owner->GetComponent<CombatBlackBoard>() : nullptr;
     if (blackboard) blackboard->currentStance = CombatStance::OneHand;
 
     m_timer = 0.0f;
     m_comboStage = 0;
     m_comboQueued = false;
 
-    // Guarded: only plays if stage 0 is actually configured (fixes empty-vector crash).
-    PlayStage(owner, 0, StageBlend(0, blendDuration));
+    float blend = StageBlend(0, blendDuration);
+    PlayStage(owner, 0, blend);
 }
 
 void HEIN::OneHandAttackState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
 {
+    if (!owner || !stateMachine) return;
+
     m_timer += deltaTime;
     HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
+
+    int totalStages = GetTotalStages(owner);
+    if (totalStages <= 0)
+    {
+        auto it = m_config.transitions.find("OnStop");
+        std::string target = (it != m_config.transitions.end()) ? it->second.targetState : "Idle";
+        float blend = (it != m_config.transitions.end()) ? it->second.blendDuration : 0.2f;
+        stateMachine->ChangeState(target, blend);
+        return;
+    }
 
     if (blackboard)
     {
         float windUpTime = 0.3f;
         blackboard->currentTurnSpeed = (m_timer < windUpTime) ? 40.0f : 0.1f;
         blackboard->currentSpeed = m_config.moveSpeed;
+    }
 
-        // When the current animation stage finishes...
-        if (m_timer >= m_config.comboEndTimes[m_comboStage])
+    float stageEnd = StageEndTime(m_comboStage, owner);
+
+    // When the current animation stage finishes...
+    if (m_timer >= stageEnd)
+    {
+        // Advance combo if queued AND there are more stages ahead
+        if (m_comboQueued && m_comboStage < totalStages - 1)
         {
-            // WHERE TO PUT THE COMBO ADVANCEMENT:
-            if (m_comboQueued && m_comboStage < m_config.comboEndTimes.size() - 1)
-            {
-                m_comboStage++;
-                m_timer = 0.0f;           // Reset timer for the new animation file
-                m_comboQueued = false;    // Reset the queue
+            m_comboStage++;
+            m_timer = 0.0f;        // Reset timer for the next animation stage
+            m_comboQueued = false; // Reset the queue flag
 
-                // Crossfade to the next standalone animation file
-                std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-                for (HEIN::SkinnedModelComponent* model : models)
+            float blend = StageBlend(m_comboStage, 0.1f);
+            PlayStage(owner, m_comboStage, blend);
+            return; // Exit early to remain in OneHandAttackState
+        }
+
+        // Exit attack state completely
+        float exitBlend = (m_config.comboExitBlendDuration > 0.0f) ? m_config.comboExitBlendDuration : 0.3f;
+
+        if (blackboard && blackboard->moveIntent.LengthSquared() > 0.01f)
+        {
+            if (blackboard->isLockedOn)
+            {
+                auto it = m_config.transitions.find("OnStrafe");
+                if (it != m_config.transitions.end())
                 {
-                    model->CrossfadeAnimation(m_config.comboAnimationNames[m_comboStage], 0.1f);
+                    stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
+                    return;
                 }
-                return; // Exit early so we don't trigger the state change below
             }
 
-            // If no combo was queued, exit the attack state completely
-            if (blackboard->moveIntent.LengthSquared() > 0.01f)
+            auto it = m_config.transitions.find("OnMove");
+            if (it != m_config.transitions.end())
             {
-                if (blackboard->isLockedOn)
-                {
-                    auto& t = m_config.transitions["OnStrafe"];
-                    stateMachine->ChangeState(t.targetState, t.blendDuration);
-                }
-                else
-                {
-                    auto& t = m_config.transitions["OnMove"];
-                    stateMachine->ChangeState(t.targetState, t.blendDuration);
-                }
+                stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
+                return;
             }
-            else
-            {
-                auto& t = m_config.transitions["OnStop"];
-                stateMachine->ChangeState(t.targetState, t.blendDuration);
-            }
+        }
+
+        auto it = m_config.transitions.find("OnStop");
+        if (it != m_config.transitions.end())
+        {
+            stateMachine->ChangeState(it->second.targetState, exitBlend);
+        }
+        else
+        {
+            stateMachine->ChangeState("Idle", exitBlend);
         }
     }
 }
@@ -4505,279 +4638,378 @@ bool HEIN::OneHandAttackState::HandleMessage(Actor* owner, CombatStateMachineCom
 {
     if (messageID == Message::PLAYER_ACTION_ATTACK)
     {
-        if (m_comboStage < m_config.comboEndTimes.size() - 1)
+        int totalStages = GetTotalStages(owner);
+        // Only accept/queue combo if there is a next stage to advance to
+        if (m_comboStage < totalStages - 1)
         {
-            if (m_timer >= m_config.comboWindowStarts[m_comboStage] &&
-                m_timer < m_config.comboEndTimes[m_comboStage])
+            float windowStart = StageWindowStart(m_comboStage, owner);
+            float stageEnd = StageEndTime(m_comboStage, owner);
+
+            if (m_timer >= windowStart && m_timer < stageEnd)
             {
-                m_comboQueued = true; // Queue it, don't advance yet!
+                m_comboQueued = true;
                 return true;
             }
         }
-    }
-    return false;
-}
-void HEIN::OneHandAttackState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/) {}
-
-// ==============================================================================
-// DODGE STATE
-// ==============================================================================
-HEIN::DodgeState::DodgeState(const StateConfig& config) : m_config(config) {}
-
-void HEIN::DodgeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (blackboard)
-    {
-        blackboard->currentStance = CombatStance::Dodging;
-        blackboard->dodgeCooldownTimer = blackboard->maxDodgeCooldown;
-        if (blackboard->moveIntent.LengthSquared() > 0.01f)
-        {
-            m_lockedDirection = blackboard->moveIntent;
-        }
-        else
-        {
-            HEIN::TransformComponent* trans = owner->GetComponent<HEIN::TransformComponent>();
-            float currentMathematicalYaw = trans->GetRotationEuler().y;
-            float trueVisualYaw = currentMathematicalYaw - DirectX::XM_PI;
-            m_lockedDirection.x = sinf(trueVisualYaw);
-            m_lockedDirection.y = 0.0f;
-            m_lockedDirection.z = cosf(trueVisualYaw);
-            m_lockedDirection.Normalize();
-        }
-    }
-    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-    for (HEIN::SkinnedModelComponent* model : models)
-    {
-        model->CrossfadeAnimation(m_config.animationName, blendDuration);
-    }
-    m_timer = 0.0f;
-}
-
-void HEIN::DodgeState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
-{
-    m_timer += deltaTime;
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
-
-    if (blackboard)
-    {
-        blackboard->currentTurnSpeed = 30.0f;
-        blackboard->currentSpeed = m_config.moveSpeed;
-        blackboard->moveIntent = m_lockedDirection;
-
-        if (m_timer >= m_config.stateDuration)
-        {
-            if (blackboard->moveIntent.LengthSquared() > 0.1f)
-            {
-                if (blackboard->isLockedOn)
-                {
-                    auto& t = m_config.transitions["OnStrafe"];
-                    stateMachine->ChangeState(t.targetState, t.blendDuration);
-                }
-                else
-                {
-                    auto& t = m_config.transitions["OnMove"];
-                    stateMachine->ChangeState(t.targetState, t.blendDuration);
-                }
-            }
-            else
-            {
-                auto& t = m_config.transitions["OnStop"];
-                stateMachine->ChangeState(t.targetState, t.blendDuration);
-            }
-        }
-    }
-}
-
-bool HEIN::DodgeState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
-{
-    return false;
-}
-
-void HEIN::DodgeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) {}
-
-// ==============================================================================
-// STRAFE STATE
-// ==============================================================================
-HEIN::StrafeState::StrafeState(const StateConfig& config) : m_config(config), m_isRight(false) {}
-
-void HEIN::StrafeState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (blackboard)
-    {
-        blackboard->currentStance = CombatStance::Strafing;
-        m_isRight = blackboard->localMoveIntent.x < 0.0f;
-    }
-
-    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-    for (HEIN::SkinnedModelComponent* model : models)
-    {
-        model->CrossfadeAnimation(m_isRight ? m_config.animationName : m_config.secondaryAnimationName, blendDuration);
-    }
-}
-
-void HEIN::StrafeState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
-    if (!blackboard) return;
-
-    blackboard->currentSpeed = m_config.moveSpeed;
-
-    if (!blackboard->isLockedOn || std::abs(blackboard->localMoveIntent.z) > std::abs(blackboard->localMoveIntent.x))
-    {
-        auto& t = m_config.transitions["OnMove"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return;
-    }
-
-    if (blackboard->moveIntent.LengthSquared() <= 0.1f)
-    {
-        auto& t = m_config.transitions["OnStop"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return;
-    }
-
-    bool isRight = blackboard->localMoveIntent.x < 0.0f;
-    if (isRight != m_isRight)
-    {
-        m_isRight = isRight;
-        std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-        for (HEIN::SkinnedModelComponent* model : models)
-        {
-            // Mid-state directional shift uses a fast 0.2f blend
-            model->CrossfadeAnimation(m_isRight ? m_config.animationName : m_config.secondaryAnimationName, 0.2f);
-        }
-    }
-}
-
-bool HEIN::StrafeState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
-{
-    switch (messageID)
-    {
-    case Message::PLAYER_ACTION_ATTACK:
-    {
-        auto& t = m_config.transitions["OnAttack"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_DODGE:
-    {
-        auto& t = m_config.transitions["OnDodge"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    case Message::PLAYER_ACTION_BLOCK:
-    {
-        auto& t = m_config.transitions["OnBlock"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
-    }
-    }
-    return false;
-}
-
-void HEIN::StrafeState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) {}
-
-// ==============================================================================
-// BLOCK STATE
-// ==============================================================================
-HEIN::BlockState::BlockState(const StateConfig& config) : m_config(config) {}
-
-void HEIN::BlockState::OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<CombatBlackBoard>();
-    if (blackboard) blackboard->currentStance = CombatStance::Blocking;
-
-    std::vector<HEIN::SkinnedModelComponent*> models = owner->GetComponents<SkinnedModelComponent>();
-    for (HEIN::SkinnedModelComponent* model : models)
-    {
-        model->CrossfadeAnimation(m_config.animationName, blendDuration);
-    }
-}
-
-void HEIN::BlockState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
-{
-    HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
-    if (blackboard)
-    {
-        blackboard->currentBlockStamina -= deltaTime;
-        blackboard->currentSpeed = m_config.moveSpeed;
-
-        if (blackboard->currentBlockStamina <= 0.0f)
-        {
-            blackboard->isBlockBroken = true;
-
-            if (blackboard->moveIntent.LengthSquared() > 0.1f)
-            {
-                if (blackboard->isLockedOn)
-                {
-                    auto& t = m_config.transitions["OnStrafe"];
-                    stateMachine->ChangeState(t.targetState, t.blendDuration);
-                }
-                else
-                {
-                    auto& t = m_config.transitions["OnMove"];
-                    stateMachine->ChangeState(t.targetState, t.blendDuration);
-                }
-            }
-            else
-            {
-                auto& t = m_config.transitions["OnStop"];
-                stateMachine->ChangeState(t.targetState, t.blendDuration);
-            }
-        }
-    }
-}
-
-bool HEIN::BlockState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
-{
-    if (messageID == Message::PLAYER_STOP_BLOCK)
-    {
-        HEIN::CombatBlackBoard* blackboard = owner->GetComponent<HEIN::CombatBlackBoard>();
-        if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
-        {
-            if (blackboard->isLockedOn)
-            {
-                auto& t = m_config.transitions["OnStrafe"];
-                stateMachine->ChangeState(t.targetState, t.blendDuration);
-            }
-            else
-            {
-                auto& t = m_config.transitions["OnMove"];
-                stateMachine->ChangeState(t.targetState, t.blendDuration);
-            }
-        }
-        else
-        {
-            auto& t = m_config.transitions["OnStop"];
-            stateMachine->ChangeState(t.targetState, t.blendDuration);
-        }
-        return true;
+        return false;
     }
 
     if (messageID == Message::PLAYER_ACTION_DODGE)
     {
-        auto& t = m_config.transitions["OnDodge"];
-        stateMachine->ChangeState(t.targetState, t.blendDuration);
-        return true;
+        auto it = m_config.transitions.find("OnDodge");
+        if (it != m_config.transitions.end())
+        {
+            stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
+            return true;
+        }
     }
+
     return false;
 }
 
-void HEIN::BlockState::OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) {}
+void HEIN::OneHandAttackState::OnExit(Actor* /*owner*/, CombatStateMachineComponent* /*stateMachine*/)
+{
+    m_comboQueued = false;
+    m_comboStage = 0;
+    m_timer = 0.0f;
+}
+
+// ==============================================================================
+// UNIVERSAL DATA-DRIVEN COMBAT STATE
+// ==============================================================================
+HEIN::UniversalCombatState::UniversalCombatState(const StateConfig& config)
+    : m_config(config)
+{
+}
+
+void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/, float blendDuration)
+{
+    m_timer = 0.0f;
+    m_hasQueuedTransition = false;
+    m_stopDebounceTimer = 0.0f;
+
+    auto* blackboard = owner->GetComponent<CombatBlackBoard>();
+    if (blackboard)
+    {
+        if (m_config.isBlock)
+        {
+            blackboard->currentStance = CombatStance::Blocking;
+        }
+        else if (m_config.isAttack)
+        {
+            blackboard->currentStance = CombatStance::AttackRelese;
+        }
+        else if (m_config.lockMovementDirection || m_config.invincibilityEnd > 0.0f)
+        {
+            blackboard->currentStance = CombatStance::Dodging;
+        }
+        else if (m_config.stateName == "Strafe")
+        {
+            blackboard->currentStance = CombatStance::Strafing;
+        }
+        else if (m_config.moveSpeed > 0.0f)
+        {
+            blackboard->currentStance = CombatStance::Walking;
+        }
+        else
+        {
+            blackboard->currentStance = CombatStance::Idle;
+        }
+
+        blackboard->currentSpeed = m_config.moveSpeed;
+        blackboard->currentTurnSpeed = m_config.turnSpeed;
+
+        if (m_config.lockMovementDirection)
+        {
+            if (blackboard->moveIntent.LengthSquared() > 0.01f)
+            {
+                m_lockedDirection = blackboard->moveIntent;
+            }
+            else
+            {
+                auto* transform = owner->GetComponent<TransformComponent>();
+                if (transform)
+                {
+                    m_lockedDirection = transform->GetForward();
+                }
+                else
+                {
+                    m_lockedDirection = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 1.0f);
+                }
+            }
+            m_lockedDirection.y = 0.0f;
+            if (m_lockedDirection.LengthSquared() > 0.001f) m_lockedDirection.Normalize();
+            blackboard->moveIntent = m_lockedDirection;
+        }
+    }
+
+    m_actualDuration = m_config.stateDuration;
+    auto* model = owner->GetComponent<SkinnedModelComponent>();
+    if (m_actualDuration <= 0.0f && model != nullptr && !m_config.animationName.empty())
+    {
+        float animDur = model->GetAnimationDuration(m_config.animationName);
+        m_actualDuration = (animDur > 0.01f) ? animDur : 1.0f;
+    }
+    if (m_actualDuration <= 0.0f) m_actualDuration = 1.0f;
+
+    if (model != nullptr && !m_config.animationName.empty())
+    {
+        model->CrossfadeAnimation(m_config.animationName, blendDuration, !m_config.isLooping);
+    }
+}
+
+void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
+{
+    m_timer += deltaTime;
+
+    auto* blackboard = owner->GetComponent<CombatBlackBoard>();
+    if (blackboard)
+    {
+        blackboard->currentSpeed = m_config.moveSpeed;
+        blackboard->currentTurnSpeed = m_config.turnSpeed;
+
+        if (m_config.lockMovementDirection)
+        {
+            blackboard->moveIntent = m_lockedDirection;
+        }
+    }
+
+    auto* health = owner->GetComponent<HealthComponent>();
+    if (health)
+    {
+        bool isInvincible = (m_config.invincibilityEnd > 0.0f &&
+                             m_timer >= m_config.invincibilityStart &&
+                             m_timer <= m_config.invincibilityEnd);
+        health->SetGameplayInvincible(isInvincible || m_config.isBlock);
+    }
+
+    if (m_config.isBlock && blackboard)
+    {
+        if (blackboard->currentBlockStamina <= 0.0f)
+        {
+            blackboard->isBlockBroken = true;
+            auto itStop = m_config.transitions.find("OnStop");
+            if (itStop != m_config.transitions.end())
+            {
+                stateMachine->ChangeState(itStop->second.targetState, itStop->second.blendDuration);
+                return;
+            }
+        }
+    }
+
+    // Queued transition from input buffering
+    if (m_hasQueuedTransition)
+    {
+        if (m_queuedTransition.canInterrupt || m_timer >= m_queuedTransition.windowStart)
+        {
+            stateMachine->ChangeState(m_queuedTransition.targetState, m_queuedTransition.blendDuration);
+            m_hasQueuedTransition = false;
+            return;
+        }
+    }
+
+    // Movement cancellation for non-looping states (e.g. holding W cancels attack recovery window)
+    if (!m_config.isLooping && blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+    {
+        auto itMove = m_config.transitions.find("OnMove");
+        if (itMove != m_config.transitions.end())
+        {
+            const auto& t = itMove->second;
+            if (t.canInterrupt || (m_timer >= t.windowStart && m_timer <= t.windowEnd))
+            {
+                stateMachine->ChangeState(t.targetState, t.blendDuration);
+                return;
+            }
+        }
+    }
+
+    // Automatic Exit Time / Timeout transitions for non-looping states (Attacks, Dodge)
+    if (!m_config.isLooping && m_timer >= m_actualDuration)
+    {
+        // If moving when animation concludes, prefer OnMove over Idle
+        if (blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+        {
+            auto itMove = m_config.transitions.find("OnMove");
+            if (itMove != m_config.transitions.end())
+            {
+                stateMachine->ChangeState(itMove->second.targetState, itMove->second.blendDuration);
+                return;
+            }
+        }
+
+        for (const auto& [key, t] : m_config.transitions)
+        {
+            if (t.hasExitTime || key == "OnFinished" || key == "OnStop" || t.triggerEvent == "OnFinished")
+            {
+                stateMachine->ChangeState(t.targetState, t.blendDuration);
+                return;
+            }
+        }
+
+        // Default fallback: return to Idle
+        stateMachine->ChangeState("Idle", 0.2f);
+        return;
+    }
+
+    // Directional auto-transitions for looping movement states
+    if (m_config.isLooping && blackboard)
+    {
+        if (m_config.moveSpeed <= 0.001f) // Idle-like
+        {
+            if (blackboard->moveIntent.LengthSquared() > 0.1f)
+            {
+                if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z))
+                {
+                    auto it = m_config.transitions.find("OnStrafe");
+                    if (it != m_config.transitions.end())
+                    {
+                        stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
+                        return;
+                    }
+                }
+                auto it = m_config.transitions.find("OnMove");
+                if (it != m_config.transitions.end())
+                {
+                    stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
+                    return;
+                }
+            }
+        }
+        else // Walk-like
+        {
+            if (blackboard->moveIntent.LengthSquared() <= 0.01f)
+            {
+                m_stopDebounceTimer += deltaTime;
+                if (m_stopDebounceTimer >= 0.08f)
+                {
+                    auto it = m_config.transitions.find("OnStop");
+                    if (it != m_config.transitions.end())
+                    {
+                        stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                m_stopDebounceTimer = 0.0f;
+            }
+        }
+    }
+}
+
+void HEIN::UniversalCombatState::OnExit(Actor* owner, CombatStateMachineComponent* /*stateMachine*/)
+{
+    m_hasQueuedTransition = false;
+    auto* health = owner->GetComponent<HealthComponent>();
+    if (health)
+    {
+        health->SetGameplayInvincible(false);
+    }
+}
+
+bool HEIN::UniversalCombatState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
+{
+    std::string eventName = "";
+    std::string fallbackEventName = "";
+
+    auto* blackboard = owner->GetComponent<CombatBlackBoard>();
+
+    switch (messageID)
+    {
+    case Message::PLAYER_ACTION_ATTACK:
+        if (blackboard && blackboard->localMoveIntent.z > 0.5f)
+        {
+            eventName = "OnForwardAttack";
+            fallbackEventName = "OnAttack";
+        }
+        else if (blackboard && blackboard->localMoveIntent.z < -0.5f)
+        {
+            eventName = "OnBackAttack";
+            fallbackEventName = "OnAttack";
+        }
+        else
+        {
+            eventName = "OnAttack";
+        }
+        break;
+
+    case Message::PLAYER_ACTION_DODGE:
+        eventName = "OnDodge";
+        break;
+
+    case Message::PLAYER_ACTION_BLOCK:
+        eventName = "OnBlock";
+        break;
+
+    case Message::PLAYER_STOP_BLOCK:
+        eventName = "OnStopBlock";
+        fallbackEventName = "OnStop";
+        break;
+
+    default:
+        return false;
+    }
+
+    auto TryTransition = [&](const TransitionData& t) -> bool
+    {
+        // 1. Instant Cancel / Skip Animation:
+        // If canInterrupt is true, OR windowStart <= 0.001f, OR within combo window:
+        // Immediately skip current animation and chain directly to target state!
+        if (t.canInterrupt || t.windowStart <= 0.001f || (m_timer >= t.windowStart && m_timer <= t.windowEnd))
+        {
+            stateMachine->ChangeState(t.targetState, t.blendDuration);
+            m_hasQueuedTransition = false;
+            return true;
+        }
+
+        // 2. Combo Buffering:
+        // If pressed before windowStart, queue it so it never gets dropped and triggers the moment the window opens!
+        if (m_timer < t.windowStart)
+        {
+            m_queuedTransition = t;
+            m_hasQueuedTransition = true;
+            return true;
+        }
+        return false;
+    };
+
+    // 1. Direct key match in transitions map
+    auto it = m_config.transitions.find(eventName);
+    if (it != m_config.transitions.end())
+    {
+        if (TryTransition(it->second)) return true;
+    }
+
+    // 2. Fallback key match (e.g. OnForwardAttack -> OnAttack)
+    if (!fallbackEventName.empty())
+    {
+        auto itFb = m_config.transitions.find(fallbackEventName);
+        if (itFb != m_config.transitions.end())
+        {
+            if (TryTransition(itFb->second)) return true;
+        }
+    }
+
+    // 3. Match against triggerEvent field
+    for (const auto& [key, t] : m_config.transitions)
+    {
+        if (t.triggerEvent == eventName || (!fallbackEventName.empty() && t.triggerEvent == fallbackEventName))
+        {
+            if (TryTransition(t)) return true;
+        }
+    }
+
+    return false;
+}
 
 std::unique_ptr<HEIN::ICombatState> HEIN::CreateCombatStateFromConfig(const StateConfig& config)
 {
-    if (config.stateType == "Idle") return std::make_unique<HEIN::IdleState>(config);
-    if (config.stateType == "Run") return std::make_unique<HEIN::WalkState>(config);
-    if (config.stateType == "Walk") return std::make_unique<HEIN::WalkState>(config);
-    if (config.stateType == "OneHand") return std::make_unique<HEIN::OneHandAttackState>(config);
-    if (config.stateType == "Dodge") return std::make_unique<HEIN::DodgeState>(config);
-    if (config.stateType == "Strafe") return std::make_unique<HEIN::StrafeState>(config);
-    if (config.stateType == "Block") return std::make_unique<HEIN::BlockState>(config);
-
-    return std::make_unique<HEIN::IdleState>(config);
+    if (config.stateType == "OneHand" && !config.comboAnimationNames.empty())
+    {
+        return std::make_unique<HEIN::OneHandAttackState>(config);
+    }
+    return std::make_unique<HEIN::UniversalCombatState>(config);
 }
 
 ================================================================================
@@ -4796,27 +5028,24 @@ namespace HEIN
 	{
 		std::string targetState;
 		float blendDuration = 0.2f;
+		std::string triggerEvent = ""; // "OnAttack", "OnForwardAttack", "OnDodge", "OnBlock", "OnStopBlock", "OnMove", "OnStop", "OnStrafe", "OnFinished"
+		bool hasExitTime = false;      // Automatically transitions when state animation concludes or stateDuration elapsed
+		float windowStart = 0.0f;      // Window timestamp (seconds) when input is accepted
+		float windowEnd = 999.0f;      // Window timestamp (seconds) until input is accepted
+		bool canInterrupt = false;     // Can interrupt from earlier stages/states
 	};
 
 	/**
 	 * @struct StateConfig
-	 * @brief Configuration data for initializing a combat state.
+	 * @brief Unified configuration data for defining ANY combat state purely via data.
 	 * 
-	 * Contains shared parameters such as animation names, transition mappings,
-	 * timing windows for combos, and movement modifiers for the state.
-	 */
-	/**
-	 * @struct StateConfig
-	 * @brief Configuration data for an individual combat state.
-	 * 
-	 * Contains animation names, transition logic, combo timings, and movement modifiers
-	 * needed to execute a specific combat state (like an attack, block, or dodge).
+	 * Contains animation names, movement speed, timing windows, stances, and transition links.
+	 * Enables joining state-to-state with custom triggers, combo windows, and exit times.
 	 */
 	struct StateConfig
 	{
 		std::string stateName = "Idle";
-
-		std::string stateType = "Idle";
+		std::string stateType = "DataDriven";
 
 		/// @brief The primary animation to play during this state.
 		std::string animationName = "Idle";
@@ -4824,94 +5053,88 @@ namespace HEIN
 		/// @brief An optional secondary animation (e.g. for lower-body movement).
 		std::string secondaryAnimationName = "";
 
-		std::vector<std::string> comboAnimationNames;
-		/// @brief Maps an input or event (key) to the name of the next state (value).
-		std::unordered_map<std::string, TransitionData> transitions;
-
-		/// @brief Timestamps indicating when this state can be canceled into a combo.
-		std::vector<float> comboEndTimes;
-		
-		/// @brief Timestamps indicating the window during which combo inputs are accepted.
-		std::vector<float> comboWindowStarts;
-
-		/// @brief Per-stage crossfade duration (seconds) used when blending INTO each combo stage.
-		/// Index i blends comboAnimationNames[i] in over comboBlendDurations[i]. If a stage has no
-		/// entry, the transition blend duration passed to OnEnter is used as a fallback.
-		std::vector<float> comboBlendDurations;
-
-		/// @brief Number of fully-defined combo stages. A stage is only usable when it has an
-		/// animation name AND both timing entries; this clamps out partially-configured stages.
-		size_t GetComboStageCount() const
-		{
-			size_t n = comboAnimationNames.size();
-			n = (n < comboEndTimes.size()) ? n : comboEndTimes.size();
-			n = (n < comboWindowStarts.size()) ? n : comboWindowStarts.size();
-			return n;
-		}
-
-		/// @brief Blend duration (seconds) used when transitioning out after a failed combo chain.
-		/// Separates the combo-exit crossfade from the generic transition blend durations,
-		/// allowing a smoother recovery animation back to idle/walk/strafe.
-		float comboExitBlendDuration = 0.3f;
-
 		/// @brief The actor's movement speed while in this state.
 		float moveSpeed = 0.0f;
 		
-		/// @brief The total duration of this state before it ends automatically.
-		float stateDuration = 1.0f;
+		/// @brief The total duration of this state (0.0f = auto-detect from animation clip length).
+		float stateDuration = 0.0f;
+
+		/// @brief How quickly the actor can rotate during this state.
+		float turnSpeed = 10.0f;
+
+		/// @brief True for looping states (Idle, Walk, Strafe), false for one-shots (Attacks, Dodge).
+		bool isLooping = false;
+
+		/// @brief If true, activates weapon damage dealer hitboxes during this state.
+		bool isAttack = false;
+
+		/// @brief If true, takes defensive stance and absorbs damage using stamina.
+		bool isBlock = false;
+
+		/// @brief If true, locks actor's movement direction to facing/input intent on enter (for Dodge).
+		bool lockMovementDirection = false;
+
+		/// @brief Timestamp (seconds) where invincibility starts (i-frames).
+		float invincibilityStart = 0.0f;
+
+		/// @brief Timestamp (seconds) where invincibility ends.
+		float invincibilityEnd = 0.0f;
+
+		/// @brief Maps an input or event key to destination state transition data.
+		std::unordered_map<std::string, TransitionData> transitions;
+
+		// Legacy combo fields (kept for backward compatibility)
+		std::vector<std::string> comboAnimationNames;
+		std::vector<float> comboEndTimes;
+		std::vector<float> comboWindowStarts;
+		std::vector<float> comboBlendDurations;
+		float comboExitBlendDuration = 0.3f;
+
+		size_t GetComboStageCount() const
+		{
+			if (!comboAnimationNames.empty()) return comboAnimationNames.size();
+			if (!comboEndTimes.empty()) return comboEndTimes.size();
+			if (!animationName.empty()) return 1;
+			return 0;
+		}
 	};
 
 	class CombatStateMachineComponent;
 
 	std::unique_ptr<ICombatState> CreateCombatStateFromConfig(const StateConfig& config);
-	/**
-	 * @class IdleState
-	 * @brief Represents the neutral resting state of the actor.
-	 * 
-	 * Active when the actor is completely stationary (moveSpeed = 0). 
-	 * Transitions instantly to WalkState on directional input, or immediately into 
-	 * Action states (Attack, Dodge, Block) upon receiving the respective messages.
-	 */
-	class IdleState : public ICombatState
-	{
-	private:
-
-		HEIN::StateConfig m_config;
-	public:
-		IdleState(const HEIN::StateConfig& config);
-
-		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
-
-		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
-
-		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
-
-		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
-		
-	};
 
 	/**
-	 * @class WalkState
-	 * @brief Represents the grounded movement state.
+	 * @class UniversalCombatState
+	 * @brief Unified, data-driven combat state capable of handling ANY state in the game.
 	 * 
-	 * Active while movement input is held (moveSpeed = 30). Transitions back to 
-	 * IdleState upon OnStop. Action states like Attack or Dodge can interrupt this state.
+	 * Eliminates hardcoded C++ state classes by reading state properties, timing windows,
+	 * animation crossfades, and state-to-state transitions entirely from StateConfig data.
 	 */
-	class WalkState : public ICombatState
+	class UniversalCombatState : public ICombatState
 	{
 	private:
-		HEIN::StateConfig m_config;
+		StateConfig m_config;
+		float m_timer = 0.0f;
+		float m_actualDuration = 1.0f;
+		DirectX::SimpleMath::Vector3 m_lockedDirection = DirectX::SimpleMath::Vector3::Zero;
+
+		bool m_hasQueuedTransition = false;
+		TransitionData m_queuedTransition;
+		float m_stopDebounceTimer = 0.0f;
 
 	public:
-		WalkState(const HEIN::StateConfig& config);
+		UniversalCombatState(const StateConfig& config);
 
 		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
-
 		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
-
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
-
 		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
+
+		bool IsAttackState() const override { return m_config.isAttack; }
+		bool IsBlockState() const override { return m_config.isBlock; }
+
+		const StateConfig& GetConfig() const { return m_config; }
+		float GetTimer() const { return m_timer; }
 	};
 
 	/**
@@ -4934,14 +5157,13 @@ namespace HEIN
 	class OneHandAttackState : public ICombatState
 	{
 	public:
-		/// Existing timing defaults used by the current three-stage combo implementation.
-		/// Keep these until Update is converted to consume the per-state config values.
-		static constexpr float STAGE_1_END_TIME     = 1.60f;
-		static constexpr float STAGE_2_END_TIME     = 2.40f;
-		static constexpr float STAGE_3_END_TIME     = 4.50f;
-		static constexpr float STAGE_1_WINDOW_START = 1.20f;
-		static constexpr float STAGE_2_WINDOW_START = 2.20f;
-		static constexpr float STAGE_3_WINDOW_START = 4.20f;
+		/// Fallback timing defaults used if no per-stage timings or model durations are available.
+		static constexpr float STAGE_1_END_TIME     = 1.10f;
+		static constexpr float STAGE_2_END_TIME     = 1.20f;
+		static constexpr float STAGE_3_END_TIME     = 2.20f;
+		static constexpr float STAGE_1_WINDOW_START = 0.40f;
+		static constexpr float STAGE_2_WINDOW_START = 0.40f;
+		static constexpr float STAGE_3_WINDOW_START = 0.60f;
 
 	private:
 		HEIN::StateConfig m_config;
@@ -4949,22 +5171,20 @@ namespace HEIN
 		int m_comboStage = 0;
 		bool m_comboQueued = false;
 
-		/// @brief Number of fully-configured combo stages (clamped; never crashes on partial data).
-		int StageCount() const { return static_cast<int>(m_config.GetComboStageCount()); }
+		/// @brief Total number of combo stages (3 or more dynamically supported).
+		int GetTotalStages(Actor* owner = nullptr) const;
 
 		/// @brief Animation name for a stage, or nullptr if not configured.
 		const std::string* StageAnim(int stage) const;
 		/// @brief Timestamp (seconds) at which a stage's attack motion concludes.
-		float StageEndTime(int stage) const;
+		float StageEndTime(int stage, Actor* owner = nullptr) const;
 		/// @brief Timestamp (seconds) at which the next combo input starts being accepted.
-		float StageWindowStart(int stage) const;
+		float StageWindowStart(int stage, Actor* owner = nullptr) const;
 		/// @brief Crossfade duration (seconds) for blending INTO a stage.
-		/// Falls back to @p fallback when the stage has no per-stage entry.
-		float StageBlend(int stage, float fallback) const;
+		float StageBlend(int stage, float fallback = 0.1f) const;
 
 		/// @brief Crossfades all skinned models into the given stage's animation.
 		void PlayStage(Actor* owner, int stage, float blendDuration);
-
 
 	public:
 		OneHandAttackState(const StateConfig& config);
@@ -4978,84 +5198,9 @@ namespace HEIN
 		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
 
 		bool IsAttackState() const override { return true; }
-	};
 
-	/**
-	 * @class DodgeState
-	 * @brief Evasion state granting temporary invincibility.
-	 * 
-	 * Active upon OnDodge. 
-	 * RESPONSIBILITY: Locks the actor's velocity to a fixed direction (`m_lockedDirection`) 
-	 * and provides i-frames for the duration of the roll (typically 0.6s). 
-	 * During this state, the actor ignores damage payloads in `DamageSystem::HandleTriggerHit`.
-	 * Transitions to IdleState or WalkState upon completion.
-	 */
-	class DodgeState : public ICombatState
-	{
-	private:
-		HEIN::StateConfig m_config;
-		float m_timer = 0.0f;
-		DirectX::SimpleMath::Vector3 m_lockedDirection;
-
-	public:
-		DodgeState(const StateConfig& config);
-
-		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
-
-		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
-
-		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
-
-		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
-	};
-
-	class StrafeState : public ICombatState
-	{
-	private:
-
-		HEIN::StateConfig m_config;
-	
-		bool m_isRight;
-	public:
-
-		StrafeState(const StateConfig& config);
-
-		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
-
-		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
-
-		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
-
-		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
-	};
-
-	/**
-	 * @class BlockState
-	 * @brief Defensive posture for negating incoming damage.
-	 * 
-	 * Active while the block button (RMB) is held. 
-	 * RESPONSIBILITY: Redirects incoming trigger damage to drain stamina instead of health. 
-	 * If stamina is fully depleted, causes a guard break (transitioning back to IdleState).
-	 */
-	class BlockState : public ICombatState
-	{
-	private:
-
-		HEIN::StateConfig m_config;
-
-	public:
-
-		BlockState(const StateConfig& config);
-
-		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
-
-		void Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime) override;
-
-		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
-
-		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
-
-		bool IsBlockState() const override { return true; }
+		int GetCurrentComboStage() const { return m_comboStage; }
+		bool IsComboQueued() const { return m_comboQueued; }
 	};
 }
 
@@ -5532,7 +5677,7 @@ namespace HEIN
 						DirectX::SimpleMath::Vector3 hitNormal;
 						if (CollisionMath::IntersectRayTriangle(rayOrigin, rayDir, tri, hitDist, hitNormal))
 						{
-							if (hitDist >= 0.0f)
+							if (hitDist >= minDistance)
 							{
 								float safeDist = std::max(minDistance, hitDist - cameraRadius);
 								if (safeDist < closestHit)
@@ -5553,9 +5698,9 @@ namespace HEIN
 					float hitDist = 0.0f;
 					if (CollisionMath::SweepSphereVsAABB(rayOrigin, rayDir, cameraRadius, aabb->GetWorldAABB(), hitDist))
 					{
-						if (hitDist >= 0.0f)
+						if (hitDist >= minDistance)
 						{
-							float safeDist = std::max(minDistance, hitDist);
+							float safeDist = std::max(minDistance, hitDist - cameraRadius);
 							if (safeDist < closestHit)
 							{
 								closestHit = safeDist;
@@ -5573,9 +5718,9 @@ namespace HEIN
 					float hitDist = 0.0f;
 					if (CollisionMath::SweepSphereVSOBB(rayOrigin, rayDir, cameraRadius, obb->GetWorldOBB(), hitDist))
 					{
-						if (hitDist >= 0.0f)
+						if (hitDist >= minDistance)
 						{
-							float safeDist = std::max(minDistance, hitDist);
+							float safeDist = std::max(minDistance, hitDist - cameraRadius);
 							if (safeDist < closestHit)
 							{
 								closestHit = safeDist;
@@ -5591,7 +5736,7 @@ namespace HEIN
 					if (terrain == nullptr) continue;
 					
 					float stepSize = 0.5f; // half meter steps
-					float t = 0.0f;
+					float t = minDistance; // Start test at minDistance to avoid false self-occlusion at feet/ground
 					while (t <= maxDistance)
 					{
 						DirectX::SimpleMath::Vector3 p = rayOrigin + rayDir * t;
@@ -5601,7 +5746,7 @@ namespace HEIN
 						{
 							if (p.y - cameraRadius < terrainHeight)
 							{
-								float safeDist = std::max(minDistance, t);
+								float safeDist = std::max(minDistance, t - cameraRadius);
 								if (safeDist < closestHit)
 								{
 									closestHit = safeDist;
@@ -7140,6 +7285,7 @@ HEIN::SpringCameraMode::SpringCameraMode(
 	, m_followDistance(followDistance)
 	, m_heightOffset(heightOffset)
 	, m_shoulderOffset(DEFAULT_SHOULDER_OFFSET)
+	, m_standingHeight(15.0f)
 	, m_isInitialized(false)
 {
 }
@@ -7181,6 +7327,26 @@ void HEIN::SpringCameraMode::Update(CameraData& outData, float deltaTime, ICamer
 	deltaTime = std::clamp(deltaTime, 0.0001f, 0.1f);
 
 	DirectX::SimpleMath::Vector3 rawTarget = *m_desiredTarget;
+
+	// Prevent camera from diving into the floor when player dodges / rolls
+	Actor* targetActor = m_manager ? m_manager->GetActor(m_targetID) : nullptr;
+	if (targetActor != nullptr)
+	{
+		TransformComponent* transform = targetActor->GetComponent<TransformComponent>();
+		if (transform != nullptr)
+		{
+			float heightAboveFeet = rawTarget.y - transform->GetPosition().y;
+			if (heightAboveFeet > 8.0f)
+			{
+				m_standingHeight = heightAboveFeet;
+			}
+			else if (heightAboveFeet < 6.0f)
+			{
+				// Character is rolling or diving down - maintain stable focus above root
+				rawTarget.y = transform->GetPosition().y + m_standingHeight;
+			}
+		}
+	}
 
 	if (!m_isInitialized)
 	{
@@ -7289,7 +7455,7 @@ namespace HEIN
 		static constexpr float DEFAULT_FOLLOW_DISTANCE = 40.0f;
 		static constexpr float DEFAULT_HEIGHT_OFFSET = 0.0f;
 		static constexpr float DEFAULT_SHOULDER_OFFSET = 0.0f;
-		static constexpr float MIN_DISTANCE = 2.0f;
+		static constexpr float MIN_DISTANCE = 8.0f;
 		static constexpr float CAMERA_RADIUS = 1.0f;
 		static constexpr float PIVOT_SMOOTH_SPEED = 18.0f;
 		static constexpr float ROTATION_SMOOTH_SPEED = 25.0f;
@@ -7315,6 +7481,7 @@ namespace HEIN
 		float m_followDistance;
 		float m_heightOffset;
 		float m_shoulderOffset;
+		float m_standingHeight;
 		bool  m_isInitialized;
 
 	public:
@@ -9617,6 +9784,11 @@ namespace HEIN
 		{
 			messenger->Notify(playerID, Message::PLAYER_STOP_BLOCK);
 		}
+
+		if (gameContext.keyboardTracker.pressed.M)
+		{
+			messenger->Notify(playerID, Message::PLAYER_TOGGLE_MODEL);
+		}
 	}
 	
 }
@@ -11017,6 +11189,12 @@ void HEIN::BoneLinkComponent::Start()
 
 void HEIN::BoneLinkComponent::LateUpdate(float deltaTime)
 {
+	if (m_owner != nullptr)
+	{
+		SkinnedModelComponent* activeModel = m_owner->GetComponent<SkinnedModelComponent>();
+		if (activeModel != nullptr) m_targetModel = activeModel;
+	}
+
 	if (m_targetModel == nullptr && m_targetStaticModel == nullptr)
 	{
 		m_targetModel = m_owner->GetComponent<SkinnedModelComponent>();
@@ -11440,6 +11618,7 @@ FILE: External\Engine\Components\FoliageComponent.cpp
 #include <DDSTextureLoader.h>
 #include <WICTextureLoader.h>
 #include <d3dcompiler.h>
+#include "Effect/ReadData.h"
 #include <ImGui/imgui.h>
 #include <cmath>
 #include <random>
@@ -11630,52 +11809,95 @@ namespace HEIN
 	{
 		if (m_isInitialized) return true;
 
-		// Compile Vertex and Pixel Shaders dynamically
-		Microsoft::WRL::ComPtr<ID3DBlob> vsBlob, psBlob, errorBlob;
-		HRESULT hr = D3DCompileFromFile(
-			L"../External/Engine/Shaders/Foliage_VS.hlsl",
-			nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-			"main", "vs_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0,
-			&vsBlob, &errorBlob
-		);
-		if (FAILED(hr))
+		// Load precompiled CSO shaders if available, falling back to dynamic compilation
+		std::vector<uint8_t> vsData;
+		std::vector<uint8_t> psData;
+		bool loadedCso = false;
+		try
 		{
-			hr = D3DCompileFromFile(
-				L"External/Engine/Shaders/Foliage_VS.hlsl",
+			vsData = DX::ReadData(L"Resources/Shaders/Foliage_VS.cso");
+			psData = DX::ReadData(L"Resources/Shaders/Foliage_PS.cso");
+			loadedCso = true;
+		}
+		catch (...)
+		{
+			try
+			{
+				vsData = DX::ReadData(L"Foliage_VS.cso");
+				psData = DX::ReadData(L"Foliage_PS.cso");
+				loadedCso = true;
+			}
+			catch (...)
+			{
+				loadedCso = false;
+			}
+		}
+
+		Microsoft::WRL::ComPtr<ID3DBlob> vsBlob, psBlob, errorBlob;
+		const void* vsBytecode = nullptr;
+		size_t vsBytecodeSize = 0;
+		const void* psBytecode = nullptr;
+		size_t psBytecodeSize = 0;
+
+		if (loadedCso)
+		{
+			vsBytecode = vsData.data();
+			vsBytecodeSize = vsData.size();
+			psBytecode = psData.data();
+			psBytecodeSize = psData.size();
+		}
+		else
+		{
+			HRESULT hr = D3DCompileFromFile(
+				L"../External/Engine/Shaders/Foliage_VS.hlsl",
 				nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
 				"main", "vs_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0,
 				&vsBlob, &errorBlob
 			);
-		}
-		if (FAILED(hr))
-		{
-			if (errorBlob) OutputDebugStringA(static_cast<char*>(errorBlob->GetBufferPointer()));
-			return false;
-		}
+			if (FAILED(hr))
+			{
+				hr = D3DCompileFromFile(
+					L"External/Engine/Shaders/Foliage_VS.hlsl",
+					nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+					"main", "vs_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0,
+					&vsBlob, &errorBlob
+				);
+			}
+			if (FAILED(hr))
+			{
+				if (errorBlob) OutputDebugStringA(static_cast<char*>(errorBlob->GetBufferPointer()));
+				return false;
+			}
 
-		hr = D3DCompileFromFile(
-			L"../External/Engine/Shaders/Foliage_PS.hlsl",
-			nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-			"main", "ps_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0,
-			&psBlob, &errorBlob
-		);
-		if (FAILED(hr))
-		{
 			hr = D3DCompileFromFile(
-				L"External/Engine/Shaders/Foliage_PS.hlsl",
+				L"../External/Engine/Shaders/Foliage_PS.hlsl",
 				nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
 				"main", "ps_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0,
 				&psBlob, &errorBlob
 			);
-		}
-		if (FAILED(hr))
-		{
-			if (errorBlob) OutputDebugStringA(static_cast<char*>(errorBlob->GetBufferPointer()));
-			return false;
+			if (FAILED(hr))
+			{
+				hr = D3DCompileFromFile(
+					L"External/Engine/Shaders/Foliage_PS.hlsl",
+					nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+					"main", "ps_5_0", D3DCOMPILE_ENABLE_STRICTNESS, 0,
+					&psBlob, &errorBlob
+				);
+			}
+			if (FAILED(hr))
+			{
+				if (errorBlob) OutputDebugStringA(static_cast<char*>(errorBlob->GetBufferPointer()));
+				return false;
+			}
+
+			vsBytecode = vsBlob->GetBufferPointer();
+			vsBytecodeSize = vsBlob->GetBufferSize();
+			psBytecode = psBlob->GetBufferPointer();
+			psBytecodeSize = psBlob->GetBufferSize();
 		}
 
-		DX::ThrowIfFailed(device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_vertexShader.ReleaseAndGetAddressOf()));
-		DX::ThrowIfFailed(device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pixelShader.ReleaseAndGetAddressOf()));
+		DX::ThrowIfFailed(device->CreateVertexShader(vsBytecode, vsBytecodeSize, nullptr, m_vertexShader.ReleaseAndGetAddressOf()));
+		DX::ThrowIfFailed(device->CreatePixelShader(psBytecode, psBytecodeSize, nullptr, m_pixelShader.ReleaseAndGetAddressOf()));
 
 		// Specify Input Layout bridging the static geometry (Slot 0) and dynamic instance data (Slot 1)
 		D3D11_INPUT_ELEMENT_DESC layoutDesc[] =
@@ -11691,7 +11913,7 @@ namespace HEIN
 			{ "INST_TYPE",   0, DXGI_FORMAT_R32_UINT,           1, offsetof(FoliageInstanceData, type),     D3D11_INPUT_PER_INSTANCE_DATA, 1 }
 		};
 
-		DX::ThrowIfFailed(device->CreateInputLayout(layoutDesc, _countof(layoutDesc), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), m_inputLayout.ReleaseAndGetAddressOf()));
+		DX::ThrowIfFailed(device->CreateInputLayout(layoutDesc, _countof(layoutDesc), vsBytecode, vsBytecodeSize, m_inputLayout.ReleaseAndGetAddressOf()));
 
 		// Allocate Constant Buffers
 		D3D11_BUFFER_DESC cbDesc = {};
@@ -16047,6 +16269,7 @@ FILE: External\Engine\Components\SkinnedModelComponent.cpp
 #include <string>
 #include <filesystem>
 #include <d3dcompiler.h>
+#include "Effect/ReadData.h"
 #include "TransformComponent.h"
 #include "Common/ShadowSystem.h"
 #include "Entities/ActorManager.h"
@@ -16054,6 +16277,7 @@ FILE: External\Engine\Components\SkinnedModelComponent.cpp
 #include "LightComponent.h"
 #include "Camera/CameraController.h"
 #include "FogComponent.h"
+#include "../../../Dual/BlackBoard/CombatBlackBoard.h"
 
 
 std::shared_ptr<DirectX::EffectFactory> HEIN::SkinnedModelComponent::s_fxFactory = nullptr;
@@ -16136,37 +16360,81 @@ namespace HEIN
 		}
 
 
-		// Compile Shaders
-		Microsoft::WRL::ComPtr<ID3DBlob> vsBlob, psBlob, errorBlob;
-		HRESULT hr = D3DCompileFromFile(L"../External/Engine/Shaders/CustomSkinned.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", 0, 0, &vsBlob, &errorBlob);
-		if (FAILED(hr))
+		// Load Shaders (Precompiled CSO first, then runtime fallback)
+		std::vector<uint8_t> vsData;
+		std::vector<uint8_t> psData;
+		bool loadedCso = false;
+		try
 		{
-			hr = D3DCompileFromFile(L"External/Engine/Shaders/CustomSkinned.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", 0, 0, &vsBlob, &errorBlob);
+			vsData = DX::ReadData(L"Resources/Shaders/CustomSkinned_VS.cso");
+			psData = DX::ReadData(L"Resources/Shaders/CustomSkinned_PS.cso");
+			loadedCso = true;
 		}
-		if (FAILED(hr))
+		catch (...)
 		{
-			if (errorBlob) {
-				FILE* f;
-				if (fopen_s(&f, "ShaderError.txt", "w") == 0) {
-					fprintf(f, "%s", (char*)errorBlob->GetBufferPointer());
-					fclose(f);
-				}
+			try
+			{
+				vsData = DX::ReadData(L"CustomSkinned_VS.cso");
+				psData = DX::ReadData(L"CustomSkinned_PS.cso");
+				loadedCso = true;
 			}
-			return; // Gracefully fail
+			catch (...)
+			{
+				loadedCso = false;
+			}
 		}
-		device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_vertexShader.ReleaseAndGetAddressOf());
 
-		hr = D3DCompileFromFile(L"../External/Engine/Shaders/CustomSkinned.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", 0, 0, &psBlob, &errorBlob);
-		if (FAILED(hr))
+		Microsoft::WRL::ComPtr<ID3DBlob> vsBlob, psBlob, errorBlob;
+		const void* vsBytecode = nullptr;
+		size_t vsBytecodeSize = 0;
+		const void* psBytecode = nullptr;
+		size_t psBytecodeSize = 0;
+
+		if (loadedCso)
 		{
-			hr = D3DCompileFromFile(L"External/Engine/Shaders/CustomSkinned.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", 0, 0, &psBlob, &errorBlob);
+			vsBytecode = vsData.data();
+			vsBytecodeSize = vsData.size();
+			psBytecode = psData.data();
+			psBytecodeSize = psData.size();
 		}
-		if (FAILED(hr))
+		else
 		{
-			if (errorBlob) OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-			return; // Gracefully fail
+			HRESULT hr = D3DCompileFromFile(L"../External/Engine/Shaders/CustomSkinned_VS.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &vsBlob, &errorBlob);
+			if (FAILED(hr))
+			{
+				hr = D3DCompileFromFile(L"External/Engine/Shaders/CustomSkinned_VS.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &vsBlob, &errorBlob);
+			}
+			if (FAILED(hr))
+			{
+				if (errorBlob) {
+					FILE* f;
+					if (fopen_s(&f, "ShaderError.txt", "w") == 0) {
+						fprintf(f, "%s", (char*)errorBlob->GetBufferPointer());
+						fclose(f);
+					}
+				}
+				return; // Gracefully fail
+			}
+
+			hr = D3DCompileFromFile(L"../External/Engine/Shaders/CustomSkinned_PS.hlsl", nullptr, nullptr, "main", "ps_5_0", 0, 0, &psBlob, &errorBlob);
+			if (FAILED(hr))
+			{
+				hr = D3DCompileFromFile(L"External/Engine/Shaders/CustomSkinned_PS.hlsl", nullptr, nullptr, "main", "ps_5_0", 0, 0, &psBlob, &errorBlob);
+			}
+			if (FAILED(hr))
+			{
+				if (errorBlob) OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+				return; // Gracefully fail
+			}
+
+			vsBytecode = vsBlob->GetBufferPointer();
+			vsBytecodeSize = vsBlob->GetBufferSize();
+			psBytecode = psBlob->GetBufferPointer();
+			psBytecodeSize = psBlob->GetBufferSize();
 		}
-		device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pixelShader.ReleaseAndGetAddressOf());
+
+		device->CreateVertexShader(vsBytecode, vsBytecodeSize, nullptr, m_vertexShader.ReleaseAndGetAddressOf());
+		device->CreatePixelShader(psBytecode, psBytecodeSize, nullptr, m_pixelShader.ReleaseAndGetAddressOf());
 
 		// Create Constant Buffers 
 		D3D11_BUFFER_DESC cbDesc = {};
@@ -16180,7 +16448,7 @@ namespace HEIN
 		cbDesc.ByteWidth = sizeof(CB_Lighting);
 		device->CreateBuffer(&cbDesc, nullptr, m_cbLighting.ReleaseAndGetAddressOf());
 
-		// Create Input Layout explicitly to match CustomSkinned.hlsl shader using the actual vertex declaration from the model!
+		// Create Input Layout explicitly to match CustomSkinned_VS.hlsl shader using the actual vertex declaration from the model!
 		bool layoutCreated = false;
 		if (!m_model->meshes.empty())
 		{
@@ -16205,8 +16473,8 @@ namespace HEIN
 							HRESULT hrLayout = device->CreateInputLayout(
 								modifiedDecl.data(),
 								(UINT)modifiedDecl.size(),
-								vsBlob->GetBufferPointer(),
-								vsBlob->GetBufferSize(),
+								vsBytecode,
+								vsBytecodeSize,
 								m_inputLayout.ReleaseAndGetAddressOf()
 							);
 							if (SUCCEEDED(hrLayout))
@@ -16232,9 +16500,229 @@ namespace HEIN
 
 	}
 
+	
+	int SkinnedModelComponent::GetRootBoneIndex() const
+	{
+		if (!m_model || m_model->bones.empty()) return -1;
+
+		// 1. Explicitly configured root bone name
+		if (!m_rootBoneName.empty())
+		{
+			for (size_t i = 0; i < m_model->bones.size(); ++i)
+			{
+				if (m_model->bones[i].name.find(m_rootBoneName) != std::wstring::npos)
+				{
+					return static_cast<int>(i);
+				}
+			}
+		}
+
+		// 2. Search common root bone naming conventions
+		const wchar_t* commonNames[] = {
+			L"mixamorig:Hips",
+			L"Hips",
+			L"hips",
+			L"Root",
+			L"root",
+			L"Pelvis",
+			L"pelvis",
+			L"Bip01"
+		};
+		for (const wchar_t* name : commonNames)
+		{
+			for (size_t i = 0; i < m_model->bones.size(); ++i)
+			{
+				if (m_model->bones[i].name.find(name) != std::wstring::npos)
+				{
+					return static_cast<int>(i);
+				}
+			}
+		}
+
+		// 3. Fallback: bone without parent (parentIndex == ModelBone::c_Invalid)
+		for (size_t i = 0; i < m_model->bones.size(); ++i)
+		{
+			if (m_model->bones[i].parentIndex == DirectX::ModelBone::c_Invalid)
+			{
+				return static_cast<int>(i);
+			}
+		}
+
+		// 4. Default fallback: bone 0
+		return 0;
+	}
+
+	DirectX::SimpleMath::Vector3 SkinnedModelComponent::ExtractClipRootMotionDelta(
+		DX::AnimationSDKMESH* anim,
+		int rootIdx,
+		double& inOutPrevTime,
+		bool& inOutHasPrev
+	)
+	{
+		if (!anim || rootIdx < 0) return DirectX::SimpleMath::Vector3::Zero;
+
+		double currentAnimTime = anim->GetAnimTime();
+		double clipDuration = anim->GetEndTime();
+
+		if (clipDuration <= 0.0001)
+		{
+			return DirectX::SimpleMath::Vector3::Zero;
+		}
+
+		uint32_t numKeys = anim->GetNumAnimationKeys();
+		if (numKeys == 0) return DirectX::SimpleMath::Vector3::Zero;
+
+		if (!inOutHasPrev)
+		{
+			inOutHasPrev = true;
+			inOutPrevTime = currentAnimTime;
+			return DirectX::SimpleMath::Vector3::Zero;
+		}
+
+		double prevAnimTime = inOutPrevTime;
+		inOutPrevTime = currentAnimTime;
+
+		DirectX::SimpleMath::Vector3 startPos = anim->GetRootTranslationAtKey(rootIdx, 0);
+		DirectX::SimpleMath::Vector3 endPos = anim->GetRootTranslationAtKey(rootIdx, numKeys - 1);
+		DirectX::SimpleMath::Vector3 cycleDisplacement = endPos - startPos;
+
+		int prevCycle = static_cast<int>(std::floor(prevAnimTime / clipDuration));
+		int currentCycle = static_cast<int>(std::floor(currentAnimTime / clipDuration));
+
+		DirectX::SimpleMath::Vector3 rawDelta = DirectX::SimpleMath::Vector3::Zero;
+
+		if (currentCycle == prevCycle)
+		{
+			double tPrev = prevAnimTime - prevCycle * clipDuration;
+			double tCurr = currentAnimTime - currentCycle * clipDuration;
+			DirectX::SimpleMath::Vector3 pPrev = anim->GetRootTranslationAtTime(rootIdx, tPrev);
+			DirectX::SimpleMath::Vector3 pCurr = anim->GetRootTranslationAtTime(rootIdx, tCurr);
+			rawDelta = pCurr - pPrev;
+		}
+		else if (currentCycle > prevCycle)
+		{
+			double tPrev = prevAnimTime - prevCycle * clipDuration;
+			double tCurr = currentAnimTime - currentCycle * clipDuration;
+
+			DirectX::SimpleMath::Vector3 pPrev = anim->GetRootTranslationAtTime(rootIdx, tPrev);
+			DirectX::SimpleMath::Vector3 pCurr = anim->GetRootTranslationAtTime(rootIdx, tCurr);
+
+			DirectX::SimpleMath::Vector3 deltaFromPrevToEnd = endPos - pPrev;
+			int fullCycles = (currentCycle - prevCycle) - 1;
+			DirectX::SimpleMath::Vector3 fullCyclesDelta = cycleDisplacement * static_cast<float>(fullCycles > 0 ? fullCycles : 0);
+			DirectX::SimpleMath::Vector3 deltaFromStartToCurr = pCurr - startPos;
+
+			rawDelta = deltaFromPrevToEnd + fullCyclesDelta + deltaFromStartToCurr;
+		}
+		else
+		{
+			// animTime jumped backwards (e.g. animation restarted)
+			double tCurr = currentAnimTime - currentCycle * clipDuration;
+			DirectX::SimpleMath::Vector3 pCurr = anim->GetRootTranslationAtTime(rootIdx, tCurr);
+			rawDelta = pCurr - startPos;
+		}
+
+		if (!m_rootMotionExtractY)
+		{
+			rawDelta.y = 0.0f;
+		}
+
+		return rawDelta;
+	}
+
+	void SkinnedModelComponent::LockRootBone(
+		DirectX::XMMATRIX* localBones,
+		int rootIdx,
+		const DirectX::SimpleMath::Vector3& initialPos
+	)
+	{
+		if (!localBones || rootIdx < 0) return;
+
+		DirectX::XMVECTOR scale, rot, trans;
+		if (!DirectX::XMMatrixDecompose(&scale, &rot, &trans, localBones[rootIdx])) return;
+
+		DirectX::SimpleMath::Vector3 currentPos = trans;
+		DirectX::SimpleMath::Vector3 lockedTrans;
+		if (m_rootMotionExtractY)
+		{
+			lockedTrans = initialPos;
+		}
+		else
+		{
+			// Preserve vertical Y translation so hip bobbing / dips stay on the mesh
+			lockedTrans = DirectX::SimpleMath::Vector3(initialPos.x, currentPos.y, initialPos.z);
+		}
+
+		localBones[rootIdx] = DirectX::XMMatrixScalingFromVector(scale) *
+		                      DirectX::XMMatrixRotationQuaternion(rot) *
+		                      DirectX::XMMatrixTranslationFromVector(DirectX::SimpleMath::Vector3(lockedTrans));
+	}
+
+	void SkinnedModelComponent::ApplyRootMotionDeltaToWorld(const DirectX::SimpleMath::Vector3& localDelta, float deltaTime)
+	{
+		DirectX::SimpleMath::Vector3 worldDelta = DirectX::SimpleMath::Vector3::Zero;
+		if (m_owner != nullptr)
+		{
+			auto* transform = m_owner->GetComponent<TransformComponent>();
+			if (transform != nullptr)
+			{
+				DirectX::SimpleMath::Vector3 scaledDelta = localDelta * transform->GetScale();
+				worldDelta = DirectX::SimpleMath::Vector3::Transform(scaledDelta, transform->GetRotation());
+			}
+		}
+		m_rootMotionDelta = worldDelta;
+
+		if (m_isVisible && m_owner != nullptr)
+		{
+			auto* bb = m_owner->GetComponent<CombatBlackBoard>();
+			auto* transform = m_owner->GetComponent<TransformComponent>();
+
+			if (bb != nullptr)
+			{
+				// Deadzone (0.01 units) prevents microscopic in-place hip bobbing from triggering movement
+				if (worldDelta.LengthSquared() > 0.0001f)
+				{
+					bb->hasRootMotion = true;
+					float safeDt = (deltaTime > 0.0001f) ? deltaTime : 0.016f;
+					DirectX::SimpleMath::Vector3 computedVel = worldDelta / safeDt;
+					float speedSq = computedVel.LengthSquared();
+					constexpr float MAX_ROOT_SPEED = 60.0f; // Sane limit prevents velocity explosions
+					if (speedSq > MAX_ROOT_SPEED * MAX_ROOT_SPEED)
+					{
+						computedVel = (computedVel / std::sqrt(speedSq)) * MAX_ROOT_SPEED;
+					}
+					bb->rootMotionVelocity = computedVel;
+					bb->rootMotionDelta = worldDelta;
+				}
+				else
+				{
+					bb->hasRootMotion = false;
+					bb->rootMotionVelocity = DirectX::SimpleMath::Vector3::Zero;
+					bb->rootMotionDelta = DirectX::SimpleMath::Vector3::Zero;
+				}
+			}
+			else if (transform != nullptr && worldDelta.LengthSquared() > 0.0001f)
+			{
+				// If no CombatBlackBoard on actor, directly move transform
+				transform->SetPosition(transform->GetPosition() + worldDelta);
+			}
+		}
+	}
+
 	void SkinnedModelComponent::Update(float deltaTime)
 	{
 		if (!m_model) return;
+
+		int rootIdx = m_enableRootMotion ? GetRootBoneIndex() : -1;
+
+		if (m_isBlending)
+		{
+			if (m_currentAnimation == m_targetAnimation || m_targetAnimation == nullptr)
+			{
+				m_isBlending = false;
+				m_targetAnimation = nullptr;
+			}
+		}
 
 		if (m_isBlending && m_currentAnimation != nullptr &&
 			m_targetAnimation != nullptr)
@@ -16248,34 +16736,62 @@ namespace HEIN
 				m_targetAnimation = nullptr;
 				m_isBlending = false;
 
+				// Transfer target tracking state to active tracking state
+				m_prevAnimTime = m_targetPrevAnimTime;
+				m_initialRootTranslation = m_targetInitialRootTranslation;
+				m_hasPrevRootTranslation = m_targetHasPrevRootTranslation;
+				m_targetHasPrevRootTranslation = false;
+
 				m_currentAnimation->Update(deltaTime);
 				m_currentAnimation->Apply(*m_model, m_model->bones.size(), m_drawBones.get());
+
+				if (m_enableRootMotion && rootIdx >= 0)
+				{
+					DirectX::SimpleMath::Vector3 localDelta = ExtractClipRootMotionDelta(
+						m_currentAnimation, rootIdx,
+						m_prevAnimTime, m_hasPrevRootTranslation
+					);
+					LockRootBone(m_currentAnimation->GetLocalBones(), rootIdx, m_initialRootTranslation);
+					m_model->CopyAbsoluteBoneTransforms(m_model->bones.size(), m_currentAnimation->GetLocalBones(), m_drawBones.get());
+					ApplyRootMotionDeltaToWorld(localDelta, deltaTime);
+				}
 			}
 			else
 			{
-				//Live Dynamic Blending
-				// Update Both Animation
+				// Live Dynamic Blending
 				m_currentAnimation->Update(deltaTime);
 				m_targetAnimation->Update(deltaTime);
 
-				float stopTime = m_currentAnimation->GetEndTime() - 0.05f;
-
-				if (m_currentAnimation->GetAnimTime() >= stopTime)
-				{
-					m_currentAnimation->SetAnimTime(stopTime);
-				}
-
 				m_currentAnimation->Apply(*m_model, m_model->bones.size(), m_shapShotBones.get());
 				m_targetAnimation->Apply(*m_model, m_model->bones.size(), m_targetBones.get());
-				
+
+				if (m_enableRootMotion && rootIdx >= 0)
+				{
+					DirectX::SimpleMath::Vector3 deltaA = ExtractClipRootMotionDelta(
+						m_currentAnimation, rootIdx,
+						m_prevAnimTime, m_hasPrevRootTranslation
+					);
+					DirectX::SimpleMath::Vector3 deltaB = ExtractClipRootMotionDelta(
+						m_targetAnimation, rootIdx,
+						m_targetPrevAnimTime, m_targetHasPrevRootTranslation
+					);
+
+					// Blend the displacement: (1 - blendFactor) * A + blendFactor * B
+					DirectX::SimpleMath::Vector3 blendedDelta = DirectX::SimpleMath::Vector3::Lerp(deltaA, deltaB, blendFactor);
+
+					// Lock root bones in both clips so blended bones remain anchored
+					LockRootBone(m_currentAnimation->GetLocalBones(), rootIdx, m_initialRootTranslation);
+					LockRootBone(m_targetAnimation->GetLocalBones(), rootIdx, m_targetInitialRootTranslation);
+
+					ApplyRootMotionDeltaToWorld(blendedDelta, deltaTime);
+				}
+
 				// Get the Live raw Bones
 				const DirectX::XMMATRIX* sourceLocalBones = m_currentAnimation->GetLocalBones();
 				const DirectX::XMMATRIX* targetLocalBones = m_targetAnimation->GetLocalBones();
 
-				
 				for (size_t i = 0; i < m_model->bones.size(); ++i)
 				{
-
 					DirectX::XMVECTOR scaleA, rotA, transA;
 					DirectX::XMVECTOR scaleB, rotB, transB;
 
@@ -16294,11 +16810,10 @@ namespace HEIN
 					}
 					else
 					{
-						// Fallback if decompose fails
-						// Cannot easily blend quaternions of reflected matrices, so just snap to the source animation.
 						m_blendedLocalBones[i] = sourceLocalBones[i];
 					}
 				}
+
 				m_model->CopyAbsoluteBoneTransforms(m_model->bones.size(), m_blendedLocalBones.get(), m_drawBones.get());
 			}
 		}
@@ -16306,7 +16821,27 @@ namespace HEIN
 		{
 			m_currentAnimation->Update(deltaTime);
 			m_currentAnimation->Apply(*m_model, m_model->bones.size(), m_drawBones.get());
+
+			if (m_enableRootMotion && rootIdx >= 0)
+			{
+				if (!m_hasPrevRootTranslation)
+				{
+					m_initialRootTranslation = m_currentAnimation->GetRootTranslationAtKey(rootIdx, 0);
+				}
+				DirectX::SimpleMath::Vector3 localDelta = ExtractClipRootMotionDelta(
+					m_currentAnimation, rootIdx,
+					m_prevAnimTime, m_hasPrevRootTranslation
+				);
+				LockRootBone(m_currentAnimation->GetLocalBones(), rootIdx, m_initialRootTranslation);
+				m_model->CopyAbsoluteBoneTransforms(m_model->bones.size(), m_currentAnimation->GetLocalBones(), m_drawBones.get());
+				ApplyRootMotionDeltaToWorld(localDelta, deltaTime);
+			}
 		}
+		else
+		{
+			m_rootMotionDelta = DirectX::SimpleMath::Vector3::Zero;
+		}
+
 		if (m_currentAnimation != nullptr)
 		{
 			for (size_t i = 0; i < m_model->bones.size(); i++)
@@ -16835,6 +17370,17 @@ namespace HEIN
 		if (it != m_animations.end())
 		{
 			m_currentAnimation = it->second.get();
+			m_targetAnimation = nullptr;
+			m_isBlending = false;
+			ResetRootMotionTracking();
+			if (m_enableRootMotion && m_currentAnimation)
+			{
+				int rootIdx = GetRootBoneIndex();
+				if (rootIdx >= 0)
+				{
+					m_initialRootTranslation = m_currentAnimation->GetRootTranslationAtKey(rootIdx, 0);
+				}
+			}
 		}
 	}
 
@@ -16845,13 +17391,50 @@ namespace HEIN
 
 		if (it == m_animations.end()) return;
 
+		DX::AnimationSDKMESH* requestedAnim = it->second.get();
+
 		if (m_currentAnimation == nullptr)
 		{
-			m_currentAnimation = it->second.get();
+			m_currentAnimation = requestedAnim;
+			ResetRootMotionTracking();
+			if (m_enableRootMotion && m_currentAnimation)
+			{
+				int rootIdx = GetRootBoneIndex();
+				if (rootIdx >= 0)
+				{
+					m_initialRootTranslation = m_currentAnimation->GetRootTranslationAtKey(rootIdx, 0);
+				}
+			}
 			return;
 		}
 
-		if (m_isBlending && m_targetAnimation == it->second.get()) return;
+		// Prevent crossfading into the exact same animation clip (which would cause double-speed updates)
+		if (m_currentAnimation == requestedAnim)
+		{
+			if (!m_isBlending)
+			{
+				if (forceRestart)
+				{
+					m_currentAnimation->SetAnimTime(0.0f);
+					m_prevAnimTime = 0.0;
+					m_hasPrevRootTranslation = false;
+				}
+				return;
+			}
+			else if (m_targetAnimation == requestedAnim)
+			{
+				return;
+			}
+			else
+			{
+				// Currently blending away, but requested to stay on current: cancel the blend
+				m_targetAnimation = nullptr;
+				m_isBlending = false;
+				return;
+			}
+		}
+
+		if (m_isBlending && m_targetAnimation == requestedAnim) return;
 
 		if (m_model)
 		{
@@ -16878,13 +17461,37 @@ namespace HEIN
 		m_blendDuration = duration;
 
 		m_targetAnimation = it->second.get();
-
 		if (forceRestart)
 		{
 			m_targetAnimation->SetAnimTime(0.0f);
 		}
+
+		m_targetHasPrevRootTranslation = false;
+		m_targetPrevAnimTime = m_targetAnimation->GetAnimTime();
+		if (m_enableRootMotion && m_targetAnimation)
+		{
+			int rootIdx = GetRootBoneIndex();
+			if (rootIdx >= 0)
+			{
+				m_targetInitialRootTranslation = m_targetAnimation->GetRootTranslationAtKey(rootIdx, 0);
+			}
+		}
 	}
 
+	float SkinnedModelComponent::GetAnimationDuration(const std::string& name) const
+	{
+		auto it = m_animations.find(name);
+		if (it != m_animations.end() && it->second)
+		{
+			return static_cast<float>(it->second->GetEndTime());
+		}
+		return 0.0f;
+	}
+
+	bool SkinnedModelComponent::HasAnimation(const std::string& name) const
+	{
+		return m_animations.find(name) != m_animations.end();
+	}
 		
 	void SkinnedModelComponent::OnInspectorGUI(GameContext& gameContext)
 	{
@@ -16894,6 +17501,45 @@ namespace HEIN
 			HWND windowHandle = gameContext.deviceResources.GetWindow();
 			if (!m_lastError.empty()) ImGui::TextColored(ImVec4(1, 0, 0, 1), "%s", m_lastError.c_str());
 			ImGui::Checkbox("Visible", &m_isVisible);
+
+			ImGui::Separator();
+			ImGui::Text("Root Motion Settings:");
+			ImGui::Checkbox("Enable Root Motion", &m_enableRootMotion);
+			ImGui::Checkbox("Extract Vertical (Y) Motion", &m_rootMotionExtractY);
+
+			char rootBoneBuf[128] = { 0 };
+			std::string narrowRootBone(m_rootBoneName.begin(), m_rootBoneName.end());
+			strncpy_s(rootBoneBuf, narrowRootBone.c_str(), sizeof(rootBoneBuf) - 1);
+			if (ImGui::InputText("Root Bone Name", rootBoneBuf, sizeof(rootBoneBuf)))
+			{
+				std::string s(rootBoneBuf);
+				m_rootBoneName = std::wstring(s.begin(), s.end());
+			}
+
+			int rootIndex = GetRootBoneIndex();
+			std::string detectedName = GetBoneName(rootIndex);
+			ImGui::Text("Detected Root Bone: [%d] %s", rootIndex, detectedName.c_str());
+			ImGui::Text("Root Motion Delta: (%.3f, %.3f, %.3f)", m_rootMotionDelta.x, m_rootMotionDelta.y, m_rootMotionDelta.z);
+
+			if (m_owner != nullptr)
+			{
+				std::vector<SkinnedModelComponent*> allModels = m_owner->GetComponents<SkinnedModelComponent>();
+				if (allModels.size() > 1)
+				{
+					ImGui::Text("Attached Skinned Models: %zu (Active: %d)", allModels.size(), m_owner->GetActiveSkinnedModelIndex());
+					if (ImGui::Button("Toggle Active Model (Key: M)"))
+					{
+						m_owner->ToggleSkinnedModel();
+					}
+				}
+				else
+				{
+					if (ImGui::Button("Toggle Root Motion (Key: M)"))
+					{
+						m_owner->ToggleSkinnedModel();
+					}
+				}
+			}
 
 			// Model Path Editor
 			std::string modelPathStr = std::string(m_modelPath.begin(), m_modelPath.end());
@@ -16995,6 +17641,11 @@ nlohmann::json HEIN::SkinnedModelComponent::Serialize()
     std::string narrowTextureDir(m_textureDir.begin(), m_textureDir.end());
     data["ModelPath"] = narrowModelPath;
     data["TextureDir"] = narrowTextureDir;
+    data["EnableRootMotion"] = m_enableRootMotion;
+    data["RootMotionExtractY"] = m_rootMotionExtractY;
+    std::string narrowRootBone(m_rootBoneName.begin(), m_rootBoneName.end());
+    data["RootBoneName"] = narrowRootBone;
+    data["IsVisible"] = m_isVisible;
 
     nlohmann::json animsArray = nlohmann::json::array();
     for (const auto& pair : m_animationPaths)
@@ -17013,6 +17664,14 @@ nlohmann::json HEIN::SkinnedModelComponent::Serialize()
 void HEIN::SkinnedModelComponent::Deserialize(const nlohmann::json& data)
 {
     IComponent::Deserialize(data);
+    if (data.contains("EnableRootMotion")) m_enableRootMotion = data["EnableRootMotion"];
+    if (data.contains("RootMotionExtractY")) m_rootMotionExtractY = data["RootMotionExtractY"];
+    if (data.contains("RootBoneName"))
+    {
+        std::string narrowRootBone = data["RootBoneName"];
+        m_rootBoneName = std::wstring(narrowRootBone.begin(), narrowRootBone.end());
+    }
+    if (data.contains("IsVisible")) m_isVisible = data["IsVisible"];
     if (data.contains("ModelPath"))
     {
         std::string narrowModelPath = data["ModelPath"];
@@ -17128,9 +17787,38 @@ namespace HEIN
 		
 		bool m_needsReload = false;
 
+		// Root Motion Settings & State
+		bool m_enableRootMotion = false;
+		bool m_rootMotionExtractY = false;
+		std::wstring m_rootBoneName = L"";
+		DirectX::SimpleMath::Vector3 m_rootMotionDelta = DirectX::SimpleMath::Vector3::Zero;
+		DirectX::SimpleMath::Vector3 m_initialRootTranslation = DirectX::SimpleMath::Vector3::Zero;
+		bool m_hasPrevRootTranslation = false;
+		double m_prevAnimTime = 0.0;
+
+		// Target animation root motion tracking during crossfades
+		DirectX::SimpleMath::Vector3 m_targetInitialRootTranslation = DirectX::SimpleMath::Vector3::Zero;
+		bool m_targetHasPrevRootTranslation = false;
+		double m_targetPrevAnimTime = 0.0;
+
+		DirectX::SimpleMath::Vector3 ExtractClipRootMotionDelta(
+			DX::AnimationSDKMESH* anim,
+			int rootIdx,
+			double& inOutPrevTime,
+			bool& inOutHasPrev
+		);
+
+		void LockRootBone(
+			DirectX::XMMATRIX* localBones,
+			int rootIdx,
+			const DirectX::SimpleMath::Vector3& initialPos
+		);
+
+		void ApplyRootMotionDeltaToWorld(const DirectX::SimpleMath::Vector3& localDelta, float deltaTime);
+
 		Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader> m_pixelShader;
-		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout; // For CustomSkinned.hlsl
+		Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout; // For CustomSkinned_VS.hlsl
 		std::map<void*, Microsoft::WRL::ComPtr<ID3D11InputLayout>> m_staticInputLayouts; // For non-skinned parts (uses void* to avoid missing includes)
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_cbMatrices;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_cbLighting;
@@ -17192,9 +17880,37 @@ namespace HEIN
 		void RemoveAnimation(const std::string& name);
 		void ChangeAnimation(const std::string& name);
 		void CrossfadeAnimation(const std::string& name, float duration, bool forceRestart = false);
+		float GetAnimationDuration(const std::string& name) const;
+		bool HasAnimation(const std::string& name) const;
 
 		void SetVisible(bool visible) { m_isVisible = visible; }
 		bool IsVisible() const { return m_isVisible; }
+
+		// Root Motion API
+		bool IsRootMotionEnabled() const { return m_enableRootMotion; }
+		void SetEnableRootMotion(bool enable)
+		{
+			m_enableRootMotion = enable;
+			ResetRootMotionTracking();
+		}
+
+		bool IsRootMotionExtractY() const { return m_rootMotionExtractY; }
+		void SetRootMotionExtractY(bool extractY) { m_rootMotionExtractY = extractY; }
+
+		const std::wstring& GetRootBoneName() const { return m_rootBoneName; }
+		void SetRootBoneName(const std::wstring& name) { m_rootBoneName = name; }
+
+		DirectX::SimpleMath::Vector3 GetRootMotionDelta() const { return m_rootMotionDelta; }
+		int GetRootBoneIndex() const;
+
+		void ResetRootMotionTracking()
+		{
+			m_hasPrevRootTranslation = false;
+			m_targetHasPrevRootTranslation = false;
+			m_prevAnimTime = 0.0;
+			m_targetPrevAnimTime = 0.0;
+			m_rootMotionDelta = DirectX::SimpleMath::Vector3::Zero;
+		}
 
 		const DirectX::SimpleMath::Matrix* GetCurrentLocalBones() const
 		{
@@ -18025,13 +18741,16 @@ HEIN::Socket* HEIN::SocketComponent::GetSocket(const std::wstring& socketName)
 
 DirectX::SimpleMath::Matrix HEIN::SocketComponent::GetSocketWorldMatrix(const std::wstring& socketName)
 {
-    if (m_model == nullptr && m_staticModel == nullptr)
+    // Always bind to the owner's currently active skinned model (for switching models)
+    SkinnedModelComponent* activeModel = m_owner ? m_owner->GetComponent<SkinnedModelComponent>() : m_model;
+    if (!activeModel) activeModel = m_model;
+
+    if (activeModel == nullptr && m_staticModel == nullptr && m_owner != nullptr)
     {
-        m_model = m_owner->GetComponent<SkinnedModelComponent>();
-        if (!m_model) m_staticModel = m_owner->GetComponent<StaticModelComponent>();
+        m_staticModel = m_owner->GetComponent<StaticModelComponent>();
     }
 
-    if (!HasSocket(socketName) || (m_model == nullptr && m_staticModel == nullptr) || m_transform == nullptr)
+    if (!HasSocket(socketName) || (activeModel == nullptr && m_staticModel == nullptr) || m_transform == nullptr)
     {
         if (m_transform != nullptr)
         {
@@ -18043,8 +18762,8 @@ DirectX::SimpleMath::Matrix HEIN::SocketComponent::GetSocketWorldMatrix(const st
     const Socket& socket = m_sockets[socketName];
 
     DirectX::SimpleMath::Matrix ownerWorld = m_transform->GetWorldMatrix();
-    DirectX::SimpleMath::Matrix boneWorld = m_model ? 
-        m_model->GetBoneWorldMatrix(socket.boneName.c_str(), ownerWorld) :
+    DirectX::SimpleMath::Matrix boneWorld = activeModel ? 
+        activeModel->GetBoneWorldMatrix(socket.boneName.c_str(), ownerWorld) :
         (m_staticModel ? m_staticModel->GetBoneWorldMatrix(socket.boneName.c_str(), ownerWorld) : ownerWorld);
 
     DirectX::SimpleMath::Vector3 extractedScale;
@@ -19227,6 +19946,7 @@ FILE: External\Engine\Components\TerrainComponent.cpp
 #include <ImGui/imgui_stdlib.h>
 #include <cstdio>
 #include <d3dcompiler.h>
+#include "Effect/ReadData.h"
 #include "Camera/CameraController.h"
 
 HEIN::TerrainComponent::TerrainComponent(Actor* owner)
@@ -19346,27 +20066,50 @@ bool HEIN::TerrainComponent::Initialize(
 		}
 	}
 
-	// Compile and load Custom shaders
+	// Load precompiled CSO shaders if available, falling back to dynamic compilation
+	std::vector<uint8_t> vsData;
+	std::vector<uint8_t> psData;
+	bool loadedCso = false;
+	try
+	{
+		vsData = DX::ReadData(L"Resources/Shaders/Terrain_VS.cso");
+		psData = DX::ReadData(L"Resources/Shaders/Terrain_PS.cso");
+		loadedCso = true;
+	}
+	catch (...)
+	{
+		try
+		{
+			vsData = DX::ReadData(L"Terrain_VS.cso");
+			psData = DX::ReadData(L"Terrain_PS.cso");
+			loadedCso = true;
+		}
+		catch (...)
+		{
+			loadedCso = false;
+		}
+	}
+
 	Microsoft::WRL::ComPtr<ID3DBlob> vertexShaderBlob;
 	Microsoft::WRL::ComPtr<ID3DBlob> pixelShaderBlob;
 	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+	const void* vsBytecode = nullptr;
+	size_t vsBytecodeSize = 0;
+	const void* psBytecode = nullptr;
+	size_t psBytecodeSize = 0;
 
-	// Compile Vertex Shader
-	HRESULT hr = D3DCompileFromFile(
-		L"../External/Engine/Shaders/Terrain_VS.hlsl",
-		nullptr,
-		D3D_COMPILE_STANDARD_FILE_INCLUDE,
-		"main",
-		"vs_5_0",
-		D3DCOMPILE_ENABLE_STRICTNESS,
-		0,
-		&vertexShaderBlob,
-		&errorBlob
-	);
-	if (FAILED(hr))
+	if (loadedCso)
 	{
-		hr = D3DCompileFromFile(
-			L"External/Engine/Shaders/Terrain_VS.hlsl",
+		vsBytecode = vsData.data();
+		vsBytecodeSize = vsData.size();
+		psBytecode = psData.data();
+		psBytecodeSize = psData.size();
+	}
+	else
+	{
+		// Compile Vertex Shader
+		HRESULT hr = D3DCompileFromFile(
+			L"../External/Engine/Shaders/Terrain_VS.hlsl",
 			nullptr,
 			D3D_COMPILE_STANDARD_FILE_INCLUDE,
 			"main",
@@ -19376,29 +20119,29 @@ bool HEIN::TerrainComponent::Initialize(
 			&vertexShaderBlob,
 			&errorBlob
 		);
-	}
-	if (FAILED(hr))
-	{
-		if (errorBlob) OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-		return false;
-	}
+		if (FAILED(hr))
+		{
+			hr = D3DCompileFromFile(
+				L"External/Engine/Shaders/Terrain_VS.hlsl",
+				nullptr,
+				D3D_COMPILE_STANDARD_FILE_INCLUDE,
+				"main",
+				"vs_5_0",
+				D3DCOMPILE_ENABLE_STRICTNESS,
+				0,
+				&vertexShaderBlob,
+				&errorBlob
+			);
+		}
+		if (FAILED(hr))
+		{
+			if (errorBlob) OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+			return false;
+		}
 
-	// Compile Pixel Shader
-	hr = D3DCompileFromFile(
-		L"../External/Engine/Shaders/Terrain_PS.hlsl",
-		nullptr,
-		D3D_COMPILE_STANDARD_FILE_INCLUDE,
-		"main",
-		"ps_5_0",
-		D3DCOMPILE_ENABLE_STRICTNESS,
-		0,
-		&pixelShaderBlob,
-		&errorBlob
-	);
-	if (FAILED(hr))
-	{
+		// Compile Pixel Shader
 		hr = D3DCompileFromFile(
-			L"External/Engine/Shaders/Terrain_PS.hlsl",
+			L"../External/Engine/Shaders/Terrain_PS.hlsl",
 			nullptr,
 			D3D_COMPILE_STANDARD_FILE_INCLUDE,
 			"main",
@@ -19408,22 +20151,41 @@ bool HEIN::TerrainComponent::Initialize(
 			&pixelShaderBlob,
 			&errorBlob
 		);
-	}
-	if (FAILED(hr))
-	{
-		if (errorBlob) OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-		return false;
+		if (FAILED(hr))
+		{
+			hr = D3DCompileFromFile(
+				L"External/Engine/Shaders/Terrain_PS.hlsl",
+				nullptr,
+				D3D_COMPILE_STANDARD_FILE_INCLUDE,
+				"main",
+				"ps_5_0",
+				D3DCOMPILE_ENABLE_STRICTNESS,
+				0,
+				&pixelShaderBlob,
+				&errorBlob
+			);
+		}
+		if (FAILED(hr))
+		{
+			if (errorBlob) OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+			return false;
+		}
+
+		vsBytecode = vertexShaderBlob->GetBufferPointer();
+		vsBytecodeSize = vertexShaderBlob->GetBufferSize();
+		psBytecode = pixelShaderBlob->GetBufferPointer();
+		psBytecodeSize = pixelShaderBlob->GetBufferSize();
 	}
 
 	device->CreateVertexShader(
-		vertexShaderBlob->GetBufferPointer(),
-		vertexShaderBlob->GetBufferSize(),
+		vsBytecode,
+		vsBytecodeSize,
 		nullptr,
 		m_vertexShader.ReleaseAndGetAddressOf()
 	);
 	device->CreatePixelShader(
-		pixelShaderBlob->GetBufferPointer(),
-		pixelShaderBlob->GetBufferSize(),
+		psBytecode,
+		psBytecodeSize,
 		nullptr,
 		m_pixelShader.ReleaseAndGetAddressOf()
 	);
@@ -19444,8 +20206,8 @@ bool HEIN::TerrainComponent::Initialize(
 		device->CreateInputLayout(
 			polygonLayout,
 			numElements,
-			vertexShaderBlob->GetBufferPointer(),
-			vertexShaderBlob->GetBufferSize(),
+			vsBytecode,
+			vsBytecodeSize,
 			m_inputLayout.ReleaseAndGetAddressOf()
 		)
 	);
@@ -20885,6 +21647,12 @@ void HEIN::TwoBoneLinkComponent::Start()
 
 void HEIN::TwoBoneLinkComponent::LateUpdate(float deltaTime)
 {
+	if (m_owner != nullptr)
+	{
+		SkinnedModelComponent* activeModel = m_owner->GetComponent<SkinnedModelComponent>();
+		if (activeModel != nullptr) m_targetModel = activeModel;
+	}
+
 	if (m_targetModel == nullptr && m_targetStaticModel == nullptr)
 	{
 		m_targetModel = m_owner->GetComponent<SkinnedModelComponent>();
@@ -24885,6 +25653,7 @@ namespace HEIN
 				for (const std::pair<const HEIN::ActorID, std::unique_ptr<HEIN::Actor>>& pair : actorManager.GetAllActors())
 				{
 					HEIN::Actor* actor = pair.second.get();
+					if (!actor || !actor->IsVisible()) continue;
 					float actorClosestHit = FLT_MAX;
 					bool hit = false;
 
@@ -25066,7 +25835,31 @@ namespace HEIN
 
 		ImGui::PushID(static_cast<int>(actor->GetID()));
 
+		bool isVisible = actor->IsVisible();
+		ImGui::PushStyleColor(ImGuiCol_Button, isVisible ? ImVec4(0.2f, 0.45f, 0.2f, 0.6f) : ImVec4(0.35f, 0.35f, 0.35f, 0.6f));
+		ImGui::PushStyleColor(ImGuiCol_Text, isVisible ? ImVec4(0.9f, 0.9f, 0.9f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 0.7f));
+		if (ImGui::SmallButton(isVisible ? "V" : "-"))
+		{
+			actor->SetVisible(!isVisible);
+		}
+		ImGui::PopStyleColor(2);
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip(isVisible ? "Visible (Click to hide)" : "Hidden (Click to show)");
+		}
+		ImGui::SameLine();
+
+		if (!actor->IsVisible())
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.55f, 0.55f, 0.55f, 0.7f));
+		}
+
 		bool nodeOpen = ImGui::TreeNodeEx((void*)(intptr_t)actor->GetID(), nodeFlags, "%s", narrowTag.c_str());
+
+		if (!actor->IsVisible())
+		{
+			ImGui::PopStyleColor();
+		}
 
 		// Left-click to select
 		if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && !ImGui::IsItemToggledOpen())
@@ -25120,6 +25913,11 @@ namespace HEIN
 			}
 
 			ImGui::Separator();
+
+			if (ImGui::MenuItem(actor->IsVisible() ? "Hide Actor" : "Show Actor"))
+			{
+				actor->SetVisible(!actor->IsVisible());
+			}
 
 			if (ImGui::MenuItem("Duplicate Actor", "Ctrl+D"))
 			{
@@ -25235,6 +26033,18 @@ namespace HEIN
 			ImGui::PopStyleColor(3);
 			ImGui::Separator();
 
+			bool isVis = m_selectedActor->IsVisible();
+			if (ImGui::Checkbox("Visible", &isVis))
+			{
+				m_selectedActor->SetVisible(isVis);
+			}
+			ImGui::SameLine();
+			bool isAct = m_selectedActor->IsActive();
+			if (ImGui::Checkbox("Active", &isAct))
+			{
+				m_selectedActor->SetActive(isAct);
+			}
+
 			std::wstring wtag = m_selectedActor ? m_selectedActor->GetTag() : L"";
 			std::string narrowTag(wtag.begin(), wtag.end());
 
@@ -25301,7 +26111,6 @@ namespace HEIN
 
 		ImGuiWindowFlags toolbarFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
-		
 		float hierarchyWidth = screenW * 0.12f;
 		float toolbarWidth = inspectorPos.x - hierarchyWidth;
 		if (toolbarWidth < 10.0f) toolbarWidth = 10.0f; // Ensure a minimum width
@@ -26564,6 +27373,7 @@ FILE: External\Engine\Entities\Actor.cpp
 #include "Actor.h"
 #include "Components/IComponent.h"
 #include <Components/TransformComponent.h>
+#include <Components/SkinnedModelComponent.h>
 #include <Factory/ComponentFactory.h>
 #include "ActorManager.h"
 #include <ImGui/imgui.h>
@@ -26578,6 +27388,8 @@ HEIN::Actor::Actor(ActorID id, const std::wstring& tag)
 
 void HEIN::Actor::Update(float deltaTime)
 {
+	if (!m_isActive) return;
+
 	// Route update tick to all attached components sequentially
 	for (auto& comp : m_components)
 	{
@@ -26587,6 +27399,8 @@ void HEIN::Actor::Update(float deltaTime)
 
 void HEIN::Actor::LateUpdate(float deltaTime)
 {
+	if (!m_isActive) return;
+
 	for (auto& comp : m_components)
 	{
 		comp->LateUpdate(deltaTime);
@@ -26597,6 +27411,8 @@ void HEIN::Actor::LateUpdate(float deltaTime)
 
 void HEIN::Actor::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matrix& view, const DirectX::SimpleMath::Matrix& proj)
 {
+	if (!m_isVisible || !m_isActive) return;
+
 	TransformComponent* transform = GetComponent<TransformComponent>();
 	if (!transform) return;
 
@@ -26613,6 +27429,8 @@ void HEIN::Actor::Draw(GameContext& gameContext, const DirectX::SimpleMath::Matr
 
 void HEIN::Actor::Draw2D(GameContext& gameContext)
 {
+	if (!m_isVisible || !m_isActive) return;
+
 	for (auto& component : m_components)
 	{
 		if (component->Is2D())
@@ -26634,6 +27452,19 @@ void HEIN::Actor::Start()
 void HEIN::Actor::DrawInspector(GameContext& gameContext)
 {
 	HEIN::IComponent* compToRemove = nullptr;
+
+	std::vector<HEIN::SkinnedModelComponent*> skinnedModels = GetComponents<HEIN::SkinnedModelComponent>();
+	if (skinnedModels.size() > 1)
+	{
+		ImGui::Separator();
+		ImGui::Text("Skinned Model Switcher (Key: M)");
+		ImGui::Text("Active Model: [%d / %d]", m_activeSkinnedModelIndex + 1, static_cast<int>(skinnedModels.size()));
+		if (ImGui::Button("Toggle Active Model"))
+		{
+			ToggleSkinnedModel();
+		}
+		ImGui::Separator();
+	}
 
 	for (auto& comp : m_components)
 	{
@@ -26665,6 +27496,8 @@ nlohmann::json HEIN::Actor::Serialize(ActorManager* manager)
 
 	std::string narrowTag(m_tag.begin(), m_tag.end());
 	actorData["Name"] = narrowTag;
+	actorData["IsVisible"] = m_isVisible;
+	actorData["IsActive"] = m_isActive;
 
 	nlohmann::json componentArray = nlohmann::json::array();
 
@@ -26711,25 +27544,34 @@ void HEIN::Actor::Deserialize(const nlohmann::json& actorData, ActorManager* man
 		m_tag = std::wstring(loadedName.begin(), loadedName.end());
 	}
 
+	if (actorData.contains("IsVisible"))
+	{
+		m_isVisible = actorData["IsVisible"].get<bool>();
+	}
+
+	if (actorData.contains("IsActive"))
+	{
+		m_isActive = actorData["IsActive"].get<bool>();
+	}
+
 	if (actorData.contains("Components"))
 	{
-		size_t existingCompIndex = 0;
+		std::vector<bool> matched(m_components.size(), false);
 		for (const auto& compData : actorData["Components"])
 		{
 			std::string compType = compData["Type"];
 
 			HEIN::IComponent* targetComp = nullptr;
 
-			// Sequential matching allows multiple components of the same type to map correctly
-			while (existingCompIndex < m_components.size())
+			// Find first unmatched component of matching type
+			for (size_t i = 0; i < m_components.size(); ++i)
 			{
-				if (m_components[existingCompIndex]->GetComponentName() == compType)
+				if (!matched[i] && m_components[i]->GetComponentName() == compType)
 				{
-					targetComp = m_components[existingCompIndex].get();
-					existingCompIndex++; // Advance for next component match
+					targetComp = m_components[i].get();
+					matched[i] = true;
 					break;
 				}
-				existingCompIndex++;
 			}
 
 			if (targetComp != nullptr)
@@ -26745,6 +27587,7 @@ void HEIN::Actor::Deserialize(const nlohmann::json& actorData, ActorManager* man
 
 				if (newComp != nullptr)
 				{
+					matched.push_back(true);
 					if (compData.contains("Data") && !compData["Data"].is_null())
 					{
 						newComp->Deserialize(compData["Data"]);
@@ -26788,6 +27631,83 @@ void HEIN::Actor::InitializeAfterDeserialize(GameContext& gameContext)
 }
 
 
+HEIN::SkinnedModelComponent* HEIN::Actor::GetActiveSkinnedModel()
+{
+	std::vector<HEIN::SkinnedModelComponent*> models = GetComponents<HEIN::SkinnedModelComponent>();
+	if (models.empty()) return nullptr;
+
+	// Check if any model is explicitly marked visible
+	for (size_t i = 0; i < models.size(); ++i)
+	{
+		if (models[i] && models[i]->IsVisible())
+		{
+			m_activeSkinnedModelIndex = static_cast<int>(i);
+			return models[i];
+		}
+	}
+
+	if (m_activeSkinnedModelIndex >= 0 && m_activeSkinnedModelIndex < static_cast<int>(models.size()))
+	{
+		return models[m_activeSkinnedModelIndex];
+	}
+	return models[0];
+}
+
+void HEIN::Actor::SetActiveSkinnedModelIndex(int index)
+{
+	std::vector<HEIN::SkinnedModelComponent*> models = GetComponents<HEIN::SkinnedModelComponent>();
+	if (models.empty() || index < 0 || index >= static_cast<int>(models.size())) return;
+
+	m_activeSkinnedModelIndex = index;
+	for (int i = 0; i < static_cast<int>(models.size()); ++i)
+	{
+		if (models[i])
+		{
+			models[i]->SetVisible(i == index);
+		}
+	}
+}
+
+void HEIN::Actor::ToggleSkinnedModel()
+{
+	std::vector<HEIN::SkinnedModelComponent*> models = GetComponents<HEIN::SkinnedModelComponent>();
+	if (models.empty()) return;
+
+	if (models.size() == 1)
+	{
+		// Single model: toggle root motion directly
+		bool current = models[0]->IsRootMotionEnabled();
+		models[0]->SetEnableRootMotion(!current);
+		char buf[128];
+		sprintf_s(buf, "[ModelToggle] Single model: Root Motion toggled to %s\n", !current ? "ENABLED" : "DISABLED");
+		OutputDebugStringA(buf);
+		return;
+	}
+
+	// Multiple models: toggle active model index
+	m_activeSkinnedModelIndex = (m_activeSkinnedModelIndex + 1) % static_cast<int>(models.size());
+	for (int i = 0; i < static_cast<int>(models.size()); ++i)
+	{
+		if (models[i])
+		{
+			models[i]->SetVisible(i == m_activeSkinnedModelIndex);
+		}
+	}
+
+	char buf[128];
+	sprintf_s(buf, "[ModelToggle] Switched to SkinnedModel [%d] (Root Motion: %s)\n",
+		m_activeSkinnedModelIndex,
+		models[m_activeSkinnedModelIndex]->IsRootMotionEnabled() ? "ENABLED" : "DISABLED");
+	OutputDebugStringA(buf);
+}
+
+template <>
+HEIN::SkinnedModelComponent* HEIN::Actor::GetComponent<HEIN::SkinnedModelComponent>()
+{
+	return GetActiveSkinnedModel();
+}
+
+
 ================================================================================
 FILE: External\Engine\Entities\Actor.h
 ================================================================================
@@ -26820,6 +27740,7 @@ namespace HEIN
 
 	class IComponent;
 	class ActorManager;
+	class SkinnedModelComponent;
 
 	/// <summary>
 	/// Represents an entity in the game world using a handle-based architecture.
@@ -26835,6 +27756,13 @@ namespace HEIN
 		ActorID m_ownerID = INVALID_ACTOR_ID;
 		ActorID m_parentID = INVALID_ACTOR_ID;
 		std::vector<ActorID> m_childrensID;
+
+		// Active SkinnedModel tracking for toggling between models (e.g. root motion vs non-root motion)
+		int m_activeSkinnedModelIndex = 0;
+
+		// Unity-style Visibility and Active state
+		bool m_isVisible = true;
+		bool m_isActive = true;
 
 		// Memory safe Array of Components
 		std::vector<std::unique_ptr<HEIN::IComponent>> m_components;
@@ -26878,6 +27806,12 @@ namespace HEIN
 
 		void SetActorType(ActorType type) { m_type = type; }
 		ActorType GetActorType() const { return m_type; }
+
+		// Unity-style Visibility & Active controls
+		bool IsVisible() const { return m_isVisible; }
+		void SetVisible(bool visible) { m_isVisible = visible; }
+		bool IsActive() const { return m_isActive; }
+		void SetActive(bool active) { m_isActive = active; }
 
 		/// <summary>
 		/// Adds a child to this actor's scene graph hierarchy.
@@ -26948,7 +27882,17 @@ namespace HEIN
 			return result;
 		}
 
+		// Skinned Model Management (Support switching between multiple models, e.g. with and without root motion)
+		HEIN::SkinnedModelComponent* GetActiveSkinnedModel();
+		int GetActiveSkinnedModelIndex() const { return m_activeSkinnedModelIndex; }
+		void SetActiveSkinnedModelIndex(int index);
+		void ToggleSkinnedModel();
+
 	};
+
+	// Explicit specialization so GetComponent<SkinnedModelComponent>() returns the active / visible model
+	template <>
+	HEIN::SkinnedModelComponent* Actor::GetComponent<HEIN::SkinnedModelComponent>();
 
 }
 
@@ -27071,6 +28015,8 @@ void HEIN::ActorManager::DrawAllShadows(GameContext& gameContext, const DirectX:
 {
     for (auto& pair : m_actors)
     {
+        if (!pair.second->IsVisible() || !pair.second->IsActive()) continue;
+
         auto components = pair.second->GetComponents<IComponent>();
         for (auto* comp : components)
         {
@@ -28341,7 +29287,9 @@ namespace HEIN
 			PLAYER_EXIT_STRAFE,
 
 			SET_WEAPON_ACTIVE,
-			SET_WEAPON_INACTIVE
+			SET_WEAPON_INACTIVE,
+
+			PLAYER_TOGGLE_MODEL
 		};
 	};
 
@@ -28703,110 +29651,23 @@ namespace HEIN
 }
 
 ================================================================================
-FILE: External\Engine\Shaders\CustomSkinned.hlsl
+FILE: External\Engine\Shaders\CustomSkinned_PS.hlsl
 ================================================================================
 
-// CustomSkinned.hlsl
+//--------------------------------------------------------------------------------------
+// CustomSkinned_PS.hlsl
+// Pixel Shader for Skinned Models with Lighting, Fog, and Shadow Mapping
+//--------------------------------------------------------------------------------------
 
-// ==============================================================================
-// CONSTANT BUFFERS (Data from C++)
-// ==============================================================================
-cbuffer cbMatrices : register(b0)
-{
-    matrix WorldViewProj;
-    matrix World;
-    matrix LightViewProj; // Matrix from the Light's perspective for Shadows
-    matrix BoneTransforms[256]; // Animation bone matrices
-};
-
-cbuffer cbLighting : register(b1)
-{
-    float3 LightPos;
-    int LightType; // 0 = Directional, 1 = Point, 2 = Spot
-    
-    float3 LightDir;
-    float LightIntensity;
-    
-    float4 LightColor;
-    
-    float LightRange;
-    float LightSpotAngle; // Passed in radians
-    float FogStart;
-    float FogEnd;
-    
-    float4 FogColor;
-    
-    float3 CameraPos;
-    float FogPadding;
-};
+#include "CustomSkinned_Common.hlsli"
 
 // ==============================================================================
 // TEXTURES & SAMPLERS
 // ==============================================================================
-Texture2D DiffuseMap : register(t0); // The model's texture
-Texture2D ShadowMap : register(t4); // The generated shadow map
+Texture2D DiffuseMap : register(t0);               // The model's texture
+Texture2D ShadowMap  : register(t4);               // The generated shadow map
 SamplerState LinearSampler : register(s0);
 SamplerComparisonState ShadowSampler : register(s1); // Sampler for shadow filtering
-
-// ==============================================================================
-// STRUCTURES
-// ==============================================================================
-struct VSInput
-{
-    float3 Pos : POSITION;
-    float3 Normal : NORMAL;
-    float2 TexCoord : TEXCOORD0;
-    uint4 BoneIndices : BLENDINDICES0;
-    float4 BoneWeights : BLENDWEIGHT0;
-};
-
-struct VSOutput
-{
-    float4 Pos : SV_POSITION;
-    float3 WorldPos : TEXCOORD2;
-    float3 Normal : TEXCOORD3;
-    float2 TexCoord : TEXCOORD0;
-    float4 LightSpacePos : TEXCOORD1; // Position from the Light's point of view
-};
-
-// ==============================================================================
-// VERTEX SHADER
-// ==============================================================================
-VSOutput VSMain(VSInput input)
-{
-    VSOutput output;
-
-    // Normalize weights just in case the model exporter left them unnormalized
-    float totalWeight = input.BoneWeights.x + input.BoneWeights.y + input.BoneWeights.z + input.BoneWeights.w;
-    if (totalWeight > 0.0f)
-    {
-        input.BoneWeights /= totalWeight;
-    }
-
-    // Skinning Calculation
-    matrix skinTransform =
-        BoneTransforms[input.BoneIndices.x] * input.BoneWeights.x +
-        BoneTransforms[input.BoneIndices.y] * input.BoneWeights.y +
-        BoneTransforms[input.BoneIndices.z] * input.BoneWeights.z +
-        BoneTransforms[input.BoneIndices.w] * input.BoneWeights.w;
-
-    // Apply Skinning to Local Position and Normal
-    float4 localPos = mul(float4(input.Pos, 1.0f), skinTransform);
-    float3 localNormal = mul(input.Normal, (float3x3) skinTransform);
-
-    // Transform to Screen Space for Camera
-    output.WorldPos = mul(localPos, World).xyz;
-    output.Pos = mul(localPos, WorldViewProj);
-    
-    // Pass data to Pixel Shader
-    output.Normal = normalize(mul(localNormal, (float3x3) World));
-    output.TexCoord = input.TexCoord;
-    
-    // Transform to Light Space for Shadow Calculation
-    output.LightSpacePos = mul(localPos, LightViewProj);
-
-    return output;
-}
 
 // ==============================================================================
 // SHADOW CALCULATION
@@ -28851,7 +29712,7 @@ float CalculateShadow(float4 lightSpacePos)
 // ==============================================================================
 // PIXEL SHADER
 // ==============================================================================
-float4 PSMain(VSOutput input) : SV_TARGET
+float4 main(VSOutput input) : SV_TARGET
 {
     float4 baseColor = DiffuseMap.Sample(LinearSampler, input.TexCoord);
     
@@ -28910,6 +29771,73 @@ float4 PSMain(VSOutput input) : SV_TARGET
 
     return float4(finalColor, baseColor.a);
 }
+
+// Backwards-compatible alias for entry point PSMain
+float4 PSMain(VSOutput input) : SV_TARGET
+{
+    return main(input);
+}
+
+
+================================================================================
+FILE: External\Engine\Shaders\CustomSkinned_VS.hlsl
+================================================================================
+
+//--------------------------------------------------------------------------------------
+// CustomSkinned_VS.hlsl
+// Vertex Shader for Skinned Models with Skeletal Animation
+//--------------------------------------------------------------------------------------
+
+#include "CustomSkinned_Common.hlsli"
+
+// ==============================================================================
+// VERTEX SHADER
+// ==============================================================================
+VSOutput main(VSInput input)
+{
+    VSOutput output;
+
+    // Normalize weights just in case the model exporter left them unnormalized
+    float totalWeight = input.BoneWeights.x + input.BoneWeights.y + input.BoneWeights.z + input.BoneWeights.w;
+    if (totalWeight > 0.0f)
+    {
+        input.BoneWeights /= totalWeight;
+    }
+
+    // Apply Skinning directly to Position and Normal
+    float4 inPos = float4(input.Pos, 1.0f);
+    float4 localPos =
+        mul(inPos, BoneTransforms[input.BoneIndices.x]) * input.BoneWeights.x +
+        mul(inPos, BoneTransforms[input.BoneIndices.y]) * input.BoneWeights.y +
+        mul(inPos, BoneTransforms[input.BoneIndices.z]) * input.BoneWeights.z +
+        mul(inPos, BoneTransforms[input.BoneIndices.w]) * input.BoneWeights.w;
+
+    float3 localNormal =
+        mul(input.Normal, (float3x3)BoneTransforms[input.BoneIndices.x]) * input.BoneWeights.x +
+        mul(input.Normal, (float3x3)BoneTransforms[input.BoneIndices.y]) * input.BoneWeights.y +
+        mul(input.Normal, (float3x3)BoneTransforms[input.BoneIndices.z]) * input.BoneWeights.z +
+        mul(input.Normal, (float3x3)BoneTransforms[input.BoneIndices.w]) * input.BoneWeights.w;
+
+    // Transform to Screen Space for Camera
+    output.WorldPos = mul(localPos, World).xyz;
+    output.Pos = mul(localPos, WorldViewProj);
+    
+    // Pass data to Pixel Shader
+    output.Normal = normalize(mul(localNormal, (float3x3) World));
+    output.TexCoord = input.TexCoord;
+    
+    // Transform to Light Space for Shadow Calculation
+    output.LightSpacePos = mul(localPos, LightViewProj);
+
+    return output;
+}
+
+// Backwards-compatible alias for entry point VSMain
+VSOutput VSMain(VSInput input)
+{
+    return main(input);
+}
+
 
 ================================================================================
 FILE: External\Engine\Shaders\Foliage_PS.hlsl

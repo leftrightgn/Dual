@@ -17,9 +17,6 @@
     <ClCompile Include="Factory\ActorFactory.cpp">
       <Filter>Factory</Filter>
     </ClCompile>
-    <ClCompile Include="Components\BehaviourTreeComponent.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
     <ClCompile Include="BehaviourTree\BTAttackNode.cpp">
       <Filter>BehaviourTree</Filter>
     </ClCompile>
@@ -47,7 +44,11 @@
     <ClCompile Include="States\CombatStates.cpp">
       <Filter>States</Filter>
     </ClCompile>
-    <ClCompile Include="BlackBoard\CombatBlackBoard.cpp" />
+    <ClCompile Include="Components\BehaviourTreeComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTCheckHealthNode.cpp" />
+    <ClCompile Include="BehaviourTree\BTCheckTargetStanceNode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -59,9 +60,6 @@
     </ClInclude>
     <ClInclude Include="Factory\ActorFactory.h">
       <Filter>Factory</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\BehaviourTreeComponent.h">
-      <Filter>BehaviourTree</Filter>
     </ClInclude>
     <ClInclude Include="BehaviourTree\BTAttackNode.h">
       <Filter>BehaviourTree</Filter>
@@ -95,6 +93,15 @@
     </ClInclude>
     <ClInclude Include="States\CombatStates.h">
       <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\BehaviourTreeComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTCheckHealthNode.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTCheckTargetStanceNode.h">
+      <Filter>BehaviourTree</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

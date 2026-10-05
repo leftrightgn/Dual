@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CombatStateMachineComponent.h"
 #include <States/ICombatState.h>
+#include <States/CombatStates.h>
 #include "../../../External/Engine/Entities/Actor.h"
 #include "../../External/Engine/Components/ColliderComponent/ColliderComponent.h"
 #include "../../External/Engine/Message/Messenger.h" 
@@ -31,13 +32,22 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 
     Messenger::GetInstance()->Notify(m_owner->GetID(), IsAttacking() ? Message::SET_WEAPON_ACTIVE : Message::SET_WEAPON_INACTIVE);
 
-    HEIN::HealthComponent* health = m_owner->GetComponent<HEIN::HealthComponent>();
-    if (health) health->SetGameplayInvincible(IsBlocking());
-
     HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
     if (blackboard)
     {
-        if (!IsBlocking() && blackboard->currentBlockStamina < blackboard->maxBlockStamina)
+        if (IsBlocking())
+        {
+            if (blackboard->currentBlockStamina > 0.0f)
+            {
+                blackboard->currentBlockStamina -= 0.35f * deltaTime;
+                if (blackboard->currentBlockStamina <= 0.0f)
+                {
+                    blackboard->currentBlockStamina = 0.0f;
+                    blackboard->isBlockBroken = true;
+                }
+            }
+        }
+        else if (blackboard->currentBlockStamina < blackboard->maxBlockStamina)
         {
             blackboard->currentBlockStamina += blackboard->blockRecoveryRate * deltaTime;
             if (blackboard->currentBlockStamina >= blackboard->maxBlockStamina)
@@ -106,7 +116,7 @@ void HEIN::CombatStateMachineComponent::ApplyPendingState()
 void HEIN::CombatStateMachineComponent::AddState(const StateConfig& config)
 {
     m_stateConfigs[config.stateName] = config;
-    m_states[config.stateName] = CreateCombatStateFromConfig(config);
+    m_states[config.stateName] = std::make_unique<UniversalCombatState>(config);
 
     if (m_currentState == nullptr && m_pendingState == nullptr)
     {
@@ -135,7 +145,7 @@ void HEIN::CombatStateMachineComponent::RebuildAllStates()
 
     for (const auto& [name, config] : m_stateConfigs)
     {
-        m_states[name] = CreateCombatStateFromConfig(config);
+        m_states[name] = std::make_unique<UniversalCombatState>(config);
     }
 
     if (!m_defaultStateName.empty() && m_states.contains(m_defaultStateName))
@@ -156,6 +166,11 @@ void HEIN::CombatStateMachineComponent::OnMessageAccepted(Message::MessageID mes
         {
             HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
             if (blackboard && blackboard->dodgeCooldownTimer > 0.0f) return;
+        }
+        if (messageID == Message::PLAYER_ACTION_BLOCK)
+        {
+            HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
+            if (blackboard && (blackboard->isBlockBroken || blackboard->currentBlockStamina <= 0.0f)) return;
         }
 
         m_messageBuffer.clear();
@@ -295,10 +310,29 @@ void HEIN::CombatStateMachineComponent::Deserialize(const nlohmann::json& data)
             if (stateJson.contains("turnSpeed")) cfg.turnSpeed = stateJson["turnSpeed"].get<float>();
             if (stateJson.contains("isLooping")) cfg.isLooping = stateJson["isLooping"].get<bool>();
             if (stateJson.contains("isAttack")) cfg.isAttack = stateJson["isAttack"].get<bool>();
+            if (cfg.stateName == "OneHand" || cfg.stateType == "OneHand")
+            {
+                cfg.isAttack = true;
+            }
             if (stateJson.contains("isBlock")) cfg.isBlock = stateJson["isBlock"].get<bool>();
+            if (cfg.stateName == "Block" || cfg.stateType == "Block")
+            {
+                cfg.isBlock = true;
+                cfg.isLooping = true;
+                cfg.moveSpeed = 0.0f;
+            }
             if (stateJson.contains("lockMovementDirection")) cfg.lockMovementDirection = stateJson["lockMovementDirection"].get<bool>();
             if (stateJson.contains("invincibilityStart")) cfg.invincibilityStart = stateJson["invincibilityStart"].get<float>();
             if (stateJson.contains("invincibilityEnd")) cfg.invincibilityEnd = stateJson["invincibilityEnd"].get<float>();
+            if (cfg.stateName == "Dodge" || cfg.stateType == "Dodge")
+            {
+                cfg.lockMovementDirection = true;
+                if (!stateJson.contains("invincibilityEnd") || cfg.invincibilityEnd <= 0.0f)
+                {
+                    cfg.invincibilityStart = 0.0f;
+                    cfg.invincibilityEnd = (cfg.stateDuration > 0.0f) ? (cfg.stateDuration * 0.7f) : 0.6f;
+                }
+            }
 
             if (stateJson.contains("transitions") && stateJson["transitions"].is_object())
             {

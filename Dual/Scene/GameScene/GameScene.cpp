@@ -17,6 +17,10 @@
 #include "../../../External/Engine/FrameWork/GameContext.h"
 #include <Components/PlayerInputComponent.h>
 #include <Components/CombatStateMachineComponent.h>
+#include <Components/CharacterMovementComponent.h>
+#include <Components/BehaviourTreeComponent.h>
+#include <BlackBoard/CombatBlackBoard.h>
+#include "../../../External/Engine/Factory/ComponentFactory.h"
 #include <Factory/ActorFactory.h>
 #include "../../../External/Engine/Components/HealthComponent.h"
 #include "../../../External/Engine/ImGui/imgui.h"
@@ -49,21 +53,79 @@ void GameScene::OnEnter(GameContext& gameContext)
     float aspectRatio = static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height);
     m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.0f, aspectRatio, 0.01f, 5000.0f);
 
-    // Entity Spawning via Actor Factory
-    m_cameraID = HEIN::ActorFactory::CreateMainCamera(m_actorManager);
+    // Register all game-level components into ComponentFactory reflection registry
+    HEIN::ActorFactory::RegisterGameComponents();
 
-    HEIN::PlayerSpawnData playerData = HEIN::ActorFactory::CreateKnight(m_actorManager, gameContext, &m_targetPos);
-    m_playerID = playerData.playerID;
-    HEIN::ActorFactory::CreateSword(m_actorManager, gameContext, m_playerID, 5.0f);
+    // Load the Scene Data from JSON (Data-driven DOD level loading)
+    LoadAutoSave(gameContext);
 
-    HEIN::EnemySpawnData enemyData = HEIN::ActorFactory::CreateEnemy(m_actorManager, gameContext, m_playerID);
-    m_enemyID = enemyData.enemyID;
-    HEIN::ActorFactory::CreateAxe(m_actorManager, gameContext, m_enemyID, 20.0f);
+    // Re-establish "Glue" Connections
+    HEIN::Actor* player = GetPlayerActor();
+    HEIN::Actor* enemy = GetEnemyActor();
+    HEIN::CameraController* camera = GetActiveCameraController(gameContext);
 
-    HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
+    if (player != nullptr)
+    {
+        player->SetActorType(HEIN::ActorType::Player);
+        m_playerID = player->GetID();
 
-    // Camera Controller & Modes Registration
-    SetupCameraModes(gameContext, GetActiveCameraController(gameContext), playerData.tpsModel);
+        // Ensure runtime components exist for earlier saves
+        if (!player->GetComponent<HEIN::CombatBlackBoard>())
+            player->AddComponent<HEIN::CombatBlackBoard>();
+        if (!player->GetComponent<HEIN::PlayerInputComponent>())
+            player->AddComponent<HEIN::PlayerInputComponent>(&m_actorManager);
+        if (!player->GetComponent<HEIN::CharacterMovementComponent>())
+            player->AddComponent<HEIN::CharacterMovementComponent>();
+    }
+
+    if (enemy != nullptr)
+    {
+        enemy->SetActorType(HEIN::ActorType::Enemy);
+        m_enemyID = enemy->GetID();
+
+        if (!enemy->GetComponent<HEIN::CombatBlackBoard>())
+        {
+            auto* bb = enemy->AddComponent<HEIN::CombatBlackBoard>();
+            if (auto* trans = enemy->GetComponent<HEIN::TransformComponent>())
+            {
+                bb->spawnPosition = trans->GetPosition();
+                bb->hasSetSpawnPosition = true;
+            }
+        }
+        if (!enemy->GetComponent<HEIN::CharacterMovementComponent>())
+            enemy->AddComponent<HEIN::CharacterMovementComponent>();
+
+        if (player != nullptr)
+        {
+            HEIN::ActorFactory::SetupEnemyAI(enemy, &m_actorManager, player->GetID());
+        }
+    }
+
+    // Re-link weapon owners if needed
+    if (HEIN::Actor* sword = m_actorManager.GetActorByName(L"Sword"))
+    {
+        if (player != nullptr) sword->SetOwnerID(player->GetID());
+    }
+    if (HEIN::Actor* axe = m_actorManager.GetActorByName(L"Axe"))
+    {
+        if (enemy != nullptr) axe->SetOwnerID(enemy->GetID());
+    }
+
+    // Call Start() on all loaded actors so components initialize and subscribe to Messenger
+    for (const auto& pair : m_actorManager.GetAllActors())
+    {
+        if (pair.second)
+        {
+            pair.second->Start();
+        }
+    }
+
+    // Re-hook the camera modes to the loaded player model
+    if (player != nullptr && camera != nullptr)
+    {
+        HEIN::SkinnedModelComponent* pModel = player->GetComponent<HEIN::SkinnedModelComponent>();
+        SetupCameraModes(gameContext, camera, pModel);
+    }
 
     // Debug Display Controller & Trigger Event Listeners
     m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
@@ -73,10 +135,6 @@ void GameScene::OnEnter(GameContext& gameContext)
     gameContext.eventManager->AddTriggerListener([this](const HEIN::TriggerEventPayLoad& payLoad) {
         m_damageSystem->HandlTriggerHit(payLoad, m_actorManager);
     });
-
-    // AutoSave Scene State Overlay
-    LoadAutoSave(gameContext);
-    UpdateDebugTargets();
 }
 
 // --------------------------------------------------------------------------------------
@@ -215,8 +273,13 @@ void GameScene::ProcessSimulationPhase(GameContext& gameContext, float deltaTime
 
         if (pTransform != nullptr && pModel != nullptr)
         {
+            DirectX::SimpleMath::Vector3 playerPos = pTransform->GetPosition();
             DirectX::SimpleMath::Vector3 headPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End", pTransform->GetWorldMatrix());
-            float heightAboveRoot = headPos.y - pTransform->GetPosition().y;
+            if (headPos == DirectX::SimpleMath::Vector3::Zero || (headPos - playerPos).LengthSquared() > 10000.0f)
+            {
+                headPos = playerPos + DirectX::SimpleMath::Vector3(0.0f, 15.0f, 0.0f);
+            }
+            float heightAboveRoot = headPos.y - playerPos.y;
 
             static float s_standingHeight = 15.0f;
             bool isDodging = (pSM && pSM->GetCurrentStateName() == "Dodge") || (heightAboveRoot < 6.0f);
@@ -479,6 +542,14 @@ void GameScene::HandleEditorActions(GameContext& gameContext)
 void GameScene::LoadAutoSave(GameContext& gameContext)
 {
     std::ifstream autoSaveFile("AutoSave.json");
+    if (!autoSaveFile.is_open())
+    {
+        autoSaveFile.open("Dual/AutoSave.json");
+    }
+    if (!autoSaveFile.is_open())
+    {
+        autoSaveFile.open("../Dual/AutoSave.json");
+    }
     if (autoSaveFile.is_open())
     {
         nlohmann::json j;
@@ -580,6 +651,15 @@ void GameScene::SetupCameraModes(GameContext& gameContext, HEIN::CameraControlle
         {
             modelPointer->Update(0.0f);
             m_targetPos = modelPointer->GetBoneWorldPosition(L"mixamorig:HeadTop_End", playerTransform->GetWorldMatrix());
+        }
+
+        if (playerTransform != nullptr)
+        {
+            DirectX::SimpleMath::Vector3 playerPos = playerTransform->GetPosition();
+            if (m_targetPos == DirectX::SimpleMath::Vector3::Zero || (m_targetPos - playerPos).LengthSquared() > 10000.0f)
+            {
+                m_targetPos = playerPos + DirectX::SimpleMath::Vector3(0.0f, 15.0f, 0.0f);
+            }
         }
 
         cameraComp->RegisterCamera(

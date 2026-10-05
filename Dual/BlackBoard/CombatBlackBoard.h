@@ -74,7 +74,7 @@ namespace HEIN
 
 		// Dodge Stats
 		float dodgeCooldownTimer = 0.0f;
-		float maxDodgeCooldown = 5.0f;
+		float maxDodgeCooldown = 1.5f;
 
 		bool hasBeenSeenByPlayer = false;
 
@@ -84,12 +84,18 @@ namespace HEIN
 
 		bool isLeashing = false;
 
+		CombatStance targetStance = CombatStance::Idle;
+		bool isTargetAttacking = false;
+		float targetHealth = 100.0f;
+		float actionCooldownTimer = 0.0f;
+
 		CombatBlackBoard(Actor* owner)
 			: IComponent(owner)
 		{
 		}
 
-		void Update(float deltaTime) override;
+		void Update(float /*deltaTime*/) override {}
 
+		std::string GetComponentName() const override { return "CombatBlackBoard"; }
 	};
 }

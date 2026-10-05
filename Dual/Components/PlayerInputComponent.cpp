@@ -27,6 +27,10 @@ void HEIN::PlayerInputComponent::Start()
 
 void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 {
+	if (m_blackboard == nullptr)
+	{
+		m_blackboard = m_owner->GetComponent<HEIN::CombatBlackBoard>();
+	}
 	if (m_actorManager == nullptr || m_blackboard == nullptr) return;
 	HEIN::CameraController* cameraController = gameContext.mainCamera;
 

@@ -63,6 +63,13 @@ namespace HEIN
 			ActorManager& actorManager
 		);
 
+		static void RegisterGameComponents();
+
+		static void SetupEnemyAI(
+			Actor* enemyActor,
+			ActorManager* actorManager,
+			HEIN::ActorID targetID
+		);
 	};
 
 }

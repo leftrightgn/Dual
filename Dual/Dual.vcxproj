@@ -181,6 +181,8 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BehaviourTree\BTCheckHealthNode.h" />
+    <ClInclude Include="BehaviourTree\BTCheckTargetStanceNode.h" />
     <ClInclude Include="BehaviourTree\BTCheckTetherNode.h" />
     <ClInclude Include="BehaviourTree\BTIdleNode.h" />
     <ClInclude Include="BehaviourTree\BTReturnToSpawnNode.h" />
@@ -189,6 +191,8 @@
     <ClInclude Include="Scene\TitleScene\TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BehaviourTree\BTCheckHealthNode.cpp" />
+    <ClCompile Include="BehaviourTree\BTCheckTargetStanceNode.cpp" />
     <ClCompile Include="BehaviourTree\BTCheckTetherNode.cpp" />
     <ClCompile Include="BehaviourTree\BTIdleNode.cpp" />
     <ClCompile Include="BehaviourTree\BTReturnToSpawnNode.cpp" />
@@ -245,7 +249,6 @@
     <ClCompile Include="BehaviourTree\BTCheckDistance.cpp" />
     <ClCompile Include="BehaviourTree\BTDodgeNode.cpp" />
     <ClCompile Include="BehaviourTree\BTStrafeNode.cpp" />
-    <ClCompile Include="BlackBoard\CombatBlackBoard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Components\BehaviourTreeComponent.h" />

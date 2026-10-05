@@ -56,5 +56,7 @@ namespace HEIN
 		 * @param messageID The incoming message ID to evaluate.
 		 */
 		void OnMessageAccepted(Message::MessageID messageID) override;
+
+		std::string GetComponentName() const override { return "PlayerInputComponent"; }
 	};
 }

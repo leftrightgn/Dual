@@ -14,6 +14,7 @@
 #include <BehaviourTree/BTAttackNode.h>
 #include <utility>
 #include "../../External/Engine/Components/HealthComponent.h"
+#include "../../External/Engine/Components/GaugeComponent.h"
 #include "../../External/Engine/Components/ColliderComponent/CapsuleColliderComponent.h"
 #include "../../External/Engine/Components/BoneLinkComponent.h"
 #include "../../External/Engine/Components/TwoBoneLinkComponent.h"
@@ -29,11 +30,13 @@
 #include "../../External/Engine/BehaviourTree/BTSelector.h"
 #include "../../External/Engine/BehaviourTree/BTSequence.h"
 #include "../../External/Engine/Camera/CameraController.h"
+#include "../../External/Engine/Factory/ComponentFactory.h"
 #include "ActorFactory.h"
 #include "../../External/Engine/Components/TransformComponent.h"
 #include "../../External/Engine/Components/ProceduralAnimationComponent.h"
 #include <BehaviourTree/BTReturnToSpawnNode.h>
 #include <BehaviourTree/BTCheckTetherNode.h>
+#include "../../External/Engine/Common/DamageSystem.h"
 
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
@@ -404,7 +407,94 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     bb->hasSetSpawnPosition = true;
 
     enemyActor->AddComponent<HEIN::CharacterMovementComponent>();
-    enemyActor->AddComponent<HEIN::TargetTrackingComponent>(&actorManager, HEIN::ActorType::Player);
+
+    SetupEnemyAI(enemyActor, &actorManager, targetID);
+
+    // Data-driven combat state machine (states and transitions loaded via AutoSave.json DOD)
+    if (!enemyActor->GetComponent<HEIN::CombatStateMachineComponent>())
+    {
+        enemyActor->AddComponent<HEIN::CombatStateMachineComponent>();
+    }
+
+    enemyActor->Start();
+    return spawnData;
+}
+
+HEIN::ActorID HEIN::ActorFactory::CreateMainCamera(ActorManager& actorManager)
+{
+    HEIN::Actor* cameraActor = actorManager.CreateActor(L"MainCamera");
+
+    cameraActor->AddComponent<HEIN::CameraController>();
+
+    cameraActor->Start();
+    return cameraActor->GetID();
+}
+
+void HEIN::ActorFactory::RegisterGameComponents()
+{
+    ComponentFactory::Initialize();
+    ComponentFactory::RegisterComponent<CombatStateMachineComponent>("CombatStateMachineComponent");
+    ComponentFactory::RegisterComponent<BehaviourTreeComponent>("BehaviourTreeComponent");
+    ComponentFactory::RegisterComponent<CharacterMovementComponent>("CharacterMovementComponent");
+    ComponentFactory::RegisterComponent<PlayerInputComponent>("PlayerInputComponent");
+    ComponentFactory::RegisterComponent<CombatBlackBoard>("CombatBlackBoard");
+
+    // UI pulls Block and Dodge directly from the actor's CombatBlackBoard
+    GaugeComponent::SetExternalSyncHandler([](Actor* target, GaugeType type, float& outCurrent, float& outMax) -> bool {
+        if (!target) return false;
+        auto* bb = target->GetComponent<CombatBlackBoard>();
+        if (!bb) return false;
+
+        if (type == GaugeType::Block)
+        {
+            outCurrent = bb->currentBlockStamina;
+            outMax = bb->maxBlockStamina;
+            return true;
+        }
+        else if (type == GaugeType::Dodge)
+        {
+            outCurrent = (bb->dodgeCooldownTimer > 0.0f)
+                ? (bb->maxDodgeCooldown - bb->dodgeCooldownTimer)
+                : bb->maxDodgeCooldown;
+            outMax = bb->maxDodgeCooldown;
+            return true;
+        }
+        return false;
+    });
+
+    // Intercept damage for blocking states
+    DamageSystem::SetDamageInterceptor([](Actor* attacker, Actor* victim, float damage) -> bool {
+        if (!victim) return true;
+        auto* sm = victim->GetComponent<CombatStateMachineComponent>();
+        auto* bb = victim->GetComponent<CombatBlackBoard>();
+        if (sm && sm->IsBlocking() && bb && !bb->isBlockBroken)
+        {
+            // Block absorbs the hit! Deduct stamina
+            bb->currentBlockStamina -= 1.0f; // 1 block point per hit
+            if (bb->currentBlockStamina <= 0.0f)
+            {
+                bb->currentBlockStamina = 0.0f;
+                bb->isBlockBroken = true;
+                return true; // Guard broke! Damage breaks through to health
+            }
+            return false; // Attack blocked! No health damage
+        }
+        return true; // Normal hit, apply full damage
+    });
+}
+
+void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorManager, HEIN::ActorID targetID)
+{
+    if (!enemyActor || !actorManager) return;
+
+    if (!enemyActor->GetComponent<HEIN::TargetTrackingComponent>())
+    {
+        enemyActor->AddComponent<HEIN::TargetTrackingComponent>(actorManager, HEIN::ActorType::Player);
+    }
+    if (!enemyActor->GetComponent<HEIN::ProceduralAnimationComponent>())
+    {
+        enemyActor->AddComponent<HEIN::ProceduralAnimationComponent>(actorManager);
+    }
 
     std::unique_ptr<HEIN::BTSelector> aiBrain = std::make_unique<HEIN::BTSelector>();
 
@@ -412,22 +502,16 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     // LEASHING SEQUENCE (Highest Priority - Checked First!)
     // ---------------------------------------------------------
     std::unique_ptr<HEIN::BTSequence> leashSequence = std::make_unique<HEIN::BTSequence>();
-    // If enemy wanders > 40m from spawn (OR is currently returning), this succeeds
     leashSequence->AddChild(std::make_unique<HEIN::BTCheckTetherNode>(40.0f));
-    // Execute the walk back home
     leashSequence->AddChild(std::make_unique<HEIN::BTReturnToSpawnNode>(20.0f));
     aiBrain->AddChild(std::move(leashSequence));
-
 
     // ---------------------------------------------------------
     // COMBAT SEQUENCE (The Aggro Zone)
     // ---------------------------------------------------------
     std::unique_ptr<HEIN::BTSequence> combatSequence = std::make_unique<HEIN::BTSequence>();
-
-    // The player must be within 20 meters of the enemy to start the fight!
     combatSequence->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 100.0f));
 
-    // If the player is in range, decide how to fight them:
     std::unique_ptr<HEIN::BTSelector> combatSelector = std::make_unique<HEIN::BTSelector>();
 
     // -- Dodge
@@ -448,32 +532,13 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     combatSequence->AddChild(std::move(combatSelector));
     aiBrain->AddChild(std::move(combatSequence));
 
-
-    // ---------------------------------------------------------
-    // IDLE NODE (Fallback)
-    // ---------------------------------------------------------
-    // Fallback idle behavior when target is outside combat threshold and within tether bounds
+    // Fallback idle behavior
     aiBrain->AddChild(std::make_unique<HEIN::BTIdleNode>());
 
-    HEIN::BehaviourTreeComponent* btComp = enemyActor->AddComponent<HEIN::BehaviourTreeComponent>();
-    btComp->Initialize(std::move(aiBrain), &actorManager, targetID);
-
-
-    // Data-driven combat state machine (states and transitions loaded via AutoSave.json DOD)
-    enemyActor->AddComponent<HEIN::CombatStateMachineComponent>();
-
-    enemyActor->AddComponent<HEIN::ProceduralAnimationComponent>(&actorManager);
-
-    enemyActor->Start();
-    return spawnData;
-}
-
-HEIN::ActorID HEIN::ActorFactory::CreateMainCamera(ActorManager& actorManager)
-{
-    HEIN::Actor* cameraActor = actorManager.CreateActor(L"MainCamera");
-
-    cameraActor->AddComponent<HEIN::CameraController>();
-
-    cameraActor->Start();
-    return cameraActor->GetID();
+    HEIN::BehaviourTreeComponent* btComp = enemyActor->GetComponent<HEIN::BehaviourTreeComponent>();
+    if (!btComp)
+    {
+        btComp = enemyActor->AddComponent<HEIN::BehaviourTreeComponent>();
+    }
+    btComp->Initialize(std::move(aiBrain), actorManager, targetID);
 }

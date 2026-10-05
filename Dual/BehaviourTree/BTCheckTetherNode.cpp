@@ -3,6 +3,11 @@
 #include "BlackBoard/CombatBlackBoard.h"
 #include "Components/TransformComponent.h"
 
+HEIN::BTCheckTetherNode::BTCheckTetherNode(float maxTetherDistance)
+	: m_maxTetherDistance(maxTetherDistance)
+{
+}
+
 HEIN::BTNodeState HEIN::BTCheckTetherNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
 {
 	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();

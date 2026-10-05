@@ -39,6 +39,7 @@ namespace HEIN
 		void Start() override;
 	
 		void Update(float deltaTime) override;
-		
+
+		std::string GetComponentName() const override { return "CharacterMovementComponent"; }
 	};
 }

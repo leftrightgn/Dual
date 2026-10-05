@@ -3,12 +3,16 @@
 
 namespace HEIN
 {
-	class BTCheckTetherNode : public BTNode
+	class BTCheckHealthNode : public BTNode
 	{
 	private:
-		float m_maxTetherDistance;
+
+		float m_minPct;
+		float m_maxPct;
+
 	public:
-		BTCheckTetherNode(float maxTetherDistance);
+
+		BTCheckHealthNode(float minPct, float maxPct);
 		BTNodeState Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime) override;
 	};
 }
