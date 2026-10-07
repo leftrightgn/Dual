@@ -18,7 +18,8 @@ namespace HEIN
 		Staggered,
 		Dodging,
 		Strafing,
-		Blocking
+		Blocking,
+		Jumping
 	};
 
 	// Only holds Data contains zero logic
@@ -62,6 +63,9 @@ namespace HEIN
 		float currentSpeed = 30.0f;
 		float currentTurnSpeed = 12.0f;
 
+		bool isAttacking = false;
+		bool isJumping = false;
+
 		DirectX::SimpleMath::Vector3 moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		DirectX::SimpleMath::Vector3 localMoveIntent = DirectX::SimpleMath::Vector3::Zero;
 
@@ -88,6 +92,10 @@ namespace HEIN
 		bool isTargetAttacking = false;
 		float targetHealth = 100.0f;
 		float actionCooldownTimer = 0.0f;
+
+		// Hit confirmation & combo tracking
+		bool lastAttackHit = false;
+		int comboIndex = 0;
 
 		CombatBlackBoard(Actor* owner)
 			: IComponent(owner)

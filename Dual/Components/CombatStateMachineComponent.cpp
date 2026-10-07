@@ -67,9 +67,12 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
         if (tracking)
         {
             tracking->SetLockedOn(blackboard->isLockedOn);
-            blackboard->lockedTargetID = tracking->GetTargetID();
-            blackboard->dirToTarget = tracking->GetDirToTarget();
-            blackboard->distanceToTarget = tracking->GetDistanceToTarget();
+            if (tracking->IsLockedOn())
+            {
+                blackboard->lockedTargetID = tracking->GetTargetID();
+                blackboard->dirToTarget = tracking->GetDirToTarget();
+                blackboard->distanceToTarget = tracking->GetDistanceToTarget();
+            }
             blackboard->isLockedOn = tracking->IsLockedOn();
         }
     }
@@ -157,7 +160,22 @@ void HEIN::CombatStateMachineComponent::RebuildAllStates()
 
 void HEIN::CombatStateMachineComponent::OnMessageAccepted(Message::MessageID messageID)
 {
+    if (messageID == Message::ATTACK_HIT_CONFIRMED)
+    {
+        HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
+        if (blackboard)
+        {
+            blackboard->lastAttackHit = true;
+        }
+        if (m_currentState != nullptr)
+        {
+            m_currentState->HandleMessage(m_owner, this, messageID);
+        }
+        return;
+    }
+
     if (messageID == Message::PLAYER_ACTION_ATTACK ||
+        messageID == Message::ENEMY_ACTION_HEAVY_ATTACK ||
         messageID == Message::PLAYER_ACTION_BLOCK ||
         messageID == Message::PLAYER_STOP_BLOCK ||
         messageID == Message::PLAYER_ACTION_DODGE)
@@ -269,7 +287,8 @@ nlohmann::json HEIN::CombatStateMachineComponent::Serialize()
                 {"hasExitTime", transition.hasExitTime},
                 {"windowStart", transition.windowStart},
                 {"windowEnd", transition.windowEnd},
-                {"canInterrupt", transition.canInterrupt}
+                {"canInterrupt", transition.canInterrupt},
+                {"requireHit", transition.requireHit}
             };
         }
 
@@ -347,6 +366,7 @@ void HEIN::CombatStateMachineComponent::Deserialize(const nlohmann::json& data)
                     if (it.value().contains("windowStart")) tData.windowStart = it.value()["windowStart"].get<float>();
                     if (it.value().contains("windowEnd")) tData.windowEnd = it.value()["windowEnd"].get<float>();
                     if (it.value().contains("canInterrupt")) tData.canInterrupt = it.value()["canInterrupt"].get<bool>();
+                    if (it.value().contains("requireHit")) tData.requireHit = it.value()["requireHit"].get<bool>();
 
                     cfg.transitions[it.key()] = tData;
                 }
@@ -478,6 +498,11 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
                         }
 
                         if (ImGui::Checkbox("Has Exit Time", &transition.hasExitTime))
+                        {
+                            configChanged = true;
+                        }
+
+                        if (ImGui::Checkbox("Require Hit Confirm (Combos)", &transition.requireHit))
                         {
                             configChanged = true;
                         }

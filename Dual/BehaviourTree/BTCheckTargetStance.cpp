@@ -1,19 +1,19 @@
 #include "pch.h"
-#include "BTCheckTargetStanceNode.h"
+#include "BTCheckTargetStance.h"
 
-HEIN::BTCheckTargetStanceNode::BTCheckTargetStanceNode(CombatStance desiredStance)
+HEIN::BTCheckTargetStance::BTCheckTargetStance(CombatStance desiredStance)
 	: m_desiredStance(desiredStance)
 	, m_checkIsAttacking(false)
 {
 }
 
-HEIN::BTCheckTargetStanceNode::BTCheckTargetStanceNode(bool checkIsAttacking)
+HEIN::BTCheckTargetStance::BTCheckTargetStance(bool checkIsAttacking)
 	: m_desiredStance(CombatStance::Idle)
 	, m_checkIsAttacking(checkIsAttacking)
 {
 }
 
-HEIN::BTNodeState HEIN::BTCheckTargetStanceNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
+HEIN::BTNodeState HEIN::BTCheckTargetStance::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
 {
 	auto* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
 	if (!blackboard) return BTNodeState::Failure;

@@ -95,6 +95,7 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalOptions>/Zc:__cplusplus /ZH:SHA_256 %(AdditionalOptions)</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -117,6 +118,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalOptions>/Zc:__cplusplus /ZH:SHA_256 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -141,6 +143,7 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalOptions>/Zc:__cplusplus /ZH:SHA_256 %(AdditionalOptions)</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -168,6 +171,7 @@
       <AdditionalOptions>/Zc:__cplusplus /ZH:SHA_256 %(AdditionalOptions)</AdditionalOptions>
       <GuardEHContMetadata>true</GuardEHContMetadata>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -181,9 +185,10 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BehaviourTree\BTCheckHealthNode.h" />
-    <ClInclude Include="BehaviourTree\BTCheckTargetStanceNode.h" />
+    <ClInclude Include="BehaviourTree\BTCheckHealth.h" />
+    <ClInclude Include="BehaviourTree\BTCheckTargetStance.h" />
     <ClInclude Include="BehaviourTree\BTCheckTetherNode.h" />
+    <ClInclude Include="BehaviourTree\BTCooldownDecorator.h" />
     <ClInclude Include="BehaviourTree\BTIdleNode.h" />
     <ClInclude Include="BehaviourTree\BTReturnToSpawnNode.h" />
     <ClInclude Include="pch.h" />
@@ -191,9 +196,10 @@
     <ClInclude Include="Scene\TitleScene\TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BehaviourTree\BTCheckHealthNode.cpp" />
-    <ClCompile Include="BehaviourTree\BTCheckTargetStanceNode.cpp" />
+    <ClCompile Include="BehaviourTree\BTCheckHealth.cpp" />
+    <ClCompile Include="BehaviourTree\BTCheckTargetStance.cpp" />
     <ClCompile Include="BehaviourTree\BTCheckTetherNode.cpp" />
+    <ClCompile Include="BehaviourTree\BTCooldownDecorator.cpp" />
     <ClCompile Include="BehaviourTree\BTIdleNode.cpp" />
     <ClCompile Include="BehaviourTree\BTReturnToSpawnNode.cpp" />
     <ClCompile Include="Framework\Main.cpp" />

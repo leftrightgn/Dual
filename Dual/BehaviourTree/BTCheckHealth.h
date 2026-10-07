@@ -3,7 +3,7 @@
 
 namespace HEIN
 {
-	class BTCheckHealthNode : public BTNode
+	class BTCheckHealth : public BTNode
 	{
 	private:
 
@@ -12,7 +12,7 @@ namespace HEIN
 
 	public:
 
-		BTCheckHealthNode(float minPct, float maxPct);
+		BTCheckHealth(float minPct, float maxPct);
 		BTNodeState Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime) override;
 	};
 }

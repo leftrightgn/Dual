@@ -59,73 +59,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     // Load the Scene Data from JSON (Data-driven DOD level loading)
     LoadAutoSave(gameContext);
 
-    // Re-establish "Glue" Connections
-    HEIN::Actor* player = GetPlayerActor();
-    HEIN::Actor* enemy = GetEnemyActor();
-    HEIN::CameraController* camera = GetActiveCameraController(gameContext);
-
-    if (player != nullptr)
-    {
-        player->SetActorType(HEIN::ActorType::Player);
-        m_playerID = player->GetID();
-
-        // Ensure runtime components exist for earlier saves
-        if (!player->GetComponent<HEIN::CombatBlackBoard>())
-            player->AddComponent<HEIN::CombatBlackBoard>();
-        if (!player->GetComponent<HEIN::PlayerInputComponent>())
-            player->AddComponent<HEIN::PlayerInputComponent>(&m_actorManager);
-        if (!player->GetComponent<HEIN::CharacterMovementComponent>())
-            player->AddComponent<HEIN::CharacterMovementComponent>();
-    }
-
-    if (enemy != nullptr)
-    {
-        enemy->SetActorType(HEIN::ActorType::Enemy);
-        m_enemyID = enemy->GetID();
-
-        if (!enemy->GetComponent<HEIN::CombatBlackBoard>())
-        {
-            auto* bb = enemy->AddComponent<HEIN::CombatBlackBoard>();
-            if (auto* trans = enemy->GetComponent<HEIN::TransformComponent>())
-            {
-                bb->spawnPosition = trans->GetPosition();
-                bb->hasSetSpawnPosition = true;
-            }
-        }
-        if (!enemy->GetComponent<HEIN::CharacterMovementComponent>())
-            enemy->AddComponent<HEIN::CharacterMovementComponent>();
-
-        if (player != nullptr)
-        {
-            HEIN::ActorFactory::SetupEnemyAI(enemy, &m_actorManager, player->GetID());
-        }
-    }
-
-    // Re-link weapon owners if needed
-    if (HEIN::Actor* sword = m_actorManager.GetActorByName(L"Sword"))
-    {
-        if (player != nullptr) sword->SetOwnerID(player->GetID());
-    }
-    if (HEIN::Actor* axe = m_actorManager.GetActorByName(L"Axe"))
-    {
-        if (enemy != nullptr) axe->SetOwnerID(enemy->GetID());
-    }
-
-    // Call Start() on all loaded actors so components initialize and subscribe to Messenger
-    for (const auto& pair : m_actorManager.GetAllActors())
-    {
-        if (pair.second)
-        {
-            pair.second->Start();
-        }
-    }
-
-    // Re-hook the camera modes to the loaded player model
-    if (player != nullptr && camera != nullptr)
-    {
-        HEIN::SkinnedModelComponent* pModel = player->GetComponent<HEIN::SkinnedModelComponent>();
-        SetupCameraModes(gameContext, camera, pModel);
-    }
+    // Re-establish "Glue" Connections, AI, weapons, Start(), and camera modes
+    PostSceneLoadInit(gameContext);
 
     // Debug Display Controller & Trigger Event Listeners
     m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
@@ -469,15 +404,33 @@ void GameScene::HandleEditorActions(GameContext& gameContext)
             std::ifstream file(szFile);
             if (file.is_open())
             {
-                nlohmann::json j;
-                file >> j;
+                try
+                {
+                    file.seekg(0, std::ios::end);
+                    std::streampos fileSize = file.tellg();
+                    file.seekg(0, std::ios::beg);
 
-                gameContext.mainCamera = nullptr;
-                m_actorManager.Deserialize(j);
-                m_actorManager.InitializeAfterDeserialize(gameContext);
+                    if (fileSize > 0)
+                    {
+                        nlohmann::json j;
+                        file >> j;
 
-                UpdateDebugTargets();
-                m_isPlaying = true;
+                        gameContext.mainCamera = nullptr;
+                        m_actorManager.Deserialize(j);
+                        m_actorManager.InitializeAfterDeserialize(gameContext);
+
+                        PostSceneLoadInit(gameContext);
+
+                        UpdateDebugTargets();
+                        m_isPlaying = true;
+                    }
+                }
+                catch (const std::exception& e)
+                {
+                    OutputDebugStringA("Failed to parse scene JSON: ");
+                    OutputDebugStringA(e.what());
+                    OutputDebugStringA("\n");
+                }
             }
         }
     }
@@ -552,10 +505,29 @@ void GameScene::LoadAutoSave(GameContext& gameContext)
     }
     if (autoSaveFile.is_open())
     {
-        nlohmann::json j;
-        autoSaveFile >> j;
-        m_actorManager.Deserialize(j);
-        m_actorManager.InitializeAfterDeserialize(gameContext);
+        try
+        {
+            autoSaveFile.seekg(0, std::ios::end);
+            std::streampos fileSize = autoSaveFile.tellg();
+            autoSaveFile.seekg(0, std::ios::beg);
+
+            if (fileSize > 0)
+            {
+                nlohmann::json j;
+                autoSaveFile >> j;
+                if (!j.empty())
+                {
+                    m_actorManager.Deserialize(j);
+                    m_actorManager.InitializeAfterDeserialize(gameContext);
+                }
+            }
+        }
+        catch (const std::exception& e)
+        {
+            OutputDebugStringA("Failed to parse AutoSave.json: ");
+            OutputDebugStringA(e.what());
+            OutputDebugStringA("\n");
+        }
     }
 }
 
@@ -705,4 +677,80 @@ void GameScene::SetupCameraModes(GameContext& gameContext, HEIN::CameraControlle
     );
 
     cameraComp->SetFirstCamera(HEIN::CameraType::Spring);
+}
+
+void GameScene::PostSceneLoadInit(GameContext& gameContext)
+{
+    // Re-establish "Glue" Connections
+    HEIN::Actor* player = GetPlayerActor();
+    HEIN::Actor* enemy = GetEnemyActor();
+    HEIN::CameraController* camera = GetActiveCameraController(gameContext);
+
+    if (player != nullptr)
+    {
+        player->SetActorType(HEIN::ActorType::Player);
+        m_playerID = player->GetID();
+
+        // Ensure runtime components exist for earlier saves
+        if (!player->GetComponent<HEIN::CombatBlackBoard>())
+            player->AddComponent<HEIN::CombatBlackBoard>();
+        if (!player->GetComponent<HEIN::PlayerInputComponent>())
+            player->AddComponent<HEIN::PlayerInputComponent>(&m_actorManager);
+        if (!player->GetComponent<HEIN::CharacterMovementComponent>())
+            player->AddComponent<HEIN::CharacterMovementComponent>();
+    }
+
+    if (enemy != nullptr)
+    {
+        enemy->SetActorType(HEIN::ActorType::Enemy);
+        m_enemyID = enemy->GetID();
+
+        if (!enemy->GetComponent<HEIN::CombatBlackBoard>())
+        {
+            auto* bb = enemy->AddComponent<HEIN::CombatBlackBoard>();
+            if (auto* trans = enemy->GetComponent<HEIN::TransformComponent>())
+            {
+                bb->spawnPosition = trans->GetPosition();
+                bb->hasSetSpawnPosition = true;
+            }
+        }
+        if (!enemy->GetComponent<HEIN::CharacterMovementComponent>())
+            enemy->AddComponent<HEIN::CharacterMovementComponent>();
+
+        if (auto* model = enemy->GetComponent<HEIN::SkinnedModelComponent>())
+        {
+            model->SetEnableRootMotion(true);
+        }
+
+        if (player != nullptr)
+        {
+            HEIN::ActorFactory::SetupEnemyAI(enemy, &m_actorManager, player->GetID());
+        }
+    }
+
+    // Re-link weapon owners if needed
+    if (HEIN::Actor* sword = m_actorManager.GetActorByName(L"Sword"))
+    {
+        if (player != nullptr) sword->SetOwnerID(player->GetID());
+    }
+    if (HEIN::Actor* axe = m_actorManager.GetActorByName(L"Axe"))
+    {
+        if (enemy != nullptr) axe->SetOwnerID(enemy->GetID());
+    }
+
+    // Call Start() on all loaded actors so components initialize and subscribe to Messenger
+    for (const auto& pair : m_actorManager.GetAllActors())
+    {
+        if (pair.second)
+        {
+            pair.second->Start();
+        }
+    }
+
+    // Re-hook the camera modes to the loaded player model
+    if (player != nullptr && camera != nullptr)
+    {
+        HEIN::SkinnedModelComponent* pModel = player->GetComponent<HEIN::SkinnedModelComponent>();
+        SetupCameraModes(gameContext, camera, pModel);
+    }
 }

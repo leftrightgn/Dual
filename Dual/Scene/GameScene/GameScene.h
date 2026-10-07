@@ -57,6 +57,7 @@ private:
 
 	// --- Setup Helpers ---
 	void SetupCameraModes(GameContext& gameContext, HEIN::CameraController* cameraComp, HEIN::SkinnedModelComponent* modelPointer);
+	void PostSceneLoadInit(GameContext& gameContext);
 
 private:
 

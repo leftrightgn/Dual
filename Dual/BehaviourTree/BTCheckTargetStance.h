@@ -4,7 +4,7 @@
 
 namespace HEIN
 {
-	class BTCheckTargetStanceNode : public BTNode
+	class BTCheckTargetStance : public BTNode
 	{
 	private:
 
@@ -13,8 +13,8 @@ namespace HEIN
 
 	public:
 
-		BTCheckTargetStanceNode(CombatStance desiredStance);
-		BTCheckTargetStanceNode(bool checkIsAttacking);
+		BTCheckTargetStance(CombatStance desiredStance);
+		BTCheckTargetStance(bool checkIsAttacking);
 		BTNodeState Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime) override;
 	};
 }

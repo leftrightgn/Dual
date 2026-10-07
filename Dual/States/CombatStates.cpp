@@ -27,6 +27,12 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
     {
         bool isBlockState = (m_config.isBlock || m_config.stateName == "Block" || m_config.stateType == "Block");
         bool isDodgeState = (m_config.lockMovementDirection || m_config.invincibilityEnd > 0.0f || m_config.stateName == "Dodge" || m_config.stateType == "Dodge");
+        bool isJumpState = (m_config.stateName.find("Jump") != std::string::npos ||
+                            m_config.stateType.find("Jump") != std::string::npos ||
+                            m_config.animationName.find("Jump") != std::string::npos);
+
+        blackboard->isAttacking = m_config.isAttack;
+        blackboard->isJumping = isJumpState;
 
         if (isBlockState)
         {
@@ -35,6 +41,11 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
         else if (m_config.isAttack)
         {
             blackboard->currentStance = CombatStance::AttackRelese;
+            blackboard->lastAttackHit = false;
+        }
+        else if (isJumpState)
+        {
+            blackboard->currentStance = CombatStance::Jumping;
         }
         else if (isDodgeState)
         {
@@ -141,7 +152,8 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     // Queued transition from input buffering
     if (m_hasQueuedTransition)
     {
-        if (m_queuedTransition.canInterrupt || m_timer >= m_queuedTransition.windowStart)
+        bool hitValid = (!m_queuedTransition.requireHit) || (blackboard && blackboard->lastAttackHit);
+        if (hitValid && (m_queuedTransition.canInterrupt || m_timer >= m_queuedTransition.windowStart))
         {
             stateMachine->ChangeState(m_queuedTransition.targetState, m_queuedTransition.blendDuration);
             m_hasQueuedTransition = false;
@@ -168,11 +180,25 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     // Automatic Exit Time / Timeout transitions for non-looping states (Attacks, Dodge)
     if (!m_config.isLooping && m_timer >= m_actualDuration)
     {
+        // 1. Check if a combo hit-confirmed transition should trigger
+        bool hitConfirmed = (blackboard != nullptr && blackboard->lastAttackHit);
+        if (hitConfirmed)
+        {
+            for (const auto& [key, t] : m_config.transitions)
+            {
+                if (t.requireHit && (t.hasExitTime || key == "OnNextCombo" || t.triggerEvent == "OnNextCombo"))
+                {
+                    stateMachine->ChangeState(t.targetState, t.blendDuration);
+                    return;
+                }
+            }
+        }
+
         // If moving when animation concludes, prefer OnMove over Idle
         if (blackboard && (blackboard->localMoveIntent.LengthSquared() > 0.1f || (!isDodge && blackboard->moveIntent.LengthSquared() > 0.1f)))
         {
             auto itMove = m_config.transitions.find("OnMove");
-            if (itMove != m_config.transitions.end())
+            if (itMove != m_config.transitions.end() && !itMove->second.requireHit)
             {
                 stateMachine->ChangeState(itMove->second.targetState, itMove->second.blendDuration);
                 return;
@@ -181,7 +207,7 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
 
         for (const auto& [key, t] : m_config.transitions)
         {
-            if (t.hasExitTime || key == "OnFinished" || key == "OnStop" || t.triggerEvent == "OnFinished")
+            if (!t.requireHit && (t.hasExitTime || key == "OnFinished" || key == "OnStop" || t.triggerEvent == "OnFinished" || key == "Exit"))
             {
                 stateMachine->ChangeState(t.targetState, t.blendDuration);
                 return;
@@ -248,6 +274,12 @@ void HEIN::UniversalCombatState::OnExit(Actor* owner, CombatStateMachineComponen
     {
         health->SetGameplayInvincible(false);
     }
+    auto* blackboard = owner->GetComponent<CombatBlackBoard>();
+    if (blackboard)
+    {
+        blackboard->isAttacking = false;
+        blackboard->isJumping = false;
+    }
 }
 
 bool HEIN::UniversalCombatState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
@@ -289,12 +321,28 @@ bool HEIN::UniversalCombatState::HandleMessage(Actor* owner, CombatStateMachineC
         fallbackEventName = "OnStop";
         break;
 
+    case Message::ENEMY_ACTION_HEAVY_ATTACK:
+        eventName = "OnHeavyAttack";
+        fallbackEventName = "OnAttack";
+        break;
+
+    case Message::ATTACK_HIT_CONFIRMED:
+        if (blackboard) blackboard->lastAttackHit = true;
+        eventName = "OnHit";
+        fallbackEventName = "OnNextCombo";
+        break;
+
     default:
         return false;
     }
 
     auto TryTransition = [&](const TransitionData& t) -> bool
     {
+        if (t.requireHit && (!blackboard || !blackboard->lastAttackHit))
+        {
+            return false;
+        }
+
         // 1. Instant Cancel / Skip Animation:
         // If canInterrupt is true, OR windowStart <= 0.001f, OR within combo window:
         // Immediately skip current animation and chain directly to target state!

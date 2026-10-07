@@ -29,6 +29,11 @@ HEIN::BTNodeState HEIN::BTDodgeNode::Tick(HEIN::Actor* self, HEIN::ActorManager*
 		if (!m_isDodging) return BTNodeState::Failure;
 	}
 
+	if (blackboard->dodgeCooldownTimer > 0.0f)
+	{
+		if (!m_isDodging) return BTNodeState::Failure;
+	}
+
 	if (!m_isDodging)
 	{
 		m_isDodging = true;
@@ -48,9 +53,9 @@ HEIN::BTNodeState HEIN::BTDodgeNode::Tick(HEIN::Actor* self, HEIN::ActorManager*
 		{
 			m_hasDodgeStarted = true;
 		}
-		else if (m_timeoutTimer > 5.0f)
+		else if (m_timeoutTimer > 0.25f)
 		{
-			// Fallback timeout to prevent getting stuck in dodge state
+			// Quick fallback timeout to prevent getting stuck in dodge state
 			// if the animation/stance transition fails to fire
 			m_isDodging = false;
 			m_cooldownTimer = m_cooldown;

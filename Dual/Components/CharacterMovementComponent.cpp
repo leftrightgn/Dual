@@ -24,8 +24,31 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 {
 	if (!m_transform || !m_blackboard) return;
 
-	// Check if root motion is actively driving movement (e.g. active root-motion model during attacks)
-	if (m_blackboard->hasRootMotion)
+	bool isEnemy = (m_owner != nullptr && m_owner->GetActorType() == HEIN::ActorType::Enemy);
+	bool allowRootMotion = m_blackboard->hasRootMotion;
+
+	if (isEnemy)
+	{
+		// For the Enemy: do not use root motion for regular movement (Walk, Strafe, etc.).
+		// But when jumping or attacking: if there is root motion in the animation, use it!
+		bool isAttackOrJump = (
+			m_blackboard->isAttacking ||
+			m_blackboard->isJumping ||
+			m_blackboard->currentStance == HEIN::CombatStance::AttackRelese ||
+			m_blackboard->currentStance == HEIN::CombatStance::OneHand ||
+			m_blackboard->currentStance == HEIN::CombatStance::AttackWindup ||
+			m_blackboard->currentStance == HEIN::CombatStance::AttackRecovery ||
+			m_blackboard->currentStance == HEIN::CombatStance::Jumping
+		);
+
+		if (!isAttackOrJump)
+		{
+			allowRootMotion = false;
+		}
+	}
+
+	// Check if root motion is actively driving movement (e.g. active root-motion model during attacks or jumps)
+	if (allowRootMotion)
 	{
 		m_blackboard->currentVelocity = m_blackboard->rootMotionVelocity;
 
@@ -41,10 +64,12 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 	}
 	else
 	{
-		if (m_blackboard->currentStance == HEIN::CombatStance::AttackRelese ||
-			m_blackboard->currentStance == HEIN::CombatStance::Staggered)
+		if (!isEnemy && (
+			m_blackboard->currentStance == HEIN::CombatStance::AttackRelese ||
+			m_blackboard->currentStance == HEIN::CombatStance::OneHand ||
+			m_blackboard->currentStance == HEIN::CombatStance::Staggered))
 		{
-			// Cancel movement if the character is currently attacking or staggered
+			// Cancel movement if the player character is currently attacking or staggered without root motion
 			m_blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		}
 

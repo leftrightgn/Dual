@@ -26,10 +26,11 @@ namespace HEIN
 
 		float m_minAttackDis;
 		bool m_isAttacking;
+		bool m_isHeavyAttack;
 
 	public:
 
-		BTAttackNode(float attackDuration, float minAttackDis = 12.0f);
+		BTAttackNode(float attackDuration, float minAttackDis = 12.0f, bool isHeavyAttack = false);
 
 		BTNodeState Tick(
 			HEIN::Actor* self,

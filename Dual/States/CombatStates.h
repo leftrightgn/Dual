@@ -15,6 +15,7 @@ namespace HEIN
 		float windowStart = 0.0f;      // Window timestamp (seconds) when input is accepted
 		float windowEnd = 999.0f;      // Window timestamp (seconds) until input is accepted
 		bool canInterrupt = false;     // Can interrupt from earlier stages/states
+		bool requireHit = false;       // Only valid if an attack hit has been confirmed
 	};
 
 	/**

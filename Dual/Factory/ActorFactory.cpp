@@ -5,13 +5,13 @@
 #include <Components/CombatStateMachineComponent.h>
 #include "BehaviourTree/BTChaseNode.h"
 #include "BehaviourTree/BTCheckDistance.h"
-
-
 #include "BehaviourTree/BTDodgeNode.h"
 #include <Components/BehaviourTreeComponent.h>
 #include "BehaviourTree/BTIdleNode.h"
-#include <States/CombatStates.h>
-#include <BehaviourTree/BTAttackNode.h>
+#include "BehaviourTree/BTAttackNode.h"
+#include "BehaviourTree/BTCheckTargetStance.h"
+#include "BehaviourTree/BTCooldownDecorator.h"
+#include "BehaviourTree/BTCheckHealth.h"
 #include <utility>
 #include "../../External/Engine/Components/HealthComponent.h"
 #include "../../External/Engine/Components/GaugeComponent.h"
@@ -37,6 +37,8 @@
 #include <BehaviourTree/BTReturnToSpawnNode.h>
 #include <BehaviourTree/BTCheckTetherNode.h>
 #include "../../External/Engine/Common/DamageSystem.h"
+#include <BehaviourTree/BTStrafeNode.h>
+
 
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
@@ -290,15 +292,20 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
         L"Resources/Models/Boss");
     spawnData.tpsModel->LoadAnimation("Idle", L"Resources/Models/Boss/idle.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("Walk", L"Resources/Models/Boss/running.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("OneHand", L"Resources/Models/Boss/swing2.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("StrafeL", L"Resources/Models/Boss/strafeL.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("StrafeR", L"Resources/Models/Boss/strafeR.sdkmesh_anim");
-    spawnData.tpsModel->LoadAnimation("Dodge", L"Resources/Models/Boss/Dodge.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("OneHand", L"Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Combo1", L"Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Combo2", L"Resources/Models/Boss/Standing Melee Attack Downward.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Combo3", L"Resources/Models/Boss/Standing Melee Attack Backhand.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("HeavyAttack", L"Resources/Models/Boss/Standing Melee Run Jump Attack.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Dodge", L"Resources/Models/Boss/dodge.sdkmesh_anim");
+    spawnData.tpsModel->SetEnableRootMotion(true); // Root Motion enabled for jump & attack animations
+    spawnData.tpsModel->SetVisible(true);
 
 
     // Head Collider
     HEIN::CapsuleColliderComponent* HeadCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     HeadCapsule->Initialize(3.5f, 1.0f);
+    HeadCapsule->SetColliderTag(L"HeadCollider");
     HeadCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::BoneLinkComponent* HeadLink = enemyActor->AddComponent<HEIN::BoneLinkComponent>();
     HeadLink->Initialize(spawnData.tpsModel, L"mixamorig:Head");
@@ -307,6 +314,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     // Body Collider
     HEIN::CapsuleColliderComponent* BodyCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     BodyCapsule->Initialize(6.5f, 0.0f);
+    BodyCapsule->SetColliderTag(L"BodyCollider");
     BodyCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* BodyLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     BodyLink->Initialize(spawnData.tpsModel, L"mixamorig:Spine2", L"mixamorig:Hips");
@@ -315,12 +323,14 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     // Right Arm Collider
     HEIN::CapsuleColliderComponent* RightarmCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     RightarmCapsule->Initialize(3.0f, 0.0f);
+    RightarmCapsule->SetColliderTag(L"RArmCollider");
     RightarmCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* RightarmLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightarmLink->Initialize(spawnData.tpsModel, L"mixamorig:RightArm", L"mixamorig:RightForeArm");
     RightarmLink->LinkTo(RightarmCapsule);
     HEIN::CapsuleColliderComponent* RightforearmCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     RightforearmCapsule->Initialize(2.5f, 0.0f);
+    RightforearmCapsule->SetColliderTag(L"RForearmCollider");
     RightforearmCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* RightforearmLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightforearmLink->Initialize(spawnData.tpsModel, L"mixamorig:RightForeArm", L"mixamorig:RightHand");
@@ -330,12 +340,14 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     // Left Arm Collider
     HEIN::CapsuleColliderComponent* LeftarmCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     LeftarmCapsule->Initialize(3.0f, 0.0f);
+    LeftarmCapsule->SetColliderTag(L"LArmCollider");
     LeftarmCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* LeftarmLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     LeftarmLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftArm", L"mixamorig:LeftForeArm");
     LeftarmLink->LinkTo(LeftarmCapsule);
     HEIN::CapsuleColliderComponent* LeftforearmCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     LeftforearmCapsule->Initialize(2.5f, 0.0f);
+    LeftforearmCapsule->SetColliderTag(L"LForearmCollider");
     LeftforearmCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* LeftforearmLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     LeftforearmLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftForeArm", L"mixamorig:LeftHand");
@@ -344,12 +356,14 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     // Right Leg Collider
     HEIN::CapsuleColliderComponent* RightupLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     RightupLegCapsule->Initialize(2.8f, 0.0f);
+    RightupLegCapsule->SetColliderTag(L"RUpLegCollider");
     RightupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* RightupLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightUpLeg", L"mixamorig:RightLeg");
     RightupLegLink->LinkTo(RightupLegCapsule);
     HEIN::CapsuleColliderComponent* RightLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     RightLegCapsule->Initialize(1.8f, 0.0f);
+    RightLegCapsule->SetColliderTag(L"RLegCollider");
     RightLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* RightLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightLegLink->Initialize(spawnData.tpsModel, L"mixamorig:RightLeg", L"mixamorig:RightFoot");
@@ -358,12 +372,14 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     // Left Leg Collider
     HEIN::CapsuleColliderComponent* LeftupLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     LeftupLegCapsule->Initialize(2.3f, 0.0f);
+    LeftupLegCapsule->SetColliderTag(L"LUpLegCollider");
     LeftupLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* LeftupLegLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     LeftupLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftUpLeg", L"mixamorig:LeftLeg");
     LeftupLegLink->LinkTo(LeftupLegCapsule);
     HEIN::CapsuleColliderComponent* LeftLegCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     LeftLegCapsule->Initialize(1.8f, 0.0f);
+    LeftLegCapsule->SetColliderTag(L"LLegCollider");
     LeftLegCapsule->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     HEIN::TwoBoneLinkComponent* LeftLegLink = enemyActor->AddComponent < HEIN::TwoBoneLinkComponent>();
     LeftLegLink->Initialize(spawnData.tpsModel, L"mixamorig:LeftLeg", L"mixamorig:LeftFoot");
@@ -499,40 +515,92 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
     std::unique_ptr<HEIN::BTSelector> aiBrain = std::make_unique<HEIN::BTSelector>();
 
     // ---------------------------------------------------------
-    // LEASHING SEQUENCE (Highest Priority - Checked First!)
+    // LEASHING SEQUENCE (Out of Bound Safety)
     // ---------------------------------------------------------
     std::unique_ptr<HEIN::BTSequence> leashSequence = std::make_unique<HEIN::BTSequence>();
-    leashSequence->AddChild(std::make_unique<HEIN::BTCheckTetherNode>(40.0f));
-    leashSequence->AddChild(std::make_unique<HEIN::BTReturnToSpawnNode>(20.0f));
+    leashSequence->AddChild(std::make_unique<HEIN::BTCheckTetherNode>(60.0f));
+    leashSequence->AddChild(std::make_unique<HEIN::BTReturnToSpawnNode>(25.0f));
     aiBrain->AddChild(std::move(leashSequence));
 
     // ---------------------------------------------------------
-    // COMBAT SEQUENCE (The Aggro Zone)
+    // REACTIVE COUNTER-PLAY
     // ---------------------------------------------------------
-    std::unique_ptr<HEIN::BTSequence> combatSequence = std::make_unique<HEIN::BTSequence>();
-    combatSequence->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 100.0f));
+    // If the player starts swinging in close quarters, the boss dodge
+    std::unique_ptr<HEIN::BTSequence> reactiveDodge = std::make_unique<HEIN::BTSequence>();
+    reactiveDodge->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 16.0f));
+    reactiveDodge->AddChild(std::make_unique<HEIN::BTCheckTargetStance>(true));  // is targetAttacking
+    reactiveDodge->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(2.5f, std::make_unique<HEIN::BTDodgeNode>(1.2f)));
+    aiBrain->AddChild(std::move(reactiveDodge));
 
-    std::unique_ptr<HEIN::BTSelector> combatSelector = std::make_unique<HEIN::BTSelector>();
+    // ---------------------------------------------------------
+    // 3. Enraged Berserker (Health <= 50%)
+    // ---------------------------------------------------------
+    std::unique_ptr<HEIN::BTSequence> phase2Branch = std::make_unique<HEIN::BTSequence>();
+    phase2Branch->AddChild(std::make_unique<HEIN::BTCheckHealth>(0.0f, 0.5f));
 
-    // -- Dodge
-    std::unique_ptr<HEIN::BTSequence> dodgeSequence = std::make_unique<HEIN::BTSequence>();
-    dodgeSequence->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 15.0f));
-    dodgeSequence->AddChild(std::make_unique<HEIN::BTDodgeNode>(1.4f));
-    combatSelector->AddChild(std::move(dodgeSequence));
+    std::unique_ptr<HEIN::BTSelector> phase2Combat = std::make_unique<HEIN::BTSelector>();
 
-    // -- Attack
-    std::unique_ptr<HEIN::BTSequence> attackSequence = std::make_unique<HEIN::BTSequence>();
-    attackSequence->AddChild(std::make_unique<HEIN::BTCheckDistance>(15.0f, 25.0f));
-    attackSequence->AddChild(std::make_unique<HEIN::BTAttackNode>(3.4f, 25.0f));
-    combatSelector->AddChild(std::move(attackSequence));
+    // 3A. Shield-Crush Heavy Attack (If player is blocking in close range)
+    std::unique_ptr<HEIN::BTSequence> p2GuardBreak = std::make_unique<HEIN::BTSequence>();
+    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 20.0f));
+    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCheckTargetStance>(CombatStance::Blocking));
+    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(1.2f, std::make_unique<HEIN::BTAttackNode>(3.2f, 20.0f, true)));
+    phase2Combat->AddChild(std::move(p2GuardBreak));
 
-    // -- Chase
-    combatSelector->AddChild(std::make_unique<HEIN::BTChaseNode>(25.0f, 80.0f));
+    // 3B. Relentless 3-Hit Combo Chain (Aggressive attack with hit-confirmed combo flow)
+    std::unique_ptr<HEIN::BTSequence> p2Combo = std::make_unique<HEIN::BTSequence>();
+    p2Combo->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 22.0f));
+    p2Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(0.8f, std::make_unique<HEIN::BTAttackNode>(3.6f, 22.0f, false)));
+    phase2Combat->AddChild(std::move(p2Combo));
 
-    combatSequence->AddChild(std::move(combatSelector));
-    aiBrain->AddChild(std::move(combatSequence));
+    // 3C. Heavy Attack Mix-Up
+    std::unique_ptr<HEIN::BTSequence> p2Heavy = std::make_unique<HEIN::BTSequence>();
+    p2Heavy->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 22.0f));
+    p2Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(2.5f, std::make_unique<HEIN::BTAttackNode>(3.2f, 22.0f, true)));
+    phase2Combat->AddChild(std::move(p2Heavy));
 
-    // Fallback idle behavior
+    // 3D. Fast gap closer
+    phase2Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(9.5f, 110.0f));
+
+    phase2Branch->AddChild(std::move(phase2Combat));
+    aiBrain->AddChild(std::move(phase2Branch));
+
+    // ---------------------------------------------------------
+    // 4. Phase 1 : Calculated duelist (Health > 50%)
+    // ---------------------------------------------------------
+    std::unique_ptr<HEIN::BTSequence> phase1Branch = std::make_unique<HEIN::BTSequence>();
+    phase1Branch->AddChild(std::make_unique<HEIN::BTCheckHealth>(0.5f, 1.0f));
+
+    std::unique_ptr<HEIN::BTSelector> phase1Combat = std::make_unique<HEIN::BTSelector>();
+
+    // 4A. Shield-Crush Heavy Attack (Punish player turtling behind guard)
+    std::unique_ptr<HEIN::BTSequence> p1GuardBreak = std::make_unique<HEIN::BTSequence>();
+    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 18.0f));
+    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCheckTargetStance>(CombatStance::Blocking));
+    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(2.0f, std::make_unique<HEIN::BTAttackNode>(3.2f, 18.0f, true)));
+    phase1Combat->AddChild(std::move(p1GuardBreak));
+
+    // 4B. 3-Hit Combo Strike (Hit-confirmed: chains to 2nd & 3rd attacks on hit)
+    std::unique_ptr<HEIN::BTSequence> p1Combo = std::make_unique<HEIN::BTSequence>();
+    p1Combo->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 18.0f));
+    p1Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(0.8f, std::make_unique<HEIN::BTAttackNode>(3.6f, 18.0f, false)));
+    phase1Combat->AddChild(std::move(p1Combo));
+
+    // 4C. Mid-Range Heavy Attack Lunge Mix-Up
+    std::unique_ptr<HEIN::BTSequence> p1Heavy = std::make_unique<HEIN::BTSequence>();
+    p1Heavy->AddChild(std::make_unique<HEIN::BTCheckDistance>(12.0f, 22.0f));
+    p1Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(4.5f, std::make_unique<HEIN::BTAttackNode>(3.2f, 22.0f, true)));
+    phase1Combat->AddChild(std::move(p1Heavy));
+
+    // 4D. Deliberate pursuit
+    phase1Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(9.5f, 55.0f));
+
+    phase1Branch->AddChild(std::move(phase1Combat));
+    aiBrain->AddChild(std::move(phase1Branch));
+
+    // =========================================================================
+    // FALLBACK IDLE
+    // =========================================================================
     aiBrain->AddChild(std::make_unique<HEIN::BTIdleNode>());
 
     HEIN::BehaviourTreeComponent* btComp = enemyActor->GetComponent<HEIN::BehaviourTreeComponent>();
@@ -541,4 +609,5 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
         btComp = enemyActor->AddComponent<HEIN::BehaviourTreeComponent>();
     }
     btComp->Initialize(std::move(aiBrain), actorManager, targetID);
+
 }

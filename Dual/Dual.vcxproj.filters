@@ -41,14 +41,21 @@
     <ClCompile Include="Components\PlayerInputComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="States\CombatStates.cpp">
-      <Filter>States</Filter>
-    </ClCompile>
     <ClCompile Include="Components\BehaviourTreeComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="BehaviourTree\BTCheckHealthNode.cpp" />
-    <ClCompile Include="BehaviourTree\BTCheckTargetStanceNode.cpp" />
+    <ClCompile Include="BehaviourTree\BTCheckHealth.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTCheckTargetStance.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourTree\BTCooldownDecorator.cpp">
+      <Filter>BehaviourTree</Filter>
+    </ClCompile>
+    <ClCompile Include="States\CombatStates.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -85,23 +92,26 @@
     <ClInclude Include="Components\PlayerInputComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="States\ICombatState.h">
-      <Filter>States</Filter>
-    </ClInclude>
     <ClInclude Include="BlackBoard\CombatBlackBoard.h">
       <Filter>BlackBoard</Filter>
-    </ClInclude>
-    <ClInclude Include="States\CombatStates.h">
-      <Filter>States</Filter>
     </ClInclude>
     <ClInclude Include="Components\BehaviourTreeComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="BehaviourTree\BTCheckHealthNode.h">
+    <ClInclude Include="BehaviourTree\BTCheckHealth.h">
       <Filter>BehaviourTree</Filter>
     </ClInclude>
-    <ClInclude Include="BehaviourTree\BTCheckTargetStanceNode.h">
+    <ClInclude Include="BehaviourTree\BTCheckTargetStance.h">
       <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourTree\BTCooldownDecorator.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
+    <ClInclude Include="States\CombatStates.h">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="States\ICombatState.h">
+      <Filter>States</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
