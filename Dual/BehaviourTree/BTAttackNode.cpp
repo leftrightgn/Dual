@@ -32,8 +32,9 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 		return BTNodeState::Failure;
 	}
 
-	// Forward combat step and rotational tracking during initial 35% wind-up
-	if (m_timer < (m_attackDuration * 0.35f))
+	// Rotational tracking: for heavy jump attack, continue tracking up to 60% of animation so the leap aims directly at the player
+	float trackingWindow = m_isHeavyAttack ? (m_attackDuration * 0.60f) : (m_attackDuration * 0.35f);
+	if (m_timer < trackingWindow)
 	{
 		// Calculate desired rotation to face the target directly.
 		// Adds PI to yaw because standard orientation might be reversed depending on the model's forward vector.
@@ -45,21 +46,42 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 		{
 			DirectX::SimpleMath::Quaternion currentRot = transform->GetRotation();
 
-			float turnSpeed = 6.0f;
+			float turnSpeed = m_isHeavyAttack ? 8.0f : 6.0f;
 
 			DirectX::SimpleMath::Quaternion newRot = DirectX::SimpleMath::Quaternion::Slerp(currentRot, targetRotation, deltaTime * turnSpeed);
 			transform->SetRotation(newRot);
 		}
+	}
 
-		// Forward combat step: close in to melee pocket range if player is slightly out of reach
-		if (blackboard->distanceToTarget > 9.0f)
+	// Forward combat step during initial wind-up:
+	// For heavy attack: the jump animation naturally propels the boss 15-18 units forward.
+	// Only step forward if target is far away (> 20.0f) to avoid overshooting and landing behind the player.
+	if (m_timer < (m_attackDuration * 0.35f))
+	{
+		if (m_isHeavyAttack)
 		{
-			blackboard->moveIntent = blackboard->dirToTarget;
-			blackboard->currentSpeed = 30.0f;
+			if (blackboard->distanceToTarget > 22.0f)
+			{
+				blackboard->moveIntent = blackboard->dirToTarget;
+				blackboard->currentSpeed = 35.0f;
+			}
+			else
+			{
+				blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+			}
 		}
 		else
 		{
-			blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+			// Regular combo attack: close in slightly if beyond weapon reach (maintains generous spacing >= 20.0f)
+			if (blackboard->distanceToTarget > 20.0f)
+			{
+				blackboard->moveIntent = blackboard->dirToTarget;
+				blackboard->currentSpeed = 30.0f;
+			}
+			else
+			{
+				blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+			}
 		}
 	}
 	else

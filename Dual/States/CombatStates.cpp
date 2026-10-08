@@ -30,6 +30,7 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
         bool isJumpState = (m_config.stateName.find("Jump") != std::string::npos ||
                             m_config.stateType.find("Jump") != std::string::npos ||
                             m_config.animationName.find("Jump") != std::string::npos);
+        bool isStunState = (m_config.stateName == "Stun" || m_config.stateType == "Stun" || m_config.animationName == "Stun");
 
         blackboard->isAttacking = m_config.isAttack;
         blackboard->isJumping = isJumpState;
@@ -37,6 +38,10 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
         if (isBlockState)
         {
             blackboard->currentStance = CombatStance::Blocking;
+        }
+        else if (isStunState)
+        {
+            blackboard->currentStance = CombatStance::Staggered;
         }
         else if (m_config.isAttack)
         {
@@ -153,7 +158,8 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     if (m_hasQueuedTransition)
     {
         bool hitValid = (!m_queuedTransition.requireHit) || (blackboard && blackboard->lastAttackHit);
-        if (hitValid && (m_queuedTransition.canInterrupt || m_timer >= m_queuedTransition.windowStart))
+        float triggerTime = m_queuedTransition.hasExitTime ? m_actualDuration : m_queuedTransition.windowStart;
+        if (hitValid && (m_queuedTransition.canInterrupt || m_timer >= triggerTime))
         {
             stateMachine->ChangeState(m_queuedTransition.targetState, m_queuedTransition.blendDuration);
             m_hasQueuedTransition = false;
@@ -162,8 +168,9 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     }
 
     // Movement cancellation for non-looping states (e.g. holding W cancels attack recovery window)
-    // Dodge states must NOT be movement-cancelled; transitions with hasExitTime must wait for exit time
-    if (!m_config.isLooping && !isDodge && blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+    // Dodge and Stun states must NOT be movement-cancelled; transitions with hasExitTime must wait for exit time
+    bool isStun = (m_config.stateName == "Stun" || m_config.stateType == "Stun" || m_config.animationName == "Stun");
+    if (!m_config.isLooping && !isDodge && !isStun && blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
     {
         auto itMove = m_config.transitions.find("OnMove");
         if (itMove != m_config.transitions.end())
@@ -207,7 +214,8 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
 
         for (const auto& [key, t] : m_config.transitions)
         {
-            if (!t.requireHit && (t.hasExitTime || key == "OnFinished" || key == "OnStop" || t.triggerEvent == "OnFinished" || key == "Exit"))
+            bool isAutoExit = t.triggerEvent.empty() || key == "Exit" || key == "OnFinished" || key == "OnStop";
+            if (!t.requireHit && isAutoExit && (t.hasExitTime || key == "OnFinished" || key == "OnStop" || key == "Exit"))
             {
                 stateMachine->ChangeState(t.targetState, t.blendDuration);
                 return;
@@ -332,6 +340,15 @@ bool HEIN::UniversalCombatState::HandleMessage(Actor* owner, CombatStateMachineC
         fallbackEventName = "OnNextCombo";
         break;
 
+    case Message::HIT_STUN:
+        eventName = "OnStun";
+        fallbackEventName = "OnHit";
+        break;
+
+    case Message::PLAYER_ACTION_JUMP:
+        eventName = "OnJump";
+        break;
+
     default:
         return false;
     }
@@ -343,19 +360,26 @@ bool HEIN::UniversalCombatState::HandleMessage(Actor* owner, CombatStateMachineC
             return false;
         }
 
-        // 1. Instant Cancel / Skip Animation:
-        // If canInterrupt is true, OR windowStart <= 0.001f, OR within combo window:
-        // Immediately skip current animation and chain directly to target state!
-        if (t.canInterrupt || t.windowStart <= 0.001f || (m_timer >= t.windowStart && m_timer <= t.windowEnd))
+        // If the transition has exit time and cannot interrupt early:
+        // Do NOT cut the animation off mid-state! Buffer it so it fires when the state completes.
+        float triggerTime = t.hasExitTime ? m_actualDuration : t.windowStart;
+        if (!t.canInterrupt && m_timer < triggerTime)
+        {
+            m_queuedTransition = t;
+            m_hasQueuedTransition = true;
+            return true;
+        }
+
+        // Within valid combo window or allowed to interrupt immediately:
+        if (t.canInterrupt || (m_timer >= triggerTime && m_timer <= t.windowEnd))
         {
             stateMachine->ChangeState(t.targetState, t.blendDuration);
             m_hasQueuedTransition = false;
             return true;
         }
 
-        // 2. Combo Buffering:
-        // If pressed before windowStart, queue it so it never gets dropped and triggers the moment the window opens!
-        if (m_timer < t.windowStart)
+        // If pressed before triggerTime, queue it to fire when the window opens:
+        if (m_timer < triggerTime)
         {
             m_queuedTransition = t;
             m_hasQueuedTransition = true;

@@ -47,7 +47,7 @@ private:
 
 	// --- Editor & Scene Management ---
 	void HandleEditorActions(GameContext& gameContext);
-	void LoadAutoSave(GameContext& gameContext);
+	void LoadSceneData(GameContext& gameContext);
 	void UpdateDebugTargets();
 
 	// --- Entity & Component Accessors ---

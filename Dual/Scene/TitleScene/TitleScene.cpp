@@ -17,8 +17,25 @@
 #include "../../Factory/ActorFactory.h"
 #include <commdlg.h>
 #include <fstream>
+#include <filesystem>
 #include <Windows.h>
 #include <DirectXMath.h>
+
+namespace
+{
+    std::string GetTitleAutoSaveWritePath()
+    {
+        namespace fs = std::filesystem;
+        std::error_code ec;
+        std::string target = "Resources/Data/TitleAutoSave.json";
+        if (!fs::exists("Resources", ec) && fs::exists("Dual/Resources", ec))
+        {
+            target = "Dual/Resources/Data/TitleAutoSave.json";
+        }
+        fs::create_directories(fs::path(target).parent_path(), ec);
+        return target;
+    }
+}
 
 using namespace DirectX;
 
@@ -38,7 +55,21 @@ void TitleScene::OnEnter(GameContext& gameContext)
 
     // Auto-load last saved title scene changes if available
     bool hasAutoSave = false;
-    std::ifstream autoSaveFile("TitleAutoSave.json");
+    std::vector<std::string> candidates = {
+        "Resources/Data/TitleAutoSave.json",
+        "Dual/Resources/Data/TitleAutoSave.json",
+        "../Dual/Resources/Data/TitleAutoSave.json"
+    };
+
+    std::ifstream autoSaveFile;
+    for (const auto& path : candidates)
+    {
+        autoSaveFile.open(path);
+        if (autoSaveFile.is_open())
+        {
+            break;
+        }
+    }
     if (autoSaveFile.is_open())
     {
         try
@@ -168,7 +199,8 @@ void TitleScene::OnEnter(GameContext& gameContext)
 void TitleScene::OnExit(GameContext& gameContext)
 {
     // Auto-save on exit
-    std::ofstream autoSave("TitleAutoSave.json");
+    std::string autoSavePath = GetTitleAutoSaveWritePath();
+    std::ofstream autoSave(autoSavePath);
     if (autoSave.is_open())
     {
         nlohmann::json j = m_actorManager.Serialize();
@@ -268,23 +300,24 @@ void TitleScene::Update(GameContext& gameContext)
 
         if (GetSaveFileNameW(&ofn) == TRUE)
         {
+            nlohmann::json j = m_actorManager.Serialize();
+            std::string serializedStr = j.dump(4);
+
             std::ofstream file(szFile);
             if (file.is_open())
             {
-                nlohmann::json j = m_actorManager.Serialize();
-                file << j.dump(4);
+                file << serializedStr;
             }
-            std::ofstream autoSave("TitleAutoSave.json");
+            std::ofstream autoSave(GetTitleAutoSaveWritePath());
             if (autoSave.is_open())
             {
-                nlohmann::json j = m_actorManager.Serialize();
-                autoSave << j.dump(4);
+                autoSave << serializedStr;
             }
         }
     }
     else if (uiAction == HEIN::EditorAction::AutoSavePressed)
     {
-        std::ofstream autoSave("TitleAutoSave.json");
+        std::ofstream autoSave(GetTitleAutoSaveWritePath());
         if (autoSave.is_open())
         {
             nlohmann::json j = m_actorManager.Serialize();
@@ -307,7 +340,7 @@ void TitleScene::Update(GameContext& gameContext)
         if (m_autoSaveTimer >= 30.0f)
         {
             m_autoSaveTimer = 0.0f;
-            std::ofstream autoSave("TitleAutoSave.json");
+            std::ofstream autoSave(GetTitleAutoSaveWritePath());
             if (autoSave.is_open())
             {
                 nlohmann::json j = m_actorManager.Serialize();

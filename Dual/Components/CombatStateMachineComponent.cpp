@@ -10,12 +10,29 @@
 #include "../../External/Engine/Components/HealthComponent.h"
 #include "../../External/Engine/Components/TargetTrackingComponent.h"
 #include <ImGui/imgui.h>
+#include <fstream>
+#include <filesystem>
 
 HEIN::CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner) : IComponent(owner) {}
 
 void HEIN::CombatStateMachineComponent::Start()
 {
     Messenger::GetInstance()->Register(m_owner->GetID(), this);
+
+    // Ensure the default state animation is applied now that SkinnedModelComponent has loaded its animations
+    std::string startState = m_defaultStateName;
+    if (startState.empty() || !m_states.contains(startState))
+    {
+        if (m_states.contains("Idle")) startState = "Idle";
+        else if (!m_states.empty()) startState = m_states.begin()->first;
+    }
+
+    if (!startState.empty() && m_states.contains(startState))
+    {
+        m_currentState = nullptr;
+        ChangeState(startState, 0.0f);
+        ApplyPendingState();
+    }
 }
 
 void HEIN::CombatStateMachineComponent::Update(float deltaTime)
@@ -174,11 +191,35 @@ void HEIN::CombatStateMachineComponent::OnMessageAccepted(Message::MessageID mes
         return;
     }
 
+    if (messageID == Message::HIT_STUN)
+    {
+        auto* health = m_owner->GetComponent<HealthComponent>();
+        if (health && health->isDead()) return;
+
+        // Try transitioning via current state's transitions first if defined
+        if (m_currentState != nullptr && m_currentState->HandleMessage(m_owner, this, messageID))
+        {
+            m_messageBuffer.clear();
+            return;
+        }
+
+        // Default fallback: force transition to Stun state if registered
+        auto itStun = m_states.find("Stun");
+        if (itStun != m_states.end() && m_currentStateName != "Stun")
+        {
+            ChangeState("Stun", 0.02f);
+            ApplyPendingState();
+            m_messageBuffer.clear();
+        }
+        return;
+    }
+
     if (messageID == Message::PLAYER_ACTION_ATTACK ||
         messageID == Message::ENEMY_ACTION_HEAVY_ATTACK ||
         messageID == Message::PLAYER_ACTION_BLOCK ||
         messageID == Message::PLAYER_STOP_BLOCK ||
-        messageID == Message::PLAYER_ACTION_DODGE)
+        messageID == Message::PLAYER_ACTION_DODGE ||
+        messageID == Message::PLAYER_ACTION_JUMP)
     {
         if (messageID == Message::PLAYER_ACTION_DODGE)
         {
@@ -233,7 +274,7 @@ bool HEIN::CombatStateMachineComponent::IsBlocking() const
 
 void HEIN::CombatStateMachineComponent::OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad)
 {
-    // Keeping your original hit detection payload stub
+    // Keeping original hit detection payload stub
     if (payLoad.triggerA->GetOwner() != GetOwner() && payLoad.triggerB->GetOwner() != GetOwner()) return;
 
     HEIN::ColliderComponent* myHurtBox = nullptr;
@@ -253,13 +294,137 @@ void HEIN::CombatStateMachineComponent::OnTriggerOverLap(const HEIN::TriggerEven
     if (enemyHitBox->GetColliderTag() == L"SwordHitbox") {}
 }
 
+bool HEIN::CombatStateMachineComponent::LoadFromConfigFile(const std::string& path)
+{
+    std::vector<std::string> candidates = {
+        path,
+        "Dual/" + path,
+        "../" + path,
+        "../Dual/" + path
+    };
+
+    std::ifstream file;
+    for (const auto& c : candidates)
+    {
+        file.open(c);
+        if (file.is_open())
+        {
+            break;
+        }
+    }
+
+    if (!file.is_open())
+    {
+        OutputDebugStringA(("Failed to open Combat Config file: " + path + "\n").c_str());
+        return false;
+    }
+
+    try
+    {
+        nlohmann::json j;
+        file >> j;
+        if (j.is_object())
+        {
+            m_configPath = path;
+            DeserializeStatesFromJSON(j);
+            return true;
+        }
+    }
+    catch (const std::exception& e)
+    {
+        OutputDebugStringA(("JSON parse error in Combat Config file: " + std::string(e.what()) + "\n").c_str());
+    }
+
+    return false;
+}
+
+bool HEIN::CombatStateMachineComponent::SaveToConfigFile(const std::string& path) const
+{
+    std::string targetPath = path.empty() ? m_configPath : path;
+    if (targetPath.empty()) return false;
+
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    std::string writePath = targetPath;
+    if (!fs::exists("Resources", ec) && fs::exists("Dual/Resources", ec))
+    {
+        if (writePath.find("Dual/") != 0)
+        {
+            writePath = "Dual/" + writePath;
+        }
+    }
+    fs::create_directories(fs::path(writePath).parent_path(), ec);
+
+    std::ofstream file(writePath);
+    if (!file.is_open()) return false;
+
+    nlohmann::json data;
+    data["defaultState"] = m_defaultStateName;
+    data["states"] = nlohmann::json::array();
+
+    for (const auto& [name, cfg] : m_stateConfigs)
+    {
+        nlohmann::json stateJson;
+        stateJson["name"] = cfg.stateName;
+        stateJson["type"] = cfg.stateType;
+        stateJson["animationName"] = cfg.animationName;
+        stateJson["secondaryAnimationName"] = cfg.secondaryAnimationName;
+        stateJson["moveSpeed"] = cfg.moveSpeed;
+        stateJson["stateDuration"] = cfg.stateDuration;
+        stateJson["turnSpeed"] = cfg.turnSpeed;
+        stateJson["isLooping"] = cfg.isLooping;
+        stateJson["isAttack"] = cfg.isAttack;
+        stateJson["isBlock"] = cfg.isBlock;
+        stateJson["lockMovementDirection"] = cfg.lockMovementDirection;
+        stateJson["invincibilityStart"] = cfg.invincibilityStart;
+        stateJson["invincibilityEnd"] = cfg.invincibilityEnd;
+
+        stateJson["transitions"] = nlohmann::json::object();
+        for (const auto& [eventKey, transition] : cfg.transitions)
+        {
+            stateJson["transitions"][eventKey] = {
+                {"targetState", transition.targetState},
+                {"blendDuration", transition.blendDuration},
+                {"triggerEvent", transition.triggerEvent},
+                {"hasExitTime", transition.hasExitTime},
+                {"windowStart", transition.windowStart},
+                {"windowEnd", transition.windowEnd},
+                {"canInterrupt", transition.canInterrupt},
+                {"requireHit", transition.requireHit}
+            };
+        }
+
+        stateJson["comboAnimationNames"] = cfg.comboAnimationNames;
+        stateJson["comboEndTimes"] = cfg.comboEndTimes;
+        stateJson["comboWindowStarts"] = cfg.comboWindowStarts;
+        stateJson["comboBlendDurations"] = cfg.comboBlendDurations;
+        stateJson["comboExitBlendDuration"] = cfg.comboExitBlendDuration;
+
+        data["states"].push_back(stateJson);
+    }
+
+    file << data.dump(4);
+    return true;
+}
+
 nlohmann::json HEIN::CombatStateMachineComponent::Serialize()
 {
     nlohmann::json data = IComponent::Serialize();
 
     data["defaultState"] = m_defaultStateName;
-    data["states"] = nlohmann::json::array();
 
+    // MODULAR COMBAT ASSET ARCHITECTURE:
+    // If a standalone combat asset (e.g. "Resources/Data/Combat/Knight_Combat.json") is bound,
+    // only save the file reference path! This decouples scene layout from character combat tuning
+    // and prevents auto-save from ever polluting combat configs with mid-fight runtime states.
+    if (!m_configPath.empty())
+    {
+        data["ConfigPath"] = m_configPath;
+        return data;
+    }
+
+    // Monolithic fallback (embeds states array if no standalone asset is used)
+    data["states"] = nlohmann::json::array();
     for (const auto& [name, cfg] : m_stateConfigs)
     {
         nlohmann::json stateJson;
@@ -307,6 +472,28 @@ void HEIN::CombatStateMachineComponent::Deserialize(const nlohmann::json& data)
 {
     IComponent::Deserialize(data);
 
+    m_stateConfigs.clear();
+
+    // 1. Modular asset loading: check for standalone ConfigPath
+    if (data.contains("ConfigPath") && data["ConfigPath"].is_string())
+    {
+        std::string cfgPath = data["ConfigPath"].get<std::string>();
+        if (!cfgPath.empty() && LoadFromConfigFile(cfgPath))
+        {
+            if (data.contains("defaultState") && data["defaultState"].is_string())
+            {
+                m_defaultStateName = data["defaultState"].get<std::string>();
+            }
+            return;
+        }
+    }
+
+    // 2. Legacy / Monolithic fallback: parse inline states from scene JSON
+    DeserializeStatesFromJSON(data);
+}
+
+void HEIN::CombatStateMachineComponent::DeserializeStatesFromJSON(const nlohmann::json& data)
+{
     m_stateConfigs.clear();
 
     if (data.contains("defaultState") && data["defaultState"].is_string())
@@ -408,6 +595,30 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
     if (ImGui::CollapsingHeader("Combat State Machine Component", ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Active State: %s", m_currentStateName.c_str());
+        ImGui::Separator();
+
+        // Modular Combat Asset Management
+        char pathBuf[256] = { 0 };
+        strncpy_s(pathBuf, m_configPath.c_str(), sizeof(pathBuf) - 1);
+        if (ImGui::InputText("Combat Asset Path", pathBuf, sizeof(pathBuf)))
+        {
+            m_configPath = pathBuf;
+        }
+        if (!m_configPath.empty())
+        {
+            if (ImGui::Button("Reload from Asset"))
+            {
+                if (LoadFromConfigFile(m_configPath))
+                {
+                    RebuildAllStates();
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Save to Asset"))
+            {
+                SaveToConfigFile(m_configPath);
+            }
+        }
         ImGui::Separator();
 
         bool configChanged = false;
@@ -580,11 +791,11 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
                         // Animation name
                         if (i < cfg.comboAnimationNames.size())
                         {
-                            char animBuf[64];
-                            strcpy_s(animBuf, cfg.comboAnimationNames[i].c_str());
-                            if (ImGui::InputText("Anim Name", animBuf, sizeof(animBuf)))
+                            char comboAnimBuf[64];
+                            strcpy_s(comboAnimBuf, cfg.comboAnimationNames[i].c_str());
+                            if (ImGui::InputText("Anim Name", comboAnimBuf, sizeof(comboAnimBuf)))
                             {
-                                cfg.comboAnimationNames[i] = animBuf;
+                                cfg.comboAnimationNames[i] = comboAnimBuf;
                                 configChanged = true;
                             }
                         }

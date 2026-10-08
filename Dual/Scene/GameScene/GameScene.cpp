@@ -29,9 +29,27 @@
 #include "../../../External/Engine/Common/json.hpp"
 #include <commdlg.h>
 #include <fstream>
+#include <filesystem>
 #include <Windows.h>
 #include <utility>
 #include <cmath>
+
+namespace
+{
+    // Primary scene configuration path (DOD scene layout, transforms, actor instances)
+    std::string GetSceneDataWritePath()
+    {
+        namespace fs = std::filesystem;
+        std::error_code ec;
+        std::string target = "Resources/Data/GameScene.json";
+        if (!fs::exists("Resources", ec) && fs::exists("Dual/Resources", ec))
+        {
+            target = "Dual/Resources/Data/GameScene.json";
+        }
+        fs::create_directories(fs::path(target).parent_path(), ec);
+        return target;
+    }
+}
 
 using namespace DirectX;
 
@@ -56,8 +74,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     // Register all game-level components into ComponentFactory reflection registry
     HEIN::ActorFactory::RegisterGameComponents();
 
-    // Load the Scene Data from JSON (Data-driven DOD level loading)
-    LoadAutoSave(gameContext);
+    // Load the Scene Data from JSON (Prioritizes GameScene.json, falls back to AutoSave.json)
+    LoadSceneData(gameContext);
 
     // Re-establish "Glue" Connections, AI, weapons, Start(), and camera modes
     PostSceneLoadInit(gameContext);
@@ -187,9 +205,9 @@ void GameScene::ProcessSimulationPhase(GameContext& gameContext, float deltaTime
     {
         m_actorManager.UpdateAll(deltaTime);
         m_physicsSystem->UpdateMovement(gameContext, m_actorManager, deltaTime);
+        m_physicsSystem->UpdateCollisions(gameContext, m_actorManager, deltaTime);
         m_actorManager.UpdateAllHierarchies(); // Math Cascades Downwards
         m_actorManager.LateUpdateAll(deltaTime);
-        m_physicsSystem->UpdateCollisions(gameContext, m_actorManager, deltaTime);
     }
     else
     {
@@ -458,27 +476,31 @@ void GameScene::HandleEditorActions(GameContext& gameContext)
 
         if (GetSaveFileNameW(&ofn) == TRUE)
         {
+            nlohmann::json j = m_actorManager.Serialize();
             std::ofstream file(szFile);
             if (file.is_open())
             {
-                nlohmann::json j = m_actorManager.Serialize();
                 file << j.dump(4);
             }
-            std::ofstream autoSave("AutoSave.json");
-            if (autoSave.is_open())
+            // Save to primary GameScene.json
+            std::string sceneDataPath = GetSceneDataWritePath();
+            std::ofstream sceneFile(sceneDataPath);
+            if (sceneFile.is_open())
             {
-                nlohmann::json j = m_actorManager.Serialize();
-                autoSave << j.dump(4);
+                sceneFile << j.dump(4);
             }
         }
     }
     else if (uiAction == HEIN::EditorAction::AutoSavePressed)
     {
-        std::ofstream autoSave("AutoSave.json");
-        if (autoSave.is_open())
+        nlohmann::json j = m_actorManager.Serialize();
+
+        // Save to primary GameScene.json
+        std::string sceneDataPath = GetSceneDataWritePath();
+        std::ofstream sceneFile(sceneDataPath);
+        if (sceneFile.is_open())
         {
-            nlohmann::json j = m_actorManager.Serialize();
-            autoSave << j.dump(4);
+            sceneFile << j.dump(4);
         }
     }
     else if (uiAction == HEIN::EditorAction::CreateStagePressed)
@@ -492,29 +514,38 @@ void GameScene::HandleEditorActions(GameContext& gameContext)
     }
 }
 
-void GameScene::LoadAutoSave(GameContext& gameContext)
+void GameScene::LoadSceneData(GameContext& gameContext)
 {
-    std::ifstream autoSaveFile("AutoSave.json");
-    if (!autoSaveFile.is_open())
+    // Search candidates for primary GameScene.json
+    std::vector<std::string> candidates = {
+        "Resources/Data/GameScene.json",
+        "Dual/Resources/Data/GameScene.json",
+        "../Dual/Resources/Data/GameScene.json"
+    };
+
+    std::ifstream sceneFile;
+    std::string loadedPath;
+    for (const auto& path : candidates)
     {
-        autoSaveFile.open("Dual/AutoSave.json");
+        sceneFile.open(path);
+        if (sceneFile.is_open())
+        {
+            loadedPath = path;
+            break;
+        }
     }
-    if (!autoSaveFile.is_open())
-    {
-        autoSaveFile.open("../Dual/AutoSave.json");
-    }
-    if (autoSaveFile.is_open())
+    if (sceneFile.is_open())
     {
         try
         {
-            autoSaveFile.seekg(0, std::ios::end);
-            std::streampos fileSize = autoSaveFile.tellg();
-            autoSaveFile.seekg(0, std::ios::beg);
+            sceneFile.seekg(0, std::ios::end);
+            std::streampos fileSize = sceneFile.tellg();
+            sceneFile.seekg(0, std::ios::beg);
 
             if (fileSize > 0)
             {
                 nlohmann::json j;
-                autoSaveFile >> j;
+                sceneFile >> j;
                 if (!j.empty())
                 {
                     m_actorManager.Deserialize(j);
@@ -524,7 +555,7 @@ void GameScene::LoadAutoSave(GameContext& gameContext)
         }
         catch (const std::exception& e)
         {
-            OutputDebugStringA("Failed to parse AutoSave.json: ");
+            OutputDebugStringA(("Failed to parse scene JSON (" + loadedPath + "): ").c_str());
             OutputDebugStringA(e.what());
             OutputDebugStringA("\n");
         }

@@ -65,6 +65,17 @@ namespace HEIN
 		/// @brief Timer tracking how long the current messages have been buffered.
 		float m_bufferTime = 0.0f;
 
+		/**
+		 * @brief Path to the standalone combat configuration asset JSON (e.g. "Resources/Data/Combat/Knight_Combat.json").
+		 * 
+		 * ARCHITECTURAL DECISION:
+		 * Decouples combat state machine definitions (combos, windows, hit timings) into external, dedicated JSON assets.
+		 * 1. Isolates combat tuning from world placement: Scene files (GameScene.json) stay lightweight and clean.
+		 * 2. Prevents runtime state corruption: Saving a scene mid-fight never overwrites or pollutes the combat asset.
+		 * 3. Reusability: Multiple enemies/archetypes can reference the exact same combat asset file.
+		 */
+		std::string m_configPath = "";
+
 	public:
 		CombatStateMachineComponent(Actor* owner);
 	
@@ -117,7 +128,31 @@ namespace HEIN
 		
 		const std::string& GetCurrentStateName() const { return m_currentStateName; }
 		const std::unordered_map<std::string, StateConfig>& GetConfigs() const { return m_stateConfigs; }
+
+		// --- Modular Asset Configuration ---
+		const std::string& GetConfigPath() const { return m_configPath; }
+		void SetConfigPath(const std::string& path) { m_configPath = path; }
+
+		/**
+		 * @brief Loads states, combos, and transitions from a standalone combat JSON asset.
+		 * @param path Relative path to the combat asset file.
+		 * @return True if loaded successfully, false on I/O or parsing error.
+		 */
+		bool LoadFromConfigFile(const std::string& path);
+
+		/**
+		 * @brief Persists the current state configurations out to a standalone combat JSON asset.
+		 * @param path Target file path. If empty, uses m_configPath.
+		 * @return True if written successfully, false on error.
+		 */
+		bool SaveToConfigFile(const std::string& path = "") const;
+
 	private:
+		/**
+		 * @brief Internal helper to parse states array and defaultState from a JSON object.
+		 */
+		void DeserializeStatesFromJSON(const nlohmann::json& data);
+
 		/**
 		 * @brief Callback triggered when an overlap event occurs (e.g. hit detection).
 		 * @param payLoad Data containing information about the overlap event.
@@ -127,3 +162,4 @@ namespace HEIN
 		void RebuildAllStates();
 	};
 }
+
