@@ -5,11 +5,7 @@
 #include "pch.h"
 #include "GameScene.h"
 #include "../../../External/Engine/Common/InputManager.h"
-#include "../../../External/Engine/Camera/DebugCameraMode.h"
 #include "../../../External/Engine/Camera/CameraController.h"
-#include "../../../External/Engine/Camera/ThirdPersonMode.h"
-#include "../../../External/Engine/Camera/FirstPersonMode.h"
-#include "../../../External/Engine/Camera/LockOnCameraMode.h"
 #include "../../../External/Engine/Camera/SpringCameraMode.h"
 #include "../../../External/Engine/Components/TransformComponent.h"
 #include "../../../External/Engine/Components/SkinnedModelComponent.h"
@@ -58,6 +54,11 @@ using namespace DirectX;
 // --------------------------------------------------------------------------------------
 void GameScene::OnEnter(GameContext& gameContext)
 {
+    // Clean all previous actors to guarantee scene isolation from TitleScene or earlier runs
+    m_actorManager.ClearAllActors();
+    gameContext.actorManager = &m_actorManager;
+    gameContext.shadowSystem = &m_shadowSystem;
+
     // Initialize Core Systems & Viewport Pipeline
     m_physicsSystem = std::make_unique<HEIN::PhysicsSystem>();
     m_damageSystem = std::make_unique<HEIN::DamageSystem>();
@@ -91,10 +92,33 @@ void GameScene::OnEnter(GameContext& gameContext)
 }
 
 // --------------------------------------------------------------------------------------
+// シーン終了時に呼び出される関数 (OnExit)
+// --------------------------------------------------------------------------------------
+void GameScene::OnExit(GameContext& gameContext)
+{
+    // Auto-save on exit to primary GameScene path
+    nlohmann::json j = m_actorManager.Serialize();
+    std::ofstream sceneFile(GetSceneDataWritePath());
+    if (sceneFile.is_open())
+    {
+        sceneFile << j.dump(4);
+    }
+
+    gameContext.actorManager = nullptr;
+    gameContext.shadowSystem = nullptr;
+    gameContext.mainCamera = nullptr;
+    m_actorManager.ClearAllActors();
+}
+
+// --------------------------------------------------------------------------------------
 // 更新 (Update) - Orchestrates ECS Pipeline Phases
 // --------------------------------------------------------------------------------------
 void GameScene::Update(GameContext& gameContext)
 {
+    gameContext.actorManager = &m_actorManager;
+    gameContext.shadowSystem = &m_shadowSystem;
+    gameContext.isEditorMode = (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()));
+
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
     // Phase 1: Editor & Tooling Phase
@@ -183,7 +207,10 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
         HEIN::CameraType targetCameraType;
         if (gameContext.inputManager->WasCameraSwitchPressed(gameContext, targetCameraType))
         {
-            camera->RequestSwitch(targetCameraType);
+            if (targetCameraType == HEIN::CameraType::Spring)
+            {
+                camera->RequestSwitch(targetCameraType);
+            }
         }
     }
 
@@ -315,8 +342,8 @@ void GameScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext*
                             targetCenter = trans->GetPosition();
                         }
                     }
-                    lightPos = targetCenter - lightDir * 500.0f;
-                    projSize = (activeLight->GetRange() > 0.1f) ? activeLight->GetRange() : 150.0f;
+                    lightPos = targetCenter - lightDir * 1000.0f;
+                    projSize = (activeLight->GetRange() > 0.1f) ? activeLight->GetRange() : 500.0f;
                 }
                 else
                 {
@@ -328,7 +355,7 @@ void GameScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext*
     }
     lightDir.Normalize();
 
-    DirectX::SimpleMath::Vector3 targetPos = lightPos + lightDir * 500.0f;
+    DirectX::SimpleMath::Vector3 targetPos = lightPos + lightDir * 1000.0f;
     DirectX::SimpleMath::Vector3 up = DirectX::SimpleMath::Vector3::Up;
     if (std::abs(lightDir.Dot(up)) > 0.999f)
     {
@@ -336,7 +363,7 @@ void GameScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext*
     }
 
     DirectX::SimpleMath::Matrix viewMat = DirectX::SimpleMath::Matrix::CreateLookAt(lightPos, targetPos, up);
-    DirectX::SimpleMath::Matrix projMat = DirectX::SimpleMath::Matrix::CreateOrthographic(projSize, projSize, 0.1f, 1000.0f);
+    DirectX::SimpleMath::Matrix projMat = DirectX::SimpleMath::Matrix::CreateOrthographic(projSize, projSize, 0.1f, 3000.0f);
     DirectX::SimpleMath::Matrix lightViewProj = viewMat * projMat;
     m_shadowSystem.SetLightViewProj(lightViewProj);
 
@@ -548,6 +575,7 @@ void GameScene::LoadSceneData(GameContext& gameContext)
                 sceneFile >> j;
                 if (!j.empty())
                 {
+                    m_actorManager.ClearAllActors();
                     m_actorManager.Deserialize(j);
                     m_actorManager.InitializeAfterDeserialize(gameContext);
                 }
@@ -665,23 +693,7 @@ void GameScene::SetupCameraModes(GameContext& gameContext, HEIN::CameraControlle
             }
         }
 
-        cameraComp->RegisterCamera(
-            HEIN::CameraType::FirstPerson,
-            [this, modelPointer]()
-            {
-                return std::make_unique<HEIN::FirstPersonMode>(
-                    &m_actorManager, m_playerID, &m_targetPos, modelPointer, modelPointer);
-            }
-        );
-
-        cameraComp->RegisterCamera(
-            HEIN::CameraType::ThirdPerson,
-            [this, modelPointer]()
-            {
-                return std::make_unique<HEIN::ThirdPersonMode>(
-                    &m_actorManager, m_playerID, &m_targetPos, modelPointer, modelPointer);
-            }
-        );
+        cameraComp->ClearRegisteredCameras();
 
         cameraComp->RegisterCamera(
             HEIN::CameraType::Spring,
@@ -691,21 +703,7 @@ void GameScene::SetupCameraModes(GameContext& gameContext, HEIN::CameraControlle
                     &m_actorManager, m_playerID, &m_targetPos);
             }
         );
-
-        cameraComp->RegisterCamera(
-            HEIN::CameraType::LockOn,
-            [this]()
-            {
-                return std::make_unique<HEIN::LockOnCameraMode>(
-                    &m_actorManager, m_playerID, m_enemyID);
-            }
-        );
     }
-
-    cameraComp->RegisterCamera(
-        HEIN::CameraType::Debug,
-        []() { return std::make_unique<HEIN::DebugCameraMode>(); }
-    );
 
     cameraComp->SetFirstCamera(HEIN::CameraType::Spring);
 }

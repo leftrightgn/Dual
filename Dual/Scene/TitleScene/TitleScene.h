@@ -11,6 +11,7 @@
 #include "../../../External/Engine/Components/UIButtonComponent.h"
 #include "../../../External/Engine/Camera/CameraController.h"
 #include "../../../External/Engine/DebugingTools/DebugDisplayController.h"
+#include "../../../External/Engine/Common/ShadowSystem.h"
 
 /**
  * @class TitleScene
@@ -31,7 +32,10 @@ public:
     void Render(GameContext& gameContext) override;
 
 private:
+    void RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext* context);
+
     std::unique_ptr<HEIN::Skybox> m_skybox;
+    HEIN::ShadowSystem m_shadowSystem;
 
     DirectX::SimpleMath::Matrix m_proj;
     DirectX::SimpleMath::Matrix m_world;

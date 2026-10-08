@@ -1,20 +1,21 @@
 {
     "Actors": [
         {
+            "ActorType": 0,
             "Children": [],
             "Components": [
                 {
                     "Data": {
                         "Position": [
-                            85.96399688720703,
-                            18.229000091552734,
-                            24.5
+                            -28.92872428894043,
+                            143.61302185058594,
+                            152.43377685546875
                         ],
                         "Rotation": [
-                            -0.024965405464172363,
-                            0.3006027042865753,
-                            0.007871548645198345,
-                            0.9533901810646057
+                            -0.0,
+                            0.40673667192459106,
+                            -0.0,
+                            0.9135454893112183
                         ],
                         "Scale": [
                             0.9999967217445374,
@@ -27,21 +28,25 @@
                 {
                     "Data": {
                         "BlendDuration": 0.0010000000474974513,
-                        "Fov": 0.7487462759017944,
-                        "PosX": 85.96399688720703,
-                        "PosY": 18.229000091552734,
-                        "PosZ": 24.5,
-                        "RotW": 0.9533901810646057,
-                        "RotX": -0.024965405464172363,
-                        "RotY": 0.3006027042865753,
-                        "RotZ": 0.007871548645198345
+                        "Fov": 0.9442231059074402,
+                        "PosX": -28.92872428894043,
+                        "PosY": 143.61302185058594,
+                        "PosZ": 152.43377685546875,
+                        "RotW": 0.9135454893112183,
+                        "RotX": -0.0,
+                        "RotY": 0.40673667192459106,
+                        "RotZ": -0.0
                     },
                     "Type": "CameraController"
                 }
             ],
-            "Name": "TitleCamera"
+            "IsActive": true,
+            "IsVisible": true,
+            "Name": "TitleCamera",
+            "OwnerID": 0
         },
         {
+            "ActorType": 0,
             "Children": [],
             "Components": [
                 {
@@ -90,9 +95,13 @@
                     "Type": "UIButtonComponent"
                 }
             ],
-            "Name": "StartButton"
+            "IsActive": true,
+            "IsVisible": true,
+            "Name": "StartButton",
+            "OwnerID": 0
         },
         {
+            "ActorType": 0,
             "Children": [],
             "Components": [
                 {
@@ -141,23 +150,67 @@
                     "Type": "UIButtonComponent"
                 }
             ],
-            "Name": "ExitButton"
+            "IsActive": true,
+            "IsVisible": true,
+            "Name": "ExitButton",
+            "OwnerID": 0
         },
         {
-            "Children": [],
+            "ActorType": 0,
+            "Children": [
+                {
+                    "ActorType": 0,
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "Position": [
+                                    3.25634765625,
+                                    96.7507095336914,
+                                    -24.771392822265625
+                                ],
+                                "Rotation": [
+                                    4.087545189476738e-13,
+                                    -3.725289587919178e-08,
+                                    5.589971844785491e-13,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    0.20000004768371582,
+                                    0.20000001788139343,
+                                    0.20000004768371582
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "CastShadows": true,
+                                "ModelPath": "Resources/Models/knight/sword.sdkmesh",
+                                "TextureDir": "Resources/Models/knight/"
+                            },
+                            "Type": "StaticModelComponent"
+                        }
+                    ],
+                    "IsActive": true,
+                    "IsVisible": true,
+                    "Name": "sword",
+                    "OwnerID": 0
+                }
+            ],
             "Components": [
                 {
                     "Data": {
                         "Position": [
-                            45.14137268066406,
-                            -1.3067593574523926,
-                            -8.883708000183105
+                            -44.91527557373047,
+                            126.16378021240234,
+                            143.10313415527344
                         ],
                         "Rotation": [
-                            -4.221719418495695e-09,
-                            0.9590288400650024,
-                            -1.4290673533423615e-08,
-                            -0.2833084166049957
+                            7.185236405859996e-09,
+                            0.8873490691184998,
+                            -3.733705344899363e-09,
+                            -0.4610982835292816
                         ],
                         "Scale": [
                             0.10000136494636536,
@@ -172,196 +225,33 @@
                         "Animations": [
                             {
                                 "Name": "Anim0",
-                                "Path": "Resources/Models/knight/Hip Hop Dancing.sdkmesh_anim"
+                                "Path": "Resources/Models/knight/bothH.sdkmesh_anim"
                             }
                         ],
+                        "EnableRootMotion": false,
+                        "IsVisible": true,
                         "ModelPath": "Resources/Models/knight/knight.sdkmesh",
+                        "RootBoneName": "",
+                        "RootMotionExtractY": false,
                         "TextureDir": "Resources/Models/knight/"
                     },
                     "Type": "SkinnedModelComponent"
                 }
             ],
-            "Name": "Player"
+            "IsActive": true,
+            "IsVisible": true,
+            "Name": "Player",
+            "OwnerID": 0
         },
         {
-            "Children": [
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    0.0,
-                                    0.0,
-                                    0.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    0.0,
-                                    1.0
-                                ],
-                                "Scale": [
-                                    1.0,
-                                    1.0,
-                                    1.0
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/floor1.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Floor"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    10.0,
-                                    0.0,
-                                    10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    -0.7071068286895752,
-                                    0.7071067690849304
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Pillar0"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    10.0,
-                                    0.0,
-                                    -10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    -0.7071068286895752,
-                                    0.7071067690849304
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Pillar1"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -10.0,
-                                    0.0,
-                                    10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    -0.7071068286895752,
-                                    0.7071067690849304
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Pillar2"
-                },
-                {
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "Position": [
-                                    -10.0,
-                                    0.0,
-                                    -10.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    -0.7071068286895752,
-                                    0.7071067690849304
-                                ],
-                                "Scale": [
-                                    0.009999999776482582,
-                                    0.009999999776482582,
-                                    0.009999999776482582
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "ModelPath": "Resources/Models/stage/pillar.sdkmesh",
-                                "TextureDir": "Resources/Models/stage"
-                            },
-                            "Type": "StaticModelComponent"
-                        }
-                    ],
-                    "Name": "Pillar3"
-                }
-            ],
+            "ActorType": 0,
+            "Children": [],
             "Components": [
                 {
                     "Data": {
                         "Position": [
                             0.0,
-                            -17.727642059326172,
+                            -44.35539245605469,
                             -21.085906982421875
                         ],
                         "Rotation": [
@@ -377,11 +267,54 @@
                         ]
                     },
                     "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "AlphaMapPath": "",
+                        "CastShadows": true,
+                        "ColorMapPath": "Resources/Textures/colormap_with_road.bmp",
+                        "DiffuseColor": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "HeightMapPath": "Resources/Textures/heightmap_with_road.bmp",
+                        "HeightScale": 38.0,
+                        "IsVisible": true,
+                        "LightDirection": [
+                            -0.5,
+                            -1.0,
+                            0.5
+                        ],
+                        "NormalMapPath": "",
+                        "Texture2Path": "",
+                        "TexturePath": "Resources/Textures/dirt01d.dds",
+                        "TextureTiling": 32.0,
+                        "isWiredFrame": false
+                    },
+                    "Type": "TerrainComponent"
+                },
+                {
+                    "Data": {
+                        "FogColor": [
+                            0.5,
+                            0.6000000238418579,
+                            0.699999988079071,
+                            1.0
+                        ],
+                        "FogEnd": 800.0,
+                        "FogStart": 215.0
+                    },
+                    "Type": "FogComponent"
                 }
             ],
-            "Name": "StageRoot"
+            "IsActive": true,
+            "IsVisible": true,
+            "Name": "StageRoot",
+            "OwnerID": 0
         },
         {
+            "ActorType": 0,
             "Children": [],
             "Components": [
                 {
@@ -408,20 +341,13 @@
                 {
                     "Data": {
                         "AlphaMapPath": "",
+                        "CastShadows": true,
                         "ColorMapPath": "Resources/Textures/colormap.bmp",
                         "DiffuseColor": [
                             1.0,
                             1.0,
                             1.0
                         ],
-                        "FogColor": [
-                            0.5,
-                            0.6000000238418579,
-                            0.699999988079071,
-                            1.0
-                        ],
-                        "FogEnd": 800.0,
-                        "FogStart": 100.0,
                         "HeightMapPath": "Resources/Textures/heightmap.bmp",
                         "HeightScale": 33.5,
                         "IsVisible": true,
@@ -439,9 +365,13 @@
                     "Type": "TerrainComponent"
                 }
             ],
-            "Name": "Terrain"
+            "IsActive": true,
+            "IsVisible": true,
+            "Name": "Terrain",
+            "OwnerID": 0
         },
         {
+            "ActorType": 0,
             "Children": [],
             "Components": [
                 {
@@ -472,8 +402,8 @@
                         "HoverTex": "",
                         "IsVisible": true,
                         "NormalTex": "Resources/Textures/ups.dds",
-                        "PosX": 406.00079345703125,
-                        "PosY": 168.00027465820313,
+                        "PosX": 386.0008544921875,
+                        "PosY": 79.33355712890625,
                         "PressedTex": "",
                         "SizeX": 481.0,
                         "SizeY": 169.0,
@@ -490,41 +420,57 @@
                     "Type": "UIButtonComponent"
                 }
             ],
-            "Name": "UIImage"
+            "IsActive": true,
+            "IsVisible": true,
+            "Name": "UIImage",
+            "OwnerID": 0
         },
         {
+            "ActorType": 0,
             "Children": [],
             "Components": [
                 {
                     "Data": {
                         "Position": [
-                            -100.23152160644531,
-                            -14.591560363769531,
-                            78.78213500976563
+                            0.0,
+                            0.0,
+                            0.0
                         ],
                         "Rotation": [
-                            0.0,
-                            0.0,
-                            1.0,
-                            -1.1920930376163597e-07
+                            -0.07718497514724731,
+                            0.8186661601066589,
+                            -0.1627221703529358,
+                            0.5452978610992432
                         ],
                         "Scale": [
-                            0.10000000149011612,
-                            0.10000000149011612,
-                            0.10000000149011612
+                            1.0,
+                            1.0,
+                            1.0
                         ]
                     },
                     "Type": "TransformComponent"
                 },
                 {
                     "Data": {
-                        "ModelPath": "Resources/Models/stage/bridge.sdkmesh",
-                        "TextureDir": "Resources/Models/stage/"
+                        "CastShadows": true,
+                        "Color": [
+                            1.0,
+                            0.7058823108673096,
+                            0.0,
+                            1.0
+                        ],
+                        "Intensity": 1.2000000476837158,
+                        "LightType": 0,
+                        "Range": 50.0,
+                        "SpotAngle": 45.0
                     },
-                    "Type": "StaticModelComponent"
+                    "Type": "LightComponent"
                 }
             ],
-            "Name": "bridge1"
+            "IsActive": true,
+            "IsVisible": true,
+            "Name": "light",
+            "OwnerID": 0
         }
     ]
 }

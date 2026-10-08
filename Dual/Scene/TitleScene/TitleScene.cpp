@@ -20,9 +20,24 @@
 #include <filesystem>
 #include <Windows.h>
 #include <DirectXMath.h>
+#include "../../../External/Engine/Components/LightComponent.h"
 
 namespace
 {
+    // Primary scene configuration path (DOD scene layout, transforms, actor instances)
+    std::string GetTitleSceneDataWritePath()
+    {
+        namespace fs = std::filesystem;
+        std::error_code ec;
+        std::string target = "Resources/Data/TitleScene.json";
+        if (!fs::exists("Resources", ec) && fs::exists("Dual/Resources", ec))
+        {
+            target = "Dual/Resources/Data/TitleScene.json";
+        }
+        fs::create_directories(fs::path(target).parent_path(), ec);
+        return target;
+    }
+
     std::string GetTitleAutoSaveWritePath()
     {
         namespace fs = std::filesystem;
@@ -41,6 +56,9 @@ using namespace DirectX;
 
 void TitleScene::OnEnter(GameContext& gameContext)
 {
+    // Initialize Core Pipeline & Shadow System
+    m_shadowSystem.Initialize(gameContext.deviceResources.GetD3DDevice(), 2048, 2048);
+
     // Initialize Skybox
     m_skybox = std::make_unique<HEIN::Skybox>();
     m_skybox->Initialize(gameContext, L"Resources/Textures/skybox.dds");
@@ -50,12 +68,19 @@ void TitleScene::OnEnter(GameContext& gameContext)
     float aspectRatio = (viewport.Height > 0.0f) ? (static_cast<float>(viewport.Width) / static_cast<float>(viewport.Height)) : 1.777f;
     m_proj = SimpleMath::Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.0f, aspectRatio, 0.01f, 1000.0f);
 
-    // Initialize Component Factory
+    // Initialize Component Factory and register all game components for reflection/deserialization
     HEIN::ComponentFactory::Initialize();
+    HEIN::ActorFactory::RegisterGameComponents();
+
+    gameContext.actorManager = &m_actorManager;
+    gameContext.shadowSystem = &m_shadowSystem;
 
     // Auto-load last saved title scene changes if available
     bool hasAutoSave = false;
     std::vector<std::string> candidates = {
+        "Resources/Data/TitleScene.json",
+        "Dual/Resources/Data/TitleScene.json",
+        "../Dual/Resources/Data/TitleScene.json",
         "Resources/Data/TitleAutoSave.json",
         "Dual/Resources/Data/TitleAutoSave.json",
         "../Dual/Resources/Data/TitleAutoSave.json"
@@ -81,6 +106,13 @@ void TitleScene::OnEnter(GameContext& gameContext)
                 m_actorManager.ClearAllActors();
                 m_actorManager.Deserialize(j);
                 m_actorManager.InitializeAfterDeserialize(gameContext);
+                for (const auto& pair : m_actorManager.GetAllActors())
+                {
+                    if (pair.second)
+                    {
+                        pair.second->Start();
+                    }
+                }
                 hasAutoSave = true;
             }
         }
@@ -198,15 +230,24 @@ void TitleScene::OnEnter(GameContext& gameContext)
 
 void TitleScene::OnExit(GameContext& gameContext)
 {
-    // Auto-save on exit
-    std::string autoSavePath = GetTitleAutoSaveWritePath();
-    std::ofstream autoSave(autoSavePath);
-    if (autoSave.is_open())
+    // Auto-save on exit to primary DOD path and fallback path
+    nlohmann::json j = m_actorManager.Serialize();
+    std::string serializedStr = j.dump(4);
+
+    std::ofstream primaryFile(GetTitleSceneDataWritePath());
+    if (primaryFile.is_open())
     {
-        nlohmann::json j = m_actorManager.Serialize();
-        autoSave << j.dump(4);
+        primaryFile << serializedStr;
     }
 
+    std::ofstream autoSave(GetTitleAutoSaveWritePath());
+    if (autoSave.is_open())
+    {
+        autoSave << serializedStr;
+    }
+
+    gameContext.actorManager = nullptr;
+    gameContext.shadowSystem = nullptr;
     gameContext.mainCamera = nullptr;
     m_actorManager.ClearAllActors();
 }
@@ -215,6 +256,10 @@ void TitleScene::Update(GameContext& gameContext)
 {
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
     m_titlePulseTimer += deltaTime;
+
+    gameContext.actorManager = &m_actorManager;
+    gameContext.shadowSystem = &m_shadowSystem;
+    gameContext.isEditorMode = (m_debugDisplay != nullptr && m_debugDisplay->isMagnified()) || !m_isPlaying;
 
     // Update Debug Display / Editor UI
     m_debugDisplay->Update(gameContext, m_actorManager);
@@ -250,6 +295,13 @@ void TitleScene::Update(GameContext& gameContext)
                 m_actorManager.ClearAllActors();
                 m_actorManager.Deserialize(j);
                 m_actorManager.InitializeAfterDeserialize(gameContext);
+                for (const auto& pair : m_actorManager.GetAllActors())
+                {
+                    if (pair.second)
+                    {
+                        pair.second->Start();
+                    }
+                }
 
                 auto startAct = m_actorManager.GetActorByName(L"StartButton");
                 if (startAct) { m_startButtonID = startAct->GetID(); m_startButton = startAct->GetComponent<HEIN::UIButtonComponent>(); }
@@ -308,6 +360,11 @@ void TitleScene::Update(GameContext& gameContext)
             {
                 file << serializedStr;
             }
+            std::ofstream primaryFile(GetTitleSceneDataWritePath());
+            if (primaryFile.is_open())
+            {
+                primaryFile << serializedStr;
+            }
             std::ofstream autoSave(GetTitleAutoSaveWritePath());
             if (autoSave.is_open())
             {
@@ -317,11 +374,18 @@ void TitleScene::Update(GameContext& gameContext)
     }
     else if (uiAction == HEIN::EditorAction::AutoSavePressed)
     {
+        nlohmann::json j = m_actorManager.Serialize();
+        std::string serializedStr = j.dump(4);
+
+        std::ofstream primaryFile(GetTitleSceneDataWritePath());
+        if (primaryFile.is_open())
+        {
+            primaryFile << serializedStr;
+        }
         std::ofstream autoSave(GetTitleAutoSaveWritePath());
         if (autoSave.is_open())
         {
-            nlohmann::json j = m_actorManager.Serialize();
-            autoSave << j.dump(4);
+            autoSave << serializedStr;
         }
     }
     else if (uiAction == HEIN::EditorAction::CreateStagePressed)
@@ -340,11 +404,18 @@ void TitleScene::Update(GameContext& gameContext)
         if (m_autoSaveTimer >= 30.0f)
         {
             m_autoSaveTimer = 0.0f;
+            nlohmann::json j = m_actorManager.Serialize();
+            std::string serializedStr = j.dump(4);
+
+            std::ofstream primaryFile(GetTitleSceneDataWritePath());
+            if (primaryFile.is_open())
+            {
+                primaryFile << serializedStr;
+            }
             std::ofstream autoSave(GetTitleAutoSaveWritePath());
             if (autoSave.is_open())
             {
-                nlohmann::json j = m_actorManager.Serialize();
-                autoSave << j.dump(4);
+                autoSave << serializedStr;
             }
         }
     }
@@ -394,6 +465,81 @@ void TitleScene::Update(GameContext& gameContext)
     m_actorManager.CleanUpDestroyedActors();
 }
 
+void TitleScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext* context)
+{
+    HEIN::LightComponent* activeLight = nullptr;
+    for (auto& pair : m_actorManager.GetAllActors())
+    {
+        activeLight = pair.second->GetComponent<HEIN::LightComponent>();
+        if (activeLight && activeLight->CastsShadows()) break;
+    }
+
+    DirectX::SimpleMath::Vector3 lightDir(0.5f, -1.0f, 0.5f);
+    DirectX::SimpleMath::Vector3 lightPos(-500.0f, 1000.0f, -500.0f);
+    float projSize = 500.0f;
+
+    DirectX::SimpleMath::Vector3 targetCenter = DirectX::SimpleMath::Vector3::Zero;
+    if (HEIN::Actor* player = m_actorManager.GetActorByName(L"Player"))
+    {
+        if (auto* trans = player->GetComponent<HEIN::TransformComponent>())
+        {
+            targetCenter = trans->GetPosition();
+        }
+    }
+    else if (m_cameraController != nullptr && m_actorManager.HasActor(m_cameraID))
+    {
+        if (HEIN::Actor* camActor = m_actorManager.GetActor(m_cameraID))
+        {
+            if (auto* trans = camActor->GetComponent<HEIN::TransformComponent>())
+            {
+                targetCenter = trans->GetPosition() + trans->GetForward() * 50.0f;
+            }
+        }
+    }
+
+    if (activeLight)
+    {
+        if (auto* lightOwner = activeLight->GetOwner())
+        {
+            if (auto* lightTransform = lightOwner->GetComponent<HEIN::TransformComponent>())
+            {
+                lightDir = lightTransform->GetForward();
+                if (activeLight->GetLightType() == HEIN::LightType::Directional)
+                {
+                    lightPos = targetCenter - lightDir * 1000.0f;
+                    projSize = (activeLight->GetRange() > 0.1f) ? activeLight->GetRange() : 500.0f;
+                }
+                else
+                {
+                    lightPos = lightTransform->GetPosition();
+                    projSize = activeLight->GetRange();
+                }
+            }
+        }
+    }
+    else
+    {
+        lightPos = targetCenter - lightDir * 1000.0f;
+    }
+    lightDir.Normalize();
+
+    DirectX::SimpleMath::Vector3 targetPos = lightPos + lightDir * 1000.0f;
+    DirectX::SimpleMath::Vector3 up = DirectX::SimpleMath::Vector3::Up;
+    if (std::abs(lightDir.Dot(up)) > 0.999f)
+    {
+        up = DirectX::SimpleMath::Vector3::Right;
+    }
+
+    DirectX::SimpleMath::Matrix viewMat = DirectX::SimpleMath::Matrix::CreateLookAt(lightPos, targetPos, up);
+    DirectX::SimpleMath::Matrix projMat = DirectX::SimpleMath::Matrix::CreateOrthographic(projSize, projSize, 0.1f, 3000.0f);
+    DirectX::SimpleMath::Matrix lightViewProj = viewMat * projMat;
+    m_shadowSystem.SetLightViewProj(lightViewProj);
+
+    m_shadowSystem.BindShadowMap(context);
+    m_actorManager.DrawAllShadows(gameContext, lightViewProj);
+    m_shadowSystem.UnbindShadowMap(context);
+}
+
 void TitleScene::Render(GameContext& gameContext)
 {
     ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
@@ -402,17 +548,49 @@ void TitleScene::Render(GameContext& gameContext)
     if (m_cameraController != nullptr && m_actorManager.HasActor(m_cameraID))
     {
         view = m_cameraController->GetView();
+        D3D11_VIEWPORT vp = gameContext.deviceResources.GetScreenViewport();
+        if (vp.Height > 0.0f)
+        {
+            float aspectRatio = static_cast<float>(vp.Width) / static_cast<float>(vp.Height);
+            m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(m_cameraController->GetFov(), aspectRatio, 0.1f, 5000.0f);
+        }
     }
+
+    gameContext.actorManager = &m_actorManager;
+    gameContext.shadowSystem = &m_shadowSystem;
+    gameContext.isEditorMode = (m_debugDisplay != nullptr && m_debugDisplay->isMagnified()) || !m_isPlaying;
+
+    // Pass 1: Shadow Depth Map Pass
+    RenderShadowPhase(gameContext, context);
+
+    // Pass 2: Main Color Pass
+    ID3D11RenderTargetView* rtv = gameContext.deviceResources.GetRenderTargetView();
+    ID3D11DepthStencilView* dsv = gameContext.deviceResources.GetDepthStencilView();
+    context->OMSetRenderTargets(1, &rtv, dsv);
+    D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
+    context->RSSetViewports(1, &viewport);
 
     if (m_skybox)
     {
         m_skybox->Draw(gameContext, view, m_proj);
     }
 
+    // Bind Shadow Map SRV (slot 4) & Comparison Sampler (slot 1) for StaticModel / SkinnedModel / Terrain
+    ID3D11ShaderResourceView* shadowSRV = m_shadowSystem.GetShadowMapSRV();
+    context->PSSetShaderResources(4, 1, &shadowSRV);
+
+    ID3D11SamplerState* shadowSampler = m_shadowSystem.GetShadowSampler();
+    context->PSSetSamplers(1, 1, &shadowSampler);
+
     // Draw all actors (including UI button/image/text SpriteBatch and typography passes)
     m_actorManager.DrawAll(gameContext, view, m_proj);
 
+    // Unbind Shadow Map SRV and Sampler
+    ID3D11ShaderResourceView* nullSRV = nullptr;
+    context->PSSetShaderResources(4, 1, &nullSRV);
 
+    ID3D11SamplerState* nullSampler = nullptr;
+    context->PSSetSamplers(1, 1, &nullSampler);
 
     // Reset pipeline state
     context->RSSetState(gameContext.commonStates.CullCounterClockwise());

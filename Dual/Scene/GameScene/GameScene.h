@@ -31,6 +31,7 @@ class GameScene : public HEIN::IScene
 public:
 
 	void OnEnter(GameContext& gameContext) override;
+	void OnExit(GameContext& gameContext) override;
 	void Update(GameContext& gameContext) override;
 	void Render(GameContext& gameContext) override;
 
