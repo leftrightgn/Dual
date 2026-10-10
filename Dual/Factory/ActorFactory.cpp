@@ -3,6 +3,7 @@
 #include <Components/PlayerInputComponent.h>
 #include <Components/CharacterMovementComponent.h>
 #include <Components/CombatStateMachineComponent.h>
+#include <Components/PossessableComponent.h>
 #include "BehaviourTree/BTChaseNode.h"
 #include "BehaviourTree/BTCheckDistance.h"
 #include "BehaviourTree/BTDodgeNode.h"
@@ -117,7 +118,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
     sword->SetOwnerID(wielderID);
 
     HEIN::DamageDealerComponent* swordDamage = sword->AddComponent<HEIN::DamageDealerComponent>();
-    swordDamage->Initialize(damage, DamageType::Physical);
+    swordDamage->Initialize(damage, DamageType::Physical, false, 15.0f);
 
     HEIN::TransformComponent* swordTransform = sword->AddComponent<HEIN::TransformComponent>();
     swordTransform->SetScale(DirectX::SimpleMath::Vector3(2.0f));
@@ -178,7 +179,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateAxe(
     axe->SetOwnerID(wielderID);
 
     HEIN::DamageDealerComponent* axeDamage = axe->AddComponent<HEIN::DamageDealerComponent>();
-    axeDamage->Initialize(damage, DamageType::Physical, true);
+    axeDamage->Initialize(damage, DamageType::Physical, true, 30.0f);
 
     HEIN::TransformComponent* axeTransform = axe->AddComponent<HEIN::TransformComponent>();
     axeTransform->SetScale(DirectX::SimpleMath::Vector3(10.0f));
@@ -460,6 +461,7 @@ void HEIN::ActorFactory::RegisterGameComponents()
     ComponentFactory::RegisterComponent<CharacterMovementComponent>("CharacterMovementComponent");
     ComponentFactory::RegisterComponent<PlayerInputComponent>("PlayerInputComponent");
     ComponentFactory::RegisterComponent<CombatBlackBoard>("CombatBlackBoard");
+    ComponentFactory::RegisterComponent<PossessableComponent>("PossessableComponent");
 
     // UI pulls Block and Dodge directly from the actor's CombatBlackBoard
     GaugeComponent::SetExternalSyncHandler([](Actor* target, GaugeType type, float& outCurrent, float& outMax) -> bool {
@@ -484,11 +486,15 @@ void HEIN::ActorFactory::RegisterGameComponents()
         return false;
     });
 
-    // Intercept damage for blocking states
-    DamageSystem::SetDamageInterceptor([](Actor* attacker, Actor* victim, float damage) -> bool {
+    // Intercept damage for blocking states, hit stun, and dynamic physical knockback
+    DamageSystem::SetDamageInterceptor([](Actor* attacker, Actor* victim, DamageDealerComponent* dealer, float /*damage*/) -> bool {
         if (!victim) return true;
         auto* sm = victim->GetComponent<CombatStateMachineComponent>();
         auto* bb = victim->GetComponent<CombatBlackBoard>();
+
+        bool isBlocked = false;
+        bool applyDamage = true;
+
         if (sm && sm->IsBlocking() && bb && !bb->isBlockBroken)
         {
             // Block absorbs the hit! Deduct stamina
@@ -499,12 +505,17 @@ void HEIN::ActorFactory::RegisterGameComponents()
                 bb->isBlockBroken = true;
                 // Guard broke! Stun the victim immediately
                 Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
-                return true; // Guard broke! Damage breaks through to health
+                applyDamage = true; // Guard broke! Damage breaks through to health
             }
-            return false; // Attack blocked! No health damage
+            else
+            {
+                isBlocked = true;
+                applyDamage = false; // Attack blocked! No health damage
+            }
         }
 
         // If attacker is executing a heavy attack, ensure victim is stunned
+        bool isHeavyAttack = false;
         if (attacker)
         {
             auto* attackerSM = attacker->GetComponent<CombatStateMachineComponent>();
@@ -513,12 +524,71 @@ void HEIN::ActorFactory::RegisterGameComponents()
                 const std::string& attackerState = attackerSM->GetCurrentStateName();
                 if (attackerState == "HeavyAttack" || attackerState.find("Heavy") != std::string::npos)
                 {
-                    Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
+                    isHeavyAttack = true;
+                    if (!isBlocked)
+                    {
+                        Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
+                    }
                 }
             }
         }
 
-        return true; // Normal hit, apply full damage
+        // Calculate and apply physical hit impulse dynamically (not hardcoded)
+        float baseForce = dealer ? dealer->GetKnockbackForce() : 25.0f;
+        if (baseForce <= 0.0f) baseForce = 25.0f;
+
+        // Calculate direction from attacker to victim along horizontal ground plane
+        DirectX::SimpleMath::Vector3 dir = DirectX::SimpleMath::Vector3::Zero;
+        auto* victimTrans = victim->GetComponent<TransformComponent>();
+        auto* attackerTrans = attacker ? attacker->GetComponent<TransformComponent>() : nullptr;
+
+        if (victimTrans && attackerTrans)
+        {
+            dir = victimTrans->GetPosition() - attackerTrans->GetPosition();
+            dir.y = 0.0f;
+        }
+
+        if (dir.LengthSquared() > 0.0001f)
+        {
+            dir.Normalize();
+        }
+        else if (attackerTrans)
+        {
+            dir = attackerTrans->GetForward();
+            dir.y = 0.0f;
+            if (dir.LengthSquared() > 0.0001f)
+                dir.Normalize();
+            else
+                dir = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 1.0f);
+        }
+        else
+        {
+            dir = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 1.0f);
+        }
+
+        // Modulate impulse by combat context
+        float impulseMagnitude = baseForce;
+        if (isBlocked)
+        {
+            impulseMagnitude *= 0.4f; // Reduced pushback when bracing with shield/block
+        }
+        else if (isHeavyAttack)
+        {
+            impulseMagnitude *= 1.4f; // Heavy attack impact bonus
+        }
+
+        DirectX::SimpleMath::Vector3 impulse = dir * impulseMagnitude;
+
+        if (auto* moveComp = victim->GetComponent<CharacterMovementComponent>())
+        {
+            moveComp->ApplyImpulse(impulse);
+        }
+        else if (auto* rb = victim->GetComponent<RigidBodyComponent>())
+        {
+            rb->SetHorizontalVelocity(rb->GetVelocity() + impulse);
+        }
+
+        return applyDamage;
     });
 }
 
@@ -632,5 +702,97 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
         btComp = enemyActor->AddComponent<HEIN::BehaviourTreeComponent>();
     }
     btComp->Initialize(std::move(aiBrain), actorManager, targetID);
+}
 
+void HEIN::ActorFactory::PossessVessel(
+    Actor* vessel,
+    ActorManager& actorManager
+)
+{
+    if (!vessel) return;
+
+    vessel->SetActorType(HEIN::ActorType::Player);
+    vessel->SetTag(L"Player");
+
+    // Stand upright
+    if (auto* transform = vessel->GetComponent<HEIN::TransformComponent>())
+    {
+        transform->SetRotationEuler(DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
+    }
+
+    // Make mortal: preserve vessel's own current health, only restore if dead
+    if (auto* health = vessel->GetComponent<HEIN::HealthComponent>())
+    {
+        if (health->GetCurrentHealth() <= 0.0f)
+        {
+            health->SetCurrentHealth(health->GetMaxHealth());
+        }
+        health->SetGameplayInvincible(false);
+    }
+
+    // Ensure GaugeComponent is visible and active for player HUD
+    if (auto* gauge = vessel->GetComponent<HEIN::GaugeComponent>())
+    {
+        gauge->SetVisible(true);
+    }
+
+    // Enable procedural animation
+    if (auto* procAnim = vessel->GetComponent<HEIN::ProceduralAnimationComponent>())
+    {
+        procAnim->SetEnabled(true);
+    }
+
+    // Ensure PlayerInputComponent exists and is active
+    if (!vessel->GetComponent<HEIN::PlayerInputComponent>())
+    {
+        vessel->AddComponent<HEIN::PlayerInputComponent>(&actorManager);
+    }
+
+    // Ensure CombatBlackBoard and CharacterMovementComponent exist
+    if (!vessel->GetComponent<HEIN::CombatBlackBoard>())
+    {
+        vessel->AddComponent<HEIN::CombatBlackBoard>();
+    }
+    if (!vessel->GetComponent<HEIN::CharacterMovementComponent>())
+    {
+        vessel->AddComponent<HEIN::CharacterMovementComponent>();
+    }
+
+    if (auto* rb = vessel->GetComponent<HEIN::RigidBodyComponent>())
+    {
+        rb->SetKinematic(false);
+        rb->SetVelocity(DirectX::SimpleMath::Vector3::Zero);
+    }
+
+    // Switch to Idle animation
+    if (auto* model = vessel->GetComponent<HEIN::SkinnedModelComponent>())
+    {
+        model->ChangeAnimation("Idle");
+    }
+
+    // Mark as occupied
+    if (auto* possessable = vessel->GetComponent<HEIN::PossessableComponent>())
+    {
+        possessable->SetOccupied(true);
+    }
+
+    // Ensure weapon children (e.g. vesselsword) are owned by the possessed body and ready for combat
+    for (ActorID childID : vessel->GetChildren())
+    {
+        if (Actor* child = actorManager.GetActor(childID))
+        {
+            child->SetOwnerID(vessel->GetID());
+            if (auto* socketAttachment = child->GetComponent<HEIN::SocketAttachmentComponent>())
+            {
+                socketAttachment->SetOwnerTag(vessel->GetTag());
+                socketAttachment->Initialize(vessel->GetID(), socketAttachment->GetSocketName());
+            }
+            if (auto* damageDealer = child->GetComponent<HEIN::DamageDealerComponent>())
+            {
+                damageDealer->Start();
+            }
+        }
+    }
+
+    vessel->Start();
 }

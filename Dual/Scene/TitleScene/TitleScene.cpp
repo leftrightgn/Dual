@@ -523,14 +523,38 @@ void TitleScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext
     }
     lightDir.Normalize();
 
-    DirectX::SimpleMath::Vector3 targetPos = lightPos + lightDir * 1000.0f;
     DirectX::SimpleMath::Vector3 up = DirectX::SimpleMath::Vector3::Up;
     if (std::abs(lightDir.Dot(up)) > 0.999f)
     {
         up = DirectX::SimpleMath::Vector3::Right;
     }
 
-    DirectX::SimpleMath::Matrix viewMat = DirectX::SimpleMath::Matrix::CreateLookAt(lightPos, targetPos, up);
+    DirectX::SimpleMath::Vector3 finalTargetCenter = targetCenter;
+
+    if (activeLight == nullptr || activeLight->GetLightType() == HEIN::LightType::Directional)
+    {
+        // Option 2: World-locked texel snapping for Directional Light shadow map
+        DirectX::SimpleMath::Matrix lightViewOrigin = DirectX::SimpleMath::Matrix::CreateLookAt(
+            DirectX::SimpleMath::Vector3::Zero,
+            lightDir * 1000.0f,
+            up
+        );
+
+        DirectX::SimpleMath::Vector3 targetInLight = DirectX::SimpleMath::Vector3::Transform(targetCenter, lightViewOrigin);
+
+        const float shadowMapResolution = 2048.0f;
+        float worldUnitsPerTexel = projSize / shadowMapResolution;
+        targetInLight.x = std::floor(targetInLight.x / worldUnitsPerTexel) * worldUnitsPerTexel;
+        targetInLight.y = std::floor(targetInLight.y / worldUnitsPerTexel) * worldUnitsPerTexel;
+
+        DirectX::SimpleMath::Matrix invLightView = lightViewOrigin.Invert();
+        finalTargetCenter = DirectX::SimpleMath::Vector3::Transform(targetInLight, invLightView);
+    }
+
+    DirectX::SimpleMath::Vector3 finalLightPos = finalTargetCenter - lightDir * 1000.0f;
+    DirectX::SimpleMath::Vector3 finalTargetPos = finalTargetCenter;
+
+    DirectX::SimpleMath::Matrix viewMat = DirectX::SimpleMath::Matrix::CreateLookAt(finalLightPos, finalTargetPos, up);
     DirectX::SimpleMath::Matrix projMat = DirectX::SimpleMath::Matrix::CreateOrthographic(projSize, projSize, 0.1f, 3000.0f);
     DirectX::SimpleMath::Matrix lightViewProj = viewMat * projMat;
     m_shadowSystem.SetLightViewProj(lightViewProj);

@@ -259,6 +259,7 @@
   <ItemGroup>
     <ClInclude Include="Components\BehaviourTreeComponent.h" />
     <ClInclude Include="Components\CharacterMovementComponent.h" />
+    <ClInclude Include="Components\PossessableComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\BehaviourTreeComponent.cpp" />

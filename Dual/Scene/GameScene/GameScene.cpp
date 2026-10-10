@@ -15,7 +15,14 @@
 #include <Components/CombatStateMachineComponent.h>
 #include <Components/CharacterMovementComponent.h>
 #include <Components/BehaviourTreeComponent.h>
+#include <Components/PossessableComponent.h>
 #include <BlackBoard/CombatBlackBoard.h>
+#include "../../../External/Engine/Components/DamageDealerComponent.h"
+#include "../../../External/Engine/Components/SocketAttachmentComponent.h"
+#include "../../../External/Engine/Components/RigidBodyComponent.h"
+#include "../../../External/Engine/Components/ColliderComponent/CapsuleColliderComponent.h"
+#include "../../../External/Engine/Components/ColliderComponent/TerrainColliderComponent.h"
+#include "../../../External/Engine/Components/TerrainComponent.h"
 #include "../../../External/Engine/Factory/ComponentFactory.h"
 #include <Factory/ActorFactory.h>
 #include "../../../External/Engine/Components/HealthComponent.h"
@@ -137,7 +144,7 @@ void GameScene::Update(GameContext& gameContext)
     ProcessSimulationPhase(gameContext, deltaTime);
 
     // Phase 4: Lifecycle Phase (Garbage Collection / Death System)
-    ProcessLifecyclePhase();
+    ProcessLifecyclePhase(gameContext);
 }
 
 // --------------------------------------------------------------------------------------
@@ -166,6 +173,20 @@ void GameScene::Render(GameContext& gameContext)
 
     // Pass 3: ImGui Editor & Gizmo Overlay Pass
     m_debugDisplay->Render(gameContext, m_actorManager, m_skybox.get(), view, m_proj);
+
+    // Pass 4: Ghost Possession Prompt Overlay
+    if (m_isGhost && m_targetVesselID != HEIN::INVALID_ACTOR_ID)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.78f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs;
+        if (ImGui::Begin("PossessOverlayPrompt", nullptr, flags))
+        {
+            ImGui::SetWindowFontScale(1.8f);
+            ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.8f, 1.0f), "[Q] POSSESS VESSEL");
+            ImGui::End();
+        }
+    }
 }
 
 // --------------------------------------------------------------------------------------
@@ -224,6 +245,70 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
             inputComp->ProcessInput(gameContext);
         }
     }
+
+    // Ghost Possession System (Press Q when near an unoccupied vessel)
+    m_targetVesselID = HEIN::INVALID_ACTOR_ID;
+    if (m_isGhost && m_isPlaying && player != nullptr)
+    {
+        auto* ghostTrans = player->GetComponent<HEIN::TransformComponent>();
+        if (ghostTrans != nullptr)
+        {
+            DirectX::SimpleMath::Vector3 ghostPos = ghostTrans->GetPosition();
+            float closestDistSq = FLT_MAX;
+            HEIN::Actor* closestVessel = nullptr;
+
+            for (const auto& pair : m_actorManager.GetAllActors())
+            {
+                HEIN::Actor* actor = pair.second.get();
+                if (!actor || actor == player) continue;
+
+                auto* possessable = actor->GetComponent<HEIN::PossessableComponent>();
+                if (possessable != nullptr && !possessable->IsOccupied())
+                {
+                    auto* trans = actor->GetComponent<HEIN::TransformComponent>();
+                    if (trans != nullptr)
+                    {
+                        float distSq = DirectX::SimpleMath::Vector3::DistanceSquared(ghostPos, trans->GetPosition());
+                        float radius = possessable->GetPossessRadius();
+                        if (distSq <= radius * radius && distSq < closestDistSq)
+                        {
+                            closestDistSq = distSq;
+                            closestVessel = actor;
+                        }
+                    }
+                }
+            }
+
+            if (closestVessel != nullptr)
+            {
+                m_targetVesselID = closestVessel->GetID();
+
+                if (gameContext.keyboardTracker.pressed.Q)
+                {
+                    // 1. Destroy Ghost Actor
+                    m_actorManager.DestroyID(player->GetID());
+
+                    // 2. Possess the Vessel
+                    HEIN::ActorFactory::PossessVessel(closestVessel, m_actorManager);
+                    m_playerID = closestVessel->GetID();
+                    m_isGhost = false;
+                    m_targetVesselID = HEIN::INVALID_ACTOR_ID;
+
+                    // 3. Re-hook Camera to newly possessed vessel
+                    if (camera != nullptr)
+                    {
+                        SetupCameraModes(gameContext, camera, closestVessel->GetComponent<HEIN::SkinnedModelComponent>());
+                    }
+
+                    // 4. Re-hook Boss AI targeting
+                    if (HEIN::Actor* enemy = GetEnemyActor())
+                    {
+                        HEIN::ActorFactory::SetupEnemyAI(enemy, &m_actorManager, m_playerID);
+                    }
+                }
+            }
+        }
+    }
 }
 
 void GameScene::ProcessSimulationPhase(GameContext& gameContext, float deltaTime)
@@ -248,18 +333,23 @@ void GameScene::ProcessSimulationPhase(GameContext& gameContext, float deltaTime
     if (player != nullptr)
     {
         auto* pTransform = player->GetComponent<HEIN::TransformComponent>();
-        auto* pModel = player->GetComponent<HEIN::SkinnedModelComponent>();
-        auto* pSM = player->GetComponent<HEIN::CombatStateMachineComponent>();
-
-        if (pTransform != nullptr && pModel != nullptr)
+        if (pTransform != nullptr)
         {
             DirectX::SimpleMath::Vector3 playerPos = pTransform->GetPosition();
-            DirectX::SimpleMath::Vector3 headPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End", pTransform->GetWorldMatrix());
-            if (headPos == DirectX::SimpleMath::Vector3::Zero || (headPos - playerPos).LengthSquared() > 10000.0f)
+            DirectX::SimpleMath::Vector3 targetPos = playerPos + DirectX::SimpleMath::Vector3(0.0f, 15.0f, 0.0f);
+
+            auto* pModel = player->GetComponent<HEIN::SkinnedModelComponent>();
+            if (pModel != nullptr)
             {
-                headPos = playerPos + DirectX::SimpleMath::Vector3(0.0f, 15.0f, 0.0f);
+                DirectX::SimpleMath::Vector3 headPos = pModel->GetBoneWorldPosition(L"mixamorig:HeadTop_End", pTransform->GetWorldMatrix());
+                if (headPos != DirectX::SimpleMath::Vector3::Zero && (headPos - playerPos).LengthSquared() <= 10000.0f)
+                {
+                    targetPos = headPos;
+                }
             }
-            float heightAboveRoot = headPos.y - playerPos.y;
+
+            auto* pSM = player->GetComponent<HEIN::CombatStateMachineComponent>();
+            float heightAboveRoot = targetPos.y - playerPos.y;
 
             static float s_standingHeight = 15.0f;
             bool isDodging = (pSM && pSM->GetCurrentStateName() == "Dodge") || (heightAboveRoot < 6.0f);
@@ -272,10 +362,10 @@ void GameScene::ProcessSimulationPhase(GameContext& gameContext, float deltaTime
             if (isDodging)
             {
                 // When dodging, maintain camera target at stable standing height above root position
-                headPos.y = pTransform->GetPosition().y + s_standingHeight;
+                targetPos.y = pTransform->GetPosition().y + s_standingHeight;
             }
 
-            m_targetPos = headPos;
+            m_targetPos = targetPos;
         }
     }
 
@@ -289,9 +379,11 @@ void GameScene::ProcessSimulationPhase(GameContext& gameContext, float deltaTime
     }
 }
 
-void GameScene::ProcessLifecyclePhase()
+void GameScene::ProcessLifecyclePhase(GameContext& gameContext)
 {
     // Health & Death Evaluation
+    HEIN::Actor* playerDiedActor = nullptr;
+
     for (const auto& pair : m_actorManager.GetAllActors())
     {
         HEIN::Actor* currentActor = pair.second.get();
@@ -300,7 +392,157 @@ void GameScene::ProcessLifecyclePhase()
         auto* health = currentActor->GetComponent<HEIN::HealthComponent>();
         if (health != nullptr && health->isDead())
         {
-            m_actorManager.DestroyID(currentActor->GetID());
+            if (currentActor->GetID() == m_playerID && currentActor->GetActorType() == HEIN::ActorType::Player)
+            {
+                playerDiedActor = currentActor;
+            }
+            else
+            {
+                m_actorManager.DestroyID(currentActor->GetID());
+            }
+        }
+    }
+
+    // Handle Player Death -> Spawn Ghost & Destroy Current Body
+    if (playerDiedActor != nullptr && !m_isGhost)
+    {
+        DirectX::SimpleMath::Vector3 deathPos(0.0f, 0.0f, 0.0f);
+        if (auto* transform = playerDiedActor->GetComponent<HEIN::TransformComponent>())
+        {
+            deathPos = transform->GetPosition();
+        }
+
+        // 1. Keep dead body laying on the ground as a corpse (boss drops aggro)
+        playerDiedActor->SetActorType(HEIN::ActorType::Default);
+        playerDiedActor->SetTag(L"Corpse");
+
+        if (auto* possessable = playerDiedActor->GetComponent<HEIN::PossessableComponent>())
+        {
+            possessable->SetOccupied(true);
+        }
+
+        if (auto* gauge = playerDiedActor->GetComponent<HEIN::GaugeComponent>())
+        {
+            gauge->SetVisible(false);
+        }
+
+        if (auto* health = playerDiedActor->GetComponent<HEIN::HealthComponent>())
+        {
+            health->SetGameplayInvincible(true);
+        }
+
+        if (auto* input = playerDiedActor->GetComponent<HEIN::PlayerInputComponent>())
+        {
+            playerDiedActor->RemoveComponent(input);
+        }
+
+        if (auto* movement = playerDiedActor->GetComponent<HEIN::CharacterMovementComponent>())
+        {
+            playerDiedActor->RemoveComponent(movement);
+        }
+
+        if (auto* bb = playerDiedActor->GetComponent<HEIN::CombatBlackBoard>())
+        {
+            bb->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+            bb->currentSpeed = 0.0f;
+        }
+
+        if (auto* transform = playerDiedActor->GetComponent<HEIN::TransformComponent>())
+        {
+            DirectX::SimpleMath::Vector3 rot = transform->GetRotationEuler();
+            rot.x = -DirectX::XM_PIDIV2; // Lay flat on ground
+            transform->SetRotationEuler(rot);
+            DirectX::SimpleMath::Vector3 pos = transform->GetPosition();
+            pos.y = std::max(pos.y - 1.0f, 0.0f);
+            transform->SetPosition(pos);
+        }
+
+        // Disable weapon hitbox on corpse
+        for (HEIN::ActorID childID : playerDiedActor->GetChildren())
+        {
+            if (auto* child = m_actorManager.GetActor(childID))
+            {
+                if (auto* dealer = child->GetComponent<HEIN::DamageDealerComponent>())
+                {
+                    dealer->SetActive(false);
+                }
+            }
+        }
+
+        // 2. Spawn or activate ghost at death position
+        HEIN::Actor* ghost = nullptr;
+        for (const auto& pair : m_actorManager.GetAllActors())
+        {
+            if (pair.second && pair.second->GetActorType() == HEIN::ActorType::Ghost && pair.second.get() != playerDiedActor)
+            {
+                ghost = pair.second.get();
+                break;
+            }
+        }
+        if (ghost == nullptr)
+        {
+            ghost = m_actorManager.GetActorByName(L"Ghost");
+        }
+
+        if (ghost != nullptr && ghost != playerDiedActor)
+        {
+            ghost->SetActive(true);
+            ghost->SetVisible(true);
+            ghost->SetActorType(HEIN::ActorType::Ghost);
+            if (auto* transform = ghost->GetComponent<HEIN::TransformComponent>())
+            {
+                transform->SetPosition(deathPos + DirectX::SimpleMath::Vector3(0.0f, 3.0f, 0.0f));
+            }
+            if (!ghost->GetComponent<HEIN::CombatBlackBoard>())
+            {
+                auto* bb = ghost->AddComponent<HEIN::CombatBlackBoard>();
+                bb->currentSpeed = 35.0f;
+                bb->currentTurnSpeed = 12.0f;
+            }
+            if (!ghost->GetComponent<HEIN::CharacterMovementComponent>())
+            {
+                ghost->AddComponent<HEIN::CharacterMovementComponent>();
+            }
+            if (!ghost->GetComponent<HEIN::PlayerInputComponent>())
+            {
+                ghost->AddComponent<HEIN::PlayerInputComponent>(&m_actorManager);
+            }
+            if (!ghost->GetComponent<HEIN::RigidBodyComponent>())
+            {
+                auto* rb = ghost->AddComponent<HEIN::RigidBodyComponent>();
+                rb->Initialize(80.0f, true, false);
+                rb->SetNeedsInitialSnap(true);
+            }
+            if (!ghost->GetComponent<HEIN::CapsuleColliderComponent>())
+            {
+                auto* col = ghost->AddComponent<HEIN::CapsuleColliderComponent>();
+                col->Initialize(3.0f, 12.0f);
+                col->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
+                col->SetTrigger(false);
+                col->SetCollisionLayer(HEIN::CollisionLayer::Layer_Player);
+                col->SetCollisionMask(HEIN::CollisionLayer::Layer_Environment);
+            }
+            ghost->Start();
+        }
+        if (ghost != nullptr)
+        {
+            m_playerID = ghost->GetID();
+            m_isGhost = true;
+
+            // 3. Re-hook camera to track ghost
+            if (auto* camera = GetActiveCameraController(gameContext))
+            {
+                SetupCameraModes(gameContext, camera, ghost->GetComponent<HEIN::SkinnedModelComponent>());
+            }
+
+            // 4. Enemy AI drops target (boss goes back to idle or spawn tether)
+            if (HEIN::Actor* enemy = GetEnemyActor())
+            {
+                if (auto* bt = enemy->GetComponent<HEIN::BehaviourTreeComponent>())
+                {
+                    bt->SetTargetID(HEIN::INVALID_ACTOR_ID);
+                }
+            }
         }
     }
 
@@ -321,8 +563,17 @@ void GameScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext*
     }
 
     DirectX::SimpleMath::Vector3 lightDir(0.5f, -1.0f, 0.5f);
-    DirectX::SimpleMath::Vector3 lightPos(-500.0f, 1000.0f, -500.0f);
-    float projSize = 150.0f;
+    DirectX::SimpleMath::Vector3 targetCenter = DirectX::SimpleMath::Vector3::Zero;
+    HEIN::Actor* player = GetPlayerActor();
+    if (player)
+    {
+        if (auto* trans = player->GetComponent<HEIN::TransformComponent>())
+        {
+            targetCenter = trans->GetPosition();
+        }
+    }
+    DirectX::SimpleMath::Vector3 lightPos = targetCenter - lightDir * 1000.0f;
+    float projSize = 500.0f;
 
     if (activeLight)
     {
@@ -333,15 +584,6 @@ void GameScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext*
                 lightDir = lightTransform->GetForward();
                 if (activeLight->GetLightType() == HEIN::LightType::Directional)
                 {
-                    HEIN::Actor* player = GetPlayerActor();
-                    DirectX::SimpleMath::Vector3 targetCenter = DirectX::SimpleMath::Vector3::Zero;
-                    if (player)
-                    {
-                        if (auto* trans = player->GetComponent<HEIN::TransformComponent>())
-                        {
-                            targetCenter = trans->GetPosition();
-                        }
-                    }
                     lightPos = targetCenter - lightDir * 1000.0f;
                     projSize = (activeLight->GetRange() > 0.1f) ? activeLight->GetRange() : 500.0f;
                 }
@@ -355,15 +597,44 @@ void GameScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext*
     }
     lightDir.Normalize();
 
-    DirectX::SimpleMath::Vector3 targetPos = lightPos + lightDir * 1000.0f;
     DirectX::SimpleMath::Vector3 up = DirectX::SimpleMath::Vector3::Up;
     if (std::abs(lightDir.Dot(up)) > 0.999f)
     {
         up = DirectX::SimpleMath::Vector3::Right;
     }
 
-    DirectX::SimpleMath::Matrix viewMat = DirectX::SimpleMath::Matrix::CreateLookAt(lightPos, targetPos, up);
+    DirectX::SimpleMath::Vector3 finalTargetCenter = targetCenter;
+
+    if (activeLight == nullptr || activeLight->GetLightType() == HEIN::LightType::Directional)
+    {
+        // Option 2: World-locked texel snapping for Directional Light shadow map
+        // 1. Establish orientation matrix centered at world origin
+        DirectX::SimpleMath::Matrix lightViewOrigin = DirectX::SimpleMath::Matrix::CreateLookAt(
+            DirectX::SimpleMath::Vector3::Zero,
+            lightDir * 1000.0f,
+            up
+        );
+
+        // 2. Project targetCenter (player) into orientation space
+        DirectX::SimpleMath::Vector3 targetInLight = DirectX::SimpleMath::Vector3::Transform(targetCenter, lightViewOrigin);
+
+        // 3. Snap to discrete texel multiples in world units
+        const float shadowMapResolution = 2048.0f;
+        float worldUnitsPerTexel = projSize / shadowMapResolution;
+        targetInLight.x = std::floor(targetInLight.x / worldUnitsPerTexel) * worldUnitsPerTexel;
+        targetInLight.y = std::floor(targetInLight.y / worldUnitsPerTexel) * worldUnitsPerTexel;
+
+        // 4. Transform snapped position back to world space
+        DirectX::SimpleMath::Matrix invLightView = lightViewOrigin.Invert();
+        finalTargetCenter = DirectX::SimpleMath::Vector3::Transform(targetInLight, invLightView);
+    }
+
+    DirectX::SimpleMath::Vector3 finalLightPos = finalTargetCenter - lightDir * 1000.0f;
+    DirectX::SimpleMath::Vector3 finalTargetPos = finalTargetCenter;
+
+    DirectX::SimpleMath::Matrix viewMat = DirectX::SimpleMath::Matrix::CreateLookAt(finalLightPos, finalTargetPos, up);
     DirectX::SimpleMath::Matrix projMat = DirectX::SimpleMath::Matrix::CreateOrthographic(projSize, projSize, 0.1f, 3000.0f);
+
     DirectX::SimpleMath::Matrix lightViewProj = viewMat * projMat;
     m_shadowSystem.SetLightViewProj(lightViewProj);
 
@@ -615,12 +886,43 @@ void GameScene::UpdateDebugTargets()
 HEIN::Actor* GameScene::GetPlayerActor()
 {
     HEIN::Actor* player = m_actorManager.GetActor(m_playerID);
-    if (!player)
+    if (player && (player->GetActorType() == HEIN::ActorType::Player || m_isGhost))
     {
-        player = m_actorManager.GetActorByName(L"Player");
-        if (player) m_playerID = player->GetID();
+        return player;
     }
-    return player;
+
+    // 1. Look for an actor explicitly marked as ActorType::Player
+    for (const auto& pair : m_actorManager.GetAllActors())
+    {
+        if (pair.second && pair.second->GetActorType() == HEIN::ActorType::Player)
+        {
+            m_playerID = pair.first;
+            return pair.second.get();
+        }
+    }
+
+    // 2. Look for an actor named/tagged "Player"
+    player = m_actorManager.GetActorByName(L"Player");
+    if (player)
+    {
+        m_playerID = player->GetID();
+        return player;
+    }
+
+    // 3. Fallback: If no player actor exists yet, select the first possessable vessel as starting body
+    for (const auto& pair : m_actorManager.GetAllActors())
+    {
+        if (pair.second && pair.second->GetActorType() != HEIN::ActorType::Enemy && pair.second->GetActorType() != HEIN::ActorType::Ghost)
+        {
+            if (pair.second->GetComponent<HEIN::PossessableComponent>())
+            {
+                m_playerID = pair.first;
+                return pair.second.get();
+            }
+        }
+    }
+
+    return nullptr;
 }
 
 HEIN::Actor* GameScene::GetEnemyActor()
@@ -678,18 +980,19 @@ void GameScene::SetupCameraModes(GameContext& gameContext, HEIN::CameraControlle
         auto* playerTransform = player->GetComponent<HEIN::TransformComponent>();
 
         // Safe defensive null checks against uninitialized models/transforms
-        if (modelPointer != nullptr && playerTransform != nullptr)
-        {
-            modelPointer->Update(0.0f);
-            m_targetPos = modelPointer->GetBoneWorldPosition(L"mixamorig:HeadTop_End", playerTransform->GetWorldMatrix());
-        }
-
         if (playerTransform != nullptr)
         {
             DirectX::SimpleMath::Vector3 playerPos = playerTransform->GetPosition();
-            if (m_targetPos == DirectX::SimpleMath::Vector3::Zero || (m_targetPos - playerPos).LengthSquared() > 10000.0f)
+            m_targetPos = playerPos + DirectX::SimpleMath::Vector3(0.0f, 15.0f, 0.0f);
+
+            if (modelPointer != nullptr)
             {
-                m_targetPos = playerPos + DirectX::SimpleMath::Vector3(0.0f, 15.0f, 0.0f);
+                modelPointer->Update(0.0f);
+                DirectX::SimpleMath::Vector3 headPos = modelPointer->GetBoneWorldPosition(L"mixamorig:HeadTop_End", playerTransform->GetWorldMatrix());
+                if (headPos != DirectX::SimpleMath::Vector3::Zero && (headPos - playerPos).LengthSquared() <= 10000.0f)
+                {
+                    m_targetPos = headPos;
+                }
             }
         }
 
@@ -719,6 +1022,76 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
     {
         player->SetActorType(HEIN::ActorType::Player);
         m_playerID = player->GetID();
+
+        m_isGhost = false;
+        m_targetVesselID = HEIN::INVALID_ACTOR_ID;
+
+        // If this actor is a possessable vessel, mark it as occupied
+        if (auto* possessable = player->GetComponent<HEIN::PossessableComponent>())
+        {
+            possessable->SetOccupied(true);
+        }
+
+        // Ensure player's gauge is visible
+        if (auto* gauge = player->GetComponent<HEIN::GaugeComponent>())
+        {
+            gauge->SetVisible(true);
+        }
+
+        // Any pre-placed Ghost actors in the level are kept dormant/invisible until player dies
+        for (const auto& pair : m_actorManager.GetAllActors())
+        {
+            if (pair.second && pair.second->GetActorType() == HEIN::ActorType::Ghost)
+            {
+                pair.second->SetActive(false);
+                pair.second->SetVisible(false);
+            }
+        }
+
+        // Any unpossessed vessel in the level is put into dormant sleep mode (render only, shut other functions until possessed)
+        for (const auto& pair : m_actorManager.GetAllActors())
+        {
+            HEIN::Actor* actor = pair.second.get();
+            if (!actor || actor == player) continue;
+
+            if (auto* possessable = actor->GetComponent<HEIN::PossessableComponent>())
+            {
+                if (!possessable->IsOccupied())
+                {
+                    // 1. Keep visible for rendering, but deactivate UI gauges
+                    if (auto* gauge = actor->GetComponent<HEIN::GaugeComponent>())
+                    {
+                        gauge->SetVisible(false);
+                    }
+
+                    // 2. Disable expensive procedural foot IK
+                    if (auto* procAnim = actor->GetComponent<HEIN::ProceduralAnimationComponent>())
+                    {
+                        procAnim->SetEnabled(false);
+                    }
+
+                    // 3. Put rigidbody into kinematic sleep so physics collisions don't tick
+                    if (auto* rb = actor->GetComponent<HEIN::RigidBodyComponent>())
+                    {
+                        rb->SetKinematic(true);
+                        rb->SetVelocity(DirectX::SimpleMath::Vector3::Zero);
+                    }
+
+                    // 4. Ensure vessel is invincible while dormant
+                    if (auto* health = actor->GetComponent<HEIN::HealthComponent>())
+                    {
+                        health->SetGameplayInvincible(true);
+                    }
+
+                    // 5. Ensure dormant vessel is playing Idle animation
+                    if (auto* model = actor->GetComponent<HEIN::SkinnedModelComponent>())
+                    {
+                        model->ChangeAnimation("Idle");
+                    }
+                }
+            }
+        }
+
 
         // Ensure runtime components exist for earlier saves
         if (!player->GetComponent<HEIN::CombatBlackBoard>())
@@ -757,7 +1130,29 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
         }
     }
 
-    // Re-link weapon owners if needed
+    // Re-link all socket attachment owners and child weapons dynamically across the scene
+    for (const auto& pair : m_actorManager.GetAllActors())
+    {
+        HEIN::Actor* actor = pair.second.get();
+        if (!actor) continue;
+
+        if (auto* socketComp = actor->GetComponent<HEIN::SocketAttachmentComponent>())
+        {
+            if (!socketComp->GetOwnerTag().empty())
+            {
+                if (HEIN::Actor* targetOwner = m_actorManager.GetActorByName(socketComp->GetOwnerTag()))
+                {
+                    actor->SetOwnerID(targetOwner->GetID());
+                    socketComp->Initialize(targetOwner->GetID(), socketComp->GetSocketName());
+                }
+            }
+        }
+        else if (actor->GetParentID() != HEIN::INVALID_ACTOR_ID)
+        {
+            actor->SetOwnerID(actor->GetParentID());
+        }
+    }
+
     if (HEIN::Actor* sword = m_actorManager.GetActorByName(L"Sword"))
     {
         if (player != nullptr) sword->SetOwnerID(player->GetID());
@@ -765,6 +1160,40 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
     if (HEIN::Actor* axe = m_actorManager.GetActorByName(L"Axe"))
     {
         if (enemy != nullptr) axe->SetOwnerID(enemy->GetID());
+    }
+
+    // Ensure any actor with TerrainComponent also has a TerrainColliderComponent for physical collisions
+    for (const auto& pair : m_actorManager.GetAllActors())
+    {
+        if (pair.second && pair.second->GetComponent<HEIN::TerrainComponent>())
+        {
+            if (!pair.second->GetComponent<HEIN::TerrainColliderComponent>())
+            {
+                auto* tc = pair.second->AddComponent<HEIN::TerrainColliderComponent>();
+                tc->SetCollisionLayer(HEIN::CollisionLayer::Layer_Environment);
+                tc->SetCollisionMask(HEIN::CollisionLayer::Layer_All);
+            }
+        }
+    }
+
+    // Ensure Ghost actor has RigidBodyComponent and CapsuleColliderComponent to collide with TerrainComponent
+    if (HEIN::Actor* ghostActor = m_actorManager.GetActorByName(L"Ghost"))
+    {
+        if (!ghostActor->GetComponent<HEIN::RigidBodyComponent>())
+        {
+            auto* rb = ghostActor->AddComponent<HEIN::RigidBodyComponent>();
+            rb->Initialize(80.0f, true, false);
+            rb->SetNeedsInitialSnap(true);
+        }
+        if (!ghostActor->GetComponent<HEIN::CapsuleColliderComponent>())
+        {
+            auto* col = ghostActor->AddComponent<HEIN::CapsuleColliderComponent>();
+            col->Initialize(3.0f, 12.0f);
+            col->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
+            col->SetTrigger(false);
+            col->SetCollisionLayer(HEIN::CollisionLayer::Layer_Player);
+            col->SetCollisionMask(HEIN::CollisionLayer::Layer_Environment);
+        }
     }
 
     // Call Start() on all loaded actors so components initialize and subscribe to Messenger

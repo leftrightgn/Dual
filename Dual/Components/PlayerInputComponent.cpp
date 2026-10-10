@@ -8,6 +8,7 @@
 #include "../../External/Engine/Message/Message.h"  
 #include "../../External/Engine/Framework/GameContext.h"
 #include <Components/CombatStateMachineComponent.h>
+#include "../../External/Engine/ImGui/imgui.h"
 
 
 HEIN::PlayerInputComponent::PlayerInputComponent(
@@ -17,6 +18,14 @@ HEIN::PlayerInputComponent::PlayerInputComponent(
 	: HEIN::IComponent(owner)
 	, m_actorManager(actorManager)
 {
+}
+
+HEIN::PlayerInputComponent::~PlayerInputComponent()
+{
+	if (m_owner != nullptr && Messenger::GetInstance() != nullptr)
+	{
+		Messenger::GetInstance()->UnRegister(m_owner->GetID());
+	}
 }
 
 void HEIN::PlayerInputComponent::Start()
@@ -48,7 +57,7 @@ void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
 			DirectX::SimpleMath::Matrix invView = view.Invert();
 			DirectX::SimpleMath::Vector3 camForward = invView.Forward();
 
-			float cameraYaw = atan2f(camForward.x, camForward.z);
+			cameraYaw = atan2f(camForward.x, camForward.z);
 			DirectX::SimpleMath::Matrix camRotation = DirectX::SimpleMath::Matrix::CreateRotationY(cameraYaw);
 			worldIntent = DirectX::SimpleMath::Vector3::TransformNormal(localInput, camRotation);
 
@@ -100,5 +109,15 @@ void HEIN::PlayerInputComponent::OnMessageAccepted(Message::MessageID messageID)
 	if (stateMachine != nullptr)
 	{
 		stateMachine->OnMessageAccepted(messageID);
+	}
+}
+
+void HEIN::PlayerInputComponent::OnInspectorGUI(GameContext& /*gameContext*/)
+{
+	if (ImGui::CollapsingHeader("PlayerInputComponent", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::Text("Input Mode: Active Player Controller");
+		ImGui::Text("Blackboard: %s", m_blackboard ? "Connected" : "Disconnected");
+		ImGui::Text("Local Intent: (%.2f, %.2f, %.2f)", m_localInput.x, m_localInput.y, m_localInput.z);
 	}
 }

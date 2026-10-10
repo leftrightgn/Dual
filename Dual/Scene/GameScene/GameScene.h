@@ -40,7 +40,7 @@ private:
 	// --- ECS Update Pipeline Phases ---
 	void ProcessInputPhase(GameContext& gameContext);
 	void ProcessSimulationPhase(GameContext& gameContext, float deltaTime);
-	void ProcessLifecyclePhase();
+	void ProcessLifecyclePhase(GameContext& gameContext);
 
 	// --- Render Pipeline Phases ---
 	void RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext* context);
@@ -77,6 +77,9 @@ private:
 	HEIN::ActorID m_playerID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_enemyID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_cameraID = HEIN::INVALID_ACTOR_ID;
+
+	bool m_isGhost = false;
+	HEIN::ActorID m_targetVesselID = HEIN::INVALID_ACTOR_ID;
 
 	HEIN::ActorManager m_actorManager;
 	HEIN::ShadowSystem m_shadowSystem;

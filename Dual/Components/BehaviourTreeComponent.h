@@ -46,6 +46,9 @@ namespace HEIN
 			HEIN::ActorID targetID
 		);
 
+		void SetTargetID(HEIN::ActorID targetID) { m_targetID = targetID; }
+		HEIN::ActorID GetTargetID() const { return m_targetID; }
+
 		void Start() override;
 		
 		/**

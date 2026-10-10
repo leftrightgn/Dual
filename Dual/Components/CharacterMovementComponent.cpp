@@ -4,6 +4,8 @@
 #include "BlackBoard/CombatBlackBoard.h"
 #include "../../External/Engine/Entities/Actor.h"
 #include "../../External/Engine/Components/RigidBodyComponent.h"
+#include "../../External/Engine/Components/SkinnedModelComponent.h"
+#include "../../External/Engine/ImGui/imgui.h"
 
 
 HEIN::CharacterMovementComponent::CharacterMovementComponent(Actor* owner)
@@ -11,6 +13,7 @@ HEIN::CharacterMovementComponent::CharacterMovementComponent(Actor* owner)
 	, m_blackboard()
 	, m_transform()
 	, m_friction(DEFAULT_FRICTION)
+	, m_impulseVelocity(DirectX::SimpleMath::Vector3::Zero)
 {
 }
 
@@ -20,9 +23,28 @@ void HEIN::CharacterMovementComponent::Start()
 	m_transform = m_owner->GetComponent<HEIN::TransformComponent>();
 }
 
+void HEIN::CharacterMovementComponent::ApplyImpulse(const DirectX::SimpleMath::Vector3& impulse)
+{
+	m_impulseVelocity += impulse;
+}
+
 void HEIN::CharacterMovementComponent::Update(float deltaTime)
 {
 	if (!m_transform || !m_blackboard) return;
+
+	// Decay external physical impulses (knockback, blast, etc.) smoothly via friction
+	if (m_impulseVelocity.LengthSquared() > 0.0001f)
+	{
+		m_impulseVelocity = DirectX::SimpleMath::Vector3::Lerp(
+			m_impulseVelocity,
+			DirectX::SimpleMath::Vector3::Zero,
+			deltaTime * m_friction
+		);
+		if (m_impulseVelocity.LengthSquared() <= 0.0001f)
+		{
+			m_impulseVelocity = DirectX::SimpleMath::Vector3::Zero;
+		}
+	}
 
 	bool isEnemy = (m_owner != nullptr && m_owner->GetActorType() == HEIN::ActorType::Enemy);
 	bool allowRootMotion = m_blackboard->hasRootMotion;
@@ -51,15 +73,16 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 	if (allowRootMotion)
 	{
 		m_blackboard->currentVelocity = m_blackboard->rootMotionVelocity;
+		DirectX::SimpleMath::Vector3 effectiveVelocity = m_blackboard->currentVelocity + m_impulseVelocity;
 
 		HEIN::RigidBodyComponent* rb = m_owner->GetComponent<HEIN::RigidBodyComponent>();
 		if (rb != nullptr && !rb->isKinematic())
 		{
-			rb->SetHorizontalVelocity(m_blackboard->currentVelocity);
+			rb->SetHorizontalVelocity(effectiveVelocity);
 		}
 		else if (m_transform != nullptr)
 		{
-			m_transform->SetPosition(m_transform->GetPosition() + m_blackboard->currentVelocity * deltaTime);
+			m_transform->SetPosition(m_transform->GetPosition() + effectiveVelocity * deltaTime);
 		}
 	}
 	else
@@ -82,11 +105,39 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 			deltaTime * m_friction
 		);
 
+		DirectX::SimpleMath::Vector3 effectiveVelocity = m_blackboard->currentVelocity + m_impulseVelocity;
+
 		// Move the actor
 		HEIN::RigidBodyComponent* rb = m_owner->GetComponent<HEIN::RigidBodyComponent>();
 		if (rb != nullptr)
 		{
-			rb->SetHorizontalVelocity(m_blackboard->currentVelocity);
+			rb->SetHorizontalVelocity(effectiveVelocity);
+		}
+		else if (m_transform != nullptr)
+		{
+			m_transform->SetPosition(m_transform->GetPosition() + effectiveVelocity * deltaTime);
+		}
+	}
+
+	// Automatic animation blending for Ghost form
+	if (m_owner != nullptr && m_owner->GetActorType() == HEIN::ActorType::Ghost)
+	{
+		if (auto* model = m_owner->GetComponent<HEIN::SkinnedModelComponent>())
+		{
+			if (m_blackboard->moveIntent.LengthSquared() > 0.01f)
+			{
+				if (model->HasAnimation("Walk"))
+				{
+					model->CrossfadeAnimation("Walk", 0.15f);
+				}
+			}
+			else
+			{
+				if (model->HasAnimation("Idle"))
+				{
+					model->CrossfadeAnimation("Idle", 0.15f);
+				}
+			}
 		}
 	}
 	if (m_blackboard->isLockedOn && m_blackboard->currentStance == HEIN::CombatStance::Strafing &&  m_blackboard->dirToTarget.LengthSquared() > 0.001f)
@@ -130,4 +181,33 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 
 		m_transform->SetRotationEuler(currentRot);
 	}
+}
+
+void HEIN::CharacterMovementComponent::OnInspectorGUI(GameContext& /*gameContext*/)
+{
+	if (ImGui::CollapsingHeader("CharacterMovementComponent", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::DragFloat("Friction", &m_friction, 0.1f, 0.0f, 50.0f);
+		ImGui::Text("Impulse: (%.2f, %.2f, %.2f)", m_impulseVelocity.x, m_impulseVelocity.y, m_impulseVelocity.z);
+		if (m_blackboard)
+		{
+			ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", 
+				m_blackboard->currentVelocity.x, m_blackboard->currentVelocity.y, m_blackboard->currentVelocity.z);
+			ImGui::DragFloat("Move Speed", &m_blackboard->currentSpeed, 0.5f, 0.0f, 200.0f);
+			ImGui::DragFloat("Turn Speed", &m_blackboard->currentTurnSpeed, 0.1f, 0.0f, 50.0f);
+		}
+	}
+}
+
+nlohmann::json HEIN::CharacterMovementComponent::Serialize()
+{
+	nlohmann::json data = IComponent::Serialize();
+	data["Friction"] = m_friction;
+	return data;
+}
+
+void HEIN::CharacterMovementComponent::Deserialize(const nlohmann::json& data)
+{
+	IComponent::Deserialize(data);
+	if (data.contains("Friction")) m_friction = data["Friction"];
 }

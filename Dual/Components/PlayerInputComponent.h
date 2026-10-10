@@ -40,6 +40,7 @@ namespace HEIN
 			Actor* owner, 
 			ActorManager* actorManager
 		);
+		~PlayerInputComponent() override;
 
 		void Start() override;
 
@@ -56,6 +57,8 @@ namespace HEIN
 		 * @param messageID The incoming message ID to evaluate.
 		 */
 		void OnMessageAccepted(Message::MessageID messageID) override;
+
+		void OnInspectorGUI(GameContext& gameContext) override;
 
 		std::string GetComponentName() const override { return "PlayerInputComponent"; }
 	};

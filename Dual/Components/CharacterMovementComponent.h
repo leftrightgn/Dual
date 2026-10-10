@@ -1,5 +1,6 @@
 #pragma once
 #include "../../External/Engine/Components/IComponent.h"
+#include <SimpleMath.h>
 
 namespace HEIN
 {
@@ -33,12 +34,26 @@ namespace HEIN
 		/// @brief Current friction value applied to this character's movement.
 		float m_friction;
 
+		/// @brief External physical impulse velocity (hit knockback, blast, etc.) decaying via friction.
+		DirectX::SimpleMath::Vector3 m_impulseVelocity;
+
 	public:
 		CharacterMovementComponent(Actor* owner);
 	
 		void Start() override;
 	
 		void Update(float deltaTime) override;
+
+		/// @brief Applies an instantaneous physical impulse vector (e.g. hit knockback) to the character.
+		void ApplyImpulse(const DirectX::SimpleMath::Vector3& impulse);
+
+		DirectX::SimpleMath::Vector3 GetImpulseVelocity() const { return m_impulseVelocity; }
+		void ClearImpulse() { m_impulseVelocity = DirectX::SimpleMath::Vector3::Zero; }
+
+		void OnInspectorGUI(GameContext& gameContext) override;
+
+		nlohmann::json Serialize() override;
+		void Deserialize(const nlohmann::json& data) override;
 
 		std::string GetComponentName() const override { return "CharacterMovementComponent"; }
 	};

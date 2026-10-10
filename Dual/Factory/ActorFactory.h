@@ -70,6 +70,11 @@ namespace HEIN
 			ActorManager* actorManager,
 			HEIN::ActorID targetID
 		);
+
+		static void PossessVessel(
+			Actor* vessel,
+			ActorManager& actorManager
+		);
 	};
 
 }

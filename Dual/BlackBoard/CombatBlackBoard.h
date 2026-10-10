@@ -3,6 +3,7 @@
 #include <SimpleMath.h>
 #include <string>
 #include "../../External/Engine/Entities/Actor.h"
+#include "../../External/Engine/ImGui/imgui.h"
 
 namespace HEIN
 {
@@ -103,6 +104,22 @@ namespace HEIN
 		}
 
 		void Update(float /*deltaTime*/) override {}
+
+		void OnInspectorGUI(GameContext& /*gameContext*/) override
+		{
+			if (ImGui::CollapsingHeader("CombatBlackBoard", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				ImGui::DragFloat("Health", &currentHealth, 0.5f, 0.0f, 1000.0f);
+				ImGui::DragFloat("Stamina", &currentStamina, 0.5f, 0.0f, 1000.0f);
+				ImGui::DragFloat("Speed", &currentSpeed, 0.5f, 0.0f, 200.0f);
+				ImGui::DragFloat("Turn Speed", &currentTurnSpeed, 0.1f, 0.0f, 50.0f);
+				ImGui::Checkbox("Is Grounded", &isGrounded);
+				ImGui::Checkbox("Is Attacking", &isAttacking);
+				ImGui::Checkbox("Is Jumping", &isJumping);
+				ImGui::Text("Move Intent: (%.2f, %.2f, %.2f)", moveIntent.x, moveIntent.y, moveIntent.z);
+				ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", currentVelocity.x, currentVelocity.y, currentVelocity.z);
+			}
+		}
 
 		std::string GetComponentName() const override { return "CombatBlackBoard"; }
 	};
