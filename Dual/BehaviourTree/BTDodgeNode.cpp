@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "BTDodgeNode.h"
 #include <BlackBoard/CombatBlackBoard.h>
+#include <Components/TransformComponent.h>
 #include "../../External/Engine/Message/Messenger.h" 
 #include "../../External/Engine/Message/Message.h"  
 
@@ -44,7 +45,21 @@ HEIN::BTNodeState HEIN::BTDodgeNode::Tick(HEIN::Actor* self, HEIN::ActorManager*
 	}
 
 	m_timeoutTimer += deltaTime;
-	blackboard->moveIntent = -blackboard->dirToTarget;
+
+	DirectX::SimpleMath::Vector3 evadeDir = -blackboard->dirToTarget;
+	evadeDir.y = 0.0f;
+	if (evadeDir.LengthSquared() > 0.001f)
+	{
+		evadeDir.Normalize();
+	}
+	else
+	{
+		auto* trans = self->GetComponent<TransformComponent>();
+		evadeDir = trans ? -trans->GetForward() : DirectX::SimpleMath::Vector3(0.0f, 0.0f, -1.0f);
+		evadeDir.y = 0.0f;
+		if (evadeDir.LengthSquared() > 0.001f) evadeDir.Normalize();
+	}
+	blackboard->moveIntent = evadeDir;
 
 	if (!m_hasDodgeStarted)
 	{
@@ -52,6 +67,8 @@ HEIN::BTNodeState HEIN::BTDodgeNode::Tick(HEIN::Actor* self, HEIN::ActorManager*
 		if (blackboard->currentStance == CombatStance::Dodging)
 		{
 			m_hasDodgeStarted = true;
+			float dodgeSpeed = (blackboard->currentSpeed > 10.0f) ? blackboard->currentSpeed : 75.0f;
+			blackboard->currentVelocity = evadeDir * dodgeSpeed;
 		}
 		else if (m_timeoutTimer > 0.25f)
 		{
