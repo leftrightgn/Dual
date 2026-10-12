@@ -80,6 +80,12 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
             if (blackboard->dodgeCooldownTimer < 0.0f) blackboard->dodgeCooldownTimer = 0.0f;
         }
 
+        if (blackboard->blockCooldownTimer > 0.0f)
+        {
+            blackboard->blockCooldownTimer -= deltaTime;
+            if (blackboard->blockCooldownTimer < 0.0f) blackboard->blockCooldownTimer = 0.0f;
+        }
+
         HEIN::TargetTrackingComponent* tracking = m_owner->GetComponent<HEIN::TargetTrackingComponent>();
         if (tracking)
         {

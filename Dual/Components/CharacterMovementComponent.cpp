@@ -32,6 +32,25 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 {
 	if (!m_transform || !m_blackboard) return;
 
+	// Pull root-motion state from the active visible SkinnedModelComponent into CombatBlackBoard
+	m_blackboard->hasRootMotion = false;
+	m_blackboard->rootMotionVelocity = DirectX::SimpleMath::Vector3::Zero;
+	m_blackboard->rootMotionDelta = DirectX::SimpleMath::Vector3::Zero;
+
+	if (m_owner != nullptr)
+	{
+		for (auto* model : m_owner->GetComponents<HEIN::SkinnedModelComponent>())
+		{
+			if (model != nullptr && model->IsVisible() && model->HasActiveRootMotion())
+			{
+				m_blackboard->hasRootMotion = true;
+				m_blackboard->rootMotionVelocity = model->GetRootMotionVelocity();
+				m_blackboard->rootMotionDelta = model->GetRootMotionDelta();
+				break;
+			}
+		}
+	}
+
 	// Decay external physical impulses (knockback, blast, etc.) smoothly via friction
 	if (m_impulseVelocity.LengthSquared() > 0.0001f)
 	{

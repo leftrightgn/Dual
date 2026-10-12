@@ -75,7 +75,8 @@ namespace HEIN
 		float currentBlockStamina = 2.0f;
 		float blockRecoveryRate = 0.5f;
 		bool isBlockBroken = false;
-		float blockCooldownTimer = 0.0f;
+		float blockCooldownTimer = 0.0f;      // > 0 after a successful block: incoming hits are ignored
+		float blockCooldownDuration = 0.6f;   // Immunity window after a successful block (covers the rest of the swing)
 
 		// Dodge Stats
 		float dodgeCooldownTimer = 0.0f;

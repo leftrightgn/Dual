@@ -76,7 +76,7 @@
             "isBlock": false,
             "isLooping": false,
             "lockMovementDirection": true,
-            "moveSpeed": 75.0,
+            "moveSpeed": 35.0,
             "name": "Dodge",
             "secondaryAnimationName": "",
             "stateDuration": 0.0,

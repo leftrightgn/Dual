@@ -260,7 +260,8 @@ HEIN::ActorID HEIN::ActorFactory::CreateStage(ActorManager& actorManager, GameCo
     floorModel->m_castShadows = false;
     HEIN::MeshColliderComponent* floorPhysics = floorActor->AddComponent<HEIN::MeshColliderComponent>();
     floorPhysics->LoadFromObj(L"Resources/Models/stage/floor1.obj");
-    floorPhysics->SetCollisionLayer(CollisionLayer::Layer_Environment);
+    floorPhysics->SetCollisionLayer(CollisionLayer::Layer_Environment | CollisionLayer::Layer_Ground);
+    floorPhysics->SetColliderTag(L"Ground");
     // Link Floor to Root
     floorActor->SetParent(stageRoot->GetID());
     stageRoot->AddChild(floorActor->GetID());
@@ -408,7 +409,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     rootPushbox->SetTrigger(false);      // This one physically hits the floor
     rootPushbox->SetColliderTag(L"EnemyRoot");
     rootPushbox->SetCollisionLayer(CollisionLayer::Layer_Enemy);
-    rootPushbox->SetCollisionMask(CollisionLayer::Layer_Environment | CollisionLayer::Layer_Player);
+    rootPushbox->SetCollisionMask(CollisionLayer::Layer_Environment | CollisionLayer::Layer_Ground | CollisionLayer::Layer_Wall | CollisionLayer::Layer_Player);
 
 
     // SET BONES TO TRIGGERS (So they don't push the floor)
@@ -495,22 +496,28 @@ void HEIN::ActorFactory::RegisterGameComponents()
         bool isBlocked = false;
         bool applyDamage = true;
 
-        if (sm && sm->IsBlocking() && bb && !bb->isBlockBroken)
+        // Block cooldown active: this hit belongs to a swing we already blocked.
+        // Ignore it completely (no damage, no stamina cost, no knockback).
+        if (bb && bb->blockCooldownTimer > 0.0f)
         {
-            // Block absorbs the hit! Deduct stamina
-            bb->currentBlockStamina -= 1.0f; // 1 block point per hit
+            return false;
+        }
+
+        if (sm && sm->IsBlocking() && bb && !bb->isBlockBroken && bb->currentBlockStamina > 0.0f)
+        {
+            // Correct block: the hit is fully absorbed, player takes no damage
+            isBlocked = true;
+            applyDamage = false;
+            bb->blockCooldownTimer = bb->blockCooldownDuration;
+
+            bb->currentBlockStamina -= 1.0f; // 1 block point per blocked swing
             if (bb->currentBlockStamina <= 0.0f)
             {
+                // Last block point used: guard breaks, but this hit is still absorbed.
+                // The next swing (after the cooldown) will land.
                 bb->currentBlockStamina = 0.0f;
                 bb->isBlockBroken = true;
-                // Guard broke! Stun the victim immediately
                 Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
-                applyDamage = true; // Guard broke! Damage breaks through to health
-            }
-            else
-            {
-                isBlocked = true;
-                applyDamage = false; // Attack blocked! No health damage
             }
         }
 

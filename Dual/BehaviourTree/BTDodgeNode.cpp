@@ -67,7 +67,7 @@ HEIN::BTNodeState HEIN::BTDodgeNode::Tick(HEIN::Actor* self, HEIN::ActorManager*
 		if (blackboard->currentStance == CombatStance::Dodging)
 		{
 			m_hasDodgeStarted = true;
-			float dodgeSpeed = (blackboard->currentSpeed > 10.0f) ? blackboard->currentSpeed : 75.0f;
+			float dodgeSpeed = (blackboard->currentSpeed > 10.0f) ? blackboard->currentSpeed : 25.0f;
 			blackboard->currentVelocity = evadeDir * dodgeSpeed;
 		}
 		else if (m_timeoutTimer > 0.25f)
