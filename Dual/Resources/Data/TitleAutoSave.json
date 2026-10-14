@@ -8,14 +8,14 @@
                     "Data": {
                         "Position": [
                             -28.92872428894043,
-                            143.61302185058594,
+                            137.31300354003906,
                             152.43377685546875
                         ],
                         "Rotation": [
-                            -0.0,
-                            0.40673667192459106,
-                            -0.0,
-                            0.9135454893112183
+                            6.511580163959252e-09,
+                            -0.746057391166687,
+                            7.295609449897711e-09,
+                            0.6658816337585449
                         ],
                         "Scale": [
                             0.9999967217445374,
@@ -28,14 +28,14 @@
                 {
                     "Data": {
                         "BlendDuration": 0.0010000000474974513,
-                        "Fov": 0.9442231059074402,
+                        "Fov": 0.9581857919692993,
                         "PosX": -28.92872428894043,
-                        "PosY": 143.61302185058594,
+                        "PosY": 137.31300354003906,
                         "PosZ": 152.43377685546875,
-                        "RotW": 0.9135454893112183,
-                        "RotX": -0.0,
-                        "RotY": 0.40673667192459106,
-                        "RotZ": -0.0
+                        "RotW": 0.6658816337585449,
+                        "RotX": 6.511580163959252e-09,
+                        "RotY": -0.746057391166687,
+                        "RotZ": 7.295609449897711e-09
                     },
                     "Type": "CameraController"
                 }
@@ -73,15 +73,15 @@
                 {
                     "Data": {
                         "ElementType": 0,
-                        "FontSize": 2.450000047683716,
-                        "HoverTex": "Resources/Textures/start1.dds",
+                        "FontSize": 2.309999942779541,
+                        "HoverTex": "Resources/Textures/StartButtonSelected.dds",
                         "IsVisible": true,
-                        "NormalTex": "Resources/Textures/start.dds",
-                        "PosX": 699.0,
-                        "PosY": 387.0000305175781,
-                        "PressedTex": "",
-                        "SizeX": 216.0,
-                        "SizeY": 64.0,
+                        "NormalTex": "Resources/Textures/StartButton.dds",
+                        "PosX": 653.0010375976563,
+                        "PosY": 349.666748046875,
+                        "PressedTex": "Resources/Textures/StartButtonSelected.dds",
+                        "SizeX": 279.0,
+                        "SizeY": 104.0,
                         "Text": "",
                         "TextColorA": 1.0,
                         "TextColorB": 1.0,
@@ -129,14 +129,14 @@
                     "Data": {
                         "ElementType": 0,
                         "FontSize": 2.450000047683716,
-                        "HoverTex": "Resources/Textures/exit1.dds",
+                        "HoverTex": "Resources/Textures/ExitButtonSelected.dds",
                         "IsVisible": true,
-                        "NormalTex": "Resources/Textures/exit.dds",
-                        "PosX": 699.0,
-                        "PosY": 468.99993896484375,
-                        "PressedTex": "",
-                        "SizeX": 216.0,
-                        "SizeY": 64.0,
+                        "NormalTex": "Resources/Textures/ExitButton.dds",
+                        "PosX": 686.0,
+                        "PosY": 465.6663818359375,
+                        "PressedTex": "Resources/Textures/ExitButtonSelected.dds",
+                        "SizeX": 209.0,
+                        "SizeY": 96.0,
                         "Text": "",
                         "TextColorA": 1.0,
                         "TextColorB": 1.0,
@@ -156,10 +156,10 @@
             "OwnerID": 0
         },
         {
-            "ActorType": 0,
+            "ActorType": 1,
             "Children": [
                 {
-                    "ActorType": 0,
+                    "ActorType": 3,
                     "Children": [],
                     "Components": [
                         {
@@ -202,20 +202,20 @@
                 {
                     "Data": {
                         "Position": [
-                            -44.91527557373047,
-                            126.16378021240234,
-                            143.10313415527344
+                            -14.148308753967285,
+                            121.71240234375,
+                            150.83999633789063
                         ],
                         "Rotation": [
-                            7.185236405859996e-09,
-                            0.8873490691184998,
-                            -3.733705344899363e-09,
-                            -0.4610982835292816
+                            -7.983431693503462e-09,
+                            0.7035136818885803,
+                            1.353959833139129e-09,
+                            0.7106817364692688
                         ],
                         "Scale": [
-                            0.10000136494636536,
+                            0.10000154376029968,
                             0.10000000149011612,
-                            0.10000136494636536
+                            0.10000154376029968
                         ]
                     },
                     "Type": "TransformComponent"
@@ -401,12 +401,12 @@
                         "FontSize": 1.0,
                         "HoverTex": "",
                         "IsVisible": true,
-                        "NormalTex": "Resources/Textures/ups.dds",
-                        "PosX": 386.0008544921875,
-                        "PosY": 79.33355712890625,
+                        "NormalTex": "Resources/Textures/Title.dds",
+                        "PosX": 260.6673889160156,
+                        "PosY": -47.33308792114258,
                         "PressedTex": "",
-                        "SizeX": 481.0,
-                        "SizeY": 169.0,
+                        "SizeX": 714.0,
+                        "SizeY": 412.0,
                         "Text": "",
                         "TextColorA": 1.0,
                         "TextColorB": 1.0,
@@ -432,20 +432,20 @@
                 {
                     "Data": {
                         "Position": [
-                            0.0,
-                            0.0,
-                            0.0
+                            -18.02887535095215,
+                            138.3078155517578,
+                            154.68582153320313
                         ],
                         "Rotation": [
-                            -0.07718497514724731,
-                            0.8186661601066589,
-                            -0.1627221703529358,
-                            0.5452978610992432
+                            -0.6784787178039551,
+                            0.023421768099069595,
+                            0.7328425645828247,
+                            0.04538515582680702
                         ],
                         "Scale": [
-                            1.0,
-                            1.0,
-                            1.0
+                            1.0000243186950684,
+                            1.0000574588775635,
+                            1.0000019073486328
                         ]
                     },
                     "Type": "TransformComponent"
@@ -454,15 +454,15 @@
                     "Data": {
                         "CastShadows": true,
                         "Color": [
-                            1.0,
-                            0.7058823108673096,
-                            0.0,
+                            0.2626831829547882,
+                            0.2647058963775635,
+                            0.19593428075313568,
                             1.0
                         ],
-                        "Intensity": 1.2000000476837158,
-                        "LightType": 0,
-                        "Range": 50.0,
-                        "SpotAngle": 45.0
+                        "Intensity": 3.200000047683716,
+                        "LightType": 1,
+                        "Range": 57.099998474121094,
+                        "SpotAngle": 44.0
                     },
                     "Type": "LightComponent"
                 }
@@ -470,6 +470,54 @@
             "IsActive": true,
             "IsVisible": true,
             "Name": "light",
+            "OwnerID": 0
+        },
+        {
+            "ActorType": 5,
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            -11.675000190734863,
+                            124.72599792480469,
+                            151.24200439453125
+                        ],
+                        "Rotation": [
+                            -0.058387331664562225,
+                            0.6829254031181335,
+                            -0.16639739274978638,
+                            0.7088835835456848
+                        ],
+                        "Scale": [
+                            0.10002265870571136,
+                            0.10000137984752655,
+                            0.10003681480884552
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "Animations": [
+                            {
+                                "Name": "Anim1",
+                                "Path": "Resources/Models/knight/Zombie Idle.sdkmesh_anim"
+                            }
+                        ],
+                        "EnableRootMotion": false,
+                        "IsVisible": true,
+                        "ModelPath": "Resources/Models/knight/Treading Water (1).sdkmesh",
+                        "RootBoneName": "",
+                        "RootMotionExtractY": false,
+                        "TextureDir": "Resources/Models/knight/"
+                    },
+                    "Type": "SkinnedModelComponent"
+                }
+            ],
+            "IsActive": true,
+            "IsVisible": true,
+            "Name": "Ghost",
             "OwnerID": 0
         }
     ]

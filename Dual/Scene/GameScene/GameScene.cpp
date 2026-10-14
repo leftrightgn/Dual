@@ -21,6 +21,7 @@
 #include "../../../External/Engine/Components/SocketAttachmentComponent.h"
 #include "../../../External/Engine/Components/RigidBodyComponent.h"
 #include "../../../External/Engine/Components/ColliderComponent/CapsuleColliderComponent.h"
+#include "../../../External/Engine/Components/ColliderComponent/AABBColliderComponent.h"
 #include "../../../External/Engine/Components/ColliderComponent/TerrainColliderComponent.h"
 #include "../../../External/Engine/Components/TerrainComponent.h"
 #include "../../../External/Engine/Factory/ComponentFactory.h"
@@ -214,8 +215,19 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
         }
         else
         {
-            cameraInput.mouseX = static_cast<float>(mouseState.x);
-            cameraInput.mouseY = static_cast<float>(mouseState.y);
+            // In absolute mode (cursor free / UI mode), do NOT feed raw screen pixel coordinates into rotation delta.
+            // Only feed delta if right-click dragging and UI is not capturing mouse.
+            if (!isUICapturingMouse && mouseState.rightButton && gameContext.inputManager != nullptr)
+            {
+                auto mouseDelta = gameContext.inputManager->GetMouseDelta();
+                cameraInput.mouseX = static_cast<float>(mouseDelta.first);
+                cameraInput.mouseY = static_cast<float>(mouseDelta.second);
+            }
+            else
+            {
+                cameraInput.mouseX = 0.0f;
+                cameraInput.mouseY = 0.0f;
+            }
         }
 
         cameraInput.isLeftMouseDown = isUICapturingMouse ? false : mouseState.leftButton;
@@ -285,8 +297,23 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
 
                 if (gameContext.keyboardTracker.pressed.Q)
                 {
-                    // 1. Destroy Ghost Actor
-                    m_actorManager.DestroyID(player->GetID());
+                    // 1. Deactivate and hide Ghost Actor (preserve in memory so it can return if the possessed vessel dies)
+                    player->SetActive(false);
+                    player->SetVisible(false);
+                    if (auto* rb = player->GetComponent<HEIN::RigidBodyComponent>())
+                    {
+                        rb->SetVelocity(DirectX::SimpleMath::Vector3::Zero);
+                        rb->SetKinematic(true);
+                    }
+                    if (auto* bb = player->GetComponent<HEIN::CombatBlackBoard>())
+                    {
+                        bb->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+                        bb->currentVelocity = DirectX::SimpleMath::Vector3::Zero;
+                    }
+                    if (auto* model = player->GetComponent<HEIN::SkinnedModelComponent>())
+                    {
+                        model->SetVisible(false);
+                    }
 
                     // 2. Possess the Vessel
                     HEIN::ActorFactory::PossessVessel(closestVessel, m_actorManager);
@@ -412,6 +439,55 @@ void GameScene::ProcessLifecyclePhase(GameContext& gameContext)
             deathPos = transform->GetPosition();
         }
 
+        // Clamp death position to ground surface elevation (terrain or static environment colliders like Stage floor)
+        float groundHeight = -FLT_MAX;
+        bool foundGround = false;
+        DirectX::SimpleMath::Vector3 terrainNormal;
+        for (const auto& pair : m_actorManager.GetAllActors())
+        {
+            if (auto* terrainCol = pair.second->GetComponent<HEIN::TerrainColliderComponent>())
+            {
+                float th = 0.0f;
+                if (terrainCol->GetHeightAtPosition(deathPos.x, deathPos.z, th, terrainNormal))
+                {
+                    groundHeight = th;
+                    foundGround = true;
+                }
+                break;
+            }
+        }
+        for (const auto& pair : m_actorManager.GetAllActors())
+        {
+            if (!pair.second || !pair.second->IsActive()) continue;
+            for (auto* aabbComp : pair.second->GetComponents<HEIN::AABBColliderComponent>())
+            {
+                if (!aabbComp || aabbComp->IsTrigger()) continue;
+                if (aabbComp->IsWall()) continue;
+                if (!aabbComp->IsGround() && (aabbComp->GetCollisionLayer() & (HEIN::CollisionLayer::Layer_Environment | HEIN::CollisionLayer::Layer_Default)) == 0) continue;
+
+                const auto& aabb = aabbComp->GetWorldAABB();
+                float minX = aabb.Center.x - aabb.Extents.x;
+                float maxX = aabb.Center.x + aabb.Extents.x;
+                float minZ = aabb.Center.z - aabb.Extents.z;
+                float maxZ = aabb.Center.z + aabb.Extents.z;
+                float topY = aabb.Center.y + aabb.Extents.y;
+                float botY = aabb.Center.y - aabb.Extents.y;
+
+                if (deathPos.x >= minX && deathPos.x <= maxX && deathPos.z >= minZ && deathPos.z <= maxZ && deathPos.y >= (botY - 5.0f))
+                {
+                    if (!foundGround || topY > groundHeight)
+                    {
+                        groundHeight = topY;
+                        foundGround = true;
+                    }
+                }
+            }
+        }
+        if (foundGround && deathPos.y < groundHeight)
+        {
+            deathPos.y = groundHeight;
+        }
+
         // 1. Keep dead body laying on the ground as a corpse (boss drops aggro)
         playerDiedActor->SetActorType(HEIN::ActorType::Default);
         playerDiedActor->SetTag(L"Corpse");
@@ -453,7 +529,10 @@ void GameScene::ProcessLifecyclePhase(GameContext& gameContext)
             rot.x = -DirectX::XM_PIDIV2; // Lay flat on ground
             transform->SetRotationEuler(rot);
             DirectX::SimpleMath::Vector3 pos = transform->GetPosition();
-            pos.y = std::max(pos.y - 1.0f, 0.0f);
+            if (foundGround)
+            {
+                pos.y = groundHeight + 0.2f; // Rest dead corpse cleanly on ground or stage floor
+            }
             transform->SetPosition(pos);
         }
 
@@ -483,21 +562,43 @@ void GameScene::ProcessLifecyclePhase(GameContext& gameContext)
         {
             ghost = m_actorManager.GetActorByName(L"Ghost");
         }
-
+       
         if (ghost != nullptr && ghost != playerDiedActor)
         {
             ghost->SetActive(true);
             ghost->SetVisible(true);
             ghost->SetActorType(HEIN::ActorType::Ghost);
+            if (auto* model = ghost->GetComponent<HEIN::SkinnedModelComponent>())
+            {
+                model->SetVisible(true);
+                model->SetGhostMode(true);
+                if (model->HasAnimation("Anim0"))
+                {
+                    model->ChangeAnimation("Anim0");
+                }
+                else if (model->HasAnimation("Idle"))
+                {
+                    model->ChangeAnimation("Idle");
+                }
+            }
+            DirectX::SimpleMath::Vector3 ghostSpawnPos = deathPos + DirectX::SimpleMath::Vector3(0.0f, 3.5f, 0.0f);
             if (auto* transform = ghost->GetComponent<HEIN::TransformComponent>())
             {
-                transform->SetPosition(deathPos + DirectX::SimpleMath::Vector3(0.0f, 3.0f, 0.0f));
+                transform->SetPosition(ghostSpawnPos);
             }
-            if (!ghost->GetComponent<HEIN::CombatBlackBoard>())
+            auto* bb = ghost->GetComponent<HEIN::CombatBlackBoard>();
+            if (!bb)
             {
-                auto* bb = ghost->AddComponent<HEIN::CombatBlackBoard>();
+                bb = ghost->AddComponent<HEIN::CombatBlackBoard>();
+            }
+            if (bb)
+            {
                 bb->currentSpeed = 35.0f;
                 bb->currentTurnSpeed = 12.0f;
+                bb->spawnPosition = ghostSpawnPos;
+                bb->hasSetSpawnPosition = true;
+                bb->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+                bb->currentVelocity = DirectX::SimpleMath::Vector3::Zero;
             }
             if (!ghost->GetComponent<HEIN::CharacterMovementComponent>())
             {
@@ -507,11 +608,17 @@ void GameScene::ProcessLifecyclePhase(GameContext& gameContext)
             {
                 ghost->AddComponent<HEIN::PlayerInputComponent>(&m_actorManager);
             }
-            if (!ghost->GetComponent<HEIN::RigidBodyComponent>())
+            auto* rb = ghost->GetComponent<HEIN::RigidBodyComponent>();
+            if (!rb)
             {
-                auto* rb = ghost->AddComponent<HEIN::RigidBodyComponent>();
+                rb = ghost->AddComponent<HEIN::RigidBodyComponent>();
                 rb->Initialize(80.0f, true, false);
-                rb->SetNeedsInitialSnap(true);
+            }
+            if (rb)
+            {
+                rb->SetKinematic(false);
+                rb->SetVelocity(DirectX::SimpleMath::Vector3::Zero);
+                rb->SetNeedsInitialSnap(false);
             }
             if (!ghost->GetComponent<HEIN::CapsuleColliderComponent>())
             {
@@ -520,7 +627,7 @@ void GameScene::ProcessLifecyclePhase(GameContext& gameContext)
                 col->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
                 col->SetTrigger(false);
                 col->SetCollisionLayer(HEIN::CollisionLayer::Layer_Player);
-                col->SetCollisionMask(HEIN::CollisionLayer::Layer_Environment);
+                col->SetCollisionMask(HEIN::CollisionLayer::Layer_Environment | HEIN::CollisionLayer::Layer_Ground | HEIN::CollisionLayer::Layer_Wall);
             }
             ghost->Start();
         }
@@ -1045,6 +1152,11 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
             {
                 pair.second->SetActive(false);
                 pair.second->SetVisible(false);
+                if (auto* rb = pair.second->GetComponent<HEIN::RigidBodyComponent>())
+                {
+                    rb->SetKinematic(true);
+                    rb->SetVelocity(DirectX::SimpleMath::Vector3::Zero);
+                }
             }
         }
 
@@ -1170,7 +1282,7 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
             if (!pair.second->GetComponent<HEIN::TerrainColliderComponent>())
             {
                 auto* tc = pair.second->AddComponent<HEIN::TerrainColliderComponent>();
-                tc->SetCollisionLayer(HEIN::CollisionLayer::Layer_Environment);
+                tc->SetCollisionLayer(HEIN::CollisionLayer::Layer_Environment | HEIN::CollisionLayer::Layer_Ground);
                 tc->SetCollisionMask(HEIN::CollisionLayer::Layer_All);
             }
         }
@@ -1183,7 +1295,7 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
         {
             auto* rb = ghostActor->AddComponent<HEIN::RigidBodyComponent>();
             rb->Initialize(80.0f, true, false);
-            rb->SetNeedsInitialSnap(true);
+            rb->SetNeedsInitialSnap(false);
         }
         if (!ghostActor->GetComponent<HEIN::CapsuleColliderComponent>())
         {
@@ -1192,7 +1304,7 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
             col->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
             col->SetTrigger(false);
             col->SetCollisionLayer(HEIN::CollisionLayer::Layer_Player);
-            col->SetCollisionMask(HEIN::CollisionLayer::Layer_Environment);
+            col->SetCollisionMask(HEIN::CollisionLayer::Layer_Environment | HEIN::CollisionLayer::Layer_Ground | HEIN::CollisionLayer::Layer_Wall);
         }
     }
 

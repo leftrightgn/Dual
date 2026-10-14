@@ -113,12 +113,14 @@
     <ClInclude Include="States\ICombatState.h">
       <Filter>States</Filter>
     </ClInclude>
+    <ClInclude Include="Components\PossessableComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="directx.ico" />
+    <Image Include="Resources\Models\knight\Body.dds" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

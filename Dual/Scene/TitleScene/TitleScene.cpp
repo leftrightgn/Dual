@@ -219,6 +219,33 @@ void TitleScene::OnEnter(GameContext& gameContext)
         }
     }
 
+    // Ensure Ghost mode and animation playback on Ghost model if present
+    auto ghostAct = m_actorManager.GetActorByName(L"Ghost");
+    if (ghostAct)
+    {
+        if (auto* model = ghostAct->GetComponent<HEIN::SkinnedModelComponent>())
+        {
+            model->SetGhostMode(true);
+            if (model->HasAnimation("Anim0"))
+            {
+                model->ChangeAnimation("Anim0");
+            }
+        }
+    }
+
+    // Ensure Player animation playback if present
+    auto playerAct = m_actorManager.GetActorByName(L"Player");
+    if (playerAct)
+    {
+        if (auto* model = playerAct->GetComponent<HEIN::SkinnedModelComponent>())
+        {
+            if (model->HasAnimation("Anim0"))
+            {
+                model->ChangeAnimation("Anim0");
+            }
+        }
+    }
+
     // Initialize Debug Display / Editor
     m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
     m_debugDisplay->Initialize();
@@ -482,6 +509,13 @@ void TitleScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext
     if (HEIN::Actor* player = m_actorManager.GetActorByName(L"Player"))
     {
         if (auto* trans = player->GetComponent<HEIN::TransformComponent>())
+        {
+            targetCenter = trans->GetPosition();
+        }
+    }
+    else if (HEIN::Actor* ghost = m_actorManager.GetActorByName(L"Ghost"))
+    {
+        if (auto* trans = ghost->GetComponent<HEIN::TransformComponent>())
         {
             targetCenter = trans->GetPosition();
         }
