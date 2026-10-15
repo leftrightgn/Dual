@@ -40,6 +40,7 @@
                     "Type": "CameraController"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "TitleCamera",
@@ -95,6 +96,7 @@
                     "Type": "UIButtonComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "StartButton",
@@ -150,6 +152,7 @@
                     "Type": "UIButtonComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "ExitButton",
@@ -192,6 +195,7 @@
                             "Type": "StaticModelComponent"
                         }
                     ],
+                    "EnableFrustumCulling": true,
                     "IsActive": true,
                     "IsVisible": true,
                     "Name": "sword",
@@ -238,6 +242,7 @@
                     "Type": "SkinnedModelComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "Player",
@@ -308,6 +313,7 @@
                     "Type": "FogComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "StageRoot",
@@ -365,6 +371,7 @@
                     "Type": "TerrainComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "Terrain",
@@ -420,6 +427,7 @@
                     "Type": "UIButtonComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "UIImage",
@@ -467,6 +475,7 @@
                     "Type": "LightComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "light",
@@ -515,6 +524,7 @@
                     "Type": "SkinnedModelComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "Ghost",

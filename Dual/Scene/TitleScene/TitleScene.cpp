@@ -287,6 +287,7 @@ void TitleScene::Update(GameContext& gameContext)
     gameContext.actorManager = &m_actorManager;
     gameContext.shadowSystem = &m_shadowSystem;
     gameContext.isEditorMode = (m_debugDisplay != nullptr && m_debugDisplay->isMagnified()) || !m_isPlaying;
+    gameContext.showUI = (m_debugDisplay != nullptr) ? m_debugDisplay->GetDebugUI().IsShowUIEnabled() : true;
 
     // Update Debug Display / Editor UI
     m_debugDisplay->Update(gameContext, m_actorManager);
@@ -466,7 +467,7 @@ void TitleScene::Update(GameContext& gameContext)
     bool isEditorMode = (m_debugDisplay != nullptr && m_debugDisplay->isMagnified()) || !m_isPlaying;
     if (!isEditorMode)
     {
-        bool startPressed = (m_startButton && m_startButton->IsClicked());
+        bool startPressed = gameContext.showUI && (m_startButton && m_startButton->IsClicked());
 
         if (startPressed)
         {
@@ -478,7 +479,7 @@ void TitleScene::Update(GameContext& gameContext)
         }
 
         // Check Exit Button or Escape key
-        bool exitPressed = (m_exitButton && m_exitButton->IsClicked()) ||
+        bool exitPressed = (gameContext.showUI && m_exitButton && m_exitButton->IsClicked()) ||
                            gameContext.keyboardTracker.pressed.Escape;
 
         if (exitPressed)
@@ -617,6 +618,7 @@ void TitleScene::Render(GameContext& gameContext)
     gameContext.actorManager = &m_actorManager;
     gameContext.shadowSystem = &m_shadowSystem;
     gameContext.isEditorMode = (m_debugDisplay != nullptr && m_debugDisplay->isMagnified()) || !m_isPlaying;
+    gameContext.showUI = (m_debugDisplay != nullptr) ? m_debugDisplay->GetDebugUI().IsShowUIEnabled() : true;
 
     // Pass 1: Shadow Depth Map Pass
     RenderShadowPhase(gameContext, context);

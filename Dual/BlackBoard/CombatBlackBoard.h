@@ -71,16 +71,16 @@ namespace HEIN
 		DirectX::SimpleMath::Vector3 localMoveIntent = DirectX::SimpleMath::Vector3::Zero;
 
 		// Block Stats
-		float maxBlockStamina = 2.0f;
-		float currentBlockStamina = 2.0f;
+		float maxBlockStamina = 1.0f;
+		float currentBlockStamina = 1.0f;
 		float blockRecoveryRate = 0.5f;
 		bool isBlockBroken = false;
 		float blockCooldownTimer = 0.0f;      // > 0 after a successful block: incoming hits are ignored
-		float blockCooldownDuration = 0.6f;   // Immunity window after a successful block (covers the rest of the swing)
+		float blockCooldownDuration = 0.8f;   // Immunity window after a successful block (covers the rest of the swing)
 
 		// Dodge Stats
 		float dodgeCooldownTimer = 0.0f;
-		float maxDodgeCooldown = 1.5f;
+		float maxDodgeCooldown = 3.5f;
 
 		bool hasBeenSeenByPlayer = false;
 

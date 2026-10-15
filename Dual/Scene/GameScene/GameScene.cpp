@@ -126,6 +126,7 @@ void GameScene::Update(GameContext& gameContext)
     gameContext.actorManager = &m_actorManager;
     gameContext.shadowSystem = &m_shadowSystem;
     gameContext.isEditorMode = (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()));
+    gameContext.showUI = (m_debugDisplay != nullptr) ? m_debugDisplay->GetDebugUI().IsShowUIEnabled() : true;
 
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
@@ -165,6 +166,7 @@ void GameScene::Render(GameContext& gameContext)
     gameContext.actorManager = &m_actorManager;
     gameContext.shadowSystem = &m_shadowSystem;
     gameContext.isEditorMode = (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()));
+    gameContext.showUI = (m_debugDisplay != nullptr) ? m_debugDisplay->GetDebugUI().IsShowUIEnabled() : true;
 
     // Pass 1: Shadow Map Depth Generation Pass
     RenderShadowPhase(gameContext, context);
@@ -176,7 +178,7 @@ void GameScene::Render(GameContext& gameContext)
     m_debugDisplay->Render(gameContext, m_actorManager, m_skybox.get(), view, m_proj);
 
     // Pass 4: Ghost Possession Prompt Overlay
-    if (m_isGhost && m_targetVesselID != HEIN::INVALID_ACTOR_ID)
+    if (gameContext.showUI && m_isGhost && m_targetVesselID != HEIN::INVALID_ACTOR_ID)
     {
         ImGuiIO& io = ImGui::GetIO();
         ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.78f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));

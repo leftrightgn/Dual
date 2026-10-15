@@ -40,11 +40,19 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
     ApplyPendingState();
     ProcessBuffer(deltaTime);
 
-    if (m_pendingState != nullptr) return;
+    if (m_pendingState != nullptr)
+    {
+        ApplyPendingState();
+    }
 
     if (m_currentState)
     {
         m_currentState->Update(m_owner, this, deltaTime);
+    }
+
+    if (m_pendingState != nullptr)
+    {
+        ApplyPendingState();
     }
 
     Messenger::GetInstance()->Notify(m_owner->GetID(), IsAttacking() ? Message::SET_WEAPON_ACTIVE : Message::SET_WEAPON_INACTIVE);
