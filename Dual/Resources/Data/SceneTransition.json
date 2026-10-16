@@ -1,0 +1,80 @@
+{
+    "BarFillColor": [
+        0.78,
+        0.72,
+        0.52,
+        1.0
+    ],
+    "BarFillTexturePath": "",
+    "BarLength": 340.0,
+    "BarNeedleColor": [
+        0.98,
+        0.92,
+        0.72,
+        1.0
+    ],
+    "BarNeedleTexturePath": "",
+    "BarNormalizedPos": [
+        0.72,
+        0.92
+    ],
+    "BarOrientation": 0,
+    "BarStyle": 0,
+    "BarThickness": 2.0,
+    "BarTrackColor": [
+        0.35,
+        0.32,
+        0.25,
+        0.85
+    ],
+    "BarTrackTexturePath": "",
+    "Columns": 1,
+    "EndCapLength": 12.0,
+    "EndCapThickness": 2.0,
+    "FadeInDuration": 0.5,
+    "FadeOutDuration": 0.45,
+    "Fps": 24.0,
+    "HoldDuration": 1.2,
+    "LoopAnimation": true,
+    "MinLoadingHoldDuration": 1.2,
+    "NeedleLength": 18.0,
+    "NeedlePulseSpeed": 4.0,
+    "NeedleThickness": 3.0,
+    "Rows": 1,
+    "SegmentCount": 10,
+    "ShowEndCaps": true,
+    "ShowLoadingBar": true,
+    "ShowNeedle": true,
+    "ShowPercentageText": false,
+    "ShowTips": true,
+    "TexturePath": "",
+    "TintColor": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+    ],
+    "TipNormalizedPos": [
+        0.06,
+        0.72
+    ],
+    "Tips": [
+        {
+            "description": "When your mortal body falls, press [Q] near an unoccupied vessel to claim its strength.",
+            "title": "Vessel Possession"
+        },
+        {
+            "description": "Raise your guard right before an attack lands to execute a perfect parry and break enemy posture.",
+            "title": "Perfect Parrying"
+        },
+        {
+            "description": "Taking three consecutive unblocked hits triggers a defensive radial burst, repelling nearby foes.",
+            "title": "Anti-Combo Burst"
+        },
+        {
+            "description": "Heavy attacks and stunning strikes launch opponents skyward, creating juggle opportunities.",
+            "title": "Aerial Launch"
+        }
+    ],
+    "TotalFrames": 1
+}

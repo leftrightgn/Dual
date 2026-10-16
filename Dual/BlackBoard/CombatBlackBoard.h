@@ -61,8 +61,8 @@ namespace HEIN
 		float maxStamina = 100.0f;
 		float currentHealth = 100.0f;
 		CombatStance currentStance = CombatStance::Idle;
-		float currentSpeed = 30.0f;
-		float currentTurnSpeed = 12.0f;
+		float currentSpeed = 55.0f;
+		float currentTurnSpeed = 25.0f;
 
 		bool isAttacking = false;
 		bool isJumping = false;
@@ -77,10 +77,12 @@ namespace HEIN
 		bool isBlockBroken = false;
 		float blockCooldownTimer = 0.0f;      // > 0 after a successful block: incoming hits are ignored
 		float blockCooldownDuration = 0.8f;   // Immunity window after a successful block (covers the rest of the swing)
+		float blockActiveTimer = 0.0f;        // Time since entering block state (for parry window calculation)
+		float parryWindow = 0.20f;            // Window within which blocking acts as a perfect parry
 
 		// Dodge Stats
 		float dodgeCooldownTimer = 0.0f;
-		float maxDodgeCooldown = 3.5f;
+		float maxDodgeCooldown = 0.6f;
 
 		bool hasBeenSeenByPlayer = false;
 
@@ -98,6 +100,7 @@ namespace HEIN
 		// Hit confirmation & combo tracking
 		bool lastAttackHit = false;
 		int comboIndex = 0;
+		int consecutiveHitsTaken = 0;         // Unblocked hit counter for anti-combo burst
 
 		CombatBlackBoard(Actor* owner)
 			: IComponent(owner)

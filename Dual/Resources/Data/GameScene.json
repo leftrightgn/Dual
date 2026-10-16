@@ -8,17 +8,18 @@
                     "Data": {
                         "BlendDuration": 1.0,
                         "Fov": 0.8726646304130554,
-                        "PosX": 86.14935302734375,
-                        "PosY": -43.715919494628906,
-                        "PosZ": -1478.44580078125,
-                        "RotW": 0.8405044078826904,
-                        "RotX": -0.18957090377807617,
-                        "RotY": 0.4951208233833313,
-                        "RotZ": 0.11167163401842117
+                        "PosX": 90.35916137695313,
+                        "PosY": -55.6573600769043,
+                        "PosZ": -1484.85302734375,
+                        "RotW": 0.804088294506073,
+                        "RotX": -0.04695763811469078,
+                        "RotY": 0.5916443467140198,
+                        "RotZ": 0.03455120697617531
                     },
                     "Type": "CameraController"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "MainCamera",
@@ -97,6 +98,7 @@
                             "Type": "SocketAttachmentComponent"
                         }
                     ],
+                    "EnableFrustumCulling": true,
                     "IsActive": true,
                     "IsVisible": true,
                     "Name": "Sword",
@@ -124,9 +126,9 @@
                 {
                     "Data": {
                         "Position": [
-                            56.38669204711914,
-                            -76.53315734863281,
-                            -1496.8638916015625
+                            53.8817253112793,
+                            -76.18931579589844,
+                            -1497.197265625
                         ],
                         "Rotation": [
                             -0.0,
@@ -146,16 +148,12 @@
                     "Data": {
                         "Animations": [
                             {
-                                "Name": "Idle",
-                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
-                            },
-                            {
                                 "Name": "Slash3",
                                 "Path": "Resources/Models/knight/slash3.sdkmesh_anim"
                             },
                             {
-                                "Name": "Slash2",
-                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
+                                "Name": "Idle",
+                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
                             },
                             {
                                 "Name": "Walk",
@@ -166,16 +164,20 @@
                                 "Path": "Resources/Models/knight/Dodge.sdkmesh_anim"
                             },
                             {
+                                "Name": "Slash2",
+                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
+                            },
+                            {
                                 "Name": "Block",
                                 "Path": "Resources/Models/knight/block.sdkmesh_anim"
                             },
                             {
-                                "Name": "Stun",
-                                "Path": "Resources/Models/knight/stun.sdkmesh_anim"
-                            },
-                            {
                                 "Name": "Slash1",
                                 "Path": "Resources/Models/knight/slash1.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Stun",
+                                "Path": "Resources/Models/knight/stun.sdkmesh_anim"
                             },
                             {
                                 "Name": "Jump",
@@ -285,7 +287,7 @@
                 {
                     "Data": {
                         "ColliderTag": "BodyCollider",
-                        "Height": 3.702930212020874,
+                        "Height": 3.7099344730377197,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -311,7 +313,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RarmCollider",
-                        "Height": 2.5574467182159424,
+                        "Height": 2.557429552078247,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -337,7 +339,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RforearmCollider",
-                        "Height": 2.1602976322174072,
+                        "Height": 2.1603329181671143,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -363,7 +365,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LarmCollider",
-                        "Height": 2.557426929473877,
+                        "Height": 2.5574264526367188,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -389,7 +391,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LforearmCollider",
-                        "Height": 2.160332441329956,
+                        "Height": 2.160342216491699,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -415,7 +417,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RupLegCollider",
-                        "Height": 4.170208930969238,
+                        "Height": 4.170217514038086,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -441,7 +443,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RLegCollider",
-                        "Height": 3.698099136352539,
+                        "Height": 3.6981043815612793,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -467,7 +469,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LupLegCollider",
-                        "Height": 4.1702094078063965,
+                        "Height": 4.17019510269165,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -493,7 +495,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LLegCollider",
-                        "Height": 3.698078155517578,
+                        "Height": 3.6981089115142822,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -597,7 +599,7 @@
                                 "BorderColorR": 0.8999999761581421,
                                 "BorderTexPath": "Resources/Textures/borderg.dds",
                                 "ClipTexture": true,
-                                "CurrentValue": 3.5,
+                                "CurrentValue": 0.6000000238418579,
                                 "FillColorA": 1.0,
                                 "FillColorB": 1.0,
                                 "FillColorG": 1.0,
@@ -618,7 +620,7 @@
                                 "LowColorG": 0.10000000149011612,
                                 "LowColorR": 0.8999999761581421,
                                 "LowThreshold": 0.25,
-                                "MaxValue": 3.5,
+                                "MaxValue": 0.6000000238418579,
                                 "Name": "Dodge",
                                 "OffsetX": 26.0,
                                 "OffsetY": -547.0,
@@ -701,6 +703,7 @@
                     "Type": "CharacterMovementComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "Player",
@@ -778,6 +781,7 @@
                             "Type": "SocketAttachmentComponent"
                         }
                     ],
+                    "EnableFrustumCulling": true,
                     "IsActive": true,
                     "IsVisible": true,
                     "Name": "Axe",
@@ -811,9 +815,9 @@
                         ],
                         "Rotation": [
                             0.0,
-                            -0.08491657674312592,
+                            -0.25007298588752747,
                             0.0,
-                            0.9963880777359009
+                            0.9682270288467407
                         ],
                         "Scale": [
                             0.15001897513866425,
@@ -831,28 +835,28 @@
                                 "Path": "Resources/Models/Boss/idle.sdkmesh_anim"
                             },
                             {
-                                "Name": "Walk",
-                                "Path": "Resources/Models/Boss/running.sdkmesh_anim"
+                                "Name": "Combo1",
+                                "Path": "Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim"
                             },
                             {
                                 "Name": "Dodge",
                                 "Path": "Resources/Models/Boss/dodge.sdkmesh_anim"
                             },
                             {
-                                "Name": "Combo1",
-                                "Path": "Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim"
+                                "Name": "Walk",
+                                "Path": "Resources/Models/Boss/running.sdkmesh_anim"
                             },
                             {
                                 "Name": "Combo2",
                                 "Path": "Resources/Models/Boss/Standing Melee Attack Downward.sdkmesh_anim"
                             },
                             {
-                                "Name": "Combo3",
-                                "Path": "Resources/Models/Boss/Standing Melee Attack Backhand.sdkmesh_anim"
-                            },
-                            {
                                 "Name": "OneHand",
                                 "Path": "Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Combo3",
+                                "Path": "Resources/Models/Boss/Standing Melee Attack Backhand.sdkmesh_anim"
                             },
                             {
                                 "Name": "HeavyAttack",
@@ -896,7 +900,7 @@
                 {
                     "Data": {
                         "ColliderTag": "BodyCollider",
-                        "Height": 6.498343467712402,
+                        "Height": 6.513229846954346,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -922,7 +926,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RArmCollider",
-                        "Height": 7.395674705505371,
+                        "Height": 7.395730495452881,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -948,7 +952,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RForearmCollider",
-                        "Height": 4.741000175476074,
+                        "Height": 4.741061687469482,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -974,7 +978,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LArmCollider",
-                        "Height": 7.395516395568848,
+                        "Height": 7.395537376403809,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1000,7 +1004,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LForearmCollider",
-                        "Height": 4.740864276885986,
+                        "Height": 4.740902900695801,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1026,7 +1030,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RUpLegCollider",
-                        "Height": 5.742793560028076,
+                        "Height": 5.742777347564697,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1052,7 +1056,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RLegCollider",
-                        "Height": 4.903058052062988,
+                        "Height": 4.903048515319824,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1078,7 +1082,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LUpLegCollider",
-                        "Height": 5.743044853210449,
+                        "Height": 5.742999076843262,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1104,7 +1108,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LLegCollider",
-                        "Height": 4.9027323722839355,
+                        "Height": 4.9027018547058105,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1296,6 +1300,7 @@
                     "Type": "CharacterMovementComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "Enemy",
@@ -1433,6 +1438,7 @@
                             "Type": "FoliageComponent"
                         }
                     ],
+                    "EnableFrustumCulling": true,
                     "IsActive": true,
                     "IsVisible": true,
                     "Name": "Terrain",
@@ -1494,6 +1500,7 @@
                                     "Type": "AABBColliderComponent"
                                 }
                             ],
+                            "EnableFrustumCulling": true,
                             "IsActive": true,
                             "IsVisible": true,
                             "Name": "Pillar",
@@ -1552,6 +1559,7 @@
                                     "Type": "AABBColliderComponent"
                                 }
                             ],
+                            "EnableFrustumCulling": true,
                             "IsActive": true,
                             "IsVisible": true,
                             "Name": "Pillar2",
@@ -1610,6 +1618,7 @@
                                     "Type": "AABBColliderComponent"
                                 }
                             ],
+                            "EnableFrustumCulling": true,
                             "IsActive": true,
                             "IsVisible": true,
                             "Name": "Pillar3",
@@ -1668,6 +1677,7 @@
                                     "Type": "AABBColliderComponent"
                                 }
                             ],
+                            "EnableFrustumCulling": true,
                             "IsActive": true,
                             "IsVisible": true,
                             "Name": "Pillar4",
@@ -1726,6 +1736,7 @@
                                     "Type": "AABBColliderComponent"
                                 }
                             ],
+                            "EnableFrustumCulling": true,
                             "IsActive": true,
                             "IsVisible": true,
                             "Name": "Pillar5",
@@ -1784,6 +1795,7 @@
                                     "Type": "AABBColliderComponent"
                                 }
                             ],
+                            "EnableFrustumCulling": true,
                             "IsActive": true,
                             "IsVisible": true,
                             "Name": "Pillar6",
@@ -1842,6 +1854,7 @@
                                     "Type": "AABBColliderComponent"
                                 }
                             ],
+                            "EnableFrustumCulling": true,
                             "IsActive": true,
                             "IsVisible": true,
                             "Name": "Pillar7",
@@ -1900,6 +1913,7 @@
                                     "Type": "AABBColliderComponent"
                                 }
                             ],
+                            "EnableFrustumCulling": true,
                             "IsActive": true,
                             "IsVisible": true,
                             "Name": "Pillar8",
@@ -1956,10 +1970,11 @@
                                     "Type": "MeshColliderComponent"
                                 }
                             ],
+                            "EnableFrustumCulling": true,
                             "IsActive": true,
                             "IsVisible": true,
                             "Name": "Stair",
-                            "OwnerID": 0
+                            "OwnerID": 8
                         }
                     ],
                     "Components": [
@@ -2012,6 +2027,7 @@
                             "Type": "AABBColliderComponent"
                         }
                     ],
+                    "EnableFrustumCulling": true,
                     "IsActive": true,
                     "IsVisible": true,
                     "Name": "Stage",
@@ -2041,6 +2057,7 @@
                     "Type": "TransformComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "StageRoot",
@@ -2083,10 +2100,11 @@
                             "Type": "StaticModelComponent"
                         }
                     ],
+                    "EnableFrustumCulling": true,
                     "IsActive": true,
                     "IsVisible": true,
                     "Name": "sign1",
-                    "OwnerID": 17
+                    "OwnerID": 18
                 },
                 {
                     "ActorType": 0,
@@ -2122,10 +2140,11 @@
                             "Type": "StaticModelComponent"
                         }
                     ],
+                    "EnableFrustumCulling": true,
                     "IsActive": true,
                     "IsVisible": true,
                     "Name": "sign2",
-                    "OwnerID": 17
+                    "OwnerID": 18
                 },
                 {
                     "ActorType": 0,
@@ -2161,10 +2180,11 @@
                             "Type": "StaticModelComponent"
                         }
                     ],
+                    "EnableFrustumCulling": true,
                     "IsActive": true,
                     "IsVisible": true,
                     "Name": "sign2_Copy",
-                    "OwnerID": 17
+                    "OwnerID": 18
                 }
             ],
             "Components": [
@@ -2190,6 +2210,7 @@
                     "Type": "TransformComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "Signs",
@@ -2237,6 +2258,7 @@
                     "Type": "LightComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "GlobalLight",
@@ -2315,10 +2337,11 @@
                             "Type": "SocketAttachmentComponent"
                         }
                     ],
+                    "EnableFrustumCulling": true,
                     "IsActive": true,
                     "IsVisible": true,
                     "Name": "vesselsword",
-                    "OwnerID": 22
+                    "OwnerID": 23
                 }
             ],
             "Components": [
@@ -2342,9 +2365,9 @@
                 {
                     "Data": {
                         "Position": [
-                            110.79542541503906,
+                            110.75342559814453,
                             -89.14129638671875,
-                            -1223.69873046875
+                            -1223.6986083984375
                         ],
                         "Rotation": [
                             0.0,
@@ -2364,12 +2387,16 @@
                     "Data": {
                         "Animations": [
                             {
+                                "Name": "Idle",
+                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
+                            },
+                            {
                                 "Name": "Slash3",
                                 "Path": "Resources/Models/knight/slash3.sdkmesh_anim"
                             },
                             {
-                                "Name": "Idle",
-                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
+                                "Name": "Slash2",
+                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
                             },
                             {
                                 "Name": "Walk",
@@ -2380,20 +2407,16 @@
                                 "Path": "Resources/Models/knight/Dodge.sdkmesh_anim"
                             },
                             {
-                                "Name": "Slash2",
-                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
-                            },
-                            {
                                 "Name": "Block",
                                 "Path": "Resources/Models/knight/block.sdkmesh_anim"
                             },
                             {
-                                "Name": "Slash1",
-                                "Path": "Resources/Models/knight/slash1.sdkmesh_anim"
-                            },
-                            {
                                 "Name": "Stun",
                                 "Path": "Resources/Models/knight/stun.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Slash1",
+                                "Path": "Resources/Models/knight/slash1.sdkmesh_anim"
                             },
                             {
                                 "Name": "Jump",
@@ -2503,7 +2526,7 @@
                 {
                     "Data": {
                         "ColliderTag": "BodyCollider",
-                        "Height": 6.678450584411621,
+                        "Height": 6.691084861755371,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -2529,7 +2552,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RarmCollider",
-                        "Height": 4.61248779296875,
+                        "Height": 4.612475395202637,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -2555,7 +2578,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RforearmCollider",
-                        "Height": 3.896346092224121,
+                        "Height": 3.8963000774383545,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -2581,7 +2604,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LarmCollider",
-                        "Height": 4.612480640411377,
+                        "Height": 4.6124796867370605,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -2607,7 +2630,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LforearmCollider",
-                        "Height": 3.8963077068328857,
+                        "Height": 3.896319627761841,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -2633,7 +2656,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RupLegCollider",
-                        "Height": 7.52119779586792,
+                        "Height": 7.521219253540039,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -2659,7 +2682,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RLegCollider",
-                        "Height": 6.669735908508301,
+                        "Height": 6.669760704040527,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -2685,7 +2708,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LupLegCollider",
-                        "Height": 7.521204471588135,
+                        "Height": 7.521213531494141,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -2711,7 +2734,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LLegCollider",
-                        "Height": 6.66975212097168,
+                        "Height": 6.669764995574951,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -2922,6 +2945,7 @@
                     "Type": "PossessableComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": true,
             "IsVisible": true,
             "Name": "vessel",
@@ -3011,6 +3035,7 @@
                     "Type": "SkinnedModelComponent"
                 }
             ],
+            "EnableFrustumCulling": true,
             "IsActive": false,
             "IsVisible": false,
             "Name": "Ghost",

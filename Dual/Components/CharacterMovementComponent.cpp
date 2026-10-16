@@ -19,8 +19,13 @@ HEIN::CharacterMovementComponent::CharacterMovementComponent(Actor* owner)
 
 void HEIN::CharacterMovementComponent::Start()
 {
-	m_blackboard = m_owner->GetComponent<HEIN::CombatBlackBoard>();
-	m_transform = m_owner->GetComponent<HEIN::TransformComponent>();
+	m_blackboard = m_owner ? m_owner->GetComponent<HEIN::CombatBlackBoard>() : nullptr;
+	m_transform = m_owner ? m_owner->GetComponent<HEIN::TransformComponent>() : nullptr;
+	m_rigidBody = m_owner ? m_owner->GetComponent<HEIN::RigidBodyComponent>() : nullptr;
+	if (m_owner)
+	{
+		m_skinnedModels = m_owner->GetComponents<HEIN::SkinnedModelComponent>();
+	}
 }
 
 void HEIN::CharacterMovementComponent::ApplyImpulse(const DirectX::SimpleMath::Vector3& impulse)
@@ -32,22 +37,29 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 {
 	if (!m_transform || !m_blackboard) return;
 
+	// Lazy refresh of cached components if invalidated or added post-Start
+	if (!m_rigidBody && m_owner)
+	{
+		m_rigidBody = m_owner->GetComponent<HEIN::RigidBodyComponent>();
+	}
+	if (m_skinnedModels.empty() && m_owner)
+	{
+		m_skinnedModels = m_owner->GetComponents<HEIN::SkinnedModelComponent>();
+	}
+
 	// Pull root-motion state from the active visible SkinnedModelComponent into CombatBlackBoard
 	m_blackboard->hasRootMotion = false;
 	m_blackboard->rootMotionVelocity = DirectX::SimpleMath::Vector3::Zero;
 	m_blackboard->rootMotionDelta = DirectX::SimpleMath::Vector3::Zero;
 
-	if (m_owner != nullptr)
+	for (auto* model : m_skinnedModels)
 	{
-		for (auto* model : m_owner->GetComponents<HEIN::SkinnedModelComponent>())
+		if (model != nullptr && model->IsVisible() && model->HasActiveRootMotion())
 		{
-			if (model != nullptr && model->IsVisible() && model->HasActiveRootMotion())
-			{
-				m_blackboard->hasRootMotion = true;
-				m_blackboard->rootMotionVelocity = model->GetRootMotionVelocity();
-				m_blackboard->rootMotionDelta = model->GetRootMotionDelta();
-				break;
-			}
+			m_blackboard->hasRootMotion = true;
+			m_blackboard->rootMotionVelocity = model->GetRootMotionVelocity();
+			m_blackboard->rootMotionDelta = model->GetRootMotionDelta();
+			break;
 		}
 	}
 
@@ -94,10 +106,17 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 		m_blackboard->currentVelocity = m_blackboard->rootMotionVelocity;
 		DirectX::SimpleMath::Vector3 effectiveVelocity = m_blackboard->currentVelocity + m_impulseVelocity;
 
-		HEIN::RigidBodyComponent* rb = m_owner->GetComponent<HEIN::RigidBodyComponent>();
-		if (rb != nullptr && !rb->isKinematic())
+		if (m_rigidBody != nullptr && !m_rigidBody->isKinematic())
 		{
-			rb->SetHorizontalVelocity(effectiveVelocity);
+			if (m_impulseVelocity.y > 0.01f)
+			{
+				m_rigidBody->SetVelocity(DirectX::SimpleMath::Vector3(effectiveVelocity.x, m_impulseVelocity.y, effectiveVelocity.z));
+				m_impulseVelocity.y = 0.0f;
+			}
+			else
+			{
+				m_rigidBody->SetHorizontalVelocity(effectiveVelocity);
+			}
 		}
 		else if (m_transform != nullptr)
 		{
@@ -106,12 +125,9 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 	}
 	else
 	{
-		if (!isEnemy && (
-			m_blackboard->currentStance == HEIN::CombatStance::AttackRelese ||
-			m_blackboard->currentStance == HEIN::CombatStance::OneHand ||
-			m_blackboard->currentStance == HEIN::CombatStance::Staggered))
+		// FAST-ACTION COMBAT: Only cancel movement if player is staggered! Attacks can move fluidly!
+		if (!isEnemy && m_blackboard->currentStance == HEIN::CombatStance::Staggered)
 		{
-			// Cancel movement if the player character is currently attacking or staggered without root motion
 			m_blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		}
 
@@ -127,10 +143,17 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 		DirectX::SimpleMath::Vector3 effectiveVelocity = m_blackboard->currentVelocity + m_impulseVelocity;
 
 		// Move the actor
-		HEIN::RigidBodyComponent* rb = m_owner->GetComponent<HEIN::RigidBodyComponent>();
-		if (rb != nullptr)
+		if (m_rigidBody != nullptr)
 		{
-			rb->SetHorizontalVelocity(effectiveVelocity);
+			if (m_impulseVelocity.y > 0.01f)
+			{
+				m_rigidBody->SetVelocity(DirectX::SimpleMath::Vector3(effectiveVelocity.x, m_impulseVelocity.y, effectiveVelocity.z));
+				m_impulseVelocity.y = 0.0f;
+			}
+			else
+			{
+				m_rigidBody->SetHorizontalVelocity(effectiveVelocity);
+			}
 		}
 		else if (m_transform != nullptr)
 		{
@@ -141,7 +164,8 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 	// Automatic animation blending for Ghost form
 	if (m_owner != nullptr && m_owner->GetActorType() == HEIN::ActorType::Ghost)
 	{
-		if (auto* model = m_owner->GetComponent<HEIN::SkinnedModelComponent>())
+		auto* model = !m_skinnedModels.empty() ? m_skinnedModels[0] : nullptr;
+		if (model)
 		{
 			if (m_blackboard->moveIntent.LengthSquared() > 0.01f)
 			{

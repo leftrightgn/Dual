@@ -90,7 +90,7 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 	}
 
 	// Send attack inputs periodically so the FSM can buffer them for combos
-	if (std::fmod(m_timer, 0.4f) < deltaTime || m_timer == 0.0f)
+	if (std::fmod(m_timer, 0.15f) < deltaTime || m_timer == 0.0f)
 	{
 		if (m_isHeavyAttack)
 		{

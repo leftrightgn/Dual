@@ -94,7 +94,7 @@ namespace HEIN
 	class UniversalCombatState : public ICombatState
 	{
 	private:
-		StateConfig m_config;
+		const StateConfig* m_config = nullptr;
 		float m_timer = 0.0f;
 		float m_actualDuration = 1.0f;
 		DirectX::SimpleMath::Vector3 m_lockedDirection = DirectX::SimpleMath::Vector3::Zero;
@@ -104,6 +104,7 @@ namespace HEIN
 		float m_stopDebounceTimer = 0.0f;
 
 	public:
+		UniversalCombatState(const StateConfig* config);
 		UniversalCombatState(const StateConfig& config);
 
 		void OnEnter(Actor* owner, CombatStateMachineComponent* stateMachine, float blendDuration) override;
@@ -111,10 +112,10 @@ namespace HEIN
 		void OnExit(Actor* owner, CombatStateMachineComponent* stateMachine) override;
 		bool HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID) override;
 
-		bool IsAttackState() const override { return m_config.isAttack; }
-		bool IsBlockState() const override { return m_config.isBlock || m_config.stateName == "Block" || m_config.stateType == "Block"; }
+		bool IsAttackState() const override { return m_config ? m_config->isAttack : false; }
+		bool IsBlockState() const override { return m_config ? (m_config->isBlock || m_config->stateName == "Block" || m_config->stateType == "Block") : false; }
 
-		const StateConfig& GetConfig() const { return m_config; }
+		const StateConfig& GetConfig() const { return *m_config; }
 		float GetTimer() const { return m_timer; }
 	};
 

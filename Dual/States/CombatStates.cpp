@@ -11,13 +11,20 @@
 // ==============================================================================
 // UNIVERSAL DATA-DRIVEN COMBAT STATE
 // ==============================================================================
-HEIN::UniversalCombatState::UniversalCombatState(const StateConfig& config)
+HEIN::UniversalCombatState::UniversalCombatState(const StateConfig* config)
     : m_config(config)
+{
+}
+
+HEIN::UniversalCombatState::UniversalCombatState(const StateConfig& config)
+    : m_config(&config)
 {
 }
 
 void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineComponent* /*stateMachine*/, float blendDuration)
 {
+    if (!m_config) return;
+
     m_timer = 0.0f;
     m_hasQueuedTransition = false;
     m_stopDebounceTimer = 0.0f;
@@ -25,14 +32,21 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
     auto* blackboard = owner->GetComponent<CombatBlackBoard>();
     if (blackboard)
     {
-        bool isBlockState = (m_config.isBlock || m_config.stateName == "Block" || m_config.stateType == "Block");
-        bool isDodgeState = (m_config.lockMovementDirection || m_config.invincibilityEnd > 0.0f || m_config.stateName == "Dodge" || m_config.stateType == "Dodge");
-        bool isJumpState = (m_config.stateName.find("Jump") != std::string::npos ||
-                            m_config.stateType.find("Jump") != std::string::npos ||
-                            m_config.animationName.find("Jump") != std::string::npos);
-        bool isStunState = (m_config.stateName == "Stun" || m_config.stateType == "Stun" || m_config.animationName == "Stun");
+        // Reset active parry timer and anti-combo consecutive hits counter
+        blackboard->blockActiveTimer = 0.0f;
+        if (m_config->isAttack || m_config->stateName == "Idle" || m_config->moveSpeed <= 0.001f)
+        {
+            blackboard->consecutiveHitsTaken = 0;
+        }
 
-        blackboard->isAttacking = m_config.isAttack;
+        bool isBlockState = (m_config->isBlock || m_config->stateName == "Block" || m_config->stateType == "Block");
+        bool isDodgeState = (m_config->lockMovementDirection || m_config->invincibilityEnd > 0.0f || m_config->stateName == "Dodge" || m_config->stateType == "Dodge");
+        bool isJumpState = (m_config->stateName.find("Jump") != std::string::npos ||
+                            m_config->stateType.find("Jump") != std::string::npos ||
+                            m_config->animationName.find("Jump") != std::string::npos);
+        bool isStunState = (m_config->stateName == "Stun" || m_config->stateType == "Stun" || m_config->animationName == "Stun");
+
+        blackboard->isAttacking = m_config->isAttack;
         blackboard->isJumping = isJumpState;
 
         if (isBlockState)
@@ -43,7 +57,7 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
         {
             blackboard->currentStance = CombatStance::Staggered;
         }
-        else if (m_config.isAttack)
+        else if (m_config->isAttack)
         {
             blackboard->currentStance = CombatStance::AttackRelese;
             blackboard->lastAttackHit = false;
@@ -57,11 +71,11 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
             blackboard->currentStance = CombatStance::Dodging;
             blackboard->dodgeCooldownTimer = blackboard->maxDodgeCooldown;
         }
-        else if (m_config.stateName == "Strafe")
+        else if (m_config->stateName == "Strafe")
         {
             blackboard->currentStance = CombatStance::Strafing;
         }
-        else if (m_config.moveSpeed > 0.0f)
+        else if (m_config->moveSpeed > 0.0f)
         {
             blackboard->currentStance = CombatStance::Walking;
         }
@@ -70,10 +84,10 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
             blackboard->currentStance = CombatStance::Idle;
         }
 
-        blackboard->currentSpeed = m_config.moveSpeed;
-        blackboard->currentTurnSpeed = m_config.turnSpeed;
+        blackboard->currentSpeed = m_config->moveSpeed;
+        blackboard->currentTurnSpeed = m_config->turnSpeed;
 
-        if (m_config.lockMovementDirection || isDodgeState)
+        if (m_config->lockMovementDirection || isDodgeState)
         {
             if (blackboard->moveIntent.LengthSquared() > 0.01f)
             {
@@ -97,34 +111,36 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
         }
     }
 
-    m_actualDuration = m_config.stateDuration;
+    m_actualDuration = m_config->stateDuration;
     auto* model = owner->GetComponent<SkinnedModelComponent>();
-    if (m_actualDuration <= 0.0f && model != nullptr && !m_config.animationName.empty())
+    if (m_actualDuration <= 0.0f && model != nullptr && !m_config->animationName.empty())
     {
-        float animDur = model->GetAnimationDuration(m_config.animationName);
+        float animDur = model->GetAnimationDuration(m_config->animationName);
         m_actualDuration = (animDur > 0.01f) ? animDur : 1.0f;
     }
     if (m_actualDuration <= 0.0f) m_actualDuration = 1.0f;
 
-    if (model != nullptr && !m_config.animationName.empty())
+    if (model != nullptr && !m_config->animationName.empty())
     {
-        model->CrossfadeAnimation(m_config.animationName, blendDuration, !m_config.isLooping);
+        model->CrossfadeAnimation(m_config->animationName, blendDuration, !m_config->isLooping);
     }
 }
 
 void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponent* stateMachine, float deltaTime)
 {
+    if (!m_config) return;
+
     m_timer += deltaTime;
 
     auto* blackboard = owner->GetComponent<CombatBlackBoard>();
-    bool isDodge = (m_config.lockMovementDirection || m_config.invincibilityEnd > 0.0f || m_config.stateName == "Dodge" || m_config.stateType == "Dodge");
+    bool isDodge = (m_config->lockMovementDirection || m_config->invincibilityEnd > 0.0f || m_config->stateName == "Dodge" || m_config->stateType == "Dodge");
 
     if (blackboard)
     {
-        blackboard->currentSpeed = m_config.moveSpeed;
-        blackboard->currentTurnSpeed = m_config.turnSpeed;
+        blackboard->currentSpeed = m_config->moveSpeed;
+        blackboard->currentTurnSpeed = m_config->turnSpeed;
 
-        if (m_config.lockMovementDirection || isDodge)
+        if (m_config->lockMovementDirection || isDodge)
         {
             blackboard->moveIntent = m_lockedDirection;
         }
@@ -133,20 +149,22 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     auto* health = owner->GetComponent<HealthComponent>();
     if (health)
     {
-        bool isInvincible = (m_config.invincibilityEnd > 0.0f &&
-                             m_timer >= m_config.invincibilityStart &&
-                             m_timer <= m_config.invincibilityEnd);
+        bool isInvincible = (m_config->invincibilityEnd > 0.0f &&
+                             m_timer >= m_config->invincibilityStart &&
+                             m_timer <= m_config->invincibilityEnd);
         health->SetGameplayInvincible(isInvincible);
     }
 
-    bool isBlockState = (m_config.isBlock || m_config.stateName == "Block" || m_config.stateType == "Block");
+    bool isBlockState = (m_config->isBlock || m_config->stateName == "Block" || m_config->stateType == "Block");
     if (isBlockState && blackboard)
     {
+        blackboard->blockActiveTimer += deltaTime;
+
         if (blackboard->currentBlockStamina <= 0.0f || blackboard->isBlockBroken)
         {
             blackboard->isBlockBroken = true;
-            auto itStop = m_config.transitions.find("OnStop");
-            if (itStop != m_config.transitions.end())
+            auto itStop = m_config->transitions.find("OnStop");
+            if (itStop != m_config->transitions.end())
             {
                 stateMachine->ChangeState(itStop->second.targetState, itStop->second.blendDuration);
                 return;
@@ -169,11 +187,11 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
 
     // Movement cancellation for non-looping states (e.g. holding W cancels attack recovery window)
     // Dodge and Stun states must NOT be movement-cancelled; transitions with hasExitTime must wait for exit time
-    bool isStun = (m_config.stateName == "Stun" || m_config.stateType == "Stun" || m_config.animationName == "Stun");
-    if (!m_config.isLooping && !isDodge && !isStun && blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+    bool isStun = (m_config->stateName == "Stun" || m_config->stateType == "Stun" || m_config->animationName == "Stun");
+    if (!m_config->isLooping && !isDodge && !isStun && blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
     {
-        auto itMove = m_config.transitions.find("OnMove");
-        if (itMove != m_config.transitions.end())
+        auto itMove = m_config->transitions.find("OnMove");
+        if (itMove != m_config->transitions.end())
         {
             const auto& t = itMove->second;
             if (!t.hasExitTime && (t.canInterrupt || (m_timer >= t.windowStart && m_timer <= t.windowEnd)))
@@ -185,13 +203,13 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     }
 
     // Automatic Exit Time / Timeout transitions for non-looping states (Attacks, Dodge)
-    if (!m_config.isLooping && m_timer >= m_actualDuration)
+    if (!m_config->isLooping && m_timer >= m_actualDuration)
     {
         // 1. Check if a combo hit-confirmed transition should trigger
         bool hitConfirmed = (blackboard != nullptr && blackboard->lastAttackHit);
         if (hitConfirmed)
         {
-            for (const auto& [key, t] : m_config.transitions)
+            for (const auto& [key, t] : m_config->transitions)
             {
                 if (t.requireHit && (t.hasExitTime || key == "OnNextCombo" || t.triggerEvent == "OnNextCombo"))
                 {
@@ -204,15 +222,15 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
         // If moving when animation concludes, prefer OnMove over Idle
         if (blackboard && (blackboard->localMoveIntent.LengthSquared() > 0.1f || (!isDodge && blackboard->moveIntent.LengthSquared() > 0.1f)))
         {
-            auto itMove = m_config.transitions.find("OnMove");
-            if (itMove != m_config.transitions.end() && !itMove->second.requireHit)
+            auto itMove = m_config->transitions.find("OnMove");
+            if (itMove != m_config->transitions.end() && !itMove->second.requireHit)
             {
                 stateMachine->ChangeState(itMove->second.targetState, itMove->second.blendDuration);
                 return;
             }
         }
 
-        for (const auto& [key, t] : m_config.transitions)
+        for (const auto& [key, t] : m_config->transitions)
         {
             bool isAutoExit = t.triggerEvent.empty() || key == "Exit" || key == "OnFinished" || key == "OnStop";
             if (!t.requireHit && isAutoExit && (t.hasExitTime || key == "OnFinished" || key == "OnStop" || key == "Exit"))
@@ -228,23 +246,23 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     }
 
     // Directional auto-transitions for looping movement states
-    if (m_config.isLooping && blackboard)
+    if (m_config->isLooping && blackboard)
     {
-        if (m_config.moveSpeed <= 0.001f) // Idle-like
+        if (m_config->moveSpeed <= 0.001f) // Idle-like
         {
             if (blackboard->moveIntent.LengthSquared() > 0.1f)
             {
                 if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z))
                 {
-                    auto it = m_config.transitions.find("OnStrafe");
-                    if (it != m_config.transitions.end())
+                    auto it = m_config->transitions.find("OnStrafe");
+                    if (it != m_config->transitions.end())
                     {
                         stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
                         return;
                     }
                 }
-                auto it = m_config.transitions.find("OnMove");
-                if (it != m_config.transitions.end())
+                auto it = m_config->transitions.find("OnMove");
+                if (it != m_config->transitions.end())
                 {
                     stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
                     return;
@@ -258,8 +276,8 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
                 m_stopDebounceTimer += deltaTime;
                 if (m_stopDebounceTimer >= 0.08f)
                 {
-                    auto it = m_config.transitions.find("OnStop");
-                    if (it != m_config.transitions.end())
+                    auto it = m_config->transitions.find("OnStop");
+                    if (it != m_config->transitions.end())
                     {
                         stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
                         return;
@@ -292,6 +310,8 @@ void HEIN::UniversalCombatState::OnExit(Actor* owner, CombatStateMachineComponen
 
 bool HEIN::UniversalCombatState::HandleMessage(Actor* owner, CombatStateMachineComponent* stateMachine, Message::MessageID messageID)
 {
+    if (!m_config) return false;
+
     std::string eventName = "";
     std::string fallbackEventName = "";
 
@@ -389,8 +409,8 @@ bool HEIN::UniversalCombatState::HandleMessage(Actor* owner, CombatStateMachineC
     };
 
     // 1. Direct key match in transitions map
-    auto it = m_config.transitions.find(eventName);
-    if (it != m_config.transitions.end())
+    auto it = m_config->transitions.find(eventName);
+    if (it != m_config->transitions.end())
     {
         if (TryTransition(it->second)) return true;
     }
@@ -398,15 +418,15 @@ bool HEIN::UniversalCombatState::HandleMessage(Actor* owner, CombatStateMachineC
     // 2. Fallback key match (e.g. OnForwardAttack -> OnAttack)
     if (!fallbackEventName.empty())
     {
-        auto itFb = m_config.transitions.find(fallbackEventName);
-        if (itFb != m_config.transitions.end())
+        auto itFb = m_config->transitions.find(fallbackEventName);
+        if (itFb != m_config->transitions.end())
         {
             if (TryTransition(itFb->second)) return true;
         }
     }
 
     // 3. Match against triggerEvent field
-    for (const auto& [key, t] : m_config.transitions)
+    for (const auto& [key, t] : m_config->transitions)
     {
         if (t.triggerEvent == eventName || (!fallbackEventName.empty() && t.triggerEvent == fallbackEventName))
         {

@@ -494,7 +494,9 @@ void HEIN::ActorFactory::RegisterGameComponents()
         auto* bb = victim->GetComponent<CombatBlackBoard>();
 
         bool isBlocked = false;
+        bool isParried = false;
         bool applyDamage = true;
+        bool skipHitStun = false;
 
         // Block cooldown active: this hit belongs to a swing we already blocked.
         // Ignore it completely (no damage, no stamina cost, no knockback).
@@ -505,44 +507,36 @@ void HEIN::ActorFactory::RegisterGameComponents()
 
         if (sm && sm->IsBlocking() && bb && !bb->isBlockBroken && bb->currentBlockStamina > 0.0f)
         {
-            // Correct block: the hit is fully absorbed, player takes no damage
             isBlocked = true;
             applyDamage = false;
             bb->blockCooldownTimer = bb->blockCooldownDuration;
 
-            bb->currentBlockStamina -= 1.0f; // 1 block point per blocked swing
-            if (bb->currentBlockStamina <= 0.0f)
+            // Active Perfect Parrying: parryWindow (0.20s) absorbs all damage, restores 0.5f block stamina, negates pushback, and applies HIT_STUN to attacker
+            if (bb->blockActiveTimer <= bb->parryWindow)
             {
-                // Last block point used: guard breaks, but this hit is still absorbed.
-                // The next swing (after the cooldown) will land.
-                bb->currentBlockStamina = 0.0f;
-                bb->isBlockBroken = true;
-                Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
-            }
-        }
-
-        // If attacker is executing a heavy attack, ensure victim is stunned
-        bool isHeavyAttack = false;
-        if (attacker)
-        {
-            auto* attackerSM = attacker->GetComponent<CombatStateMachineComponent>();
-            if (attackerSM)
-            {
-                const std::string& attackerState = attackerSM->GetCurrentStateName();
-                if (attackerState == "HeavyAttack" || attackerState.find("Heavy") != std::string::npos)
+                isParried = true;
+                bb->currentBlockStamina = std::fmin(bb->maxBlockStamina, bb->currentBlockStamina + 0.5f);
+                if (attacker)
                 {
-                    isHeavyAttack = true;
-                    if (!isBlocked)
-                    {
-                        Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
-                    }
+                    Messenger::GetInstance()->Notify(attacker->GetID(), Message::HIT_STUN);
                 }
             }
-        }
+            else
+            {
+                // Regular block
+                bb->currentBlockStamina -= 1.0f; // 1 block point per blocked swing
+                if (bb->currentBlockStamina <= 0.0f)
+                {
+                    // Last block point used: guard breaks, but this hit is still absorbed.
+                    // The next swing (after the cooldown) will land.
+                    bb->currentBlockStamina = 0.0f;
+                    bb->isBlockBroken = true;
+                    Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
+                }
+            }
 
-        // Calculate and apply physical hit impulse dynamically (not hardcoded)
-        float baseForce = dealer ? dealer->GetKnockbackForce() : 25.0f;
-        if (baseForce <= 0.0f) baseForce = 25.0f;
+            bb->consecutiveHitsTaken = 0;
+        }
 
         // Calculate direction from attacker to victim along horizontal ground plane
         DirectX::SimpleMath::Vector3 dir = DirectX::SimpleMath::Vector3::Zero;
@@ -573,9 +567,64 @@ void HEIN::ActorFactory::RegisterGameComponents()
             dir = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 1.0f);
         }
 
+        // Anti-combo enemy burst: if enemy takes 3 consecutive unblocked hits, reset counter, push attacker away with -60.0f radial impulse, and skip hit-stun
+        if (!isBlocked && bb)
+        {
+            bb->consecutiveHitsTaken++;
+            if (bb->consecutiveHitsTaken >= 3)
+            {
+                bb->consecutiveHitsTaken = 0;
+                skipHitStun = true;
+
+                if (attacker)
+                {
+                    DirectX::SimpleMath::Vector3 burstImpulse = -dir * 60.0f;
+                    if (auto* attMoveComp = attacker->GetComponent<CharacterMovementComponent>())
+                    {
+                        attMoveComp->ApplyImpulse(burstImpulse);
+                    }
+                    else if (auto* attRb = attacker->GetComponent<RigidBodyComponent>())
+                    {
+                        attRb->SetHorizontalVelocity(attRb->GetVelocity() + burstImpulse);
+                    }
+                }
+            }
+        }
+
+        // Check if attacker is executing a heavy attack
+        bool isHeavyAttack = false;
+        if (attacker)
+        {
+            auto* attackerSM = attacker->GetComponent<CombatStateMachineComponent>();
+            if (attackerSM)
+            {
+                const std::string& attackerState = attackerSM->GetCurrentStateName();
+                if (attackerState == "HeavyAttack" || attackerState.find("Heavy") != std::string::npos)
+                {
+                    isHeavyAttack = true;
+                }
+            }
+        }
+
+        if (!isBlocked && !skipHitStun)
+        {
+            if (isHeavyAttack || (dealer && dealer->CausesStun()))
+            {
+                Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
+            }
+        }
+
+        // Calculate and apply physical hit impulse dynamically (not hardcoded)
+        float baseForce = dealer ? dealer->GetKnockbackForce() : 25.0f;
+        if (baseForce <= 0.0f) baseForce = 25.0f;
+
         // Modulate impulse by combat context
         float impulseMagnitude = baseForce;
-        if (isBlocked)
+        if (isParried)
+        {
+            impulseMagnitude = 0.0f; // Negate pushback on perfect parry
+        }
+        else if (isBlocked)
         {
             impulseMagnitude *= 0.4f; // Reduced pushback when bracing with shield/block
         }
@@ -585,6 +634,17 @@ void HEIN::ActorFactory::RegisterGameComponents()
         }
 
         DirectX::SimpleMath::Vector3 impulse = dir * impulseMagnitude;
+
+        // Vertical knockback / aerial launch (impulse.y = 35.0f) on heavy attacks or stun hits
+        if (!isBlocked && (isHeavyAttack || (dealer && dealer->CausesStun())))
+        {
+            impulse.y = 35.0f;
+        }
+
+        if (isParried)
+        {
+            impulse = DirectX::SimpleMath::Vector3::Zero;
+        }
 
         if (auto* moveComp = victim->GetComponent<CharacterMovementComponent>())
         {
@@ -625,11 +685,11 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
     // ---------------------------------------------------------
     // REACTIVE COUNTER-PLAY
     // ---------------------------------------------------------
-    // If the player starts swinging in close quarters, the boss dodge
+    // If the player starts swinging in close quarters, the boss dodge (halved cooldown)
     std::unique_ptr<HEIN::BTSequence> reactiveDodge = std::make_unique<HEIN::BTSequence>();
     reactiveDodge->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 20.0f));
     reactiveDodge->AddChild(std::make_unique<HEIN::BTCheckTargetStance>(true));  // is targetAttacking
-    reactiveDodge->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(2.5f, std::make_unique<HEIN::BTDodgeNode>(1.2f)));
+    reactiveDodge->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(1.25f, std::make_unique<HEIN::BTDodgeNode>(1.2f)));
     aiBrain->AddChild(std::move(reactiveDodge));
 
     // ---------------------------------------------------------
@@ -644,23 +704,23 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
     std::unique_ptr<HEIN::BTSequence> p2GuardBreak = std::make_unique<HEIN::BTSequence>();
     p2GuardBreak->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 28.0f));
     p2GuardBreak->AddChild(std::make_unique<HEIN::BTCheckTargetStance>(CombatStance::Blocking));
-    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(1.2f, std::make_unique<HEIN::BTAttackNode>(3.2f, 28.0f, true)));
+    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(0.6f, std::make_unique<HEIN::BTAttackNode>(3.2f, 28.0f, true)));
     phase2Combat->AddChild(std::move(p2GuardBreak));
 
     // 3B. Relentless 3-Hit Combo Chain (Aggressive attack with hit-confirmed combo flow)
     std::unique_ptr<HEIN::BTSequence> p2Combo = std::make_unique<HEIN::BTSequence>();
     p2Combo->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 28.0f));
-    p2Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(0.8f, std::make_unique<HEIN::BTAttackNode>(3.6f, 28.0f, false)));
+    p2Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(0.4f, std::make_unique<HEIN::BTAttackNode>(3.6f, 28.0f, false)));
     phase2Combat->AddChild(std::move(p2Combo));
 
     // 3C. Heavy Attack Mix-Up
     std::unique_ptr<HEIN::BTSequence> p2Heavy = std::make_unique<HEIN::BTSequence>();
     p2Heavy->AddChild(std::make_unique<HEIN::BTCheckDistance>(20.0f, 35.0f));
-    p2Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(2.5f, std::make_unique<HEIN::BTAttackNode>(3.2f, 35.0f, true)));
+    p2Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(1.25f, std::make_unique<HEIN::BTAttackNode>(3.2f, 35.0f, true)));
     phase2Combat->AddChild(std::move(p2Heavy));
 
-    // 3D. Fast gap closer
-    phase2Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(25.0f, 110.0f));
+    // 3D. Fast gap closer (chase speed increased to 130.0f)
+    phase2Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(25.0f, 130.0f));
 
     phase2Branch->AddChild(std::move(phase2Combat));
     aiBrain->AddChild(std::move(phase2Branch));
@@ -677,23 +737,23 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
     std::unique_ptr<HEIN::BTSequence> p1GuardBreak = std::make_unique<HEIN::BTSequence>();
     p1GuardBreak->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 28.0f));
     p1GuardBreak->AddChild(std::make_unique<HEIN::BTCheckTargetStance>(CombatStance::Blocking));
-    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(2.0f, std::make_unique<HEIN::BTAttackNode>(3.2f, 28.0f, true)));
+    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(1.0f, std::make_unique<HEIN::BTAttackNode>(3.2f, 28.0f, true)));
     phase1Combat->AddChild(std::move(p1GuardBreak));
 
     // 4B. 3-Hit Combo Strike (Hit-confirmed: chains to 2nd & 3rd attacks on hit)
     std::unique_ptr<HEIN::BTSequence> p1Combo = std::make_unique<HEIN::BTSequence>();
     p1Combo->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 28.0f));
-    p1Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(0.8f, std::make_unique<HEIN::BTAttackNode>(3.6f, 28.0f, false)));
+    p1Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(0.4f, std::make_unique<HEIN::BTAttackNode>(3.6f, 28.0f, false)));
     phase1Combat->AddChild(std::move(p1Combo));
 
     // 4C. Mid-Range Heavy Attack Lunge Mix-Up
     std::unique_ptr<HEIN::BTSequence> p1Heavy = std::make_unique<HEIN::BTSequence>();
     p1Heavy->AddChild(std::make_unique<HEIN::BTCheckDistance>(20.0f, 35.0f));
-    p1Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(4.5f, std::make_unique<HEIN::BTAttackNode>(3.2f, 35.0f, true)));
+    p1Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(2.25f, std::make_unique<HEIN::BTAttackNode>(3.2f, 35.0f, true)));
     phase1Combat->AddChild(std::move(p1Heavy));
 
-    // 4D. Deliberate pursuit
-    phase1Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(25.0f, 55.0f));
+    // 4D. Deliberate pursuit (chase speed increased to 85.0f)
+    phase1Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(25.0f, 85.0f));
 
     phase1Branch->AddChild(std::move(phase1Combat));
     aiBrain->AddChild(std::move(phase1Branch));

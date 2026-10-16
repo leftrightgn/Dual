@@ -150,7 +150,7 @@ void HEIN::CombatStateMachineComponent::ApplyPendingState()
 void HEIN::CombatStateMachineComponent::AddState(const StateConfig& config)
 {
     m_stateConfigs[config.stateName] = config;
-    m_states[config.stateName] = std::make_unique<UniversalCombatState>(config);
+    m_states[config.stateName] = std::make_unique<UniversalCombatState>(&m_stateConfigs[config.stateName]);
 
     if (m_currentState == nullptr && m_pendingState == nullptr)
     {
@@ -179,7 +179,7 @@ void HEIN::CombatStateMachineComponent::RebuildAllStates()
 
     for (const auto& [name, config] : m_stateConfigs)
     {
-        m_states[name] = std::make_unique<UniversalCombatState>(config);
+        m_states[name] = std::make_unique<UniversalCombatState>(&config);
     }
 
     if (!m_defaultStateName.empty() && m_states.contains(m_defaultStateName))

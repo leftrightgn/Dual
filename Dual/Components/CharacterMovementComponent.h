@@ -1,11 +1,14 @@
 #pragma once
 #include "../../External/Engine/Components/IComponent.h"
 #include <SimpleMath.h>
+#include <vector>
 
 namespace HEIN
 {
 	struct CombatBlackBoard;
 	class TransformComponent;
+	class RigidBodyComponent;
+	class SkinnedModelComponent;
 	class Actor;
 
 	/**
@@ -22,7 +25,7 @@ namespace HEIN
 	{
 	private:
 		/// @brief Default friction applied to stop the character when no input is given.
-		static constexpr float DEFAULT_FRICTION = 8.0f;
+		static constexpr float DEFAULT_FRICTION = 20.0f;
 
 	private:
 		/// @brief Pointer to the combat blackboard, used to retrieve movement targets/states.
@@ -30,6 +33,12 @@ namespace HEIN
 
 		/// @brief Pointer to the owner's transform, used to apply movement translation.
 		HEIN::TransformComponent* m_transform;
+
+		/// @brief Cached pointer to the owner's rigid body to eliminate per-frame GetComponent lookups.
+		HEIN::RigidBodyComponent* m_rigidBody = nullptr;
+
+		/// @brief Cached skinned model components on this actor to eliminate per-frame heap allocations.
+		std::vector<HEIN::SkinnedModelComponent*> m_skinnedModels;
 
 		/// @brief Current friction value applied to this character's movement.
 		float m_friction;
