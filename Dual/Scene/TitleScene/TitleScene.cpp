@@ -246,12 +246,38 @@ void TitleScene::OnEnter(GameContext& gameContext)
         }
     }
 
-    // Initialize Debug Display / Editor
-    m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
-    m_debugDisplay->Initialize();
-    m_debugDisplay->SetDebugTargets(m_cameraID, m_startButtonID, m_exitButtonID);
+    // Editor starts completely unloaded in Game Mode (press F3 to open Editor on demand)
+    m_debugDisplay.reset();
+    m_isPlaying = true;
+    gameContext.isEditorMode = false;
+    gameContext.showColliders = false;
+    gameContext.showUI = true;
 
     // Ensure absolute mouse mode for title menu
+    Mouse::Get().SetMode(Mouse::MODE_ABSOLUTE);
+}
+
+void TitleScene::OpenEditor()
+{
+    if (!m_debugDisplay)
+    {
+        m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
+        m_debugDisplay->Initialize();
+        m_debugDisplay->SetDebugTargets(m_cameraID, m_startButtonID, m_exitButtonID);
+    }
+}
+
+void TitleScene::UnloadEditor(GameContext& gameContext)
+{
+    m_debugDisplay.reset();
+    m_actorManager.ReleaseEditorResources();
+    if (gameContext.debugCollisionRenderer != nullptr)
+    {
+        gameContext.debugCollisionRenderer->ReleaseDebugMemory();
+    }
+    gameContext.isEditorMode = false;
+    gameContext.showColliders = false;
+    gameContext.showUI = true;
     Mouse::Get().SetMode(Mouse::MODE_ABSOLUTE);
 }
 
@@ -273,10 +299,21 @@ void TitleScene::OnExit(GameContext& gameContext)
         autoSave << serializedStr;
     }
 
+    UnloadEditor(gameContext);
+    m_actorManager.ClearAllActors();
+
+    m_skybox.reset();
+    m_shadowSystem.Release();
+
     gameContext.actorManager = nullptr;
     gameContext.shadowSystem = nullptr;
     gameContext.mainCamera = nullptr;
-    m_actorManager.ClearAllActors();
+
+    if (ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext())
+    {
+        context->ClearState();
+        context->Flush();
+    }
 }
 
 void TitleScene::Update(GameContext& gameContext)
@@ -286,108 +323,137 @@ void TitleScene::Update(GameContext& gameContext)
 
     gameContext.actorManager = &m_actorManager;
     gameContext.shadowSystem = &m_shadowSystem;
-    gameContext.isEditorMode = (m_debugDisplay != nullptr && m_debugDisplay->isMagnified()) || !m_isPlaying;
-    gameContext.showUI = (m_debugDisplay != nullptr) ? m_debugDisplay->GetDebugUI().IsShowUIEnabled() : true;
 
-    // Update Debug Display / Editor UI
-    m_debugDisplay->Update(gameContext, m_actorManager);
-
-    HEIN::EditorAction uiAction = m_debugDisplay->GetUIAction();
-    if (uiAction == HEIN::EditorAction::PlayPressed || !m_debugDisplay->isVisible())
+    if (m_debugDisplay == nullptr)
     {
-        m_isPlaying = true;
-    }
-    else if (uiAction == HEIN::EditorAction::StopPressed)
-    {
-        m_isPlaying = false;
-    }
-    else if (uiAction == HEIN::EditorAction::LoadPressed)
-    {
-        WCHAR szFile[260] = { 0 };
-        OPENFILENAMEW ofn = { 0 };
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = gameContext.deviceResources.GetWindow();
-        ofn.lpstrFile = szFile;
-        ofn.nMaxFile = sizeof(szFile) / sizeof(WCHAR);
-        ofn.lpstrFilter = L"JSON Files\0*.json\0Scene Files\0*.Scene\0All Files\0*.*\0";
-        ofn.nFilterIndex = 1;
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-
-        if (GetOpenFileNameW(&ofn) == TRUE)
+        if (gameContext.keyboardTracker.pressed.F3)
         {
-            std::ifstream file(szFile);
-            if (file.is_open())
-            {
-                nlohmann::json j;
-                file >> j;
-                m_actorManager.ClearAllActors();
-                m_actorManager.Deserialize(j);
-                m_actorManager.InitializeAfterDeserialize(gameContext);
-                for (const auto& pair : m_actorManager.GetAllActors())
-                {
-                    if (pair.second)
-                    {
-                        pair.second->Start();
-                    }
-                }
-
-                auto startAct = m_actorManager.GetActorByName(L"StartButton");
-                if (startAct) { m_startButtonID = startAct->GetID(); m_startButton = startAct->GetComponent<HEIN::UIButtonComponent>(); }
-                auto exitAct = m_actorManager.GetActorByName(L"ExitButton");
-                if (exitAct) { m_exitButtonID = exitAct->GetID(); m_exitButton = exitAct->GetComponent<HEIN::UIButtonComponent>(); }
-                auto camAct = m_actorManager.GetActorByName(L"TitleCamera");
-                if (camAct)
-                {
-                    m_cameraID = camAct->GetID();
-                    m_cameraController = camAct->GetComponent<HEIN::CameraController>();
-                    if (m_cameraController)
-                    {
-                        m_cameraController->RegisterCamera(
-                            HEIN::CameraType::Debug,
-                            []() { return std::make_unique<HEIN::DebugCameraMode>(); }
-                        );
-                        m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
-                        gameContext.mainCamera = m_cameraController;
-                    }
-                }
-                m_isPlaying = false;
-            }
+            OpenEditor();
         }
     }
-    else if (uiAction == HEIN::EditorAction::NewScenePressed)
-    {
-        gameContext.mainCamera = nullptr;
-        m_actorManager.ClearAllActors();
-        m_startButtonID = HEIN::INVALID_ACTOR_ID;
-        m_exitButtonID = HEIN::INVALID_ACTOR_ID;
-        m_cameraID = HEIN::INVALID_ACTOR_ID;
-        m_startButton = nullptr;
-        m_exitButton = nullptr;
-        m_cameraController = nullptr;
-    }
-    else if (uiAction == HEIN::EditorAction::SavePressed)
-    {
-        WCHAR szFile[260] = { 0 };
-        OPENFILENAMEW ofn = { 0 };
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = gameContext.deviceResources.GetWindow();
-        ofn.lpstrFile = szFile;
-        ofn.nMaxFile = sizeof(szFile) / sizeof(WCHAR);
-        ofn.lpstrFilter = L"JSON Files\0*.json\0Scene Files\0*.Scene\0All Files\0*.*\0";
-        ofn.nFilterIndex = 1;
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
-        ofn.lpstrDefExt = L"json";
 
-        if (GetSaveFileNameW(&ofn) == TRUE)
+    if (m_debugDisplay != nullptr)
+    {
+        gameContext.isEditorMode = true;
+        gameContext.showUI = m_debugDisplay->GetDebugUI().IsShowUIEnabled();
+
+        // Update Debug Display / Editor UI
+        m_debugDisplay->Update(gameContext, m_actorManager);
+
+        HEIN::EditorAction uiAction = m_debugDisplay->GetUIAction();
+        if (uiAction == HEIN::EditorAction::PlayPressed || !m_debugDisplay->isVisible())
+        {
+            m_isPlaying = true;
+            UnloadEditor(gameContext);
+        }
+        else if (uiAction == HEIN::EditorAction::StopPressed)
+        {
+            m_isPlaying = false;
+        }
+        else if (uiAction == HEIN::EditorAction::LoadPressed)
+        {
+            WCHAR szFile[260] = { 0 };
+            OPENFILENAMEW ofn = { 0 };
+            ofn.lStructSize = sizeof(ofn);
+            ofn.hwndOwner = gameContext.deviceResources.GetWindow();
+            ofn.lpstrFile = szFile;
+            ofn.nMaxFile = sizeof(szFile) / sizeof(WCHAR);
+            ofn.lpstrFilter = L"JSON Files\0*.json\0Scene Files\0*.Scene\0All Files\0*.*\0";
+            ofn.nFilterIndex = 1;
+            ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+            if (GetOpenFileNameW(&ofn) == TRUE)
+            {
+                std::ifstream file(szFile);
+                if (file.is_open())
+                {
+                    nlohmann::json j;
+                    file >> j;
+                    m_actorManager.ClearAllActors();
+                    m_actorManager.Deserialize(j);
+                    m_actorManager.InitializeAfterDeserialize(gameContext);
+                    for (const auto& pair : m_actorManager.GetAllActors())
+                    {
+                        if (pair.second)
+                        {
+                            pair.second->Start();
+                        }
+                    }
+
+                    auto startAct = m_actorManager.GetActorByName(L"StartButton");
+                    if (startAct) { m_startButtonID = startAct->GetID(); m_startButton = startAct->GetComponent<HEIN::UIButtonComponent>(); }
+                    auto exitAct = m_actorManager.GetActorByName(L"ExitButton");
+                    if (exitAct) { m_exitButtonID = exitAct->GetID(); m_exitButton = exitAct->GetComponent<HEIN::UIButtonComponent>(); }
+                    auto camAct = m_actorManager.GetActorByName(L"TitleCamera");
+                    if (camAct)
+                    {
+                        m_cameraID = camAct->GetID();
+                        m_cameraController = camAct->GetComponent<HEIN::CameraController>();
+                        if (m_cameraController)
+                        {
+                            m_cameraController->RegisterCamera(
+                                HEIN::CameraType::Debug,
+                                []() { return std::make_unique<HEIN::DebugCameraMode>(); }
+                            );
+                            m_cameraController->SetFirstCamera(HEIN::CameraType::Debug);
+                            gameContext.mainCamera = m_cameraController;
+                        }
+                    }
+                    m_isPlaying = false;
+                }
+            }
+        }
+        else if (uiAction == HEIN::EditorAction::NewScenePressed)
+        {
+            gameContext.mainCamera = nullptr;
+            m_actorManager.ClearAllActors();
+            m_startButtonID = HEIN::INVALID_ACTOR_ID;
+            m_exitButtonID = HEIN::INVALID_ACTOR_ID;
+            m_cameraID = HEIN::INVALID_ACTOR_ID;
+            m_startButton = nullptr;
+            m_exitButton = nullptr;
+            m_cameraController = nullptr;
+        }
+        else if (uiAction == HEIN::EditorAction::SavePressed)
+        {
+            WCHAR szFile[260] = { 0 };
+            OPENFILENAMEW ofn = { 0 };
+            ofn.lStructSize = sizeof(ofn);
+            ofn.hwndOwner = gameContext.deviceResources.GetWindow();
+            ofn.lpstrFile = szFile;
+            ofn.nMaxFile = sizeof(szFile) / sizeof(WCHAR);
+            ofn.lpstrFilter = L"JSON Files\0*.json\0Scene Files\0*.Scene\0All Files\0*.*\0";
+            ofn.nFilterIndex = 1;
+            ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+            ofn.lpstrDefExt = L"json";
+
+            if (GetSaveFileNameW(&ofn) == TRUE)
+            {
+                nlohmann::json j = m_actorManager.Serialize();
+                std::string serializedStr = j.dump(4);
+
+                std::ofstream file(szFile);
+                if (file.is_open())
+                {
+                    file << serializedStr;
+                }
+                std::ofstream primaryFile(GetTitleSceneDataWritePath());
+                if (primaryFile.is_open())
+                {
+                    primaryFile << serializedStr;
+                }
+                std::ofstream autoSave(GetTitleAutoSaveWritePath());
+                if (autoSave.is_open())
+                {
+                    autoSave << serializedStr;
+                }
+            }
+        }
+        else if (uiAction == HEIN::EditorAction::AutoSavePressed)
         {
             nlohmann::json j = m_actorManager.Serialize();
             std::string serializedStr = j.dump(4);
 
-            std::ofstream file(szFile);
-            if (file.is_open())
-            {
-                file << serializedStr;
-            }
             std::ofstream primaryFile(GetTitleSceneDataWritePath());
             if (primaryFile.is_open())
             {
@@ -399,30 +465,20 @@ void TitleScene::Update(GameContext& gameContext)
                 autoSave << serializedStr;
             }
         }
-    }
-    else if (uiAction == HEIN::EditorAction::AutoSavePressed)
-    {
-        nlohmann::json j = m_actorManager.Serialize();
-        std::string serializedStr = j.dump(4);
-
-        std::ofstream primaryFile(GetTitleSceneDataWritePath());
-        if (primaryFile.is_open())
+        else if (uiAction == HEIN::EditorAction::CreateStagePressed)
         {
-            primaryFile << serializedStr;
-        }
-        std::ofstream autoSave(GetTitleAutoSaveWritePath());
-        if (autoSave.is_open())
-        {
-            autoSave << serializedStr;
+            HEIN::ActorID stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
+            if (m_debugDisplay != nullptr && stageID != HEIN::INVALID_ACTOR_ID)
+            {
+                m_debugDisplay->GetDebugUI().SetSelectedActor(m_actorManager.GetActor(stageID));
+            }
         }
     }
-    else if (uiAction == HEIN::EditorAction::CreateStagePressed)
+    else
     {
-        HEIN::ActorID stageID = HEIN::ActorFactory::CreateStage(m_actorManager, gameContext);
-        if (m_debugDisplay != nullptr && stageID != HEIN::INVALID_ACTOR_ID)
-        {
-            m_debugDisplay->GetDebugUI().SetSelectedActor(m_actorManager.GetActor(stageID));
-        }
+        gameContext.isEditorMode = false;
+        gameContext.showColliders = false;
+        gameContext.showUI = true;
     }
 
     // Periodic Background Auto-Save while in editor mode
@@ -467,7 +523,8 @@ void TitleScene::Update(GameContext& gameContext)
     bool isEditorMode = (m_debugDisplay != nullptr && m_debugDisplay->isMagnified()) || !m_isPlaying;
     if (!isEditorMode)
     {
-        bool startPressed = gameContext.showUI && (m_startButton && m_startButton->IsClicked());
+        bool isTransitioning = (gameContext.sceneManager != nullptr && gameContext.sceneManager->IsTransitioning());
+        bool startPressed = !isTransitioning && gameContext.showUI && (m_startButton && m_startButton->IsClicked());
 
         if (startPressed)
         {
@@ -604,59 +661,66 @@ void TitleScene::Render(GameContext& gameContext)
     ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext();
     SimpleMath::Matrix view = SimpleMath::Matrix::Identity;
 
+    bool isEditorVisible = (m_debugDisplay != nullptr && m_debugDisplay->isVisible());
+
     if (m_cameraController != nullptr && m_actorManager.HasActor(m_cameraID))
     {
         view = m_cameraController->GetView();
-        D3D11_VIEWPORT vp = gameContext.deviceResources.GetScreenViewport();
-        if (vp.Height > 0.0f)
+        D3D11_VIEWPORT activeVp = isEditorVisible
+            ? m_debugDisplay->GetDebugUI().GetGameViewport(gameContext)
+            : gameContext.deviceResources.GetScreenViewport();
+        if (activeVp.Height > 0.0f)
         {
-            float aspectRatio = static_cast<float>(vp.Width) / static_cast<float>(vp.Height);
+            float aspectRatio = static_cast<float>(activeVp.Width) / static_cast<float>(activeVp.Height);
             m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(m_cameraController->GetFov(), aspectRatio, 0.1f, 5000.0f);
         }
     }
 
     gameContext.actorManager = &m_actorManager;
     gameContext.shadowSystem = &m_shadowSystem;
-    gameContext.isEditorMode = (m_debugDisplay != nullptr && m_debugDisplay->isMagnified()) || !m_isPlaying;
-    gameContext.showUI = (m_debugDisplay != nullptr) ? m_debugDisplay->GetDebugUI().IsShowUIEnabled() : true;
+    gameContext.isEditorMode = isEditorVisible || !m_isPlaying;
 
     // Pass 1: Shadow Depth Map Pass
     RenderShadowPhase(gameContext, context);
 
-    // Pass 2: Main Color Pass
-    ID3D11RenderTargetView* rtv = gameContext.deviceResources.GetRenderTargetView();
-    ID3D11DepthStencilView* dsv = gameContext.deviceResources.GetDepthStencilView();
-    context->OMSetRenderTargets(1, &rtv, dsv);
-    D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
-    context->RSSetViewports(1, &viewport);
-
-    if (m_skybox)
+    if (isEditorVisible)
     {
-        m_skybox->Draw(gameContext, view, m_proj);
+        // In Editor Mode: DebugDisplayController orchestrates SceneViewOnly, GameViewOnly, or SplitSideBySide
+        m_debugDisplay->Render(gameContext, m_actorManager, m_skybox.get(), view, m_proj);
     }
+    else
+    {
+        // In Full-Screen Game Mode:
+        gameContext.isSceneViewPass = false;
+        gameContext.showUI = (m_debugDisplay != nullptr) ? m_debugDisplay->GetDebugUI().IsShowUIEnabled() : true;
+        gameContext.showColliders = false;
 
-    // Bind Shadow Map SRV (slot 4) & Comparison Sampler (slot 1) for StaticModel / SkinnedModel / Terrain
-    ID3D11ShaderResourceView* shadowSRV = m_shadowSystem.GetShadowMapSRV();
-    context->PSSetShaderResources(4, 1, &shadowSRV);
+        ID3D11RenderTargetView* rtv = gameContext.deviceResources.GetRenderTargetView();
+        ID3D11DepthStencilView* dsv = gameContext.deviceResources.GetDepthStencilView();
+        context->OMSetRenderTargets(1, &rtv, dsv);
 
-    ID3D11SamplerState* shadowSampler = m_shadowSystem.GetShadowSampler();
-    context->PSSetSamplers(1, 1, &shadowSampler);
+        D3D11_VIEWPORT fullscreen = gameContext.deviceResources.GetScreenViewport();
+        context->RSSetViewports(1, &fullscreen);
 
-    // Draw all actors (including UI button/image/text SpriteBatch and typography passes)
-    m_actorManager.DrawAll(gameContext, view, m_proj);
+        if (m_skybox)
+        {
+            m_skybox->Draw(gameContext, view, m_proj);
+        }
 
-    // Unbind Shadow Map SRV and Sampler
-    ID3D11ShaderResourceView* nullSRV = nullptr;
-    context->PSSetShaderResources(4, 1, &nullSRV);
+        ID3D11ShaderResourceView* shadowSRV = m_shadowSystem.GetShadowMapSRV();
+        context->PSSetShaderResources(4, 1, &shadowSRV);
+        ID3D11SamplerState* shadowSampler = m_shadowSystem.GetShadowSampler();
+        context->PSSetSamplers(1, 1, &shadowSampler);
 
-    ID3D11SamplerState* nullSampler = nullptr;
-    context->PSSetSamplers(1, 1, &nullSampler);
+        m_actorManager.DrawAll(gameContext, view, m_proj);
 
-    // Reset pipeline state
-    context->RSSetState(gameContext.commonStates.CullCounterClockwise());
-    context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
-    context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
+        ID3D11ShaderResourceView* nullSRV = nullptr;
+        context->PSSetShaderResources(4, 1, &nullSRV);
+        ID3D11SamplerState* nullSampler = nullptr;
+        context->PSSetSamplers(1, 1, &nullSampler);
 
-    // ImGui / Debug Pass (Hierarchy, Inspector, Gizmos, Viewport, Toolbar)
-    m_debugDisplay->Render(gameContext, m_actorManager, m_skybox.get(), view, m_proj);
+        context->RSSetState(gameContext.commonStates.CullCounterClockwise());
+        context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
+        context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
+    }
 }

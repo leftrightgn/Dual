@@ -47,6 +47,8 @@ private:
 	void RenderMainPassPhase(GameContext& gameContext, ID3D11DeviceContext* context, const DirectX::SimpleMath::Matrix& view);
 
 	// --- Editor & Scene Management ---
+	void OpenEditor();
+	void UnloadEditor(GameContext& gameContext);
 	void HandleEditorActions(GameContext& gameContext);
 	void LoadSceneData(GameContext& gameContext);
 	void UpdateDebugTargets();

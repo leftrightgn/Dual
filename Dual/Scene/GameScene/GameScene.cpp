@@ -89,10 +89,12 @@ void GameScene::OnEnter(GameContext& gameContext)
     // Re-establish "Glue" Connections, AI, weapons, Start(), and camera modes
     PostSceneLoadInit(gameContext);
 
-    // Debug Display Controller & Trigger Event Listeners
-    m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
-    m_debugDisplay->Initialize();
-    UpdateDebugTargets();
+    // Editor starts completely unloaded in Game Mode (press F3 to open Editor on demand)
+    m_debugDisplay.reset();
+    m_isPlaying = true;
+    gameContext.isEditorMode = false;
+    gameContext.showColliders = false;
+    gameContext.showUI = true;
 
     gameContext.eventManager->AddTriggerListener([this](const HEIN::TriggerEventPayLoad& payLoad) {
         m_damageSystem->HandlTriggerHit(payLoad, m_actorManager);
@@ -112,10 +114,23 @@ void GameScene::OnExit(GameContext& gameContext)
         sceneFile << j.dump(4);
     }
 
+    UnloadEditor(gameContext);
+    m_actorManager.ClearAllActors();
+
+    m_skybox.reset();
+    m_physicsSystem.reset();
+    m_damageSystem.reset();
+    m_shadowSystem.Release();
+
     gameContext.actorManager = nullptr;
     gameContext.shadowSystem = nullptr;
     gameContext.mainCamera = nullptr;
-    m_actorManager.ClearAllActors();
+
+    if (ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext())
+    {
+        context->ClearState();
+        context->Flush();
+    }
 }
 
 // --------------------------------------------------------------------------------------
@@ -125,14 +140,31 @@ void GameScene::Update(GameContext& gameContext)
 {
     gameContext.actorManager = &m_actorManager;
     gameContext.shadowSystem = &m_shadowSystem;
-    gameContext.isEditorMode = (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()));
-    gameContext.showUI = (m_debugDisplay != nullptr) ? m_debugDisplay->GetDebugUI().IsShowUIEnabled() : true;
 
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
-    // Phase 1: Editor & Tooling Phase
-    m_debugDisplay->Update(gameContext, m_actorManager);
-    HandleEditorActions(gameContext);
+    // Phase 1: Editor & Tooling Phase (Lazy-loaded on F3, completely unloaded on Play/Close)
+    if (m_debugDisplay == nullptr)
+    {
+        if (gameContext.keyboardTracker.pressed.F3)
+        {
+            OpenEditor();
+        }
+    }
+
+    if (m_debugDisplay != nullptr)
+    {
+        gameContext.isEditorMode = true;
+        gameContext.showUI = m_debugDisplay->GetDebugUI().IsShowUIEnabled();
+        m_debugDisplay->Update(gameContext, m_actorManager);
+        HandleEditorActions(gameContext);
+    }
+    else
+    {
+        gameContext.isEditorMode = false;
+        gameContext.showColliders = false;
+        gameContext.showUI = true;
+    }
 
     if (!m_isPlaying)
     {
@@ -163,31 +195,47 @@ void GameScene::Render(GameContext& gameContext)
         view = activeCamera->GetView();
     }
 
+    bool isEditorVisible = (m_debugDisplay != nullptr && m_debugDisplay->isVisible());
+
     gameContext.actorManager = &m_actorManager;
     gameContext.shadowSystem = &m_shadowSystem;
-    gameContext.isEditorMode = (!m_isPlaying || (m_debugDisplay && m_debugDisplay->isVisible()));
-    gameContext.showUI = (m_debugDisplay != nullptr) ? m_debugDisplay->GetDebugUI().IsShowUIEnabled() : true;
+    gameContext.isEditorMode = (!m_isPlaying || isEditorVisible);
 
     // Pass 1: Shadow Map Depth Generation Pass
     RenderShadowPhase(gameContext, context);
 
-    // Pass 2: Main Color & Scene Drawing Pass
-    RenderMainPassPhase(gameContext, context, view);
+    if (isEditorVisible)
+    {
+        // In Editor Mode: DebugDisplayController orchestrates SceneViewOnly, GameViewOnly, or SplitSideBySide
+        m_debugDisplay->Render(gameContext, m_actorManager, m_skybox.get(), view, m_proj);
+    }
+    else
+    {
+        // In Full-Screen Game Mode:
+        gameContext.isSceneViewPass = false;
+        gameContext.showUI = (m_debugDisplay != nullptr) ? m_debugDisplay->GetDebugUI().IsShowUIEnabled() : true;
+        gameContext.showColliders = false;
 
-    // Pass 3: ImGui Editor & Gizmo Overlay Pass
-    m_debugDisplay->Render(gameContext, m_actorManager, m_skybox.get(), view, m_proj);
+        RenderMainPassPhase(gameContext, context, view);
+    }
 
     // Pass 4: Ghost Possession Prompt Overlay
-    if (gameContext.showUI && m_isGhost && m_targetVesselID != HEIN::INVALID_ACTOR_ID)
+    if (gameContext.showUI && !gameContext.isSceneViewPass && m_isGhost && m_targetVesselID != HEIN::INVALID_ACTOR_ID)
     {
-        ImGuiIO& io = ImGui::GetIO();
-        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.78f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-        ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs;
-        if (ImGui::Begin("PossessOverlayPrompt", nullptr, flags))
+        D3D11_VIEWPORT vp = isEditorVisible
+            ? m_debugDisplay->GetDebugUI().GetGameViewport(gameContext)
+            : gameContext.deviceResources.GetScreenViewport();
+
+        if (!isEditorVisible || m_debugDisplay->GetDebugUI().GetViewportLayout() != EditorViewportLayout::SceneViewOnly)
         {
-            ImGui::SetWindowFontScale(1.8f);
-            ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.8f, 1.0f), "[Q] POSSESS VESSEL");
-            ImGui::End();
+            ImGui::SetNextWindowPos(ImVec2(vp.TopLeftX + vp.Width * 0.5f, vp.TopLeftY + vp.Height * 0.78f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+            ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs;
+            if (ImGui::Begin("PossessOverlayPrompt", nullptr, flags))
+            {
+                ImGui::SetWindowFontScale(1.8f);
+                ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.8f, 1.0f), "[Q] POSSESS VESSEL");
+                ImGui::End();
+            }
         }
     }
 }
@@ -203,9 +251,10 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
 
     bool isUICapturingMouse = ImGui::GetIO().WantCaptureMouse || ImGuizmo::IsUsing() || ImGuizmo::IsOver();
     bool isUICapturingKeyboard = ImGui::GetIO().WantCaptureKeyboard;
+    bool isSceneView = (m_debugDisplay != nullptr && m_debugDisplay->isVisible() && m_debugDisplay->isMagnified());
 
     // Camera Input Processing
-    if (!m_debugDisplay->isMagnified() && camera != nullptr)
+    if (!isSceneView && camera != nullptr)
     {
         HEIN::CameraInputState cameraInput;
         const DirectX::Mouse::State& mouseState = gameContext.mouseState;
@@ -250,7 +299,7 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
     }
 
     // Player Input Processing
-    if (m_isPlaying && player != nullptr && !m_debugDisplay->isMagnified() && !isUICapturingMouse && !isUICapturingKeyboard)
+    if (m_isPlaying && player != nullptr && !isSceneView && !isUICapturingMouse && !isUICapturingKeyboard)
     {
         gameContext.inputManager->BroadCastPlayerInput(gameContext, player->GetID());
 
@@ -758,8 +807,25 @@ void GameScene::RenderMainPassPhase(GameContext& gameContext, ID3D11DeviceContex
     ID3D11RenderTargetView* rtv = gameContext.deviceResources.GetRenderTargetView();
     ID3D11DepthStencilView* dsv = gameContext.deviceResources.GetDepthStencilView();
     context->OMSetRenderTargets(1, &rtv, dsv);
-    D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
+
+    bool isEditorVisible = (m_debugDisplay != nullptr && m_debugDisplay->isVisible());
+    if (isEditorVisible)
+    {
+        const float editorClearColor[4] = { 0.14f, 0.14f, 0.14f, 1.0f };
+        context->ClearRenderTargetView(rtv, editorClearColor);
+    }
+
+    D3D11_VIEWPORT viewport = isEditorVisible
+        ? m_debugDisplay->GetDebugUI().GetSceneViewport(gameContext)
+        : gameContext.deviceResources.GetScreenViewport();
     context->RSSetViewports(1, &viewport);
+
+    if (viewport.Height > 0.0f)
+    {
+        float aspectRatio = viewport.Width / viewport.Height;
+        float fov = (gameContext.mainCamera != nullptr) ? gameContext.mainCamera->GetFov() : (DirectX::XM_PI / 4.0f);
+        m_proj = DirectX::SimpleMath::Matrix::CreatePerspectiveFieldOfView(fov, aspectRatio, 0.1f, 5000.0f);
+    }
 
     if (m_skybox)
     {
@@ -800,13 +866,45 @@ void GameScene::RenderMainPassPhase(GameContext& gameContext, ID3D11DeviceContex
 // Editor & Scene Management
 // --------------------------------------------------------------------------------------
 
+void GameScene::OpenEditor()
+{
+    if (!m_debugDisplay)
+    {
+        m_debugDisplay = std::make_unique<HEIN::DebugDisplayController>();
+        m_debugDisplay->Initialize();
+        UpdateDebugTargets();
+    }
+}
+
+void GameScene::UnloadEditor(GameContext& gameContext)
+{
+    m_debugDisplay.reset();
+    m_actorManager.ReleaseEditorResources();
+    if (gameContext.debugCollisionRenderer != nullptr)
+    {
+        gameContext.debugCollisionRenderer->ReleaseDebugMemory();
+    }
+    gameContext.isEditorMode = false;
+    gameContext.showColliders = false;
+    gameContext.showUI = true;
+
+    if (HEIN::CameraController* camera = GetActiveCameraController(gameContext))
+    {
+        camera->UpdateMouseMode();
+    }
+}
+
 void GameScene::HandleEditorActions(GameContext& gameContext)
 {
+    if (!m_debugDisplay) return;
+
     HEIN::EditorAction uiAction = m_debugDisplay->GetUIAction();
 
     if (uiAction == HEIN::EditorAction::PlayPressed || !m_debugDisplay->isVisible())
     {
         m_isPlaying = true;
+        UnloadEditor(gameContext);
+        return;
     }
     else if (uiAction == HEIN::EditorAction::StopPressed)
     {

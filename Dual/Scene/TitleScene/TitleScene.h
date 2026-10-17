@@ -32,6 +32,8 @@ public:
     void Render(GameContext& gameContext) override;
 
 private:
+    void OpenEditor();
+    void UnloadEditor(GameContext& gameContext);
     void RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext* context);
 
     std::unique_ptr<HEIN::Skybox> m_skybox;
