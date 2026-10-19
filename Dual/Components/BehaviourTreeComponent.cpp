@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "BehaviourTreeComponent.h"
 #include <BlackBoard/CombatBlackBoard.h>
+#include "CombatStateMachineComponent.h"
 #include "../../External/Engine/Components/TransformComponent.h"
 #include <ImGui/imgui.h>
 
@@ -24,7 +25,7 @@ void HEIN::BehaviourTreeComponent::Initialize(
 
 void HEIN::BehaviourTreeComponent::Start()
 {
-	HEIN::CombatBlackBoard* blackboard = GetOwner()->GetComponent<HEIN::CombatBlackBoard>();
+	HEIN::BossBlackBoard* blackboard = GetOwner()->GetComponent<HEIN::BossBlackBoard>();
 	if (blackboard)
 	{
 		if (!m_hasSetSpawnPosition && blackboard->hasSetSpawnPosition)
@@ -37,16 +38,35 @@ void HEIN::BehaviourTreeComponent::Start()
 
 void HEIN::BehaviourTreeComponent::Update(float deltaTime)
 {
-	// Execute AI logic only if the tree, manager, and a valid target exist
-	if (m_rootNode && m_actorManager && m_targetID != INVALID_ACTOR_ID)
+	HEIN::Actor* target = (m_actorManager && m_targetID != INVALID_ACTOR_ID) ? m_actorManager->GetActor(m_targetID) : nullptr;
+	if (target == nullptr || m_targetID == INVALID_ACTOR_ID)
 	{
-		HEIN::Actor* target = m_actorManager->GetActor(m_targetID);
-		if (target == nullptr) return;
-		HEIN::CombatBlackBoard* blackboard = GetOwner()->GetComponent<HEIN::CombatBlackBoard>();
+		// Target is dead or invalid: stop moving, unlock, and return to Idle
+		if (auto* blackboard = GetOwner()->GetComponent<HEIN::BossBlackBoard>())
+		{
+			blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+			blackboard->isLockedOn = false;
+			blackboard->isAttacking = false;
+			blackboard->activeNodeName = "Idle (Target Lost)";
+		}
+		if (auto* sm = GetOwner()->GetComponent<HEIN::CombatStateMachineComponent>())
+		{
+			if (sm->GetCurrentStateName() != "Idle")
+			{
+				sm->ChangeState("Idle", 0.2f);
+			}
+		}
+		return;
+	}
+
+	// Execute AI logic only if the tree, manager, and valid target exist
+	if (m_rootNode && m_actorManager)
+	{
+		HEIN::BossBlackBoard* blackboard = GetOwner()->GetComponent<HEIN::BossBlackBoard>();
 		HEIN::TransformComponent* myTrans = GetOwner()->GetComponent<HEIN::TransformComponent>();
 		HEIN::TransformComponent* targetTrans = target->GetComponent<HEIN::TransformComponent>();
 
-		if (target && blackboard && myTrans && targetTrans)
+		if (blackboard && myTrans && targetTrans)
 		{
 			DirectX::SimpleMath::Vector3 dir = targetTrans->GetPosition() - myTrans->GetPosition();
 			dir.y = 0.0f;
@@ -60,6 +80,7 @@ void HEIN::BehaviourTreeComponent::Update(float deltaTime)
 				blackboard->targetStance = targetBB->currentStance;
 				blackboard->targetHealth = targetBB->currentHealth;
 				blackboard->isTargetAttacking = (targetBB->currentStance == CombatStance::OneHand ||
+					targetBB->currentStance == CombatStance::AttackWindup ||
 					targetBB->currentStance == CombatStance::AttackRelese ||
 					targetBB->currentStance == CombatStance::AttackRecovery);
 			}
@@ -79,7 +100,6 @@ void HEIN::BehaviourTreeComponent::Update(float deltaTime)
 			blackboard->spawnPosition = m_spawnPosition;
 			blackboard->aggroRange = m_aggroRange;
 		}
-		
 	}
 }
 
@@ -87,7 +107,7 @@ void HEIN::BehaviourTreeComponent::OnInspectorGUI(GameContext& /*gamecontext*/)
 {
 	if (ImGui::CollapsingHeader("BehaviourTree Component", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		HEIN::CombatBlackBoard* blackboard = m_owner ? m_owner->GetComponent<HEIN::CombatBlackBoard>() : nullptr;
+		HEIN::BossBlackBoard* blackboard = m_owner ? m_owner->GetComponent<HEIN::BossBlackBoard>() : nullptr;
 		if (blackboard)
 		{
 			ImGui::Text("Active Node: %s", blackboard->activeNodeName.c_str());

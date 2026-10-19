@@ -18,7 +18,7 @@ HEIN::BTNodeState HEIN::BTChaseNode::Tick(
 	float deltaTime
 )
 {
-	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;
 	
 	blackboard->activeNodeName = "Chase Node";

@@ -22,19 +22,44 @@ HEIN::BTAttackNode::BTAttackNode(
 
 HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
 {
-	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;
 
-	blackboard->activeNodeName = m_isHeavyAttack ? "Heavy Attack Node" : "Combo Attack Node";
+	float rawDt = (self && self->GetUnscaledDeltaTime() > 0.0f) ? self->GetUnscaledDeltaTime() : deltaTime;
 
-	if (m_timer == 0.0f && blackboard->distanceToTarget > m_minAttackDis)
+	const std::string expectedPrefix = m_isHeavyAttack ? "Heavy Attack" : "Combo Attack";
+	if (m_timer > 0.0f && blackboard->activeNodeName.find(expectedPrefix) == std::string::npos)
 	{
-		return BTNodeState::Failure;
+		// Node was previously interrupted by a higher-priority branch (e.g. Dodge); reset timer
+		m_timer = 0.0f;
 	}
 
-	// Rotational tracking: for heavy jump attack, continue tracking up to 60% of animation so the leap aims directly at the player
-	float trackingWindow = m_isHeavyAttack ? (m_attackDuration * 0.60f) : (m_attackDuration * 0.35f);
-	if (m_timer < trackingWindow)
+	if (m_timer == 0.0f)
+	{
+		if (blackboard->distanceToTarget > m_minAttackDis)
+		{
+			return BTNodeState::Failure;
+		}
+
+		if (!m_isHeavyAttack)
+		{
+			// Roll next 3-hit combo permutation (123, 132, 213, 231, 312, 321)
+			blackboard->RollNextBossComboPattern();
+		}
+	}
+
+	blackboard->activeNodeName = m_isHeavyAttack
+		? "Heavy Attack Node"
+		: ("Combo Attack [" + blackboard->activeComboPatternName + "]");
+
+	// Rotational tracking:
+	// - Heavy jump attack: track up to 60% of animation so the leap aims directly at the player.
+	// - 3-Hit Combo: re-acquire target angle during the wind-up phase of each of the 3 swings!
+	bool shouldTrackTarget = m_isHeavyAttack
+		? (m_timer < (m_attackDuration * m_heavyTrackRatio))
+		: (m_timer < m_comboTrackTime || blackboard->currentStance == HEIN::CombatStance::AttackWindup);
+
+	if (shouldTrackTarget)
 	{
 		// Calculate desired rotation to face the target directly.
 		// Adds PI to yaw because standard orientation might be reversed depending on the model's forward vector.
@@ -46,51 +71,44 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 		{
 			DirectX::SimpleMath::Quaternion currentRot = transform->GetRotation();
 
-			float turnSpeed = m_isHeavyAttack ? 8.0f : 6.0f;
+			float turnSpeed = m_isHeavyAttack ? m_heavyTurnSpeed : m_comboTurnSpeed;
 
-			DirectX::SimpleMath::Quaternion newRot = DirectX::SimpleMath::Quaternion::Slerp(currentRot, targetRotation, deltaTime * turnSpeed);
+			DirectX::SimpleMath::Quaternion newRot = DirectX::SimpleMath::Quaternion::Slerp(currentRot, targetRotation, rawDt * turnSpeed);
 			transform->SetRotation(newRot);
 		}
 	}
 
-	// Forward combat step during initial wind-up:
+	// Forward combat step during wind-up:
 	// For heavy attack: the jump animation naturally propels the boss 15-18 units forward.
-	// Only step forward if target is far away (> 20.0f) to avoid overshooting and landing behind the player.
-	if (m_timer < (m_attackDuration * 0.35f))
+	// For 3-hit combo: step forward during each swing's wind-up if the player is > 20.0f away.
+	if (m_isHeavyAttack)
 	{
-		if (m_isHeavyAttack)
+		if (m_timer < (m_attackDuration * m_comboTrackTime) && blackboard->distanceToTarget > m_lungeDistanceThreshold)
 		{
-			if (blackboard->distanceToTarget > 22.0f)
-			{
-				blackboard->moveIntent = blackboard->dirToTarget;
-				blackboard->currentSpeed = 35.0f;
-			}
-			else
-			{
-				blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
-			}
+			blackboard->moveIntent = blackboard->dirToTarget;
+			blackboard->currentSpeed = m_lungeSpeed;
 		}
 		else
 		{
-			// Regular combo attack: close in slightly if beyond weapon reach (maintains generous spacing >= 20.0f)
-			if (blackboard->distanceToTarget > 20.0f)
-			{
-				blackboard->moveIntent = blackboard->dirToTarget;
-				blackboard->currentSpeed = 30.0f;
-			}
-			else
-			{
-				blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
-			}
+			blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		}
 	}
 	else
 	{
-		blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+		if (shouldTrackTarget && blackboard->distanceToTarget > m_stepDistanceThreshold)
+		{
+			blackboard->moveIntent = blackboard->dirToTarget;
+			blackboard->currentSpeed = m_stepSpeed;
+		}
+		else
+		{
+			blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+		}
 	}
 
-	// Send attack inputs periodically so the FSM can buffer them for combos
-	if (std::fmod(m_timer, 0.15f) < deltaTime || m_timer == 0.0f)
+	// Send initial attack trigger on node entry; subsequent combo steps (2nd & 3rd swings)
+	// advance in UniversalCombatState::Update to deliver a relentless 3-hit Elden Ring combo!
+	if (m_timer == 0.0f)
 	{
 		if (m_isHeavyAttack)
 		{
@@ -102,18 +120,20 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 		}
 	}
 
-	m_timer += deltaTime;
+	m_timer += rawDt;
 
-	// Smart combo abort: if combo 1 missed, don't stand idle waiting for a 3-hit duration!
-	if (!m_isHeavyAttack && m_timer >= 1.25f && !blackboard->lastAttackHit)
+	// If the first swing missed, don't wait for the full 3-hit duration — finish and chase!
+	if (!m_isHeavyAttack && m_timer >= GameConstants::BossAI::EarlySwingMissTimeout && blackboard->comboIndex == 0 && !blackboard->lastAttackHit)
 	{
 		m_timer = 0.0f;
 		return BTNodeState::Success;
 	}
 
-	// If the state machine is no longer in an attack state (combo completed or recovered to Idle),
-	// finish the node early so the AI doesn't stand frozen waiting for the full m_attackDuration.
-	if (m_timer > 0.4f && !blackboard->isAttacking && blackboard->currentStance != HEIN::CombatStance::AttackRelese)
+	// If the state machine is no longer in an attack state (full 3-hit combo or heavy attack completed),
+	// finish the node so the AI transitions smoothly to its next decision (e.g. Chase or next combo).
+	if (m_timer > GameConstants::BossAI::AttackStateMinCheckTime && !blackboard->isAttacking &&
+		blackboard->currentStance != HEIN::CombatStance::AttackRelese &&
+		blackboard->currentStance != HEIN::CombatStance::AttackWindup)
 	{
 		m_timer = 0.0f;
 		return BTNodeState::Success;

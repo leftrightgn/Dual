@@ -13,7 +13,7 @@ HEIN::BTReturnToSpawnNode::BTReturnToSpawnNode(float walkSpeed)
 
 HEIN::BTNodeState HEIN::BTReturnToSpawnNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
 {
-	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
 	HEIN::TransformComponent* transform = self->GetComponent<HEIN::TransformComponent>();
 
 	if (blackboard == nullptr || transform == nullptr) return BTNodeState::Failure;

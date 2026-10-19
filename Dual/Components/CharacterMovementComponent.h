@@ -45,6 +45,8 @@ namespace HEIN
 
 		/// @brief External physical impulse velocity (hit knockback, blast, etc.) decaying via friction.
 		DirectX::SimpleMath::Vector3 m_impulseVelocity;
+		std::string m_walkAnimName = "Walk";
+		std::string m_idleAnimName = "Idle";
 
 	public:
 		CharacterMovementComponent(Actor* owner);
@@ -58,6 +60,11 @@ namespace HEIN
 
 		DirectX::SimpleMath::Vector3 GetImpulseVelocity() const { return m_impulseVelocity; }
 		void ClearImpulse() { m_impulseVelocity = DirectX::SimpleMath::Vector3::Zero; }
+
+		const std::string& GetWalkAnimName() const { return m_walkAnimName; }
+		void SetWalkAnimName(const std::string& name) { m_walkAnimName = name; }
+		const std::string& GetIdleAnimName() const { return m_idleAnimName; }
+		void SetIdleAnimName(const std::string& name) { m_idleAnimName = name; }
 
 		void OnInspectorGUI(GameContext& gameContext) override;
 

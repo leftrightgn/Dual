@@ -10,7 +10,8 @@ HEIN::BTCheckTetherNode::BTCheckTetherNode(float maxTetherDistance)
 
 HEIN::BTNodeState HEIN::BTCheckTetherNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
 {
-	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
+	if (!blackboard) return BTNodeState::Failure;
 	HEIN::Actor* player = manager->GetActor(targetID);
 	if (!player) return BTNodeState::Failure;
 

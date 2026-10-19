@@ -37,6 +37,13 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 {
 	if (!m_transform || !m_blackboard) return;
 
+	// During Hitstop (Hit Freeze), preserve stored knockback m_impulseVelocity without friction decay
+	// so the full kinetic knockback releases on the exact frame hitstop ends.
+	if (m_owner != nullptr && m_owner->IsHitstopped())
+	{
+		return;
+	}
+
 	// Lazy refresh of cached components if invalidated or added post-Start
 	if (!m_rigidBody && m_owner)
 	{
@@ -100,6 +107,8 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 		}
 	}
 
+	float timeScale = (m_owner != nullptr) ? m_owner->GetEffectiveTimeScale() : 1.0f;
+
 	// Check if root motion is actively driving movement (e.g. active root-motion model during attacks or jumps)
 	if (allowRootMotion)
 	{
@@ -131,14 +140,21 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 			m_blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		}
 
-		// Dynamic Speed: Calculate desired velocity and apply friction interpolation
-		DirectX::SimpleMath::Vector3 desiredVelocity = m_blackboard->moveIntent * m_blackboard->currentSpeed;
+		// Scale desired velocity by local time-scale so anticipation wind-up pause (0.0f) also pauses forward lunge
+		DirectX::SimpleMath::Vector3 desiredVelocity = m_blackboard->moveIntent * (m_blackboard->currentSpeed * timeScale);
 
-		m_blackboard->currentVelocity = DirectX::SimpleMath::Vector3::Lerp(
-			m_blackboard->currentVelocity,
-			desiredVelocity,
-			deltaTime * m_friction
-		);
+		if (timeScale <= 0.001f)
+		{
+			m_blackboard->currentVelocity = DirectX::SimpleMath::Vector3::Zero;
+		}
+		else
+		{
+			m_blackboard->currentVelocity = DirectX::SimpleMath::Vector3::Lerp(
+				m_blackboard->currentVelocity,
+				desiredVelocity,
+				deltaTime * m_friction
+			);
+		}
 
 		DirectX::SimpleMath::Vector3 effectiveVelocity = m_blackboard->currentVelocity + m_impulseVelocity;
 
@@ -169,16 +185,16 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 		{
 			if (m_blackboard->moveIntent.LengthSquared() > 0.01f)
 			{
-				if (model->HasAnimation("Walk"))
+				if (model->HasAnimation(m_walkAnimName))
 				{
-					model->CrossfadeAnimation("Walk", 0.15f);
+					model->CrossfadeAnimation(m_walkAnimName, 0.15f);
 				}
 			}
 			else
 			{
-				if (model->HasAnimation("Idle"))
+				if (model->HasAnimation(m_idleAnimName))
 				{
-					model->CrossfadeAnimation("Idle", 0.15f);
+					model->CrossfadeAnimation(m_idleAnimName, 0.15f);
 				}
 			}
 		}
@@ -231,6 +247,12 @@ void HEIN::CharacterMovementComponent::OnInspectorGUI(GameContext& /*gameContext
 	if (ImGui::CollapsingHeader("CharacterMovementComponent", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::DragFloat("Friction", &m_friction, 0.1f, 0.0f, 50.0f);
+		char walkBuf[64];
+		strcpy_s(walkBuf, m_walkAnimName.c_str());
+		if (ImGui::InputText("Walk Anim", walkBuf, sizeof(walkBuf))) m_walkAnimName = walkBuf;
+		char idleBuf[64];
+		strcpy_s(idleBuf, m_idleAnimName.c_str());
+		if (ImGui::InputText("Idle Anim", idleBuf, sizeof(idleBuf))) m_idleAnimName = idleBuf;
 		ImGui::Text("Impulse: (%.2f, %.2f, %.2f)", m_impulseVelocity.x, m_impulseVelocity.y, m_impulseVelocity.z);
 		if (m_blackboard)
 		{
@@ -246,6 +268,8 @@ nlohmann::json HEIN::CharacterMovementComponent::Serialize()
 {
 	nlohmann::json data = IComponent::Serialize();
 	data["Friction"] = m_friction;
+	data["WalkAnimName"] = m_walkAnimName;
+	data["IdleAnimName"] = m_idleAnimName;
 	return data;
 }
 
@@ -253,4 +277,6 @@ void HEIN::CharacterMovementComponent::Deserialize(const nlohmann::json& data)
 {
 	IComponent::Deserialize(data);
 	if (data.contains("Friction")) m_friction = data["Friction"];
+	if (data.contains("WalkAnimName")) m_walkAnimName = data["WalkAnimName"].get<std::string>();
+	if (data.contains("IdleAnimName")) m_idleAnimName = data["IdleAnimName"].get<std::string>();
 }

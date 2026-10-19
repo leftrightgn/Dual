@@ -1,11 +1,62 @@
 #include "pch.h"
 #include "CombatStateMachineComponent.h"
+namespace {
+    std::string CombatStateTypeToString(HEIN::CombatStateType type)
+    {
+        switch (type)
+        {
+        case HEIN::CombatStateType::Attack: return "Attack";
+        case HEIN::CombatStateType::ComboFinisher: return "ComboFinisher";
+        case HEIN::CombatStateType::Block: return "Block";
+        case HEIN::CombatStateType::Dodge: return "Dodge";
+        case HEIN::CombatStateType::Stun: return "Stun";
+        case HEIN::CombatStateType::Jump: return "Jump";
+        case HEIN::CombatStateType::GuardCounter: return "GuardCounter";
+        default: return "Normal";
+        }
+    }
+
+    HEIN::CombatStateType StringToCombatStateType(const std::string& str)
+    {
+        if (str == "Attack") return HEIN::CombatStateType::Attack;
+        if (str == "ComboFinisher") return HEIN::CombatStateType::ComboFinisher;
+        if (str == "Block") return HEIN::CombatStateType::Block;
+        if (str == "Dodge") return HEIN::CombatStateType::Dodge;
+        if (str == "Stun") return HEIN::CombatStateType::Stun;
+        if (str == "Jump") return HEIN::CombatStateType::Jump;
+        if (str == "GuardCounter") return HEIN::CombatStateType::GuardCounter;
+        return HEIN::CombatStateType::Normal;
+    }
+
+    std::string StateEffectTypeToString(HEIN::StateEffectType type)
+    {
+        switch (type)
+        {
+        case HEIN::StateEffectType::Shockwave: return "Shockwave";
+        case HEIN::StateEffectType::CameraShake: return "CameraShake";
+        case HEIN::StateEffectType::SoundCue: return "SoundCue";
+        case HEIN::StateEffectType::VFX: return "VFX";
+        default: return "Shockwave";
+        }
+    }
+
+    HEIN::StateEffectType StringToStateEffectType(const std::string& str)
+    {
+        if (str == "CameraShake") return HEIN::StateEffectType::CameraShake;
+        if (str == "SoundCue") return HEIN::StateEffectType::SoundCue;
+        if (str == "VFX") return HEIN::StateEffectType::VFX;
+        return HEIN::StateEffectType::Shockwave;
+    }
+}
+
 #include <States/ICombatState.h>
 #include <States/CombatStates.h>
 #include "../../../External/Engine/Entities/Actor.h"
 #include "../../External/Engine/Components/ColliderComponent/ColliderComponent.h"
 #include "../../External/Engine/Message/Messenger.h" 
 #include <BlackBoard/CombatBlackBoard.h>
+#include <BlackBoard/PlayerBlackBoard.h>
+#include <BlackBoard/BossBlackBoard.h>
 #include "../../External/Engine/Components/DamageDealerComponent.h"
 #include "../../External/Engine/Components/HealthComponent.h"
 #include "../../External/Engine/Components/TargetTrackingComponent.h"
@@ -14,6 +65,14 @@
 #include <filesystem>
 
 HEIN::CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner) : IComponent(owner) {}
+
+HEIN::CombatStateMachineComponent::~CombatStateMachineComponent()
+{
+    if (Messenger* msg = Messenger::GetInstance())
+    {
+        msg->UnRegisterObserver(this);
+    }
+}
 
 void HEIN::CombatStateMachineComponent::Start()
 {
@@ -37,8 +96,13 @@ void HEIN::CombatStateMachineComponent::Start()
 
 void HEIN::CombatStateMachineComponent::Update(float deltaTime)
 {
+    float rawDt = (m_owner != nullptr && m_owner->GetUnscaledDeltaTime() > 0.0f)
+        ? m_owner->GetUnscaledDeltaTime()
+        : deltaTime;
+
     ApplyPendingState();
-    ProcessBuffer(deltaTime);
+    // Tick input buffer on unscaled real time so inputs pressed during Hitstop or Wind-Up Pause are never dropped
+    ProcessBuffer(rawDt);
 
     if (m_pendingState != nullptr)
     {
@@ -55,43 +119,110 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
         ApplyPendingState();
     }
 
-    Messenger::GetInstance()->Notify(m_owner->GetID(), IsAttacking() ? Message::SET_WEAPON_ACTIVE : Message::SET_WEAPON_INACTIVE);
+    Messenger::GetInstance()->Notify(m_owner->GetID(), IsWeaponHitboxActive() ? Message::SET_WEAPON_ACTIVE : Message::SET_WEAPON_INACTIVE);
 
     HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
-    if (blackboard)
+    HEIN::PlayerBlackBoard* playerBB = m_owner->GetComponent<PlayerBlackBoard>();
+    HEIN::BossBlackBoard* bossBB = m_owner->GetComponent<BossBlackBoard>();
+
+    if (bossBB)
     {
-        if (IsBlocking())
+        if (bossBB->parryDecayTimer > 0.0f)
         {
-            if (blackboard->currentBlockStamina > 0.0f)
+            bossBB->parryDecayTimer -= deltaTime;
+            if (bossBB->parryDecayTimer <= 0.0f)
             {
-                blackboard->currentBlockStamina -= 0.35f * deltaTime;
-                if (blackboard->currentBlockStamina <= 0.0f)
-                {
-                    blackboard->currentBlockStamina = 0.0f;
-                    blackboard->isBlockBroken = true;
-                }
+                bossBB->parryDecayTimer = 0.0f;
+                bossBB->currentParryCount = 0;
             }
         }
-        else if (blackboard->currentBlockStamina < blackboard->maxBlockStamina)
+
+        // Boss never consumes or depletes stamina (Elden Ring boss design)
+        if (blackboard)
         {
-            blackboard->currentBlockStamina += blackboard->blockRecoveryRate * deltaTime;
-            if (blackboard->currentBlockStamina >= blackboard->maxBlockStamina)
+            blackboard->currentStamina = 100.0f;
+            blackboard->maxStamina = 100.0f;
+        }
+    }
+
+    if (blackboard)
+    {
+        if (playerBB)
+        {
+            if (IsBlocking())
             {
-                blackboard->currentBlockStamina = blackboard->maxBlockStamina;
-                blackboard->isBlockBroken = false;
+                playerBB->blockActiveTimer += deltaTime;
+
+                if (playerBB->blockCooldownTimer <= 0.0f && playerBB->currentBlockStamina < playerBB->maxBlockStamina)
+                {
+                    playerBB->currentBlockStamina += playerBB->blockHeldRecoveryRate * deltaTime;
+                    if (playerBB->currentBlockStamina >= playerBB->maxBlockStamina)
+                    {
+                        playerBB->currentBlockStamina = playerBB->maxBlockStamina;
+                    }
+                }
             }
+            else
+            {
+                playerBB->blockActiveTimer = 0.0f;
+
+                // Do NOT regenerate stamina while actively Dodging, Attacking, or Staggered
+                bool isStaminaRegenLocked = (blackboard->currentStance == CombatStance::Dodging) ||
+                                            IsAttacking() ||
+                                            (blackboard->currentStance == CombatStance::Staggered);
+
+                if (!isStaminaRegenLocked)
+                {
+                    if (playerBB->staminaRegenDelayTimer > 0.0f)
+                    {
+                        playerBB->staminaRegenDelayTimer -= deltaTime;
+                        if (playerBB->staminaRegenDelayTimer < 0.0f) playerBB->staminaRegenDelayTimer = 0.0f;
+                    }
+
+                    if (playerBB->staminaRegenDelayTimer <= 0.0f && playerBB->currentBlockStamina < playerBB->maxBlockStamina)
+                    {
+                        playerBB->currentBlockStamina += playerBB->blockRecoveryRate * deltaTime;
+
+                        if (playerBB->currentBlockStamina >= playerBB->maxBlockStamina)
+                        {
+                            playerBB->currentBlockStamina = playerBB->maxBlockStamina;
+                        }
+
+                        if (playerBB->currentBlockStamina >= 30.0f)
+                        {
+                            playerBB->isBlockBroken = false;
+                        }
+                    }
+                }
+            }
+
+            if (playerBB->blockCooldownTimer > 0.0f)
+            {
+                playerBB->blockCooldownTimer -= deltaTime;
+                if (playerBB->blockCooldownTimer < 0.0f) playerBB->blockCooldownTimer = 0.0f;
+            }
+
+            if (playerBB->parryLockoutTimer > 0.0f)
+            {
+                playerBB->parryLockoutTimer -= deltaTime;
+                if (playerBB->parryLockoutTimer < 0.0f) playerBB->parryLockoutTimer = 0.0f;
+            }
+
+            if (playerBB->guardCounterWindowTimer > 0.0f)
+            {
+                playerBB->guardCounterWindowTimer -= deltaTime;
+                if (playerBB->guardCounterWindowTimer < 0.0f) playerBB->guardCounterWindowTimer = 0.0f;
+            }
+
+            // Sync unified stamina with base CombatBlackBoard
+            blackboard->currentStamina = std::max(0.0f, playerBB->currentBlockStamina);
+            blackboard->maxStamina = playerBB->maxBlockStamina;
         }
 
         if (blackboard->dodgeCooldownTimer > 0.0f)
         {
             blackboard->dodgeCooldownTimer -= deltaTime;
             if (blackboard->dodgeCooldownTimer < 0.0f) blackboard->dodgeCooldownTimer = 0.0f;
-        }
-
-        if (blackboard->blockCooldownTimer > 0.0f)
-        {
-            blackboard->blockCooldownTimer -= deltaTime;
-            if (blackboard->blockCooldownTimer < 0.0f) blackboard->blockCooldownTimer = 0.0f;
         }
 
         HEIN::TargetTrackingComponent* tracking = m_owner->GetComponent<HEIN::TargetTrackingComponent>();
@@ -235,15 +366,22 @@ void HEIN::CombatStateMachineComponent::OnMessageAccepted(Message::MessageID mes
         messageID == Message::PLAYER_ACTION_DODGE ||
         messageID == Message::PLAYER_ACTION_JUMP)
     {
+        if (messageID == Message::PLAYER_ACTION_ATTACK)
+        {
+            HEIN::PlayerBlackBoard* playerBB = m_owner->GetComponent<PlayerBlackBoard>();
+            if (playerBB && (playerBB->currentBlockStamina <= 0.0f || playerBB->isBlockBroken)) return;
+        }
         if (messageID == Message::PLAYER_ACTION_DODGE)
         {
             HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
+            HEIN::PlayerBlackBoard* playerBB = m_owner->GetComponent<PlayerBlackBoard>();
             if (blackboard && blackboard->dodgeCooldownTimer > 0.0f) return;
+            if (playerBB && (playerBB->currentBlockStamina <= 0.0f || playerBB->isBlockBroken)) return;
         }
         if (messageID == Message::PLAYER_ACTION_BLOCK)
         {
-            HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
-            if (blackboard && (blackboard->isBlockBroken || blackboard->currentBlockStamina <= 0.0f)) return;
+            HEIN::PlayerBlackBoard* playerBB = m_owner->GetComponent<PlayerBlackBoard>();
+            if (playerBB && (playerBB->isBlockBroken || playerBB->currentBlockStamina <= 0.0f)) return;
         }
 
         m_messageBuffer.clear();
@@ -264,6 +402,16 @@ void HEIN::CombatStateMachineComponent::ProcessBuffer(float deltaTime)
     }
 
     Message::MessageID currentMessage = m_messageBuffer.front();
+    if (currentMessage == Message::PLAYER_ACTION_ATTACK)
+    {
+        auto* playerBB = m_owner->GetComponent<PlayerBlackBoard>();
+        if (playerBB && (playerBB->currentBlockStamina <= 0.0f || playerBB->isBlockBroken))
+        {
+            m_messageBuffer.clear();
+            return;
+        }
+    }
+
     if (m_currentState != nullptr)
     {
         bool wasHandled = m_currentState->HandleMessage(m_owner, this, currentMessage);
@@ -280,9 +428,27 @@ bool HEIN::CombatStateMachineComponent::IsAttacking() const
     return false;
 }
 
+bool HEIN::CombatStateMachineComponent::IsWeaponHitboxActive() const
+{
+    if (m_currentState != nullptr) return m_currentState->IsWeaponHitboxActive();
+    return false;
+}
+
+int HEIN::CombatStateMachineComponent::GetCurrentHitstopFrames() const
+{
+    if (m_currentState != nullptr) return m_currentState->GetHitstopFrames();
+    return 5;
+}
+
 bool HEIN::CombatStateMachineComponent::IsBlocking() const
 {
     if (m_currentState != nullptr) return m_currentState->IsBlockState();
+    return false;
+}
+
+bool HEIN::CombatStateMachineComponent::IsGuardCounter() const
+{
+    if (m_currentState != nullptr) return m_currentState->IsGuardCounterState();
     return false;
 }
 
@@ -389,9 +555,48 @@ bool HEIN::CombatStateMachineComponent::SaveToConfigFile(const std::string& path
         stateJson["isLooping"] = cfg.isLooping;
         stateJson["isAttack"] = cfg.isAttack;
         stateJson["isBlock"] = cfg.isBlock;
+        stateJson["isGuardCounter"] = cfg.isGuardCounter;
         stateJson["lockMovementDirection"] = cfg.lockMovementDirection;
         stateJson["invincibilityStart"] = cfg.invincibilityStart;
         stateJson["invincibilityEnd"] = cfg.invincibilityEnd;
+        stateJson["windupPauseStart"] = cfg.windupPauseStart;
+        stateJson["windupPauseDuration"] = cfg.windupPauseDuration;
+        stateJson["windupTimeScale"] = cfg.windupTimeScale;
+        stateJson["strikeSpeedMultiplier"] = cfg.strikeSpeedMultiplier;
+        stateJson["hitstopFrames"] = cfg.hitstopFrames;
+        stateJson["hitboxStart"] = cfg.hitboxStart;
+        stateJson["hitboxEnd"] = cfg.hitboxEnd;
+        stateJson["combatStateType"] = CombatStateTypeToString(cfg.stateTypeEnum);
+        stateJson["staminaCost"] = cfg.staminaCost;
+        stateJson["staminaDamage"] = cfg.staminaDamage;
+        stateJson["comboPermutationStep"] = cfg.comboPermutationStep;
+
+        stateJson["effects"] = nlohmann::json::array();
+        for (const auto& eff : cfg.effects)
+        {
+            nlohmann::json effJson;
+            effJson["type"] = StateEffectTypeToString(eff.type);
+            effJson["triggerTime"] = eff.triggerTime;
+            if (eff.type == StateEffectType::Shockwave)
+            {
+                effJson["radius"] = eff.radius;
+                effJson["duration"] = eff.duration;
+                effJson["damage"] = eff.damage;
+                effJson["knockbackForce"] = eff.knockbackForce;
+                effJson["forwardOffset"] = eff.forwardOffset;
+                effJson["isGroundOnly"] = eff.isGroundOnly;
+            }
+            else if (eff.type == StateEffectType::CameraShake)
+            {
+                effJson["shakeIntensity"] = eff.shakeIntensity;
+                effJson["shakeDuration"] = eff.shakeDuration;
+            }
+            else
+            {
+                effJson["assetKey"] = eff.assetKey;
+            }
+            stateJson["effects"].push_back(effJson);
+        }
 
         stateJson["transitions"] = nlohmann::json::object();
         for (const auto& [eventKey, transition] : cfg.transitions)
@@ -452,9 +657,17 @@ nlohmann::json HEIN::CombatStateMachineComponent::Serialize()
         stateJson["isLooping"] = cfg.isLooping;
         stateJson["isAttack"] = cfg.isAttack;
         stateJson["isBlock"] = cfg.isBlock;
+        stateJson["isGuardCounter"] = cfg.isGuardCounter;
         stateJson["lockMovementDirection"] = cfg.lockMovementDirection;
         stateJson["invincibilityStart"] = cfg.invincibilityStart;
         stateJson["invincibilityEnd"] = cfg.invincibilityEnd;
+        stateJson["windupPauseStart"] = cfg.windupPauseStart;
+        stateJson["windupPauseDuration"] = cfg.windupPauseDuration;
+        stateJson["windupTimeScale"] = cfg.windupTimeScale;
+        stateJson["strikeSpeedMultiplier"] = cfg.strikeSpeedMultiplier;
+        stateJson["hitstopFrames"] = cfg.hitstopFrames;
+        stateJson["hitboxStart"] = cfg.hitboxStart;
+        stateJson["hitboxEnd"] = cfg.hitboxEnd;
 
         stateJson["transitions"] = nlohmann::json::object();
         for (const auto& [eventKey, transition] : cfg.transitions)
@@ -488,7 +701,7 @@ void HEIN::CombatStateMachineComponent::Deserialize(const nlohmann::json& data)
 
     m_stateConfigs.clear();
 
-    // 1. Modular asset loading: check for standalone ConfigPath
+    // Modular asset loading: check for standalone ConfigPath
     if (data.contains("ConfigPath") && data["ConfigPath"].is_string())
     {
         std::string cfgPath = data["ConfigPath"].get<std::string>();
@@ -502,7 +715,7 @@ void HEIN::CombatStateMachineComponent::Deserialize(const nlohmann::json& data)
         }
     }
 
-    // 2. Legacy / Monolithic fallback: parse inline states from scene JSON
+    // Legacy / Monolithic fallback: parse inline states from scene JSON
     DeserializeStatesFromJSON(data);
 }
 
@@ -541,6 +754,12 @@ void HEIN::CombatStateMachineComponent::DeserializeStatesFromJSON(const nlohmann
                 cfg.isLooping = true;
                 cfg.moveSpeed = 0.0f;
             }
+            if (stateJson.contains("isGuardCounter")) cfg.isGuardCounter = stateJson["isGuardCounter"].get<bool>();
+            if (cfg.stateName == "GuardCounter" || cfg.stateType == "GuardCounter")
+            {
+                cfg.isGuardCounter = true;
+                cfg.isAttack = true;
+            }
             if (stateJson.contains("lockMovementDirection")) cfg.lockMovementDirection = stateJson["lockMovementDirection"].get<bool>();
             if (stateJson.contains("invincibilityStart")) cfg.invincibilityStart = stateJson["invincibilityStart"].get<float>();
             if (stateJson.contains("invincibilityEnd")) cfg.invincibilityEnd = stateJson["invincibilityEnd"].get<float>();
@@ -551,6 +770,123 @@ void HEIN::CombatStateMachineComponent::DeserializeStatesFromJSON(const nlohmann
                 {
                     cfg.invincibilityStart = 0.0f;
                     cfg.invincibilityEnd = (cfg.stateDuration > 0.0f) ? (cfg.stateDuration * 0.7f) : 0.6f;
+                }
+            }
+
+            // Animation Anticipation Wind-Up & Hitstop Config
+            if (stateJson.contains("windupPauseStart")) cfg.windupPauseStart = stateJson["windupPauseStart"].get<float>();
+            if (stateJson.contains("windupPauseDuration")) cfg.windupPauseDuration = stateJson["windupPauseDuration"].get<float>();
+            if (stateJson.contains("windupTimeScale")) cfg.windupTimeScale = stateJson["windupTimeScale"].get<float>();
+            if (stateJson.contains("strikeSpeedMultiplier")) cfg.strikeSpeedMultiplier = stateJson["strikeSpeedMultiplier"].get<float>();
+            if (stateJson.contains("hitstopFrames")) cfg.hitstopFrames = stateJson["hitstopFrames"].get<int>();
+            if (stateJson.contains("hitboxStart")) cfg.hitboxStart = stateJson["hitboxStart"].get<float>();
+            if (stateJson.contains("hitboxEnd")) cfg.hitboxEnd = stateJson["hitboxEnd"].get<float>();
+            if (stateJson.contains("combatStateType"))
+            {
+                cfg.stateTypeEnum = StringToCombatStateType(stateJson["combatStateType"].get<std::string>());
+            }
+            else if (cfg.stateType == "Block" || cfg.stateName == "Block")
+            {
+                cfg.stateTypeEnum = CombatStateType::Block;
+            }
+            else if (cfg.stateType == "Dodge" || cfg.stateName == "Dodge")
+            {
+                cfg.stateTypeEnum = CombatStateType::Dodge;
+            }
+            else if (cfg.stateType == "Stun" || cfg.stateName == "Stun")
+            {
+                cfg.stateTypeEnum = CombatStateType::Stun;
+            }
+            else if (cfg.stateName.find("Jump") != std::string::npos)
+            {
+                cfg.stateTypeEnum = CombatStateType::Jump;
+            }
+            else if (cfg.isGuardCounter || cfg.stateName == "GuardCounter")
+            {
+                cfg.stateTypeEnum = CombatStateType::GuardCounter;
+            }
+            else if (cfg.isAttack)
+            {
+                cfg.stateTypeEnum = (cfg.stateName.find("3") != std::string::npos)
+                    ? CombatStateType::ComboFinisher
+                    : CombatStateType::Attack;
+            }
+
+            if (stateJson.contains("staminaCost")) cfg.staminaCost = stateJson["staminaCost"].get<float>();
+            if (stateJson.contains("staminaDamage")) cfg.staminaDamage = stateJson["staminaDamage"].get<float>();
+            if (stateJson.contains("comboPermutationStep")) cfg.comboPermutationStep = stateJson["comboPermutationStep"].get<int>();
+
+            // Deserialize modular state effects
+            cfg.effects.clear();
+            if (stateJson.contains("effects") && stateJson["effects"].is_array())
+            {
+                for (const auto& effJson : stateJson["effects"])
+                {
+                    StateEffectConfig eff;
+                    std::string tStr = effJson.value("type", "Shockwave");
+                    eff.type = StringToStateEffectType(tStr);
+                    eff.triggerTime = effJson.value("triggerTime", 0.0f);
+
+                    if (eff.type == StateEffectType::Shockwave)
+                    {
+                        eff.radius = effJson.value("radius", 24.0f);
+                        eff.duration = effJson.value("duration", 1.1f);
+                        eff.damage = effJson.value("damage", 45.0f);
+                        eff.knockbackForce = effJson.value("knockbackForce", 35.0f);
+                        eff.forwardOffset = effJson.value("forwardOffset", 18.0f);
+                        eff.isGroundOnly = effJson.value("isGroundOnly", true);
+                    }
+                    else if (eff.type == StateEffectType::CameraShake)
+                    {
+                        eff.shakeIntensity = effJson.value("shakeIntensity", 0.5f);
+                        eff.shakeDuration = effJson.value("shakeDuration", 0.3f);
+                    }
+                    else
+                    {
+                        eff.assetKey = effJson.value("assetKey", "");
+                    }
+                    cfg.effects.push_back(eff);
+                }
+            }
+            else if (stateJson.value("emitShockwave", false))
+            {
+                StateEffectConfig legacyWave;
+                legacyWave.type = StateEffectType::Shockwave;
+                legacyWave.triggerTime = (cfg.hitboxStart > 0.0f) ? cfg.hitboxStart : 1.45f;
+                legacyWave.radius = stateJson.value("shockwaveRadius", 24.0f);
+                legacyWave.duration = stateJson.value("shockwaveDuration", 1.1f);
+                legacyWave.damage = stateJson.value("shockwaveDamage", 45.0f);
+                legacyWave.knockbackForce = stateJson.value("shockwaveKnockback", 35.0f);
+                legacyWave.forwardOffset = stateJson.value("shockwaveForwardOffset", 18.0f);
+                legacyWave.isGroundOnly = stateJson.value("shockwaveIsGroundOnly", true);
+                cfg.effects.push_back(legacyWave);
+            }
+
+            // Provide responsive Souls-like defaults for existing attack states if not yet configured in JSON
+            if (cfg.isAttack && !stateJson.contains("windupPauseDuration"))
+            {
+                bool isFinisherOrHeavy = (cfg.stateName.find("3") != std::string::npos ||
+                                          cfg.stateName.find("Heavy") != std::string::npos ||
+                                          cfg.stateName.find("Slam") != std::string::npos);
+                if (isFinisherOrHeavy)
+                {
+                    cfg.windupPauseStart = 0.42f;
+                    cfg.windupPauseDuration = 0.12f; // ~7 frames wind-up freeze at peak
+                    cfg.windupTimeScale = 0.0f;
+                    cfg.strikeSpeedMultiplier = 1.22f;
+                    cfg.hitstopFrames = 8;           // Heavy impact freeze (8 frames @ 60fps)
+                    if (!stateJson.contains("hitboxStart")) cfg.hitboxStart = 0.46f;
+                    if (!stateJson.contains("hitboxEnd")) cfg.hitboxEnd = 0.82f;
+                }
+                else
+                {
+                    cfg.windupPauseStart = 0.42f;
+                    cfg.windupPauseDuration = 0.08f; // ~5 frames wind-up freeze at peak
+                    cfg.windupTimeScale = 0.0f;
+                    cfg.strikeSpeedMultiplier = 1.15f;
+                    cfg.hitstopFrames = 5;           // Standard impact freeze (5 frames @ 60fps)
+                    if (!stateJson.contains("hitboxStart")) cfg.hitboxStart = 0.48f;
+                    if (!stateJson.contains("hitboxEnd")) cfg.hitboxEnd = 0.85f;
                 }
             }
 
@@ -609,6 +945,35 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
     if (ImGui::CollapsingHeader("Combat State Machine Component", ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Active State: %s", m_currentStateName.c_str());
+        if (m_owner)
+        {
+            ImGui::Text("Actor TimeScale: %.2f | Hitstop: %s (%.3fs)",
+                m_owner->GetEffectiveTimeScale(),
+                m_owner->IsHitstopped() ? "FROZEN" : "Active",
+                m_owner->GetHitstopTimer());
+
+            if (auto* pbb = m_owner->GetComponent<PlayerBlackBoard>())
+            {
+                if (ImGui::TreeNodeEx("Player Stamina Tuning", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    float stamPct = (pbb->maxBlockStamina > 0.0f) ? (pbb->currentBlockStamina / pbb->maxBlockStamina) : 0.0f;
+                    char stamBuf[64];
+                    sprintf_s(stamBuf, "%.1f / %.1f (%.0f%%)", pbb->currentBlockStamina, pbb->maxBlockStamina, stamPct * 100.0f);
+                    ImGui::ProgressBar(std::clamp(stamPct, 0.0f, 1.0f), ImVec2(-1.0f, 18.0f), stamBuf);
+
+                    if (ImGui::DragFloat("Stamina Recovery Rate (/s)", &pbb->staminaRecoveryRate, 0.5f, 0.0f, 300.0f, "%.1f pts/sec"))
+                    {
+                        pbb->blockRecoveryRate = pbb->staminaRecoveryRate;
+                    }
+                    ImGui::DragFloat("Blocking Recovery Rate (/s)", &pbb->blockHeldRecoveryRate, 0.5f, 0.0f, 150.0f, "%.1f pts/sec");
+                    ImGui::DragFloat("Post-Attack Delay (s)", &pbb->attackRegenDelay, 0.05f, 0.0f, 5.0f, "%.2fs");
+                    ImGui::DragFloat("Post-Dodge Delay (s)", &pbb->dodgeRegenDelay, 0.05f, 0.0f, 5.0f, "%.2fs");
+                    ImGui::DragFloat("Exhaustion Penalty Delay (s)", &pbb->exhaustedRegenDelay, 0.05f, 0.0f, 5.0f, "%.2fs");
+                    ImGui::DragFloat("Max Stamina", &pbb->maxBlockStamina, 1.0f, 10.0f, 1000.0f, "%.0f");
+                    ImGui::TreePop();
+                }
+            }
+        }
         ImGui::Separator();
 
         // Modular Combat Asset Management
@@ -668,11 +1033,108 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
                 if (ImGui::Checkbox("Is Attack", &cfg.isAttack)) configChanged = true;
                 ImGui::SameLine();
                 if (ImGui::Checkbox("Is Block", &cfg.isBlock)) configChanged = true;
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Is Guard Counter", &cfg.isGuardCounter)) configChanged = true;
                 if (ImGui::Checkbox("Lock Direction", &cfg.lockMovementDirection)) configChanged = true;
 
                 if (ImGui::DragFloatRange2("Invincibility Window", &cfg.invincibilityStart, &cfg.invincibilityEnd, 0.05f, 0.0f, 10.0f, "Start: %.2f", "End: %.2f"))
                 {
                     configChanged = true;
+                }
+
+                if (cfg.isAttack)
+                {
+                    ImGui::Separator();
+                    ImGui::TextColored(ImVec4(1.0f, 0.65f, 0.2f, 1.0f), "(Wind-Up & Hitstop)");
+                    if (ImGui::DragFloat("Wind-Up Pause Start (s)", &cfg.windupPauseStart, 0.01f, 0.0f, 5.0f, "%.2f")) configChanged = true;
+                    if (ImGui::DragFloat("Wind-Up Hold Duration (s)", &cfg.windupPauseDuration, 0.01f, 0.0f, 2.0f, "%.2f")) configChanged = true;
+                    if (ImGui::SliderFloat("Wind-Up TimeScale (0=Freeze)", &cfg.windupTimeScale, 0.0f, 1.0f, "%.2f")) configChanged = true;
+                    if (ImGui::SliderFloat("Strike Release Speed", &cfg.strikeSpeedMultiplier, 0.5f, 2.5f, "%.2fx")) configChanged = true;
+                    if (ImGui::SliderInt("Hitstop Frames (60fps)", &cfg.hitstopFrames, 0, 20)) configChanged = true;
+                    if (ImGui::DragFloatRange2("Active Hitbox Window", &cfg.hitboxStart, &cfg.hitboxEnd, 0.02f, 0.0f, 5.0f, "Start: %.2f", "End: %.2f"))
+                    {
+                        configChanged = true;
+                    }
+
+                    ImGui::Separator();
+                    ImGui::TextColored(ImVec4(0.3f, 0.8f, 1.0f, 1.0f), "=== Combat State Role & Effects ===");
+                    
+                    const char* stateTypeItems[] = { "Normal", "Attack", "ComboFinisher", "Block", "Dodge", "Stun", "Jump", "GuardCounter" };
+                    int currentTypeIdx = static_cast<int>(cfg.stateTypeEnum);
+                    if (ImGui::Combo("Combat State Role", &currentTypeIdx, stateTypeItems, IM_ARRAYSIZE(stateTypeItems)))
+                    {
+                        cfg.stateTypeEnum = static_cast<CombatStateType>(currentTypeIdx);
+                        cfg.isAttack = cfg.IsAttackState();
+                        cfg.isBlock = cfg.IsBlockState();
+                        configChanged = true;
+                    }
+
+                    if (cfg.IsAttackState())
+                    {
+                        if (ImGui::DragFloat("Stamina Cost (Player)", &cfg.staminaCost, 0.5f, 0.0f, 100.0f, "%.1f")) configChanged = true;
+                        if (ImGui::DragFloat("Stamina Damage (On Shield)", &cfg.staminaDamage, 1.0f, 0.0f, 200.0f, "%.0f")) configChanged = true;
+                        if (ImGui::SliderInt("Combo Step (-1=Auto, 0=Opener, 1=Mid, 2=Finisher)", &cfg.comboPermutationStep, -1, 2)) configChanged = true;
+                    }
+
+                    ImGui::Separator();
+                    ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.2f, 1.0f), "Modular State Action Effects (%zu active)", cfg.effects.size());
+
+                    if (ImGui::Button("+ Add Shockwave Effect"))
+                    {
+                        StateEffectConfig newWave;
+                        newWave.type = StateEffectType::Shockwave;
+                        newWave.triggerTime = cfg.hitboxStart;
+                        cfg.effects.push_back(newWave);
+                        configChanged = true;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("+ Add Camera Shake"))
+                    {
+                        StateEffectConfig newShake;
+                        newShake.type = StateEffectType::CameraShake;
+                        newShake.triggerTime = cfg.hitboxStart;
+                        cfg.effects.push_back(newShake);
+                        configChanged = true;
+                    }
+
+                    int effectToDelete = -1;
+                    for (int effIdx = 0; effIdx < static_cast<int>(cfg.effects.size()); ++effIdx)
+                    {
+                        auto& eff = cfg.effects[effIdx];
+                        ImGui::PushID(effIdx);
+                        ImGui::Separator();
+                        ImGui::Text("[%d] %s", effIdx + 1, StateEffectTypeToString(eff.type).c_str());
+                        ImGui::SameLine();
+                        if (ImGui::Button("Delete Effect"))
+                        {
+                            effectToDelete = effIdx;
+                        }
+
+                        if (ImGui::DragFloat("Trigger Time (s)", &eff.triggerTime, 0.02f, 0.0f, 5.0f, "%.2f s")) configChanged = true;
+
+                        if (eff.type == StateEffectType::Shockwave)
+                        {
+                            if (ImGui::DragFloat("Wave Radius", &eff.radius, 0.5f, 1.0f, 100.0f, "%.1f m")) configChanged = true;
+                            if (ImGui::DragFloat("Wave Duration", &eff.duration, 0.05f, 0.1f, 5.0f, "%.2f s")) configChanged = true;
+                            if (ImGui::DragFloat("Wave Damage", &eff.damage, 1.0f, 0.0f, 500.0f, "%.0f")) configChanged = true;
+                            if (ImGui::DragFloat("Wave Knockback", &eff.knockbackForce, 1.0f, 0.0f, 100.0f, "%.1f")) configChanged = true;
+                            if (ImGui::DragFloat("Forward Offset", &eff.forwardOffset, 0.5f, -20.0f, 50.0f, "%.1f m")) configChanged = true;
+                            if (ImGui::Checkbox("Ground Only (Jump Evadable)", &eff.isGroundOnly)) configChanged = true;
+                        }
+                        else if (eff.type == StateEffectType::CameraShake)
+                        {
+                            if (ImGui::SliderFloat("Shake Intensity", &eff.shakeIntensity, 0.0f, 2.0f, "%.2f")) configChanged = true;
+                            if (ImGui::SliderFloat("Shake Duration", &eff.shakeDuration, 0.05f, 2.0f, "%.2f s")) configChanged = true;
+                        }
+                        ImGui::PopID();
+                    }
+
+                    if (effectToDelete >= 0 && effectToDelete < static_cast<int>(cfg.effects.size()))
+                    {
+                        cfg.effects.erase(cfg.effects.begin() + effectToDelete);
+                        configChanged = true;
+                    }
+                    ImGui::Separator();
                 }
 
                 if (ImGui::TreeNode("Transitions (Arrows / Links)"))

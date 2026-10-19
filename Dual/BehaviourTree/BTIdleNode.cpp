@@ -4,7 +4,7 @@
 
 HEIN::BTNodeState HEIN::BTIdleNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
 {
-	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;
 
 	// Tell the debugger what the AI is thinking

@@ -28,6 +28,15 @@ namespace HEIN
 		bool m_isAttacking;
 		bool m_isHeavyAttack;
 
+		float m_heavyTrackRatio = 0.60f;
+		float m_comboTrackTime = 0.35f;
+		float m_heavyTurnSpeed = 8.0f;
+		float m_comboTurnSpeed = 7.0f;
+		float m_lungeSpeed = 35.0f;
+		float m_stepSpeed = 30.0f;
+		float m_lungeDistanceThreshold = 22.0f;
+		float m_stepDistanceThreshold = 20.0f;
+
 	public:
 
 		BTAttackNode(float attackDuration, float minAttackDis = 12.0f, bool isHeavyAttack = false);

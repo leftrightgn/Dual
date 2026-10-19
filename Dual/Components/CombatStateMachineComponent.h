@@ -70,14 +70,15 @@ namespace HEIN
 		 * 
 		 * ARCHITECTURAL DECISION:
 		 * Decouples combat state machine definitions (combos, windows, hit timings) into external, dedicated JSON assets.
-		 * 1. Isolates combat tuning from world placement: Scene files (GameScene.json) stay lightweight and clean.
-		 * 2. Prevents runtime state corruption: Saving a scene mid-fight never overwrites or pollutes the combat asset.
-		 * 3. Reusability: Multiple enemies/archetypes can reference the exact same combat asset file.
+		 * - Isolates combat tuning from world placement: Scene files (GameScene.json) stay lightweight and clean.
+		 * - Prevents runtime state corruption: Saving a scene mid-fight never overwrites or pollutes the combat asset.
+		 * - Reusability: Multiple enemies/archetypes can reference the exact same combat asset file.
 		 */
 		std::string m_configPath = "";
 
 	public:
 		CombatStateMachineComponent(Actor* owner);
+		virtual ~CombatStateMachineComponent() override;
 	
 		void Start() override;
 
@@ -125,6 +126,15 @@ namespace HEIN
 
 		/// @brief Checks if the actor is currently in a blocking state.
 		bool IsBlocking() const;
+
+		bool IsWeaponHitboxActive() const;
+		int GetCurrentHitstopFrames() const;
+		bool IsGuardCounter() const;
+		const StateConfig* GetCurrentStateConfig() const
+		{
+			auto it = m_stateConfigs.find(m_currentStateName);
+			return (it != m_stateConfigs.end()) ? &it->second : nullptr;
+		}
 		
 		const std::string& GetCurrentStateName() const { return m_currentStateName; }
 		const std::unordered_map<std::string, StateConfig>& GetConfigs() const { return m_stateConfigs; }

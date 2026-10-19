@@ -62,9 +62,26 @@ namespace HEIN
 		virtual bool IsAttackState() const { return false; }
 
 		/**
+		 * @brief Checks if the weapon hitbox should be actively dealing damage on the current frame.
+		 *        False during anticipation wind-up pause; true during active strike release frames.
+		 */
+		virtual bool IsWeaponHitboxActive() const { return IsAttackState(); }
+
+		/**
+		 * @brief Returns the configured Hitstop (Hit Freeze) duration in 60fps frames for this state.
+		 */
+		virtual int GetHitstopFrames() const { return 5; }
+
+		/**
 		 * @brief Checks if this state is a block state.
 		 * @return True if it is a block state, false otherwise.
 		 */
 		virtual bool IsBlockState() const { return false; }
+
+		/**
+		 * @brief Checks if this state is a Guard Counter state.
+		 * @return True if it is a Guard Counter state, false otherwise.
+		 */
+		virtual bool IsGuardCounterState() const { return false; }
 	};
 }

@@ -3,21 +3,31 @@
     "states": [
         {
             "animationName": "Idle",
+            "combatStateType": "Normal",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
             "comboEndTimes": [],
             "comboExitBlendDuration": 0.20000000298023224,
+            "comboPermutationStep": -1,
             "comboWindowStarts": [],
+            "effects": [],
+            "hitboxEnd": 0.0,
+            "hitboxStart": 0.0,
+            "hitstopFrames": 5,
             "invincibilityEnd": 0.0,
             "invincibilityStart": 0.0,
             "isAttack": false,
             "isBlock": false,
+            "isGuardCounter": false,
             "isLooping": true,
             "lockMovementDirection": false,
             "moveSpeed": 0.0,
             "name": "Idle",
             "secondaryAnimationName": "",
+            "staminaCost": 0.0,
+            "staminaDamage": 20.0,
             "stateDuration": 0.0,
+            "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
                 "OnAttack": {
                     "blendDuration": 0.15000000596046448,
@@ -61,25 +71,38 @@
                 }
             },
             "turnSpeed": 10.0,
-            "type": "DataDriven"
+            "type": "DataDriven",
+            "windupPauseDuration": 0.0,
+            "windupPauseStart": 0.1599999964237213,
+            "windupTimeScale": 0.0
         },
         {
             "animationName": "Dodge",
+            "combatStateType": "Dodge",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
             "comboEndTimes": [],
             "comboExitBlendDuration": 0.20000000298023224,
+            "comboPermutationStep": -1,
             "comboWindowStarts": [],
+            "effects": [],
+            "hitboxEnd": 0.0,
+            "hitboxStart": 0.0,
+            "hitstopFrames": 5,
             "invincibilityEnd": 0.5,
             "invincibilityStart": 0.0,
             "isAttack": false,
             "isBlock": false,
+            "isGuardCounter": false,
             "isLooping": false,
             "lockMovementDirection": true,
             "moveSpeed": 35.0,
             "name": "Dodge",
             "secondaryAnimationName": "",
+            "staminaCost": 0.0,
+            "staminaDamage": 20.0,
             "stateDuration": 0.0,
+            "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
                 "Exit": {
                     "blendDuration": 0.20000000298023224,
@@ -113,25 +136,38 @@
                 }
             },
             "turnSpeed": 12.0,
-            "type": "DataDriven"
+            "type": "DataDriven",
+            "windupPauseDuration": 0.0,
+            "windupPauseStart": 0.1599999964237213,
+            "windupTimeScale": 0.0
         },
         {
             "animationName": "Combo1",
+            "combatStateType": "Attack",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
             "comboEndTimes": [],
             "comboExitBlendDuration": 0.20000000298023224,
+            "comboPermutationStep": 0,
             "comboWindowStarts": [],
+            "effects": [],
+            "hitboxEnd": 1.149999976158142,
+            "hitboxStart": 0.550000011920929,
+            "hitstopFrames": 4,
             "invincibilityEnd": 0.0,
             "invincibilityStart": 0.0,
             "isAttack": true,
             "isBlock": false,
+            "isGuardCounter": false,
             "isLooping": false,
             "lockMovementDirection": false,
             "moveSpeed": 0.0,
             "name": "Combo1",
             "secondaryAnimationName": "",
+            "staminaCost": 0.0,
+            "staminaDamage": 40.0,
             "stateDuration": 0.0,
+            "strikeSpeedMultiplier": 1.1800000667572021,
             "transitions": {
                 "Exit": {
                     "blendDuration": 0.25,
@@ -142,6 +178,16 @@
                     "triggerEvent": "",
                     "windowEnd": 999.0,
                     "windowStart": 0.0
+                },
+                "OnAttack": {
+                    "blendDuration": 0.18000000715255737,
+                    "canInterrupt": false,
+                    "hasExitTime": false,
+                    "requireHit": true,
+                    "targetState": "Combo2",
+                    "triggerEvent": "OnAttack",
+                    "windowEnd": 999.0,
+                    "windowStart": 0.8500000238418579
                 },
                 "OnDodge": {
                     "blendDuration": 0.10000000149011612,
@@ -154,36 +200,49 @@
                     "windowStart": 0.5
                 },
                 "OnNextCombo": {
-                    "blendDuration": 0.15000000596046448,
-                    "canInterrupt": true,
+                    "blendDuration": 0.18000000715255737,
+                    "canInterrupt": false,
                     "hasExitTime": false,
                     "requireHit": true,
                     "targetState": "Combo2",
                     "triggerEvent": "OnNextCombo",
                     "windowEnd": 999.0,
-                    "windowStart": 0.0
+                    "windowStart": 0.8500000238418579
                 }
             },
             "turnSpeed": 2.0,
-            "type": "DataDriven"
+            "type": "DataDriven",
+            "windupPauseDuration": 0.10000000149011612,
+            "windupPauseStart": 0.44999998807907104,
+            "windupTimeScale": 0.0
         },
         {
             "animationName": "Walk",
+            "combatStateType": "Normal",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
             "comboEndTimes": [],
             "comboExitBlendDuration": 0.20000000298023224,
+            "comboPermutationStep": -1,
             "comboWindowStarts": [],
+            "effects": [],
+            "hitboxEnd": 0.0,
+            "hitboxStart": 0.0,
+            "hitstopFrames": 5,
             "invincibilityEnd": 0.0,
             "invincibilityStart": 0.0,
             "isAttack": false,
             "isBlock": false,
+            "isGuardCounter": false,
             "isLooping": true,
             "lockMovementDirection": false,
             "moveSpeed": 55.0,
             "name": "Walk",
             "secondaryAnimationName": "",
+            "staminaCost": 0.0,
+            "staminaDamage": 20.0,
             "stateDuration": 0.0,
+            "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
                 "OnAttack": {
                     "blendDuration": 0.15000000596046448,
@@ -227,77 +286,38 @@
                 }
             },
             "turnSpeed": 10.0,
-            "type": "DataDriven"
+            "type": "DataDriven",
+            "windupPauseDuration": 0.0,
+            "windupPauseStart": 0.1599999964237213,
+            "windupTimeScale": 0.0
         },
         {
             "animationName": "Combo2",
+            "combatStateType": "Attack",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
             "comboEndTimes": [],
             "comboExitBlendDuration": 0.20000000298023224,
+            "comboPermutationStep": 1,
             "comboWindowStarts": [],
+            "effects": [],
+            "hitboxEnd": 1.0499999523162842,
+            "hitboxStart": 0.5,
+            "hitstopFrames": 4,
             "invincibilityEnd": 0.0,
             "invincibilityStart": 0.0,
             "isAttack": true,
             "isBlock": false,
+            "isGuardCounter": false,
             "isLooping": false,
             "lockMovementDirection": false,
             "moveSpeed": 0.0,
             "name": "Combo2",
             "secondaryAnimationName": "",
+            "staminaCost": 0.0,
+            "staminaDamage": 40.0,
             "stateDuration": 0.0,
-            "transitions": {
-                "Exit": {
-                    "blendDuration": 0.25,
-                    "canInterrupt": false,
-                    "hasExitTime": true,
-                    "requireHit": false,
-                    "targetState": "Idle",
-                    "triggerEvent": "",
-                    "windowEnd": 999.0,
-                    "windowStart": 0.0
-                },
-                "OnDodge": {
-                    "blendDuration": 0.10000000149011612,
-                    "canInterrupt": true,
-                    "hasExitTime": false,
-                    "requireHit": false,
-                    "targetState": "Dodge",
-                    "triggerEvent": "OnDodge",
-                    "windowEnd": 999.0,
-                    "windowStart": 0.5
-                },
-                "OnNextCombo": {
-                    "blendDuration": 0.15000000596046448,
-                    "canInterrupt": true,
-                    "hasExitTime": false,
-                    "requireHit": true,
-                    "targetState": "Combo3",
-                    "triggerEvent": "OnNextCombo",
-                    "windowEnd": 999.0,
-                    "windowStart": 0.0
-                }
-            },
-            "turnSpeed": 2.0,
-            "type": "DataDriven"
-        },
-        {
-            "animationName": "OneHand",
-            "comboAnimationNames": [],
-            "comboBlendDurations": [],
-            "comboEndTimes": [],
-            "comboExitBlendDuration": 0.20000000298023224,
-            "comboWindowStarts": [],
-            "invincibilityEnd": 0.0,
-            "invincibilityStart": 0.0,
-            "isAttack": true,
-            "isBlock": false,
-            "isLooping": false,
-            "lockMovementDirection": false,
-            "moveSpeed": 0.0,
-            "name": "OneHand",
-            "secondaryAnimationName": "",
-            "stateDuration": 0.0,
+            "strikeSpeedMultiplier": 1.2000000476837158,
             "transitions": {
                 "Exit": {
                     "blendDuration": 0.25,
@@ -310,36 +330,69 @@
                     "windowStart": 0.0
                 },
                 "OnAttack": {
-                    "blendDuration": 0.15000000596046448,
+                    "blendDuration": 0.18000000715255737,
+                    "canInterrupt": false,
+                    "hasExitTime": false,
+                    "requireHit": true,
+                    "targetState": "Combo3",
+                    "triggerEvent": "OnAttack",
+                    "windowEnd": 999.0,
+                    "windowStart": 0.8500000238418579
+                },
+                "OnDodge": {
+                    "blendDuration": 0.10000000149011612,
                     "canInterrupt": true,
                     "hasExitTime": false,
                     "requireHit": false,
-                    "targetState": "Combo2",
-                    "triggerEvent": "OnAttack",
+                    "targetState": "Dodge",
+                    "triggerEvent": "OnDodge",
                     "windowEnd": 999.0,
-                    "windowStart": 0.0
+                    "windowStart": 0.5
+                },
+                "OnNextCombo": {
+                    "blendDuration": 0.18000000715255737,
+                    "canInterrupt": false,
+                    "hasExitTime": false,
+                    "requireHit": true,
+                    "targetState": "Combo3",
+                    "triggerEvent": "OnNextCombo",
+                    "windowEnd": 999.0,
+                    "windowStart": 0.8500000238418579
                 }
             },
             "turnSpeed": 2.0,
-            "type": "DataDriven"
+            "type": "DataDriven",
+            "windupPauseDuration": 0.10000000149011612,
+            "windupPauseStart": 0.41999998688697815,
+            "windupTimeScale": 0.0
         },
         {
             "animationName": "Combo3",
+            "combatStateType": "ComboFinisher",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
             "comboEndTimes": [],
             "comboExitBlendDuration": 0.20000000298023224,
+            "comboPermutationStep": 2,
             "comboWindowStarts": [],
+            "effects": [],
+            "hitboxEnd": 1.5,
+            "hitboxStart": 0.8199999928474426,
+            "hitstopFrames": 4,
             "invincibilityEnd": 0.0,
             "invincibilityStart": 0.0,
             "isAttack": true,
             "isBlock": false,
+            "isGuardCounter": false,
             "isLooping": false,
             "lockMovementDirection": false,
             "moveSpeed": 0.0,
             "name": "Combo3",
             "secondaryAnimationName": "",
+            "staminaCost": 0.0,
+            "staminaDamage": 60.0,
             "stateDuration": 0.0,
+            "strikeSpeedMultiplier": 1.2200000286102295,
             "transitions": {
                 "Exit": {
                     "blendDuration": 0.30000001192092896,
@@ -351,6 +404,16 @@
                     "windowEnd": 999.0,
                     "windowStart": 0.0
                 },
+                "OnAttack": {
+                    "blendDuration": 0.18000000715255737,
+                    "canInterrupt": false,
+                    "hasExitTime": false,
+                    "requireHit": true,
+                    "targetState": "Combo1",
+                    "triggerEvent": "OnAttack",
+                    "windowEnd": 999.0,
+                    "windowStart": 0.8500000238418579
+                },
                 "OnDodge": {
                     "blendDuration": 0.10000000149011612,
                     "canInterrupt": true,
@@ -360,28 +423,68 @@
                     "triggerEvent": "OnDodge",
                     "windowEnd": 999.0,
                     "windowStart": 0.5
+                },
+                "OnNextCombo": {
+                    "blendDuration": 0.18000000715255737,
+                    "canInterrupt": false,
+                    "hasExitTime": false,
+                    "requireHit": true,
+                    "targetState": "Combo1",
+                    "triggerEvent": "OnNextCombo",
+                    "windowEnd": 999.0,
+                    "windowStart": 0.8500000238418579
                 }
             },
             "turnSpeed": 2.0,
-            "type": "DataDriven"
+            "type": "DataDriven",
+            "windupPauseDuration": 0.10000000149011612,
+            "windupPauseStart": 0.699999988079071,
+            "windupTimeScale": 0.0
         },
         {
             "animationName": "HeavyAttack",
+            "combatStateType": "Attack",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
             "comboEndTimes": [],
             "comboExitBlendDuration": 0.20000000298023224,
+            "comboPermutationStep": -1,
             "comboWindowStarts": [],
+            "effects": [
+                {
+                    "damage": 45.0,
+                    "duration": 1.100000023841858,
+                    "forwardOffset": 22.0,
+                    "isGroundOnly": true,
+                    "knockbackForce": 35.0,
+                    "radius": 24.0,
+                    "triggerTime": 1.4500000476837158,
+                    "type": "Shockwave"
+                },
+                {
+                    "shakeDuration": 0.30000001192092896,
+                    "shakeIntensity": 1.5499999523162842,
+                    "triggerTime": 1.4500000476837158,
+                    "type": "CameraShake"
+                }
+            ],
+            "hitboxEnd": 1.850000023841858,
+            "hitboxStart": 1.4500000476837158,
+            "hitstopFrames": 6,
             "invincibilityEnd": 0.0,
             "invincibilityStart": 0.0,
             "isAttack": true,
             "isBlock": false,
+            "isGuardCounter": false,
             "isLooping": false,
             "lockMovementDirection": false,
             "moveSpeed": 0.0,
             "name": "HeavyAttack",
             "secondaryAnimationName": "",
+            "staminaCost": 0.0,
+            "staminaDamage": 75.0,
             "stateDuration": 0.0,
+            "strikeSpeedMultiplier": 1.25,
             "transitions": {
                 "Exit": {
                     "blendDuration": 0.30000001192092896,
@@ -405,7 +508,10 @@
                 }
             },
             "turnSpeed": 2.0,
-            "type": "DataDriven"
+            "type": "DataDriven",
+            "windupPauseDuration": 0.15000000596046448,
+            "windupPauseStart": 1.25,
+            "windupTimeScale": 0.0
         }
     ]
 }
