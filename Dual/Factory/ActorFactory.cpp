@@ -3,6 +3,7 @@
 #include <Components/PlayerInputComponent.h>
 #include <Components/CharacterMovementComponent.h>
 #include <Components/CombatStateMachineComponent.h>
+#include <Components/ShockwaveEmitterComponent.h>
 #include <Components/PossessableComponent.h>
 #include "BehaviourTree/BTChaseNode.h"
 #include "BehaviourTree/BTCheckDistance.h"
@@ -26,6 +27,7 @@
 #include "../../External/Engine/Components/ColliderComponent/OBBColliderComponent.h"
 #include "../../External/Engine/Components/SocketAttachmentComponent.h"
 #include "../../External/Engine/Components/StaticModelComponent.h"
+#include "../../External/Engine/Components/WeaponTrailComponent.h"
 #include "../../External/Engine/Components/ColliderComponent/MeshColliderComponent.h"
 #include "../../External/Engine/Components/ColliderComponent/AABBColliderComponent.h"
 #include "../../External/Engine/BehaviourTree/BTSelector.h"
@@ -33,6 +35,7 @@
 #include "../../External/Engine/Camera/CameraController.h"
 #include "../../External/Engine/Factory/ComponentFactory.h"
 #include "ActorFactory.h"
+#include "../../External/Engine/Common/SkeletonProfile.h"
 #include "../../External/Engine/Components/TransformComponent.h"
 #include "../../External/Engine/Components/ProceduralAnimationComponent.h"
 #include <BehaviourTree/BTReturnToSpawnNode.h>
@@ -41,8 +44,6 @@
 #include <BehaviourTree/BTStrafeNode.h>
 #include "../../External/Engine/Message/Messenger.h"
 #include "../../External/Engine/Message/Message.h"
-
-
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ActorManager& actorManager,
@@ -97,11 +98,12 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     auto* playerCombat = playerActor->AddComponent<HEIN::CombatStateMachineComponent>();
     playerCombat->LoadFromConfigFile("Resources/Data/Combat/Knight_Combat.json");
 
-    playerActor->AddComponent<HEIN::CombatBlackBoard>();
+    playerActor->AddComponent<HEIN::PlayerBlackBoard>();
     playerActor->AddComponent<HEIN::PlayerInputComponent>(&actorManager);
     playerActor->AddComponent<HEIN::TargetTrackingComponent>(&actorManager, HEIN::ActorType::Enemy);
     playerActor->AddComponent<HEIN::CharacterMovementComponent>();
     playerActor->AddComponent<HEIN::ProceduralAnimationComponent>(&actorManager);
+    playerActor->AddComponent<HEIN::ShockwaveEmitterComponent>(&actorManager);
 
     playerActor->Start();
     return spawnData;
@@ -118,7 +120,7 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
     sword->SetOwnerID(wielderID);
 
     HEIN::DamageDealerComponent* swordDamage = sword->AddComponent<HEIN::DamageDealerComponent>();
-    swordDamage->Initialize(damage, DamageType::Physical, false, 15.0f);
+    swordDamage->Initialize(damage, DamageType::Physical, false, GameConstants::Weapons::DefaultSwordKnockback);
 
     HEIN::TransformComponent* swordTransform = sword->AddComponent<HEIN::TransformComponent>();
     swordTransform->SetScale(DirectX::SimpleMath::Vector3(2.0f));
@@ -159,10 +161,13 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
     swordHitBox->SetCollisionLayer(weaponLayer);
     swordHitBox->SetCollisionMask(weaponMask);
 
-
     HEIN::SocketAttachmentComponent* socketAttachment = sword->AddComponent<HEIN::SocketAttachmentComponent>(&actorManager);
     socketAttachment->Initialize(wielderID, L"WeaponSocket");
     actorManager.SetParent(sword->GetID(), wielderID, false);
+
+    HEIN::WeaponTrailComponent* swordTrail = sword->AddComponent<HEIN::WeaponTrailComponent>(&actorManager);
+    swordTrail->ApplyTarnishedGoldPreset();
+    swordTrail->AutoFitOffsetsFromWeapon();
 
     sword->Start();
     return sword->GetID();
@@ -234,10 +239,13 @@ HEIN::ActorID HEIN::ActorFactory::CreateAxe(
     axeHitBox->SetCollisionMask(weaponMask);
     axeCapsule->SetCollisionMask(weaponMask);
 
-
     HEIN::SocketAttachmentComponent* socketAttachment = axe->AddComponent<HEIN::SocketAttachmentComponent>(&actorManager);
     socketAttachment->Initialize(wielderID, L"WeaponSocket");
     actorManager.SetParent(axe->GetID(), wielderID, false);
+
+    HEIN::WeaponTrailComponent* axeTrail = axe->AddComponent<HEIN::WeaponTrailComponent>(&actorManager);
+    axeTrail->ApplyBossBloodflamePreset();
+    axeTrail->AutoFitOffsetsFromWeapon();
 
     axe->Start();
     return axe->GetID();
@@ -307,7 +315,6 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     spawnData.tpsModel->SetEnableRootMotion(true); // Root Motion enabled for jump & attack animations
     spawnData.tpsModel->SetVisible(true);
 
-
     // Head Collider
     HEIN::CapsuleColliderComponent* HeadCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     HeadCapsule->Initialize(3.5f, 1.0f);
@@ -341,7 +348,6 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     HEIN::TwoBoneLinkComponent* RightforearmLink = enemyActor->AddComponent<HEIN::TwoBoneLinkComponent>();
     RightforearmLink->Initialize(spawnData.tpsModel, L"mixamorig:RightForeArm", L"mixamorig:RightHand");
     RightforearmLink->LinkTo(RightforearmCapsule);
-
 
     // Left Arm Collider
     HEIN::CapsuleColliderComponent* LeftarmCapsule = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
@@ -411,7 +417,6 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     rootPushbox->SetCollisionLayer(CollisionLayer::Layer_Enemy);
     rootPushbox->SetCollisionMask(CollisionLayer::Layer_Environment | CollisionLayer::Layer_Ground | CollisionLayer::Layer_Wall | CollisionLayer::Layer_Player);
 
-
     // SET BONES TO TRIGGERS (So they don't push the floor)
     HeadCapsule->SetTrigger(true);
     BodyCapsule->SetTrigger(true);
@@ -424,11 +429,12 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     LeftupLegCapsule->SetTrigger(true);
     LeftLegCapsule->SetTrigger(true);
 
-    HEIN::CombatBlackBoard* bb = enemyActor->AddComponent<HEIN::CombatBlackBoard>();
+    HEIN::BossBlackBoard* bb = enemyActor->AddComponent<HEIN::BossBlackBoard>();
     bb->spawnPosition = ptransform->GetPosition();
     bb->hasSetSpawnPosition = true;
 
     enemyActor->AddComponent<HEIN::CharacterMovementComponent>();
+    enemyActor->AddComponent<HEIN::ShockwaveEmitterComponent>(&actorManager);
 
     SetupEnemyAI(enemyActor, &actorManager, targetID);
 
@@ -462,80 +468,252 @@ void HEIN::ActorFactory::RegisterGameComponents()
     ComponentFactory::RegisterComponent<CharacterMovementComponent>("CharacterMovementComponent");
     ComponentFactory::RegisterComponent<PlayerInputComponent>("PlayerInputComponent");
     ComponentFactory::RegisterComponent<CombatBlackBoard>("CombatBlackBoard");
+    ComponentFactory::RegisterComponent<PlayerBlackBoard>("PlayerBlackBoard");
+    ComponentFactory::RegisterComponent<BossBlackBoard>("BossBlackBoard");
     ComponentFactory::RegisterComponent<PossessableComponent>("PossessableComponent");
+    ComponentFactory::RegisterComponent<ShockwaveEmitterComponent>("ShockwaveEmitterComponent");
 
-    // UI pulls Block and Dodge directly from the actor's CombatBlackBoard
+    // UI pulls Stamina (and legacy Block / Dodge) from PlayerBlackBoard or CombatBlackBoard
     GaugeComponent::SetExternalSyncHandler([](Actor* target, GaugeType type, float& outCurrent, float& outMax) -> bool {
         if (!target) return false;
+        auto* playerBB = target->GetComponent<PlayerBlackBoard>();
         auto* bb = target->GetComponent<CombatBlackBoard>();
-        if (!bb) return false;
 
-        if (type == GaugeType::Block)
+        if (type == GaugeType::Stamina || type == GaugeType::Block || type == GaugeType::Dodge)
         {
-            outCurrent = bb->currentBlockStamina;
-            outMax = bb->maxBlockStamina;
-            return true;
-        }
-        else if (type == GaugeType::Dodge)
-        {
-            outCurrent = (bb->dodgeCooldownTimer > 0.0f)
-                ? (bb->maxDodgeCooldown - bb->dodgeCooldownTimer)
-                : bb->maxDodgeCooldown;
-            outMax = bb->maxDodgeCooldown;
-            return true;
+            if (playerBB)
+            {
+                outCurrent = std::max(0.0f, playerBB->currentBlockStamina);
+                outMax = playerBB->maxBlockStamina;
+                return true;
+            }
+            else if (bb)
+            {
+                outCurrent = std::max(0.0f, bb->currentStamina);
+                outMax = bb->maxStamina;
+                return true;
+            }
+            return false;
         }
         return false;
     });
 
     // Intercept damage for blocking states, hit stun, and dynamic physical knockback
-    DamageSystem::SetDamageInterceptor([](Actor* attacker, Actor* victim, DamageDealerComponent* dealer, float /*damage*/) -> bool {
+    DamageSystem::SetDamageInterceptor([](Actor* attacker, Actor* victim, DamageDealerComponent* dealer, float& damage) -> bool {
         if (!victim) return true;
         auto* sm = victim->GetComponent<CombatStateMachineComponent>();
         auto* bb = victim->GetComponent<CombatBlackBoard>();
+        auto* playerBB = victim->GetComponent<PlayerBlackBoard>();
 
         bool isBlocked = false;
         bool isParried = false;
         bool applyDamage = true;
         bool skipHitStun = false;
 
-        // Block cooldown active: this hit belongs to a swing we already blocked.
+        // Block cooldown active: this hit belongs to a swing already blocked.
         // Ignore it completely (no damage, no stamina cost, no knockback).
-        if (bb && bb->blockCooldownTimer > 0.0f)
+        if (playerBB && playerBB->blockCooldownTimer > 0.0f)
         {
             return false;
         }
 
-        if (sm && sm->IsBlocking() && bb && !bb->isBlockBroken && bb->currentBlockStamina > 0.0f)
+        // Data-Driven Attacker State Evaluation (No string matching!)
+        CombatStateMachineComponent* attackerSM = attacker ? attacker->GetComponent<CombatStateMachineComponent>() : nullptr;
+        BossBlackBoard* attackerBossBB = attacker ? attacker->GetComponent<BossBlackBoard>() : nullptr;
+        PlayerBlackBoard* attackerPlayerBB = attacker ? attacker->GetComponent<PlayerBlackBoard>() : nullptr;
+
+        const StateConfig* attackerConfig = attackerSM ? attackerSM->GetCurrentStateConfig() : nullptr;
+        CombatStateType attackerStateType = attackerConfig ? attackerConfig->stateTypeEnum : CombatStateType::Normal;
+
+        bool isHeavyAttack = (attackerStateType == CombatStateType::Attack && attackerConfig && attackerConfig->staminaDamage >= GameConstants::Combat::HeavyAttackStaminaThreshold) ||
+                             (attackerBossBB && attackerBossBB->activeNodeName.find("Heavy Attack") != std::string::npos);
+        bool isComboFinisher = (attackerStateType == CombatStateType::ComboFinisher) ||
+                               (attackerConfig && attackerConfig->comboPermutationStep >= 3);
+        bool isGuardCounterAttack = (attackerSM && attackerSM->IsGuardCounter()) || (attackerStateType == CombatStateType::GuardCounter);
+
+        float baseStaminaDamage = attackerConfig ? attackerConfig->staminaDamage : GameConstants::Combat::DefaultStaminaDamage;
+
+        // Process Block / Parry (Elden Ring 4 Defensive Tiers)
+        float baseForce = dealer ? dealer->GetKnockbackForce() : GameConstants::Combat::DefaultKnockbackForce;
+        if (baseForce <= 0.0f) baseForce = GameConstants::Combat::DefaultKnockbackForce;
+        float impulseMagnitude = baseForce;
+
+        if (sm && sm->IsBlocking() && playerBB && !playerBB->isBlockBroken && playerBB->currentBlockStamina > 0.0f)
         {
             isBlocked = true;
-            applyDamage = false;
-            bb->blockCooldownTimer = bb->blockCooldownDuration;
+            playerBB->blockCooldownTimer = playerBB->blockCooldownDuration;
 
-            // Active Perfect Parrying: parryWindow (0.20s) absorbs all damage, restores 0.5f block stamina, negates pushback, and applies HIT_STUN to attacker
-            if (bb->blockActiveTimer <= bb->parryWindow)
+            bool isTierA = (playerBB->blockActiveTimer <= playerBB->parryActiveWindow && playerBB->parryLockoutTimer <= 0.0f);
+            bool isTierB = !isTierA && (
+                (playerBB->blockActiveTimer > playerBB->parryActiveWindow && playerBB->blockActiveTimer <= playerBB->partialParryWindow) ||
+                (playerBB->blockActiveTimer <= playerBB->partialParryWindow && playerBB->parryLockoutTimer > 0.0f)
+            );
+
+            if (isTierA)
             {
+                // Tier A - Spontaneous Deflect / Perfect Parry
+                applyDamage = false;
                 isParried = true;
-                bb->currentBlockStamina = std::fmin(bb->maxBlockStamina, bb->currentBlockStamina + 0.5f);
-                if (attacker)
+                impulseMagnitude = 0.0f; // Zero pushback
+
+                // Restore stamina from data config
+                playerBB->currentBlockStamina = std::fmin(playerBB->maxBlockStamina, playerBB->currentBlockStamina + playerBB->parryStaminaRestore);
+
+                // Increment deflectStacks (up to maxDeflectStacks) and open guardCounterWindowTimer
+                playerBB->deflectStacks = std::min(playerBB->maxDeflectStacks, playerBB->deflectStacks + 1);
+                playerBB->guardCounterWindowTimer = playerBB->guardCounterWindowDuration;
+
+                if (dealer)
+                {
+                    dealer->SetHitstopFrames(playerBB->parryHitstopFrames);
+                }
+
+                // Multi-Parry Boss Logic (Data-driven HP threshold and required parries)
+                if (attackerBossBB)
+                {
+                    attackerBossBB->currentParryCount++;
+                    attackerBossBB->parryDecayTimer = attackerBossBB->parryDecayDelay;
+
+                    float maxHp = attackerBossBB->maxHealth;
+                    float curHp = attackerBossBB->currentHealth;
+                    if (auto* attackerHealth = attacker->GetComponent<HealthComponent>())
+                    {
+                        maxHp = attackerHealth->GetMaxHealth();
+                        curHp = attackerHealth->GetCurrentHealth();
+                    }
+                    float hpPct = (maxHp > 0.0f) ? (curHp / maxHp) : 1.0f;
+                    int requiredParries = (hpPct <= attackerBossBB->phase2HealthThresholdPct)
+                        ? attackerBossBB->phase2ParriesRequired
+                        : attackerBossBB->parriesRequiredForStagger;
+                    if (attackerBossBB->currentParryCount >= requiredParries)
+                    {
+                        attackerBossBB->currentParryCount = 0;
+                        Messenger::GetInstance()->Notify(attacker->GetID(), Message::HIT_STUN);
+                    }
+                    else
+                    {
+                        // If currentParryCount < requiredParries, Boss continues combo uninterrupted
+                        if (auto* attBB = attacker->GetComponent<CombatBlackBoard>())
+                        {
+                            attBB->lastAttackHit = true;
+                        }
+                        Messenger::GetInstance()->Notify(attacker->GetID(), Message::ATTACK_HIT_CONFIRMED);
+                    }
+                }
+                else if (attacker)
                 {
                     Messenger::GetInstance()->Notify(attacker->GetID(), Message::HIT_STUN);
                 }
             }
+            else if (isTierB)
+            {
+                // Tier B - Partial Parry Fallback (Configurable ratios)
+                float partialStaminaCost = baseStaminaDamage * playerBB->partialParryStaminaMultiplier;
+                playerBB->currentBlockStamina -= partialStaminaCost;
+
+                if (playerBB->currentBlockStamina <= 0.0f)
+                {
+                    // Tier D - Guard Break Fallback
+                    playerBB->currentBlockStamina = 0.0f;
+                    playerBB->isBlockBroken = true;
+                    playerBB->guardCounterWindowTimer = 0.0f;
+                    playerBB->deflectStacks = 0;
+                    playerBB->staminaRegenDelayTimer = playerBB->guardBreakDelayTimer;
+
+                    damage = damage * playerBB->guardBreakChipDamageRatio;
+                    applyDamage = true;
+                    skipHitStun = false;
+                    isBlocked = false;
+
+                    if (sm)
+                    {
+                        sm->ChangeState("Stun", GameConstants::Combat::StunStateTransitionDuration);
+                    }
+                    Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
+                    impulseMagnitude = baseForce * playerBB->guardBreakPushbackMultiplier;
+                }
+                else
+                {
+                    // Mitigate damage with configurable chip damage ratio
+                    auto* health = victim->GetComponent<HealthComponent>();
+                    if (health)
+                    {
+                        health->ApplyDamage(damage * playerBB->partialParryChipDamageRatio);
+                    }
+                    applyDamage = false;
+                    skipHitStun = true;
+                    impulseMagnitude = baseForce * playerBB->partialParryPushbackMultiplier;
+                    playerBB->guardCounterWindowTimer = 0.0f;
+                    playerBB->staminaRegenDelayTimer = playerBB->partialParryRegenDelay;
+
+                    if (attacker)
+                    {
+                        if (auto* attBB = attacker->GetComponent<CombatBlackBoard>())
+                        {
+                            attBB->lastAttackHit = true;
+                        }
+                        Messenger::GetInstance()->Notify(attacker->GetID(), Message::ATTACK_HIT_CONFIRMED);
+                    }
+                }
+            }
             else
             {
-                // Regular block
-                bb->currentBlockStamina -= 1.0f; // 1 block point per blocked swing
-                if (bb->currentBlockStamina <= 0.0f)
+                // Tier C - Standard Guard
+                float staminaLost = baseStaminaDamage * (1.0f - (playerBB->guardBoost / GameConstants::Combat::GuardPercentDivisor));
+                playerBB->currentBlockStamina -= staminaLost;
+
+                if (attacker)
                 {
-                    // Last block point used: guard breaks, but this hit is still absorbed.
-                    // The next swing (after the cooldown) will land.
-                    bb->currentBlockStamina = 0.0f;
-                    bb->isBlockBroken = true;
+                    if (auto* attBB = attacker->GetComponent<CombatBlackBoard>())
+                    {
+                        attBB->lastAttackHit = true;
+                    }
+                    Messenger::GetInstance()->Notify(attacker->GetID(), Message::ATTACK_HIT_CONFIRMED);
+                }
+
+                if (playerBB->currentBlockStamina <= 0.0f)
+                {
+                    // Tier D - Guard Break
+                    playerBB->currentBlockStamina = 0.0f;
+                    playerBB->isBlockBroken = true;
+                    playerBB->guardCounterWindowTimer = 0.0f;
+                    playerBB->deflectStacks = 0;
+                    playerBB->staminaRegenDelayTimer = playerBB->guardBreakDelayTimer;
+
+                    damage = damage * playerBB->guardBreakChipDamageRatio;
+                    applyDamage = true;
+                    skipHitStun = false;
+                    isBlocked = false;
+
+                    if (sm)
+                    {
+                        sm->ChangeState("Stun", GameConstants::Combat::StunStateTransitionDuration);
+                    }
                     Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
+                    impulseMagnitude = baseForce * playerBB->guardBreakPushbackMultiplier;
+                }
+                else
+                {
+                    applyDamage = false;
+                    skipHitStun = true;
+                    playerBB->staminaRegenDelayTimer = playerBB->blockRegenDelay;
+
+                    if (isHeavyAttack)
+                    {
+                        // Heavy slam: heavy pushback, disables Guard Counter
+                        impulseMagnitude = baseForce * playerBB->heavyBlockPushbackMultiplier;
+                        playerBB->guardCounterWindowTimer = 0.0f;
+                    }
+                    else
+                    {
+                        // Normal combo swings: reduced block pushback, open Guard Counter window
+                        impulseMagnitude = baseForce * playerBB->blockPushbackMultiplier;
+                        playerBB->guardCounterWindowTimer = playerBB->guardCounterWindowDuration;
+                    }
                 }
             }
 
-            bb->consecutiveHitsTaken = 0;
+            if (bb) bb->consecutiveHitsTaken = 0;
         }
 
         // Calculate direction from attacker to victim along horizontal ground plane
@@ -591,19 +769,38 @@ void HEIN::ActorFactory::RegisterGameComponents()
             }
         }
 
-        // Check if attacker is executing a heavy attack
-        bool isHeavyAttack = false;
-        if (attacker)
+        // Guard Counter Damage & Stance Bonus (When Player Hits Boss / Enemy)
+        if (isGuardCounterAttack)
         {
-            auto* attackerSM = attacker->GetComponent<CombatStateMachineComponent>();
-            if (attackerSM)
+            if (attackerPlayerBB)
             {
-                const std::string& attackerState = attackerSM->GetCurrentStateName();
-                if (attackerState == "HeavyAttack" || attackerState.find("Heavy") != std::string::npos)
-                {
-                    isHeavyAttack = true;
-                }
+                impulseMagnitude *= (1.5f + 0.20f * attackerPlayerBB->deflectStacks);
+                attackerPlayerBB->deflectStacks = 0;
             }
+            if (dealer)
+            {
+                int gcHitstop = attackerPlayerBB ? attackerPlayerBB->guardCounterHitstopFrames : 9;
+                dealer->SetHitstopFrames(gcHitstop);
+            }
+            Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
+            skipHitStun = false;
+        }
+
+        // Sync per-state Hitstop frames on dealer
+        if (attackerSM && dealer && !isGuardCounterAttack)
+        {
+            int stateHitstop = attackerSM->GetCurrentHitstopFrames();
+            if (isComboFinisher)
+            {
+                int finFreeze = attackerPlayerBB ? attackerPlayerBB->comboFinisherHitstopFrames : 8;
+                stateHitstop = std::max(stateHitstop, finFreeze); // 3rd-hit combo finisher freeze across all 6 permutations
+            }
+            if (isParried)
+            {
+                int parryFreeze = playerBB ? playerBB->parryHitstopFrames : 8;
+                stateHitstop = std::max(stateHitstop, parryFreeze); // Crisp parry freeze
+            }
+            dealer->SetHitstopFrames(stateHitstop);
         }
 
         if (!isBlocked && !skipHitStun)
@@ -614,32 +811,17 @@ void HEIN::ActorFactory::RegisterGameComponents()
             }
         }
 
-        // Calculate and apply physical hit impulse dynamically (not hardcoded)
-        float baseForce = dealer ? dealer->GetKnockbackForce() : 25.0f;
-        if (baseForce <= 0.0f) baseForce = 25.0f;
-
-        // Modulate impulse by combat context
-        float impulseMagnitude = baseForce;
-        if (isParried)
+        if (!isBlocked && !isParried && !isGuardCounterAttack)
         {
-            impulseMagnitude = 0.0f; // Negate pushback on perfect parry
-        }
-        else if (isBlocked)
-        {
-            impulseMagnitude *= 0.4f; // Reduced pushback when bracing with shield/block
-        }
-        else if (isHeavyAttack)
-        {
-            impulseMagnitude *= 1.4f; // Heavy attack impact bonus
+            if (isHeavyAttack)
+            {
+                impulseMagnitude *= 1.4f; // Heavy attack impact bonus
+            }
         }
 
         DirectX::SimpleMath::Vector3 impulse = dir * impulseMagnitude;
 
-        // Vertical knockback / aerial launch (impulse.y = 35.0f) on heavy attacks or stun hits
-        if (!isBlocked && (isHeavyAttack || (dealer && dealer->CausesStun())))
-        {
-            impulse.y = 35.0f;
-        }
+        // Grounded physical knockback (purely horizontal along ground plane)
 
         if (isParried)
         {
@@ -689,71 +871,71 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
     std::unique_ptr<HEIN::BTSequence> reactiveDodge = std::make_unique<HEIN::BTSequence>();
     reactiveDodge->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 20.0f));
     reactiveDodge->AddChild(std::make_unique<HEIN::BTCheckTargetStance>(true));  // is targetAttacking
-    reactiveDodge->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(1.25f, std::make_unique<HEIN::BTDodgeNode>(1.2f)));
+    reactiveDodge->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::ReactiveDodgeCooldown, std::make_unique<HEIN::BTDodgeNode>(GameConstants::BossAI::DodgeActionDuration)));
     aiBrain->AddChild(std::move(reactiveDodge));
 
     // ---------------------------------------------------------
-    // 3. Enraged Berserker (Health <= 50%)
+    // Enraged Berserker (Health <= 50%)
     // ---------------------------------------------------------
     std::unique_ptr<HEIN::BTSequence> phase2Branch = std::make_unique<HEIN::BTSequence>();
-    phase2Branch->AddChild(std::make_unique<HEIN::BTCheckHealth>(0.0f, 0.5f));
+    phase2Branch->AddChild(std::make_unique<HEIN::BTCheckHealth>(0.0f, GameConstants::BossAI::Phase2HealthThreshold));
 
     std::unique_ptr<HEIN::BTSelector> phase2Combat = std::make_unique<HEIN::BTSelector>();
 
-    // 3A. Shield-Crush Heavy Attack (If player is blocking in close range)
+    // Shield-Crush Heavy Attack (If player is blocking in close range)
     std::unique_ptr<HEIN::BTSequence> p2GuardBreak = std::make_unique<HEIN::BTSequence>();
-    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 28.0f));
+    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::CloseGuardBreakDistance));
     p2GuardBreak->AddChild(std::make_unique<HEIN::BTCheckTargetStance>(CombatStance::Blocking));
-    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(0.6f, std::make_unique<HEIN::BTAttackNode>(3.2f, 28.0f, true)));
+    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2GuardBreakCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::CloseGuardBreakDistance, true)));
     phase2Combat->AddChild(std::move(p2GuardBreak));
 
-    // 3B. Relentless 3-Hit Combo Chain (Aggressive attack with hit-confirmed combo flow)
-    std::unique_ptr<HEIN::BTSequence> p2Combo = std::make_unique<HEIN::BTSequence>();
-    p2Combo->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 28.0f));
-    p2Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(0.4f, std::make_unique<HEIN::BTAttackNode>(3.6f, 28.0f, false)));
-    phase2Combat->AddChild(std::move(p2Combo));
-
-    // 3C. Heavy Attack Mix-Up
+    // Heavy Attack Ground Slam Mix-Up (Elden Ring Shockwave Stomp every ~2.0s)
     std::unique_ptr<HEIN::BTSequence> p2Heavy = std::make_unique<HEIN::BTSequence>();
-    p2Heavy->AddChild(std::make_unique<HEIN::BTCheckDistance>(20.0f, 35.0f));
-    p2Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(1.25f, std::make_unique<HEIN::BTAttackNode>(3.2f, 35.0f, true)));
+    p2Heavy->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::HeavyAttackDistance));
+    p2Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2HeavyCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::HeavyAttackDistance, true)));
     phase2Combat->AddChild(std::move(p2Heavy));
 
-    // 3D. Fast gap closer (chase speed increased to 130.0f)
-    phase2Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(25.0f, 130.0f));
+    // Relentless 3-Hit Combo Chain (6 Permutations: 123, 132, 213, 231, 312, 321)
+    std::unique_ptr<HEIN::BTSequence> p2Combo = std::make_unique<HEIN::BTSequence>();
+    p2Combo->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::ComboAttackDistance));
+    p2Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2ComboCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::ComboAttackDuration, GameConstants::BossAI::ComboAttackDistance, false)));
+    phase2Combat->AddChild(std::move(p2Combo));
+
+    // Fast gap closer (chase speed increased to 130.0f)
+    phase2Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(GameConstants::BossAI::ChaseArrivalDistance, GameConstants::BossAI::Phase2ChaseSpeed));
 
     phase2Branch->AddChild(std::move(phase2Combat));
     aiBrain->AddChild(std::move(phase2Branch));
 
     // ---------------------------------------------------------
-    // 4. Phase 1 : Calculated duelist (Health > 50%)
+    // Phase 1 : Calculated duelist (Health > 50%)
     // ---------------------------------------------------------
     std::unique_ptr<HEIN::BTSequence> phase1Branch = std::make_unique<HEIN::BTSequence>();
-    phase1Branch->AddChild(std::make_unique<HEIN::BTCheckHealth>(0.5f, 1.0f));
+    phase1Branch->AddChild(std::make_unique<HEIN::BTCheckHealth>(GameConstants::BossAI::Phase2HealthThreshold, 1.0f));
 
     std::unique_ptr<HEIN::BTSelector> phase1Combat = std::make_unique<HEIN::BTSelector>();
 
-    // 4A. Shield-Crush Heavy Attack (Punish player turtling behind guard)
+    // Shield-Crush Heavy Attack (Punish player turtling behind guard)
     std::unique_ptr<HEIN::BTSequence> p1GuardBreak = std::make_unique<HEIN::BTSequence>();
-    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 28.0f));
+    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::CloseGuardBreakDistance));
     p1GuardBreak->AddChild(std::make_unique<HEIN::BTCheckTargetStance>(CombatStance::Blocking));
-    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(1.0f, std::make_unique<HEIN::BTAttackNode>(3.2f, 28.0f, true)));
+    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P1GuardBreakCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::CloseGuardBreakDistance, true)));
     phase1Combat->AddChild(std::move(p1GuardBreak));
 
-    // 4B. 3-Hit Combo Strike (Hit-confirmed: chains to 2nd & 3rd attacks on hit)
-    std::unique_ptr<HEIN::BTSequence> p1Combo = std::make_unique<HEIN::BTSequence>();
-    p1Combo->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 28.0f));
-    p1Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(0.4f, std::make_unique<HEIN::BTAttackNode>(3.6f, 28.0f, false)));
-    phase1Combat->AddChild(std::move(p1Combo));
-
-    // 4C. Mid-Range Heavy Attack Lunge Mix-Up
+    // Heavy Attack Ground Slam Mix-Up (Elden Ring Shockwave Stomp every ~3.0s)
     std::unique_ptr<HEIN::BTSequence> p1Heavy = std::make_unique<HEIN::BTSequence>();
-    p1Heavy->AddChild(std::make_unique<HEIN::BTCheckDistance>(20.0f, 35.0f));
-    p1Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(2.25f, std::make_unique<HEIN::BTAttackNode>(3.2f, 35.0f, true)));
+    p1Heavy->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 32.0f));
+    p1Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(3.0f, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::HeavyAttackDistance, true)));
     phase1Combat->AddChild(std::move(p1Heavy));
 
-    // 4D. Deliberate pursuit (chase speed increased to 85.0f)
-    phase1Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(25.0f, 85.0f));
+    // 3-Hit Combo Strike (6 Permutations: 123, 132, 213, 231, 312, 321)
+    std::unique_ptr<HEIN::BTSequence> p1Combo = std::make_unique<HEIN::BTSequence>();
+    p1Combo->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::ComboAttackDistance));
+    p1Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2ComboCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::ComboAttackDuration, GameConstants::BossAI::ComboAttackDistance, false)));
+    phase1Combat->AddChild(std::move(p1Combo));
+
+    // Deliberate pursuit (chase speed increased to 85.0f)
+    phase1Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(GameConstants::BossAI::ChaseArrivalDistance, GameConstants::BossAI::Phase1ChaseSpeed));
 
     phase1Branch->AddChild(std::move(phase1Combat));
     aiBrain->AddChild(std::move(phase1Branch));
@@ -773,7 +955,8 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
 
 void HEIN::ActorFactory::PossessVessel(
     Actor* vessel,
-    ActorManager& actorManager
+    ActorManager& actorManager,
+    GameContext* gameContext
 )
 {
     if (!vessel) return;
@@ -815,10 +998,14 @@ void HEIN::ActorFactory::PossessVessel(
         vessel->AddComponent<HEIN::PlayerInputComponent>(&actorManager);
     }
 
-    // Ensure CombatBlackBoard and CharacterMovementComponent exist
-    if (!vessel->GetComponent<HEIN::CombatBlackBoard>())
+    // Ensure PlayerBlackBoard and CharacterMovementComponent exist
+    if (!vessel->GetComponent<HEIN::PlayerBlackBoard>())
     {
-        vessel->AddComponent<HEIN::CombatBlackBoard>();
+        if (auto* baseBB = vessel->GetComponent<HEIN::CombatBlackBoard>())
+        {
+            vessel->RemoveComponent(baseBB);
+        }
+        vessel->AddComponent<HEIN::PlayerBlackBoard>();
     }
     if (!vessel->GetComponent<HEIN::CharacterMovementComponent>())
     {
@@ -844,6 +1031,7 @@ void HEIN::ActorFactory::PossessVessel(
     }
 
     // Ensure weapon children (e.g. vesselsword) are owned by the possessed body and ready for combat
+    bool hasWeapon = false;
     for (ActorID childID : vessel->GetChildren())
     {
         if (Actor* child = actorManager.GetActor(childID))
@@ -857,8 +1045,19 @@ void HEIN::ActorFactory::PossessVessel(
             if (auto* damageDealer = child->GetComponent<HEIN::DamageDealerComponent>())
             {
                 damageDealer->Start();
+                hasWeapon = true;
+            }
+            if (auto* weaponTrail = child->GetComponent<HEIN::WeaponTrailComponent>())
+            {
+                weaponTrail->Start();
             }
         }
+    }
+
+    // Auto-create and equip sword if vessel has no weapon child (e.g. if vesselSword was deleted)
+    if (!hasWeapon && gameContext != nullptr)
+    {
+        CreateSword(actorManager, *gameContext, vessel->GetID(), GameConstants::Weapons::DefaultSwordDamage);
     }
 
     vessel->Start();

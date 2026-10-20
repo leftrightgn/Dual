@@ -8,13 +8,13 @@
                     "Data": {
                         "BlendDuration": 1.0,
                         "Fov": 0.8726646304130554,
-                        "PosX": 90.35916137695313,
-                        "PosY": -55.6573600769043,
-                        "PosZ": -1484.85302734375,
-                        "RotW": 0.804088294506073,
-                        "RotX": -0.04695763811469078,
-                        "RotY": 0.5916443467140198,
-                        "RotZ": 0.03455120697617531
+                        "PosX": -9.523233413696289,
+                        "PosY": -60.25547790527344,
+                        "PosZ": -1383.117919921875,
+                        "RotW": 0.9298114776611328,
+                        "RotX": -0.12897586822509766,
+                        "RotY": 0.3414275050163269,
+                        "RotZ": 0.04736003652215004
                     },
                     "Type": "CameraController"
                 }
@@ -37,6 +37,7 @@
                                 "CausesStun": false,
                                 "DamageAmount": 5.0,
                                 "DamageType": 0,
+                                "HitstopFrames": 5,
                                 "IsActive": false,
                                 "KnockbackForce": 15.0
                             },
@@ -96,6 +97,46 @@
                                 "SocketName": "WeaponSocket"
                             },
                             "Type": "SocketAttachmentComponent"
+                        },
+                        {
+                            "Data": {
+                                "BaseOffset": [
+                                    1.75,
+                                    143.54998779296875,
+                                    0.0
+                                ],
+                                "BlendMode": 0,
+                                "CoreColor": [
+                                    0.9200000166893005,
+                                    0.9700000286102295,
+                                    1.0,
+                                    0.9200000166893005
+                                ],
+                                "EdgeColor": [
+                                    0.41999998688697815,
+                                    0.6800000071525574,
+                                    0.949999988079071,
+                                    0.7799999713897705
+                                ],
+                                "EmissiveIntensity": 2.0,
+                                "EnablePhase2Boost": false,
+                                "ErosionStrength": 0.8199999928474426,
+                                "HasCustomOffsets": false,
+                                "LeadingEdgeSharpness": 8.0,
+                                "Lifetime": 0.18000000715255737,
+                                "MinVertexDistance": 0.15000000596046448,
+                                "NoiseScale": 2.200000047683716,
+                                "NoiseScrollSpeed": 3.200000047683716,
+                                "ShowDebugBladeLine": true,
+                                "Subdivisions": 4,
+                                "TipFalloffPower": 0.5699999928474426,
+                                "TipOffset": [
+                                    1.75,
+                                    583.5499877929688,
+                                    0.0
+                                ]
+                            },
+                            "Type": "WeaponTrailComponent"
                         }
                     ],
                     "EnableFrustumCulling": true,
@@ -126,15 +167,15 @@
                 {
                     "Data": {
                         "Position": [
-                            53.8817253112793,
-                            -76.18931579589844,
-                            -1497.197265625
+                            -32.736183166503906,
+                            -86.72004699707031,
+                            -1411.259033203125
                         ],
                         "Rotation": [
                             -0.0,
-                            -0.7143622040748596,
+                            -0.24926379323005676,
                             0.0,
-                            -0.6997761726379395
+                            -0.9684356451034546
                         ],
                         "Scale": [
                             0.10000001639127731,
@@ -287,7 +328,7 @@
                 {
                     "Data": {
                         "ColliderTag": "BodyCollider",
-                        "Height": 3.7099344730377197,
+                        "Height": 3.700739622116089,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -313,7 +354,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RarmCollider",
-                        "Height": 2.557429552078247,
+                        "Height": 2.557400703430176,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -339,7 +380,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RforearmCollider",
-                        "Height": 2.1603329181671143,
+                        "Height": 2.160356044769287,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -365,7 +406,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LarmCollider",
-                        "Height": 2.5574264526367188,
+                        "Height": 2.5574567317962646,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -391,7 +432,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LforearmCollider",
-                        "Height": 2.160342216491699,
+                        "Height": 2.160306692123413,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -417,7 +458,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RupLegCollider",
-                        "Height": 4.170217514038086,
+                        "Height": 4.170167446136475,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -443,7 +484,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RLegCollider",
-                        "Height": 3.6981043815612793,
+                        "Height": 3.6981303691864014,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -469,7 +510,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LupLegCollider",
-                        "Height": 4.17019510269165,
+                        "Height": 4.1703410148620605,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -495,7 +536,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LLegCollider",
-                        "Height": 3.6981089115142822,
+                        "Height": 3.6981019973754883,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -599,7 +640,7 @@
                                 "BorderColorR": 0.8999999761581421,
                                 "BorderTexPath": "Resources/Textures/borderg.dds",
                                 "ClipTexture": true,
-                                "CurrentValue": 0.6000000238418579,
+                                "CurrentValue": 100.0,
                                 "FillColorA": 1.0,
                                 "FillColorB": 1.0,
                                 "FillColorG": 1.0,
@@ -616,65 +657,20 @@
                                 "LabelColorG": 1.0,
                                 "LabelColorR": 0.0,
                                 "LowColorA": 1.0,
-                                "LowColorB": 0.10000000149011612,
-                                "LowColorG": 0.10000000149011612,
-                                "LowColorR": 0.8999999761581421,
+                                "LowColorB": 1.0,
+                                "LowColorG": 1.0,
+                                "LowColorR": 1.0,
                                 "LowThreshold": 0.25,
-                                "MaxValue": 0.6000000238418579,
-                                "Name": "Dodge",
+                                "MaxValue": 100.0,
+                                "Name": "Stamina",
                                 "OffsetX": 26.0,
                                 "OffsetY": -547.0,
                                 "ShowLabel": true,
                                 "ShowValue": false,
                                 "SizeX": 181.0,
                                 "SizeY": 46.0,
-                                "TextOffsetX": -45.5,
+                                "TextOffsetX": -56.5,
                                 "TextOffsetY": -2.0
-                            },
-                            {
-                                "AutoBind": true,
-                                "BackgroundTexPath": "Resources/Textures/nborderb.dds",
-                                "BgColorA": 0.800000011920929,
-                                "BgColorB": 0.15000000596046448,
-                                "BgColorG": 0.15000000596046448,
-                                "BgColorR": 0.15000000596046448,
-                                "BorderColorA": 1.0,
-                                "BorderColorB": 0.8999999761581421,
-                                "BorderColorG": 0.8999999761581421,
-                                "BorderColorR": 0.8999999761581421,
-                                "BorderTexPath": "Resources/Textures/borderb.dds",
-                                "ClipTexture": true,
-                                "CurrentValue": 1.0,
-                                "FillColorA": 1.0,
-                                "FillColorB": 1.0,
-                                "FillColorG": 1.0,
-                                "FillColorR": 1.0,
-                                "FillEndPoint": 1.0,
-                                "FillRightToLeft": false,
-                                "FillStartPoint": 0.2143000066280365,
-                                "FillTexMatchesFrame": true,
-                                "FillTexPath": "Resources/Textures/fillb.dds",
-                                "FontSize": 1.1399999856948853,
-                                "GaugeType": 2,
-                                "LabelColorA": 1.0,
-                                "LabelColorB": 1.0,
-                                "LabelColorG": 0.11764693260192871,
-                                "LabelColorR": 0.0,
-                                "LowColorA": 1.0,
-                                "LowColorB": 0.10000000149011612,
-                                "LowColorG": 0.10000000149011612,
-                                "LowColorR": 0.8999999761581421,
-                                "LowThreshold": 0.25,
-                                "MaxValue": 1.0,
-                                "Name": "Block",
-                                "OffsetX": 37.0,
-                                "OffsetY": -518.0,
-                                "ShowLabel": true,
-                                "ShowValue": false,
-                                "SizeX": 181.0,
-                                "SizeY": 48.0,
-                                "TextOffsetX": -48.5,
-                                "TextOffsetY": 0.0
                             }
                         ],
                         "DeactivationRange": 25.0,
@@ -698,9 +694,39 @@
                 },
                 {
                     "Data": {
-                        "Friction": 8.0
+                        "Friction": 8.0,
+                        "IdleAnimName": "Idle",
+                        "WalkAnimName": "Walk"
                     },
                     "Type": "CharacterMovementComponent"
+                },
+                {
+                    "Data": {
+                        "AttackRegenDelay": 0.699999988079071,
+                        "BlockCooldownDuration": 0.18000000715255737,
+                        "BlockHeldRecoveryRate": 6.0,
+                        "BlockRecoveryRate": 50.5,
+                        "ComboFinisherStaminaCost": 25.0,
+                        "CurrentSpeed": 55.0,
+                        "CurrentTurnSpeed": 25.0,
+                        "DodgeRegenDelay": 0.44999998807907104,
+                        "DodgeStaminaCost": 15.0,
+                        "ExhaustedRegenDelay": 1.2000000476837158,
+                        "GuardBoost": 55.0,
+                        "GuardBreakDelayTimer": 2.0,
+                        "GuardPhysicalAbsorption": 0.8500000238418579,
+                        "LightAttackStaminaCost": 18.0,
+                        "MaxHealth": 100.0,
+                        "MaxStamina": 100.0,
+                        "ParryActiveWindow": 0.20000000298023224,
+                        "PartialParryWindow": 0.3199999928474426,
+                        "StaminaRecoveryRate": 50.5
+                    },
+                    "Type": "PlayerBlackBoard"
+                },
+                {
+                    "Data": null,
+                    "Type": "ShockwaveEmitterComponent"
                 }
             ],
             "EnableFrustumCulling": true,
@@ -721,6 +747,7 @@
                                 "CausesStun": true,
                                 "DamageAmount": 20.0,
                                 "DamageType": 0,
+                                "HitstopFrames": 4,
                                 "IsActive": false,
                                 "KnockbackForce": 60.0
                             },
@@ -779,6 +806,46 @@
                                 "SocketName": "WeaponSocket"
                             },
                             "Type": "SocketAttachmentComponent"
+                        },
+                        {
+                            "Data": {
+                                "BaseOffset": [
+                                    -0.5536441802978516,
+                                    65.36077117919922,
+                                    0.16916905343532562
+                                ],
+                                "BlendMode": 0,
+                                "CoreColor": [
+                                    1.0,
+                                    0.0,
+                                    0.0,
+                                    0.9599999785423279
+                                ],
+                                "EdgeColor": [
+                                    0.813725471496582,
+                                    0.05954087898135185,
+                                    0.0,
+                                    0.8999999761581421
+                                ],
+                                "EmissiveIntensity": 2.5,
+                                "EnablePhase2Boost": true,
+                                "ErosionStrength": 0.800000011920929,
+                                "HasCustomOffsets": true,
+                                "LeadingEdgeSharpness": 6.0,
+                                "Lifetime": 0.25999999046325684,
+                                "MinVertexDistance": 0.15000000596046448,
+                                "NoiseScale": 1.7999999523162842,
+                                "NoiseScrollSpeed": 2.5,
+                                "ShowDebugBladeLine": true,
+                                "Subdivisions": 4,
+                                "TipFalloffPower": 0.4699999988079071,
+                                "TipOffset": [
+                                    -1.5312929153442383,
+                                    126.65399932861328,
+                                    0.46789485216140747
+                                ]
+                            },
+                            "Type": "WeaponTrailComponent"
                         }
                     ],
                     "EnableFrustumCulling": true,
@@ -815,9 +882,9 @@
                         ],
                         "Rotation": [
                             0.0,
-                            -0.25007298588752747,
+                            -0.032220274209976196,
                             0.0,
-                            0.9682270288467407
+                            0.9994808435440063
                         ],
                         "Scale": [
                             0.15001897513866425,
@@ -835,28 +902,28 @@
                                 "Path": "Resources/Models/Boss/idle.sdkmesh_anim"
                             },
                             {
-                                "Name": "Combo1",
-                                "Path": "Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim"
+                                "Name": "Walk",
+                                "Path": "Resources/Models/Boss/running.sdkmesh_anim"
                             },
                             {
                                 "Name": "Dodge",
                                 "Path": "Resources/Models/Boss/dodge.sdkmesh_anim"
                             },
                             {
-                                "Name": "Walk",
-                                "Path": "Resources/Models/Boss/running.sdkmesh_anim"
+                                "Name": "Combo1",
+                                "Path": "Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim"
                             },
                             {
                                 "Name": "Combo2",
                                 "Path": "Resources/Models/Boss/Standing Melee Attack Downward.sdkmesh_anim"
                             },
                             {
-                                "Name": "OneHand",
-                                "Path": "Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim"
-                            },
-                            {
                                 "Name": "Combo3",
                                 "Path": "Resources/Models/Boss/Standing Melee Attack Backhand.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "OneHand",
+                                "Path": "Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim"
                             },
                             {
                                 "Name": "HeavyAttack",
@@ -900,7 +967,7 @@
                 {
                     "Data": {
                         "ColliderTag": "BodyCollider",
-                        "Height": 6.513229846954346,
+                        "Height": 6.493738651275635,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -926,7 +993,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RArmCollider",
-                        "Height": 7.395730495452881,
+                        "Height": 7.395630359649658,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -952,7 +1019,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RForearmCollider",
-                        "Height": 4.741061687469482,
+                        "Height": 4.740994453430176,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -978,7 +1045,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LArmCollider",
-                        "Height": 7.395537376403809,
+                        "Height": 7.3954901695251465,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1004,7 +1071,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LForearmCollider",
-                        "Height": 4.740902900695801,
+                        "Height": 4.7408833503723145,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1030,7 +1097,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RUpLegCollider",
-                        "Height": 5.742777347564697,
+                        "Height": 5.742796897888184,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1056,7 +1123,7 @@
                 {
                     "Data": {
                         "ColliderTag": "RLegCollider",
-                        "Height": 4.903048515319824,
+                        "Height": 4.903005123138428,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1082,7 +1149,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LUpLegCollider",
-                        "Height": 5.742999076843262,
+                        "Height": 5.743041515350342,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1108,7 +1175,7 @@
                 {
                     "Data": {
                         "ColliderTag": "LLegCollider",
-                        "Height": 4.9027018547058105,
+                        "Height": 4.902693748474121,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1291,13 +1358,19 @@
                 },
                 {
                     "Data": null,
-                    "Type": "CombatBlackBoard"
+                    "Type": "BossBlackBoard"
                 },
                 {
                     "Data": {
-                        "Friction": 8.0
+                        "Friction": 8.0,
+                        "IdleAnimName": "Idle",
+                        "WalkAnimName": "Walk"
                     },
                     "Type": "CharacterMovementComponent"
+                },
+                {
+                    "Data": null,
+                    "Type": "ShockwaveEmitterComponent"
                 }
             ],
             "EnableFrustumCulling": true,
@@ -1379,9 +1452,9 @@
                         {
                             "Data": {
                                 "FogColor": [
-                                    0.5,
-                                    0.6000000238418579,
-                                    0.699999988079071,
+                                    0.4156574308872223,
+                                    0.4357699155807495,
+                                    0.45588237047195435,
                                     1.0
                                 ],
                                 "FogEnd": 800.0,
@@ -2228,10 +2301,10 @@
                             0.0
                         ],
                         "Rotation": [
-                            -0.14349262416362762,
+                            -0.27563735842704773,
                             0.0,
                             0.0,
-                            0.9896513819694519
+                            0.9612616896629333
                         ],
                         "Scale": [
                             1.0,
@@ -2245,12 +2318,12 @@
                     "Data": {
                         "CastShadows": true,
                         "Color": [
-                            1.0,
-                            1.0,
-                            1.0,
+                            0.2124183028936386,
+                            0.2604767382144928,
+                            0.4166666865348816,
                             1.0
                         ],
-                        "Intensity": 0.8999999761581421,
+                        "Intensity": 0.800000011920929,
                         "LightType": 0,
                         "Range": 500.0,
                         "SpotAngle": 45.0
@@ -2262,693 +2335,6 @@
             "IsActive": true,
             "IsVisible": true,
             "Name": "GlobalLight",
-            "OwnerID": 0
-        },
-        {
-            "ActorType": 0,
-            "Children": [
-                {
-                    "ActorType": 3,
-                    "Children": [],
-                    "Components": [
-                        {
-                            "Data": {
-                                "CausesStun": false,
-                                "DamageAmount": 5.0,
-                                "DamageType": 0,
-                                "IsActive": false,
-                                "KnockbackForce": 15.0
-                            },
-                            "Type": "DamageDealerComponent"
-                        },
-                        {
-                            "Data": {
-                                "Position": [
-                                    0.0,
-                                    0.0,
-                                    0.0
-                                ],
-                                "Rotation": [
-                                    0.0,
-                                    0.0,
-                                    0.0,
-                                    1.0
-                                ],
-                                "Scale": [
-                                    0.07999999821186066,
-                                    0.07999999821186066,
-                                    0.07999999821186066
-                                ]
-                            },
-                            "Type": "TransformComponent"
-                        },
-                        {
-                            "Data": {
-                                "CastShadows": true,
-                                "ModelPath": "Resources/Models/knight/swordCool.sdkmesh",
-                                "TextureDir": "Resources/Models/knight"
-                            },
-                            "Type": "StaticModelComponent"
-                        },
-                        {
-                            "Data": {
-                                "ColliderTag": "",
-                                "ExtentsX": 17.70199966430664,
-                                "ExtentsY": 120.0,
-                                "ExtentsZ": 4.011000156402588,
-                                "IsTrigger": true,
-                                "Layer": 2,
-                                "Mask": 40,
-                                "OffsetX": 1.75,
-                                "OffsetY": 160.0,
-                                "OffsetZ": 0.0,
-                                "RotW": 1.0,
-                                "RotX": 0.0,
-                                "RotY": 0.0,
-                                "RotZ": 0.0
-                            },
-                            "Type": "OBBColliderComponent"
-                        },
-                        {
-                            "Data": {
-                                "OwnerTag": "vessel",
-                                "SocketName": "WeaponSocket"
-                            },
-                            "Type": "SocketAttachmentComponent"
-                        }
-                    ],
-                    "EnableFrustumCulling": true,
-                    "IsActive": true,
-                    "IsVisible": true,
-                    "Name": "vesselsword",
-                    "OwnerID": 23
-                }
-            ],
-            "Components": [
-                {
-                    "Data": {
-                        "CurrentHealth": 100.0,
-                        "EnableHitFlash": true,
-                        "HitFlashColor": [
-                            1.0,
-                            0.10000000149011612,
-                            0.10000000149011612,
-                            0.800000011920929
-                        ],
-                        "HitFlashDuration": 0.15000000596046448,
-                        "IsGameplayInvincible": false,
-                        "IsInvincible": false,
-                        "MaxHealth": 100.0
-                    },
-                    "Type": "HealthComponent"
-                },
-                {
-                    "Data": {
-                        "Position": [
-                            110.75342559814453,
-                            -89.14129638671875,
-                            -1223.6986083984375
-                        ],
-                        "Rotation": [
-                            0.0,
-                            0.7040147185325623,
-                            0.0,
-                            0.7101854085922241
-                        ],
-                        "Scale": [
-                            0.10000002384185791,
-                            0.10000000149011612,
-                            0.10000002384185791
-                        ]
-                    },
-                    "Type": "TransformComponent"
-                },
-                {
-                    "Data": {
-                        "Animations": [
-                            {
-                                "Name": "Idle",
-                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
-                            },
-                            {
-                                "Name": "Slash3",
-                                "Path": "Resources/Models/knight/slash3.sdkmesh_anim"
-                            },
-                            {
-                                "Name": "Slash2",
-                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
-                            },
-                            {
-                                "Name": "Walk",
-                                "Path": "Resources/Models/knight/RunRoot.sdkmesh_anim"
-                            },
-                            {
-                                "Name": "Dodge",
-                                "Path": "Resources/Models/knight/Dodge.sdkmesh_anim"
-                            },
-                            {
-                                "Name": "Block",
-                                "Path": "Resources/Models/knight/block.sdkmesh_anim"
-                            },
-                            {
-                                "Name": "Stun",
-                                "Path": "Resources/Models/knight/stun.sdkmesh_anim"
-                            },
-                            {
-                                "Name": "Slash1",
-                                "Path": "Resources/Models/knight/slash1.sdkmesh_anim"
-                            },
-                            {
-                                "Name": "Jump",
-                                "Path": "Resources/Models/knight/Jump.sdkmesh_anim"
-                            }
-                        ],
-                        "EnableRootMotion": true,
-                        "IsVisible": true,
-                        "ModelPath": "Resources/Models/knight/coolknight.sdkmesh",
-                        "RootBoneName": "",
-                        "RootMotionExtractY": false,
-                        "TextureDir": "Resources/Models/knight/"
-                    },
-                    "Type": "SkinnedModelComponent"
-                },
-                {
-                    "Data": {
-                        "Sockets": [
-                            {
-                                "BoneName": "mixamorig:RightHand",
-                                "Name": "WeaponSocket",
-                                "PosX": -0.800000011920929,
-                                "PosY": 1.899999976158142,
-                                "PosZ": -0.550000011920929,
-                                "RotX": 0.0,
-                                "RotY": 0.0,
-                                "RotZ": -1.27409029006958
-                            }
-                        ]
-                    },
-                    "Type": "SocketComponent"
-                },
-                {
-                    "Data": {
-                        "ConfigPath": "Resources/Data/Combat/Knight_Combat.json",
-                        "defaultState": "Idle"
-                    },
-                    "Type": "CombatStateMachineComponent"
-                },
-                {
-                    "Data": {
-                        "TargetType": 2
-                    },
-                    "Type": "TargetTrackingComponent"
-                },
-                {
-                    "Data": {
-                        "Enabled": false,
-                        "GlobalIKWeight": 1.0,
-                        "IKChains": [
-                            {
-                                "Effector": "mixamorig:LeftFoot",
-                                "HeightOffset": 0.0,
-                                "IsFoot": true,
-                                "Mid": "mixamorig:LeftLeg",
-                                "Root": "mixamorig:LeftUpLeg",
-                                "Toe": "mixamorig:LeftToe_End",
-                                "Weight": 1.0
-                            },
-                            {
-                                "Effector": "mixamorig:RightFoot",
-                                "HeightOffset": 0.0,
-                                "IsFoot": true,
-                                "Mid": "mixamorig:RightLeg",
-                                "Root": "mixamorig:RightUpLeg",
-                                "Toe": "mixamorig:RightToe_End",
-                                "Weight": 1.0
-                            }
-                        ]
-                    },
-                    "Type": "ProceduralAnimationComponent"
-                },
-                {
-                    "Data": {
-                        "IsKinematic": true,
-                        "Mass": 80.0,
-                        "NeedsInitialSnap": false,
-                        "UseGravity": true
-                    },
-                    "Type": "RigidBodyComponent"
-                },
-                {
-                    "Data": {
-                        "ColliderTag": "HeadCollider",
-                        "Height": 4.800000190734863,
-                        "IsTrigger": true,
-                        "Layer": 4,
-                        "Mask": 40,
-                        "OffsetX": 0.0,
-                        "OffsetY": 0.0,
-                        "OffsetZ": 0.0,
-                        "Radius": 2.049999952316284,
-                        "RotW": 1.0,
-                        "RotX": 0.0,
-                        "RotY": 0.0,
-                        "RotZ": 0.0
-                    },
-                    "Type": "CapsuleColliderComponent"
-                },
-                {
-                    "Data": {
-                        "LinkedColliderTag": "HeadCollider",
-                        "TargetBoneName": "mixamorig:Head"
-                    },
-                    "Type": "BoneLinkComponent"
-                },
-                {
-                    "Data": {
-                        "ColliderTag": "BodyCollider",
-                        "Height": 6.691084861755371,
-                        "IsTrigger": true,
-                        "Layer": 4,
-                        "Mask": 40,
-                        "OffsetX": 0.0,
-                        "OffsetY": 0.0,
-                        "OffsetZ": 0.0,
-                        "Radius": 3.450000047683716,
-                        "RotW": 1.0,
-                        "RotX": 0.0,
-                        "RotY": 0.0,
-                        "RotZ": 0.0
-                    },
-                    "Type": "CapsuleColliderComponent"
-                },
-                {
-                    "Data": {
-                        "BoneAName": "mixamorig:Spine2",
-                        "BoneBName": "mixamorig:Hips",
-                        "LinkedColliderTag": "BodyCollider"
-                    },
-                    "Type": "TwoBoneLinkComponent"
-                },
-                {
-                    "Data": {
-                        "ColliderTag": "RarmCollider",
-                        "Height": 4.612475395202637,
-                        "IsTrigger": true,
-                        "Layer": 4,
-                        "Mask": 40,
-                        "OffsetX": 0.0,
-                        "OffsetY": 0.0,
-                        "OffsetZ": 0.0,
-                        "Radius": 1.5,
-                        "RotW": 1.0,
-                        "RotX": 0.0,
-                        "RotY": 0.0,
-                        "RotZ": 0.0
-                    },
-                    "Type": "CapsuleColliderComponent"
-                },
-                {
-                    "Data": {
-                        "BoneAName": "mixamorig:RightArm",
-                        "BoneBName": "mixamorig:RightForeArm",
-                        "LinkedColliderTag": "RarmCollider"
-                    },
-                    "Type": "TwoBoneLinkComponent"
-                },
-                {
-                    "Data": {
-                        "ColliderTag": "RforearmCollider",
-                        "Height": 3.8963000774383545,
-                        "IsTrigger": true,
-                        "Layer": 4,
-                        "Mask": 40,
-                        "OffsetX": 0.0,
-                        "OffsetY": 0.0,
-                        "OffsetZ": 0.0,
-                        "Radius": 1.0499999523162842,
-                        "RotW": 1.0,
-                        "RotX": 0.0,
-                        "RotY": 0.0,
-                        "RotZ": 0.0
-                    },
-                    "Type": "CapsuleColliderComponent"
-                },
-                {
-                    "Data": {
-                        "BoneAName": "mixamorig:RightForeArm",
-                        "BoneBName": "mixamorig:RightHand",
-                        "LinkedColliderTag": "RforearmCollider"
-                    },
-                    "Type": "TwoBoneLinkComponent"
-                },
-                {
-                    "Data": {
-                        "ColliderTag": "LarmCollider",
-                        "Height": 4.6124796867370605,
-                        "IsTrigger": true,
-                        "Layer": 4,
-                        "Mask": 40,
-                        "OffsetX": 0.0,
-                        "OffsetY": 0.0,
-                        "OffsetZ": 0.0,
-                        "Radius": 1.5,
-                        "RotW": 1.0,
-                        "RotX": 0.0,
-                        "RotY": 0.0,
-                        "RotZ": 0.0
-                    },
-                    "Type": "CapsuleColliderComponent"
-                },
-                {
-                    "Data": {
-                        "BoneAName": "mixamorig:LeftArm",
-                        "BoneBName": "mixamorig:LeftForeArm",
-                        "LinkedColliderTag": "LarmCollider"
-                    },
-                    "Type": "TwoBoneLinkComponent"
-                },
-                {
-                    "Data": {
-                        "ColliderTag": "LforearmCollider",
-                        "Height": 3.896319627761841,
-                        "IsTrigger": true,
-                        "Layer": 4,
-                        "Mask": 40,
-                        "OffsetX": 0.0,
-                        "OffsetY": 0.0,
-                        "OffsetZ": 0.0,
-                        "Radius": 1.0499999523162842,
-                        "RotW": 1.0,
-                        "RotX": 0.0,
-                        "RotY": 0.0,
-                        "RotZ": 0.0
-                    },
-                    "Type": "CapsuleColliderComponent"
-                },
-                {
-                    "Data": {
-                        "BoneAName": "mixamorig:LeftForeArm",
-                        "BoneBName": "mixamorig:LeftHand",
-                        "LinkedColliderTag": "LforearmCollider"
-                    },
-                    "Type": "TwoBoneLinkComponent"
-                },
-                {
-                    "Data": {
-                        "ColliderTag": "RupLegCollider",
-                        "Height": 7.521219253540039,
-                        "IsTrigger": true,
-                        "Layer": 4,
-                        "Mask": 40,
-                        "OffsetX": 0.0,
-                        "OffsetY": 0.0,
-                        "OffsetZ": 0.0,
-                        "Radius": 1.649999976158142,
-                        "RotW": 1.0,
-                        "RotX": 0.0,
-                        "RotY": 0.0,
-                        "RotZ": 0.0
-                    },
-                    "Type": "CapsuleColliderComponent"
-                },
-                {
-                    "Data": {
-                        "BoneAName": "mixamorig:RightUpLeg",
-                        "BoneBName": "RightLeg",
-                        "LinkedColliderTag": "RupLegCollider"
-                    },
-                    "Type": "TwoBoneLinkComponent"
-                },
-                {
-                    "Data": {
-                        "ColliderTag": "RLegCollider",
-                        "Height": 6.669760704040527,
-                        "IsTrigger": true,
-                        "Layer": 4,
-                        "Mask": 40,
-                        "OffsetX": 0.0,
-                        "OffsetY": 0.0,
-                        "OffsetZ": 0.0,
-                        "Radius": 1.2000000476837158,
-                        "RotW": 1.0,
-                        "RotX": 0.0,
-                        "RotY": 0.0,
-                        "RotZ": 0.0
-                    },
-                    "Type": "CapsuleColliderComponent"
-                },
-                {
-                    "Data": {
-                        "BoneAName": "mixamorig:RightLeg",
-                        "BoneBName": "mixamorig:RightFoot",
-                        "LinkedColliderTag": "RLegCollider"
-                    },
-                    "Type": "TwoBoneLinkComponent"
-                },
-                {
-                    "Data": {
-                        "ColliderTag": "LupLegCollider",
-                        "Height": 7.521213531494141,
-                        "IsTrigger": true,
-                        "Layer": 4,
-                        "Mask": 40,
-                        "OffsetX": 0.0,
-                        "OffsetY": 0.0,
-                        "OffsetZ": 0.0,
-                        "Radius": 1.649999976158142,
-                        "RotW": 1.0,
-                        "RotX": 0.0,
-                        "RotY": 0.0,
-                        "RotZ": 0.0
-                    },
-                    "Type": "CapsuleColliderComponent"
-                },
-                {
-                    "Data": {
-                        "BoneAName": "mixamorig:LeftUpLeg",
-                        "BoneBName": "mixamorig:LeftLeg",
-                        "LinkedColliderTag": "LupLegCollider"
-                    },
-                    "Type": "TwoBoneLinkComponent"
-                },
-                {
-                    "Data": {
-                        "ColliderTag": "LLegCollider",
-                        "Height": 6.669764995574951,
-                        "IsTrigger": true,
-                        "Layer": 4,
-                        "Mask": 40,
-                        "OffsetX": 0.0,
-                        "OffsetY": 0.0,
-                        "OffsetZ": 0.0,
-                        "Radius": 1.2000000476837158,
-                        "RotW": 1.0,
-                        "RotX": 0.0,
-                        "RotY": 0.0,
-                        "RotZ": 0.0
-                    },
-                    "Type": "CapsuleColliderComponent"
-                },
-                {
-                    "Data": {
-                        "BoneAName": "mixamorig:LeftLeg",
-                        "BoneBName": "mixamorig:LeftFoot",
-                        "LinkedColliderTag": "LLegCollider"
-                    },
-                    "Type": "TwoBoneLinkComponent"
-                },
-                {
-                    "Data": {
-                        "ColliderTag": "PlayerRoot",
-                        "Height": 16.350000381469727,
-                        "IsTrigger": false,
-                        "Layer": 4,
-                        "Mask": 234,
-                        "OffsetX": 0.0,
-                        "OffsetY": 146.14999389648438,
-                        "OffsetZ": 0.0,
-                        "Radius": 5.75,
-                        "RotW": 1.0,
-                        "RotX": 0.0,
-                        "RotY": 0.0,
-                        "RotZ": 0.0
-                    },
-                    "Type": "CapsuleColliderComponent"
-                },
-                {
-                    "Data": {
-                        "ActivationRange": 20.0,
-                        "AnchorMode": 0,
-                        "Bars": [
-                            {
-                                "AutoBind": true,
-                                "BackgroundTexPath": "Resources/Textures/nborder.dds",
-                                "BgColorA": 0.800000011920929,
-                                "BgColorB": 0.15000000596046448,
-                                "BgColorG": 0.15000000596046448,
-                                "BgColorR": 0.15000000596046448,
-                                "BorderColorA": 1.0,
-                                "BorderColorB": 0.8999999761581421,
-                                "BorderColorG": 0.8999999761581421,
-                                "BorderColorR": 0.8999999761581421,
-                                "BorderTexPath": "Resources/Textures/border.png.dds",
-                                "ClipTexture": true,
-                                "CurrentValue": 100.0,
-                                "FillColorA": 1.0,
-                                "FillColorB": 1.0,
-                                "FillColorG": 1.0,
-                                "FillColorR": 1.0,
-                                "FillEndPoint": 1.0,
-                                "FillRightToLeft": false,
-                                "FillStartPoint": 0.21729999780654907,
-                                "FillTexMatchesFrame": true,
-                                "FillTexPath": "Resources/Textures/fill.dds",
-                                "FontSize": 0.800000011920929,
-                                "GaugeType": 0,
-                                "LabelColorA": 1.0,
-                                "LabelColorB": 1.0,
-                                "LabelColorG": 1.0,
-                                "LabelColorR": 1.0,
-                                "LowColorA": 1.0,
-                                "LowColorB": 0.10000000149011612,
-                                "LowColorG": 0.10000000149011612,
-                                "LowColorR": 0.8999999761581421,
-                                "LowThreshold": 0.25,
-                                "MaxValue": 100.0,
-                                "Name": "HP",
-                                "OffsetX": 0.0,
-                                "OffsetY": -579.0,
-                                "ShowLabel": true,
-                                "ShowValue": false,
-                                "SizeX": 241.0,
-                                "SizeY": 46.0,
-                                "TextOffsetX": 0.0,
-                                "TextOffsetY": 0.0
-                            },
-                            {
-                                "AutoBind": true,
-                                "BackgroundTexPath": "Resources/Textures/nborderg.dds",
-                                "BgColorA": 0.800000011920929,
-                                "BgColorB": 0.15000000596046448,
-                                "BgColorG": 0.15000000596046448,
-                                "BgColorR": 0.15000000596046448,
-                                "BorderColorA": 1.0,
-                                "BorderColorB": 0.8999999761581421,
-                                "BorderColorG": 0.8999999761581421,
-                                "BorderColorR": 0.8999999761581421,
-                                "BorderTexPath": "Resources/Textures/borderg.dds",
-                                "ClipTexture": true,
-                                "CurrentValue": 1.5,
-                                "FillColorA": 1.0,
-                                "FillColorB": 1.0,
-                                "FillColorG": 1.0,
-                                "FillColorR": 1.0,
-                                "FillEndPoint": 1.0,
-                                "FillRightToLeft": false,
-                                "FillStartPoint": 0.21729999780654907,
-                                "FillTexMatchesFrame": true,
-                                "FillTexPath": "Resources/Textures/fillg.dds",
-                                "FontSize": 0.800000011920929,
-                                "GaugeType": 1,
-                                "LabelColorA": 1.0,
-                                "LabelColorB": 1.0,
-                                "LabelColorG": 1.0,
-                                "LabelColorR": 1.0,
-                                "LowColorA": 1.0,
-                                "LowColorB": 0.10000000149011612,
-                                "LowColorG": 0.10000000149011612,
-                                "LowColorR": 0.8999999761581421,
-                                "LowThreshold": 0.25,
-                                "MaxValue": 1.5,
-                                "Name": "Dodge",
-                                "OffsetX": 26.0,
-                                "OffsetY": -547.0,
-                                "ShowLabel": true,
-                                "ShowValue": false,
-                                "SizeX": 181.0,
-                                "SizeY": 46.0,
-                                "TextOffsetX": 0.0,
-                                "TextOffsetY": 0.0
-                            },
-                            {
-                                "AutoBind": true,
-                                "BackgroundTexPath": "Resources/Textures/nborderb.dds",
-                                "BgColorA": 0.800000011920929,
-                                "BgColorB": 0.15000000596046448,
-                                "BgColorG": 0.15000000596046448,
-                                "BgColorR": 0.15000000596046448,
-                                "BorderColorA": 1.0,
-                                "BorderColorB": 0.8999999761581421,
-                                "BorderColorG": 0.8999999761581421,
-                                "BorderColorR": 0.8999999761581421,
-                                "BorderTexPath": "Resources/Textures/borderb.dds",
-                                "ClipTexture": true,
-                                "CurrentValue": 2.0,
-                                "FillColorA": 1.0,
-                                "FillColorB": 1.0,
-                                "FillColorG": 1.0,
-                                "FillColorR": 1.0,
-                                "FillEndPoint": 1.0,
-                                "FillRightToLeft": false,
-                                "FillStartPoint": 0.2143000066280365,
-                                "FillTexMatchesFrame": true,
-                                "FillTexPath": "Resources/Textures/fillb.dds",
-                                "FontSize": 0.800000011920929,
-                                "GaugeType": 2,
-                                "LabelColorA": 1.0,
-                                "LabelColorB": 1.0,
-                                "LabelColorG": 1.0,
-                                "LabelColorR": 1.0,
-                                "LowColorA": 1.0,
-                                "LowColorB": 0.10000000149011612,
-                                "LowColorG": 0.10000000149011612,
-                                "LowColorR": 0.8999999761581421,
-                                "LowThreshold": 0.25,
-                                "MaxValue": 2.0,
-                                "Name": "Block",
-                                "OffsetX": 37.0,
-                                "OffsetY": -518.0,
-                                "ShowLabel": true,
-                                "ShowValue": false,
-                                "SizeX": 181.0,
-                                "SizeY": 48.0,
-                                "TextOffsetX": 0.0,
-                                "TextOffsetY": 0.0
-                            }
-                        ],
-                        "DeactivationRange": 25.0,
-                        "IsVisible": false,
-                        "ScreenPosX": 50.0,
-                        "ScreenPosY": 600.0,
-                        "UseRangeActivation": false,
-                        "WorldOffsetX": 0.0,
-                        "WorldOffsetY": 2.5,
-                        "WorldOffsetZ": 0.0
-                    },
-                    "Type": "GaugeComponent"
-                },
-                {
-                    "Data": null,
-                    "Type": "CombatBlackBoard"
-                },
-                {
-                    "Data": {
-                        "Friction": 8.0
-                    },
-                    "Type": "CharacterMovementComponent"
-                },
-                {
-                    "Data": {
-                        "IsOccupied": false,
-                        "Radius": 25.0
-                    },
-                    "Type": "PossessableComponent"
-                }
-            ],
-            "EnableFrustumCulling": true,
-            "IsActive": true,
-            "IsVisible": true,
-            "Name": "vessel",
             "OwnerID": 0
         },
         {
@@ -2982,7 +2368,9 @@
                 },
                 {
                     "Data": {
-                        "Friction": 8.0
+                        "Friction": 8.0,
+                        "IdleAnimName": "Idle",
+                        "WalkAnimName": "Walk"
                     },
                     "Type": "CharacterMovementComponent"
                 },
@@ -3039,6 +2427,691 @@
             "IsActive": false,
             "IsVisible": false,
             "Name": "Ghost",
+            "OwnerID": 0
+        },
+        {
+            "ActorType": 0,
+            "Children": [
+                {
+                    "ActorType": 0,
+                    "Children": [],
+                    "Components": [
+                        {
+                            "Data": {
+                                "CausesStun": false,
+                                "DamageAmount": 5.0,
+                                "DamageType": 0,
+                                "HitstopFrames": 5,
+                                "IsActive": false,
+                                "KnockbackForce": 15.0
+                            },
+                            "Type": "DamageDealerComponent"
+                        },
+                        {
+                            "Data": {
+                                "Position": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Rotation": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "Scale": [
+                                    0.05999999865889549,
+                                    0.05999999865889549,
+                                    0.05999999865889549
+                                ]
+                            },
+                            "Type": "TransformComponent"
+                        },
+                        {
+                            "Data": {
+                                "CastShadows": true,
+                                "ModelPath": "Resources/Models/knight/swordCool.sdkmesh",
+                                "TextureDir": "Resources/Models/knight"
+                            },
+                            "Type": "StaticModelComponent"
+                        },
+                        {
+                            "Data": {
+                                "ColliderTag": "",
+                                "ExtentsX": 17.70199966430664,
+                                "ExtentsY": 120.0,
+                                "ExtentsZ": 4.011000156402588,
+                                "IsTrigger": true,
+                                "Layer": 2,
+                                "Mask": 40,
+                                "OffsetX": 1.75,
+                                "OffsetY": 160.0,
+                                "OffsetZ": 0.0,
+                                "RotW": 1.0,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": 0.0
+                            },
+                            "Type": "OBBColliderComponent"
+                        },
+                        {
+                            "Data": {
+                                "OwnerTag": "vessel",
+                                "SocketName": "WeaponSocket"
+                            },
+                            "Type": "SocketAttachmentComponent"
+                        },
+                        {
+                            "Data": {
+                                "BaseOffset": [
+                                    1.75,
+                                    40.0,
+                                    0.0
+                                ],
+                                "BlendMode": 0,
+                                "CoreColor": [
+                                    1.0,
+                                    0.9700000286102295,
+                                    0.8600000143051147,
+                                    0.949999988079071
+                                ],
+                                "EdgeColor": [
+                                    0.8799999952316284,
+                                    0.6800000071525574,
+                                    0.30000001192092896,
+                                    0.8500000238418579
+                                ],
+                                "EmissiveIntensity": 2.299999952316284,
+                                "EnablePhase2Boost": false,
+                                "ErosionStrength": 0.7799999713897705,
+                                "HasCustomOffsets": true,
+                                "LeadingEdgeSharpness": 7.5,
+                                "Lifetime": 0.20000000298023224,
+                                "MinVertexDistance": 0.3700000047683716,
+                                "NoiseScale": 2.0,
+                                "NoiseScrollSpeed": 2.799999952316284,
+                                "ShowDebugBladeLine": true,
+                                "Subdivisions": 4,
+                                "TipFalloffPower": 0.8100000023841858,
+                                "TipOffset": [
+                                    1.75,
+                                    280.0,
+                                    0.0
+                                ]
+                            },
+                            "Type": "WeaponTrailComponent"
+                        }
+                    ],
+                    "EnableFrustumCulling": true,
+                    "IsActive": true,
+                    "IsVisible": true,
+                    "Name": "Sword_Copy",
+                    "OwnerID": 24
+                }
+            ],
+            "Components": [
+                {
+                    "Data": {
+                        "CurrentHealth": 100.0,
+                        "EnableHitFlash": true,
+                        "HitFlashColor": [
+                            1.0,
+                            1.0,
+                            1.0,
+                            0.800000011920929
+                        ],
+                        "HitFlashDuration": 0.15000000596046448,
+                        "IsGameplayInvincible": false,
+                        "IsInvincible": false,
+                        "MaxHealth": 100.0
+                    },
+                    "Type": "HealthComponent"
+                },
+                {
+                    "Data": {
+                        "Position": [
+                            126.97782897949219,
+                            -88.96723937988281,
+                            -1227.1405029296875
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.7143621444702148,
+                            0.0,
+                            0.6997761726379395
+                        ],
+                        "Scale": [
+                            0.10000001639127731,
+                            0.10000000149011612,
+                            0.10000001639127731
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "Animations": [
+                            {
+                                "Name": "Idle",
+                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Slash3",
+                                "Path": "Resources/Models/knight/slash3.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Slash2",
+                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Walk",
+                                "Path": "Resources/Models/knight/RunRoot.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Dodge",
+                                "Path": "Resources/Models/knight/Dodge.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Block",
+                                "Path": "Resources/Models/knight/block.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Stun",
+                                "Path": "Resources/Models/knight/stun.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Slash1",
+                                "Path": "Resources/Models/knight/slash1.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Jump",
+                                "Path": "Resources/Models/knight/Jump.sdkmesh_anim"
+                            }
+                        ],
+                        "EnableRootMotion": true,
+                        "IsVisible": true,
+                        "ModelPath": "Resources/Models/knight/knight.sdkmesh",
+                        "RootBoneName": "",
+                        "RootMotionExtractY": false,
+                        "TextureDir": "Resources/Models/knight/"
+                    },
+                    "Type": "SkinnedModelComponent"
+                },
+                {
+                    "Data": {
+                        "Sockets": [
+                            {
+                                "BoneName": "mixamorig:RightHand",
+                                "Name": "WeaponSocket",
+                                "PosX": -0.4000000059604645,
+                                "PosY": 0.800000011920929,
+                                "PosZ": -0.3499999940395355,
+                                "RotX": 0.0,
+                                "RotY": 0.0,
+                                "RotZ": -1.27409029006958
+                            }
+                        ]
+                    },
+                    "Type": "SocketComponent"
+                },
+                {
+                    "Data": {
+                        "ConfigPath": "Resources/Data/Combat/Knight_Combat.json",
+                        "defaultState": "Idle"
+                    },
+                    "Type": "CombatStateMachineComponent"
+                },
+                {
+                    "Data": {
+                        "TargetType": 2
+                    },
+                    "Type": "TargetTrackingComponent"
+                },
+                {
+                    "Data": {
+                        "Enabled": true,
+                        "GlobalIKWeight": 1.0,
+                        "IKChains": [
+                            {
+                                "Effector": "mixamorig:LeftFoot",
+                                "HeightOffset": 0.0,
+                                "IsFoot": true,
+                                "Mid": "mixamorig:LeftLeg",
+                                "Root": "mixamorig:LeftUpLeg",
+                                "Toe": "mixamorig:LeftToe_End",
+                                "Weight": 1.0
+                            },
+                            {
+                                "Effector": "mixamorig:RightFoot",
+                                "HeightOffset": 0.0,
+                                "IsFoot": true,
+                                "Mid": "mixamorig:RightLeg",
+                                "Root": "mixamorig:RightUpLeg",
+                                "Toe": "mixamorig:RightToe_End",
+                                "Weight": 1.0
+                            }
+                        ]
+                    },
+                    "Type": "ProceduralAnimationComponent"
+                },
+                {
+                    "Data": {
+                        "IsKinematic": false,
+                        "Mass": 80.0,
+                        "NeedsInitialSnap": false,
+                        "UseGravity": true
+                    },
+                    "Type": "RigidBodyComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "HeadCollider",
+                        "Height": 1.0,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.5,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "LinkedColliderTag": "HeadCollider",
+                        "TargetBoneName": "mixamorig:Head"
+                    },
+                    "Type": "BoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "BodyCollider",
+                        "Height": 3.7007479667663574,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 2.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:Spine2",
+                        "BoneBName": "mixamorig:Hips",
+                        "LinkedColliderTag": "BodyCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RarmCollider",
+                        "Height": 2.557445526123047,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightArm",
+                        "BoneBName": "mixamorig:RightForeArm",
+                        "LinkedColliderTag": "RarmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RforearmCollider",
+                        "Height": 2.1602914333343506,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.6000000238418579,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightForeArm",
+                        "BoneBName": "mixamorig:RightHand",
+                        "LinkedColliderTag": "RforearmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LarmCollider",
+                        "Height": 2.5573930740356445,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftArm",
+                        "BoneBName": "mixamorig:LeftForeArm",
+                        "LinkedColliderTag": "LarmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LforearmCollider",
+                        "Height": 2.160341501235962,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.6000000238418579,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftForeArm",
+                        "BoneBName": "mixamorig:LeftHand",
+                        "LinkedColliderTag": "LforearmCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RupLegCollider",
+                        "Height": 4.170257568359375,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightUpLeg",
+                        "BoneBName": "RightLeg",
+                        "LinkedColliderTag": "RupLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "RLegCollider",
+                        "Height": 3.6981425285339355,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.699999988079071,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:RightLeg",
+                        "BoneBName": "mixamorig:RightFoot",
+                        "LinkedColliderTag": "RLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LupLegCollider",
+                        "Height": 4.170204162597656,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 1.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftUpLeg",
+                        "BoneBName": "mixamorig:LeftLeg",
+                        "LinkedColliderTag": "LupLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "LLegCollider",
+                        "Height": 3.698138475418091,
+                        "IsTrigger": true,
+                        "Layer": 4,
+                        "Mask": 40,
+                        "OffsetX": 0.0,
+                        "OffsetY": 0.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 0.699999988079071,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "BoneAName": "mixamorig:LeftLeg",
+                        "BoneBName": "mixamorig:LeftFoot",
+                        "LinkedColliderTag": "LLegCollider"
+                    },
+                    "Type": "TwoBoneLinkComponent"
+                },
+                {
+                    "Data": {
+                        "ColliderTag": "PlayerRoot",
+                        "Height": 12.0,
+                        "IsTrigger": false,
+                        "Layer": 4,
+                        "Mask": 234,
+                        "OffsetX": 0.0,
+                        "OffsetY": 90.0,
+                        "OffsetZ": 0.0,
+                        "Radius": 3.0,
+                        "RotW": 1.0,
+                        "RotX": 0.0,
+                        "RotY": 0.0,
+                        "RotZ": 0.0
+                    },
+                    "Type": "CapsuleColliderComponent"
+                },
+                {
+                    "Data": {
+                        "ActivationRange": 20.0,
+                        "AnchorMode": 0,
+                        "Bars": [
+                            {
+                                "AutoBind": true,
+                                "BackgroundTexPath": "Resources/Textures/nborder.dds",
+                                "BgColorA": 0.800000011920929,
+                                "BgColorB": 0.15000000596046448,
+                                "BgColorG": 0.15000000596046448,
+                                "BgColorR": 0.15000000596046448,
+                                "BorderColorA": 1.0,
+                                "BorderColorB": 0.8999999761581421,
+                                "BorderColorG": 0.8999999761581421,
+                                "BorderColorR": 0.8999999761581421,
+                                "BorderTexPath": "Resources/Textures/border.png.dds",
+                                "ClipTexture": true,
+                                "CurrentValue": 100.0,
+                                "FillColorA": 1.0,
+                                "FillColorB": 1.0,
+                                "FillColorG": 1.0,
+                                "FillColorR": 1.0,
+                                "FillEndPoint": 1.0,
+                                "FillRightToLeft": false,
+                                "FillStartPoint": 0.21729999780654907,
+                                "FillTexMatchesFrame": true,
+                                "FillTexPath": "Resources/Textures/fill.dds",
+                                "FontSize": 1.3899999856948853,
+                                "GaugeType": 0,
+                                "LabelColorA": 1.0,
+                                "LabelColorB": 0.0,
+                                "LabelColorG": 0.0,
+                                "LabelColorR": 1.0,
+                                "LowColorA": 1.0,
+                                "LowColorB": 0.10000000149011612,
+                                "LowColorG": 0.10000000149011612,
+                                "LowColorR": 0.8999999761581421,
+                                "LowThreshold": 0.25,
+                                "MaxValue": 100.0,
+                                "Name": "HP",
+                                "OffsetX": 0.0,
+                                "OffsetY": -579.0,
+                                "ShowLabel": true,
+                                "ShowValue": false,
+                                "SizeX": 241.0,
+                                "SizeY": 46.0,
+                                "TextOffsetX": -24.5,
+                                "TextOffsetY": 0.0
+                            },
+                            {
+                                "AutoBind": true,
+                                "BackgroundTexPath": "Resources/Textures/nborderg.dds",
+                                "BgColorA": 0.800000011920929,
+                                "BgColorB": 0.15000000596046448,
+                                "BgColorG": 0.15000000596046448,
+                                "BgColorR": 0.15000000596046448,
+                                "BorderColorA": 1.0,
+                                "BorderColorB": 0.8999999761581421,
+                                "BorderColorG": 0.8999999761581421,
+                                "BorderColorR": 0.8999999761581421,
+                                "BorderTexPath": "Resources/Textures/borderg.dds",
+                                "ClipTexture": true,
+                                "CurrentValue": 100.0,
+                                "FillColorA": 1.0,
+                                "FillColorB": 1.0,
+                                "FillColorG": 1.0,
+                                "FillColorR": 1.0,
+                                "FillEndPoint": 1.0,
+                                "FillRightToLeft": false,
+                                "FillStartPoint": 0.21729999780654907,
+                                "FillTexMatchesFrame": true,
+                                "FillTexPath": "Resources/Textures/fillg.dds",
+                                "FontSize": 1.2200000286102295,
+                                "GaugeType": 1,
+                                "LabelColorA": 1.0,
+                                "LabelColorB": 0.02941155433654785,
+                                "LabelColorG": 1.0,
+                                "LabelColorR": 0.0,
+                                "LowColorA": 1.0,
+                                "LowColorB": 0.10000000149011612,
+                                "LowColorG": 0.10000000149011612,
+                                "LowColorR": 0.8999999761581421,
+                                "LowThreshold": 0.25,
+                                "MaxValue": 100.0,
+                                "Name": "Stamina",
+                                "OffsetX": 26.0,
+                                "OffsetY": -547.0,
+                                "ShowLabel": true,
+                                "ShowValue": false,
+                                "SizeX": 181.0,
+                                "SizeY": 46.0,
+                                "TextOffsetX": -45.5,
+                                "TextOffsetY": -2.0
+                            }
+                        ],
+                        "DeactivationRange": 25.0,
+                        "IsVisible": false,
+                        "ScreenPosX": 50.0,
+                        "ScreenPosY": 600.0,
+                        "UseRangeActivation": false,
+                        "WorldOffsetX": 0.0,
+                        "WorldOffsetY": 2.5,
+                        "WorldOffsetZ": 0.0
+                    },
+                    "Type": "GaugeComponent"
+                },
+                {
+                    "Data": null,
+                    "Type": "CombatBlackBoard"
+                },
+                {
+                    "Data": {
+                        "Friction": 8.0,
+                        "IdleAnimName": "Idle",
+                        "WalkAnimName": "Walk"
+                    },
+                    "Type": "CharacterMovementComponent"
+                },
+                {
+                    "Data": {
+                        "IsOccupied": false,
+                        "Radius": 25.0
+                    },
+                    "Type": "PossessableComponent"
+                }
+            ],
+            "EnableFrustumCulling": true,
+            "IsActive": true,
+            "IsVisible": true,
+            "Name": "vessel",
             "OwnerID": 0
         }
     ]

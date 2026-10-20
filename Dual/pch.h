@@ -75,4 +75,6 @@
 // DirectXTK_Utilities
 #include "../../../External/Engine/DirectXTK_Utilities/DebugDraw.h"
 
+#include "Framework/GameConstants.h"
+
 #pragma comment(lib, "d3dcompiler.lib")

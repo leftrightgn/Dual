@@ -3,6 +3,7 @@
 // Author: HEIN SOE KHANT
 //--------------------------------------------------------------------------------------
 #include "pch.h"
+#include "../../../External/Engine/Common/InputManager.h"
 #include "TitleScene.h"
 #include "../../../External/Engine/Camera/DebugCameraMode.h"
 #include "../../../External/Engine/Camera/ManualCameraMode.h"
@@ -61,7 +62,7 @@ void TitleScene::OnEnter(GameContext& gameContext)
 
     // Initialize Skybox
     m_skybox = std::make_unique<HEIN::Skybox>();
-    m_skybox->Initialize(gameContext, L"Resources/Textures/skybox.dds");
+    m_skybox->Initialize(gameContext, L"Resources/Textures/cloudyskybox.dds");
 
     // Viewport & Projection Matrix
     D3D11_VIEWPORT viewport = gameContext.deviceResources.GetScreenViewport();
@@ -220,7 +221,7 @@ void TitleScene::OnEnter(GameContext& gameContext)
     }
 
     // Ensure Ghost mode and animation playback on Ghost model if present
-    auto ghostAct = m_actorManager.GetActorByName(L"Ghost");
+    auto ghostAct = m_actorManager.GetFirstActorByType(HEIN::ActorType::Ghost);
     if (ghostAct)
     {
         if (auto* model = ghostAct->GetComponent<HEIN::SkinnedModelComponent>())
@@ -234,7 +235,7 @@ void TitleScene::OnEnter(GameContext& gameContext)
     }
 
     // Ensure Player animation playback if present
-    auto playerAct = m_actorManager.GetActorByName(L"Player");
+    auto playerAct = m_actorManager.GetFirstActorByType(HEIN::ActorType::Player);
     if (playerAct)
     {
         if (auto* model = playerAct->GetComponent<HEIN::SkinnedModelComponent>())
@@ -326,7 +327,7 @@ void TitleScene::Update(GameContext& gameContext)
 
     if (m_debugDisplay == nullptr)
     {
-        if (gameContext.keyboardTracker.pressed.F3)
+        if (HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::EditorToggle))
         {
             OpenEditor();
         }
@@ -535,10 +536,11 @@ void TitleScene::Update(GameContext& gameContext)
             }
         }
 
-        // Check Exit Button or Escape key
-        bool exitPressed = (gameContext.showUI && m_exitButton && m_exitButton->IsClicked()) ||
-                           gameContext.keyboardTracker.pressed.Escape;
-
+        // Check Exit Button or Escape key (Escape only quits in Debug builds)
+        bool exitPressed = (gameContext.showUI && m_exitButton && m_exitButton->IsClicked());
+#ifdef _DEBUG
+        if (HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Escape)) exitPressed = true;
+#endif
         if (exitPressed)
         {
             PostQuitMessage(0);
@@ -564,14 +566,14 @@ void TitleScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext
     float projSize = 500.0f;
 
     DirectX::SimpleMath::Vector3 targetCenter = DirectX::SimpleMath::Vector3::Zero;
-    if (HEIN::Actor* player = m_actorManager.GetActorByName(L"Player"))
+    if (HEIN::Actor* player = m_actorManager.GetFirstActorByType(HEIN::ActorType::Player))
     {
         if (auto* trans = player->GetComponent<HEIN::TransformComponent>())
         {
             targetCenter = trans->GetPosition();
         }
     }
-    else if (HEIN::Actor* ghost = m_actorManager.GetActorByName(L"Ghost"))
+    else if (HEIN::Actor* ghost = m_actorManager.GetFirstActorByType(HEIN::ActorType::Ghost))
     {
         if (auto* trans = ghost->GetComponent<HEIN::TransformComponent>())
         {
@@ -680,7 +682,7 @@ void TitleScene::Render(GameContext& gameContext)
     gameContext.shadowSystem = &m_shadowSystem;
     gameContext.isEditorMode = isEditorVisible || !m_isPlaying;
 
-    // Pass 1: Shadow Depth Map Pass
+    // Shadow Depth Map Pass
     RenderShadowPhase(gameContext, context);
 
     if (isEditorVisible)

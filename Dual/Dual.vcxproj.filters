@@ -38,6 +38,9 @@
     <ClCompile Include="Components\CombatStateMachineComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="Components\ShockwaveEmitterComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
     <ClCompile Include="Components\PlayerInputComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -59,6 +62,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Framework\GameConstants.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
     <ClInclude Include="Scene\GameScene\GameScene.h">
       <Filter>Scene\GameScene</Filter>
     </ClInclude>
@@ -87,6 +93,9 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="Components\CombatStateMachineComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\ShockwaveEmitterComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="Components\PlayerInputComponent.h">

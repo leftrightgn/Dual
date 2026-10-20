@@ -22,9 +22,9 @@ HEIN::PlayerInputComponent::PlayerInputComponent(
 
 HEIN::PlayerInputComponent::~PlayerInputComponent()
 {
-	if (m_owner != nullptr && Messenger::GetInstance() != nullptr)
+	if (Messenger* msg = Messenger::GetInstance())
 	{
-		Messenger::GetInstance()->UnRegister(m_owner->GetID());
+		msg->UnRegisterObserver(this);
 	}
 }
 

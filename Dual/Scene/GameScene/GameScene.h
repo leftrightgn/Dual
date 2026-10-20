@@ -13,6 +13,13 @@
 #include "../../../External/Engine/DebugingTools/DebugDisplayController.h"
 #include "../../../External/Engine/Common/ShadowSystem.h"
 
+enum class HitboxDebugScope
+{
+	Off = 0,
+	ActiveAttacksOnly = 1,
+	AllColliders = 2
+};
+
 namespace HEIN
 {
 	class CameraController;
@@ -40,7 +47,7 @@ private:
 	// --- ECS Update Pipeline Phases ---
 	void ProcessInputPhase(GameContext& gameContext);
 	void ProcessSimulationPhase(GameContext& gameContext, float deltaTime);
-	void ProcessLifecyclePhase(GameContext& gameContext);
+	void ProcessLifecyclePhase(GameContext& gameContext, float deltaTime);
 
 	// --- Render Pipeline Phases ---
 	void RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext* context);
@@ -81,6 +88,9 @@ private:
 	HEIN::ActorID m_cameraID = HEIN::INVALID_ACTOR_ID;
 
 	bool m_isGhost = false;
+	bool m_isDying = false;
+	float m_deathFreezeTimer = 0.0f;
+	int m_deathFreezeFrames = 15;
 	HEIN::ActorID m_targetVesselID = HEIN::INVALID_ACTOR_ID;
 
 	HEIN::ActorManager m_actorManager;
@@ -88,4 +98,5 @@ private:
 
 	std::unique_ptr<HEIN::DebugDisplayController> m_debugDisplay;
 	bool m_isPlaying = true;
+	HitboxDebugScope m_hitboxDebugScope = HitboxDebugScope::Off;
 };

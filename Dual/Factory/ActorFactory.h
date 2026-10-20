@@ -73,7 +73,8 @@ namespace HEIN
 
 		static void PossessVessel(
 			Actor* vessel,
-			ActorManager& actorManager
+			ActorManager& actorManager,
+			GameContext* gameContext = nullptr
 		);
 	};
 
