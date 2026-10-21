@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "BTCheckHealth.h"
-#include <Components/HealthComponent.h>
+#include "Components/HealthComponent.h"
+
 
 HEIN::BTCheckHealth::BTCheckHealth(float minPct, float maxPct)
 	: m_minPct(minPct)
@@ -8,7 +9,7 @@ HEIN::BTCheckHealth::BTCheckHealth(float minPct, float maxPct)
 {
 }
 
-HEIN::BTNodeState HEIN::BTCheckHealth::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
+HEIN::BTNodeState HEIN::BTCheckHealth::Tick(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/, float /*deltaTime*/)
 {
 	auto* health = self->GetComponent<HEIN::HealthComponent>();
 	if (!health) return BTNodeState::Failure;

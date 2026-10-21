@@ -1,9 +1,9 @@
 #pragma once
+#include "SimpleMath.h"
 #include "../../External/Engine/Components/IComponent.h"
-#include <SimpleMath.h>
-#include <string>
 #include "../../External/Engine/Entities/Actor.h"
 #include "../../External/Engine/ImGui/imgui.h"
+#include <string>
 
 namespace HEIN
 {

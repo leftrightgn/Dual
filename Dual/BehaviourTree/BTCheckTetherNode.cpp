@@ -8,7 +8,7 @@ HEIN::BTCheckTetherNode::BTCheckTetherNode(float maxTetherDistance)
 {
 }
 
-HEIN::BTNodeState HEIN::BTCheckTetherNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
+HEIN::BTNodeState HEIN::BTCheckTetherNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float /*deltaTime*/)
 {
 	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
 	if (!blackboard) return BTNodeState::Failure;
@@ -25,11 +25,11 @@ HEIN::BTNodeState HEIN::BTCheckTetherNode::Tick(HEIN::Actor* self, HEIN::ActorMa
 	// Did the player get out of the aggro range?
 	if (playerToSpawn.Length() > blackboard->aggroRange)
 	{
-		blackboard->isLeashing = true; // Snap the leash!
+		blackboard->isLeashing = true; // Reset target/position to spawn.
 	}
 	else
 	{
-		blackboard->isLeashing = false; // Player is in range, awake!
+		blackboard->isLeashing = false; // Player is in range.
 	}
 
 	// When tether boundary is exceeded, return Success to trigger the return sequence.

@@ -1,6 +1,6 @@
 #pragma once
-#include "../../External/Engine/BehaviourTree/BTNode.h"
 #include "BlackBoard/CombatBlackBoard.h"
+#include "../../External/Engine/BehaviourTree/BTNode.h"
 
 namespace HEIN
 {

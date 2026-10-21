@@ -1,17 +1,17 @@
 #include "pch.h"
 #include "BTReturnToSpawnNode.h"
 #include "BlackBoard/CombatBlackBoard.h"
-#include "Components/TransformComponent.h"
 #include "Components/CombatStateMachineComponent.h"
-#include "Message/Messenger.h" 
-#include "Message/Message.h" 
+#include "Components/TransformComponent.h"
+#include "Message/Message.h"
+#include "Message/Messenger.h"
 
 HEIN::BTReturnToSpawnNode::BTReturnToSpawnNode(float walkSpeed)
 	: m_walkSpeed(walkSpeed)
 {
 }
 
-HEIN::BTNodeState HEIN::BTReturnToSpawnNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
+HEIN::BTNodeState HEIN::BTReturnToSpawnNode::Tick(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/, float /*deltaTime*/)
 {
 	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
 	HEIN::TransformComponent* transform = self->GetComponent<HEIN::TransformComponent>();
@@ -25,7 +25,7 @@ HEIN::BTNodeState HEIN::BTReturnToSpawnNode::Tick(HEIN::Actor* self, HEIN::Actor
 	dirToHome.y = 0.0f;
 	float distanceToHome = dirToHome.Length();
 
-	// If yes, SUCCESS this node so the Behaviour Tree doesn't fall back to combat!
+	// If reached, succeed this node to prevent falling back to combat.
 	if (distanceToHome < 2.0f)
 	{
 		blackboard->activeNodeName = "Idle at Spawn";
@@ -37,7 +37,7 @@ HEIN::BTNodeState HEIN::BTReturnToSpawnNode::Tick(HEIN::Actor* self, HEIN::Actor
 		return BTNodeState::Success;
 	}
 
-	// far from home. Walk back!
+	// Far from spawn; return to spawn position.
 	blackboard->activeNodeName = "Returning to Spawn";
 	blackboard->isLockedOn = false;
 	Messenger::GetInstance()->Notify(self->GetID(), Message::PLAYER_EXIT_STRAFE);

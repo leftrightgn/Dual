@@ -1,12 +1,12 @@
-#pragma once
+﻿#pragma once
+#include "SimpleMath.h"
 #include "../../External/Engine/Components/IComponent.h"
 #include "../../External/Engine/Entities/Actor.h"
 #include "../../External/Engine/Framework/GameContext.h"
-#include <SimpleMath.h>
 #include <DirectXColors.h>
-#include <vector>
-#include <unordered_set>
 #include <string>
+#include <unordered_set>
+#include <vector>
 
 namespace HEIN
 {

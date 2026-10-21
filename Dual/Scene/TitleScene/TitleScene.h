@@ -4,14 +4,14 @@
 //--------------------------------------------------------------------------------------
 #pragma once
 #include "pch.h"
-#include "../../../External/Engine/Entities/Actor.h"
-#include "../../../External/Engine/Entities/ActorManager.h"
-#include "../../../External/Engine/Scene/IScene.h"
-#include "../../../External/Engine/Effect/Skybox.h"
-#include "../../../External/Engine/Components/UIButtonComponent.h"
-#include "../../../External/Engine/Camera/CameraController.h"
-#include "../../../External/Engine/DebugingTools/DebugDisplayController.h"
-#include "../../../External/Engine/Common/ShadowSystem.h"
+#include "../../External/Engine/Camera/CameraController.h"
+#include "../../External/Engine/System/ShadowSystem.h"
+#include "../../External/Engine/Components/UIButtonComponent.h"
+#include "../../External/Engine/DebugingTools/DebugDisplayController.h"
+#include "../../External/Engine/Effect/Skybox.h"
+#include "../../External/Engine/Entities/Actor.h"
+#include "../../External/Engine/Entities/ActorManager.h"
+#include "../../External/Engine/Scene/IScene.h"
 
 /**
  * @class TitleScene
@@ -20,7 +20,9 @@
  * Manages the "Start Game" and "Quit Game" buttons, as well as a debug/editor
  * interface for tweaking the title layout and automatically saving changes.
  */
-class TitleScene : public HEIN::IScene
+namespace HEIN
+{
+class TitleScene : public IScene
 {
 public:
     TitleScene() = default;
@@ -58,3 +60,4 @@ private:
     float m_titlePulseTimer = 0.0f;
     float m_autoSaveTimer = 0.0f;
 };
+}

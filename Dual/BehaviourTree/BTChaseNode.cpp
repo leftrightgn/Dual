@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "BTChaseNode.h"
-#include <BlackBoard/CombatBlackBoard.h>
-#include "../../External/Engine/Message/Messenger.h" 
-#include "../../External/Engine/Message/Message.h" 
+#include "BlackBoard/CombatBlackBoard.h"
 #include "../../External/Engine/Components/TransformComponent.h"
+#include "../../External/Engine/Message/Message.h"
+#include "../../External/Engine/Message/Messenger.h"
 
 HEIN::BTChaseNode::BTChaseNode(float attackRange, float walkSpeed)
 	: m_attackRange(attackRange)
@@ -13,8 +13,8 @@ HEIN::BTChaseNode::BTChaseNode(float attackRange, float walkSpeed)
 
 HEIN::BTNodeState HEIN::BTChaseNode::Tick(
 	HEIN::Actor* self, 
-	HEIN::ActorManager* manager, 
-	HEIN::ActorID targetID, 
+	HEIN::ActorManager* /*manager*/, 
+	HEIN::ActorID /*targetID*/, 
 	float deltaTime
 )
 {

@@ -13,7 +13,7 @@ HEIN::BTCheckTargetStance::BTCheckTargetStance(bool checkIsAttacking)
 {
 }
 
-HEIN::BTNodeState HEIN::BTCheckTargetStance::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
+HEIN::BTNodeState HEIN::BTCheckTargetStance::Tick(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/, float /*deltaTime*/)
 {
 	auto* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
 	if (!blackboard) return BTNodeState::Failure;

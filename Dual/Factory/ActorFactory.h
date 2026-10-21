@@ -1,5 +1,6 @@
 #pragma once
 #include "../../External/Engine/Components/SkinnedModelComponent.h"
+#include "../../External/Engine/Entities/Actor.h"
 
 namespace HEIN
 {

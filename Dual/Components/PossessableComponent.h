@@ -17,10 +17,7 @@ namespace HEIN
 		bool m_isOccupied = false;
 
 	public:
-		PossessableComponent(Actor* owner)
-			: HEIN::IComponent(owner)
-		{
-		}
+		PossessableComponent(Actor* owner);
 
 		void Update(float /*deltaTime*/) override {}
 
@@ -32,28 +29,12 @@ namespace HEIN
 
 		std::string GetComponentName() const override { return "PossessableComponent"; }
 
-		nlohmann::json Serialize() override
-		{
-			nlohmann::json data = IComponent::Serialize();
-			data["Radius"] = m_possessRadius;
-			data["IsOccupied"] = m_isOccupied;
-			return data;
-		}
+		nlohmann::json Serialize() override;
+		
 
-		void Deserialize(const nlohmann::json& data) override
-		{
-			IComponent::Deserialize(data);
-			if (data.contains("Radius")) m_possessRadius = data["Radius"];
-			if (data.contains("IsOccupied")) m_isOccupied = data["IsOccupied"];
-		}
-
-		void OnInspectorGUI(GameContext& /*gameContext*/) override
-		{
-			if (ImGui::CollapsingHeader("PossessableComponent", ImGuiTreeNodeFlags_DefaultOpen))
-			{
-				ImGui::DragFloat("Possess Radius", &m_possessRadius, 0.5f, 1.0f, 100.0f);
-				ImGui::Checkbox("Is Occupied", &m_isOccupied);
-			}
-		}
+		void Deserialize(const nlohmann::json& data) override;
+		
+		void OnInspectorGUI(GameContext& gameContext) override;
+		
 	};
 }

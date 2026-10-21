@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "BTCheckDistance.h"
-#include <BlackBoard/CombatBlackBoard.h>
+#include "BlackBoard/CombatBlackBoard.h"
+
 
 HEIN::BTCheckDistance::BTCheckDistance(
 	float minDistance, 
@@ -11,7 +12,7 @@ HEIN::BTCheckDistance::BTCheckDistance(
 {
 }
 
-HEIN::BTNodeState HEIN::BTCheckDistance::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
+HEIN::BTNodeState HEIN::BTCheckDistance::Tick(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/, float /*deltaTime*/)
 {
 	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;

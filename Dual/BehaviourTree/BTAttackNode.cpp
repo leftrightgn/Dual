@@ -1,11 +1,10 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "BTAttackNode.h"
-#include <BlackBoard/CombatBlackBoard.h>
-#include "../../External/Engine/Message/Messenger.h" 
-#include "../../External/Engine/Message/Message.h" 
-#include <cmath>
+#include "BlackBoard/CombatBlackBoard.h"
 #include "../../External/Engine/Components/TransformComponent.h"
-
+#include "../../External/Engine/Message/Message.h"
+#include "../../External/Engine/Message/Messenger.h"
+#include <cmath>
 
 HEIN::BTAttackNode::BTAttackNode(
 	float attackDuration,
@@ -20,7 +19,7 @@ HEIN::BTAttackNode::BTAttackNode(
 {
 }
 
-HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
+HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/, float deltaTime)
 {
 	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;
@@ -54,7 +53,7 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 
 	// Rotational tracking:
 	// - Heavy jump attack: track up to 60% of animation so the leap aims directly at the player.
-	// - 3-Hit Combo: re-acquire target angle during the wind-up phase of each of the 3 swings!
+	// - 3-Hit Combo: re-acquire target angle during the wind-up phase of each of the 3 swings.
 	bool shouldTrackTarget = m_isHeavyAttack
 		? (m_timer < (m_attackDuration * m_heavyTrackRatio))
 		: (m_timer < m_comboTrackTime || blackboard->currentStance == HEIN::CombatStance::AttackWindup);
@@ -107,7 +106,7 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 	}
 
 	// Send initial attack trigger on node entry; subsequent combo steps (2nd & 3rd swings)
-	// advance in UniversalCombatState::Update to deliver a relentless 3-hit Elden Ring combo!
+	// Advance in UniversalCombatState::Update for the 3-hit combo sequence.
 	if (m_timer == 0.0f)
 	{
 		if (m_isHeavyAttack)
@@ -122,7 +121,7 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 
 	m_timer += rawDt;
 
-	// If the first swing missed, don't wait for the full 3-hit duration — finish and chase!
+	// If the first swing missed, don't wait for the full 3-hit duration — finish and chase.
 	if (!m_isHeavyAttack && m_timer >= GameConstants::BossAI::EarlySwingMissTimeout && blackboard->comboIndex == 0 && !blackboard->lastAttackHit)
 	{
 		m_timer = 0.0f;

@@ -2,7 +2,7 @@
 #include "BTIdleNode.h"
 #include "BlackBoard/CombatBlackBoard.h"
 
-HEIN::BTNodeState HEIN::BTIdleNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
+HEIN::BTNodeState HEIN::BTIdleNode::Tick(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/, float /*deltaTime*/)
 {
 	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;

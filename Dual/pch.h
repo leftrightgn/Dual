@@ -73,7 +73,7 @@
 #include "GeometricPrimitive.h"
 
 // DirectXTK_Utilities
-#include "../../../External/Engine/DirectXTK_Utilities/DebugDraw.h"
+#include "../../External/Engine/DirectXTK_Utilities/DebugDraw.h"
 
 #include "Framework/GameConstants.h"
 

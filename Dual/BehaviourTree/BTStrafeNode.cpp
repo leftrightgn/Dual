@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "BTStrafeNode.h"
-#include <BlackBoard/CombatBlackBoard.h>
-#include "../../External/Engine/Message/Messenger.h" 
-#include "../../External/Engine/Message/Message.h"  
+#include "BlackBoard/CombatBlackBoard.h"
+#include "../../External/Engine/Message/Message.h"
+#include "../../External/Engine/Message/Messenger.h"
 
 HEIN::BTStrafeNode::BTStrafeNode(
 	float speed,
@@ -18,7 +18,7 @@ HEIN::BTStrafeNode::BTStrafeNode(
 {
 }
 
-HEIN::BTNodeState HEIN::BTStrafeNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
+HEIN::BTNodeState HEIN::BTStrafeNode::Tick(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/, float deltaTime)
 {
 	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;
