@@ -1,14 +1,14 @@
-#include "pch.h" 
+#include "pch.h"
 #include "States/CombatStates.h"
-#include "Components/ShockwaveEmitterComponent.h"
+#include "BlackBoard/CombatBlackBoard.h"
+#include "../../External/Engine/Components/HealthComponent.h"
+#include "../../External/Engine/Components/SkinnedModelComponent.h"
+#include "../../External/Engine/Components/TransformComponent.h"
+#include "../../External/Engine/Message/Messenger.h"
 #include "Components/CombatStateMachineComponent.h"
-#include <BlackBoard/CombatBlackBoard.h>
-#include "../../../External/Engine/Components/SkinnedModelComponent.h"
-#include "../../../External/Engine/Components/TransformComponent.h"
-#include "../../../External/Engine/Components/HealthComponent.h"
-#include "../../../External/Engine/Message/Messenger.h"
+#include "Components/CharacterMovementComponent.h"
+#include "Components/ShockwaveEmitterComponent.h"
 #include <cmath>
-
 
 // ==============================================================================
 // UNIVERSAL DATA-DRIVEN COMBAT STATE
@@ -38,7 +38,8 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
 
     if (owner)
     {
-        owner->SetLocalTimeScale(1.0f);
+        float playbackSpeed = (m_config->strikeSpeedMultiplier > 0.05f) ? m_config->strikeSpeedMultiplier : 1.0f;
+        owner->SetLocalTimeScale(playbackSpeed);
         if (m_config->isAttack)
         {
             // One Attack = One Time Damage: clear the weapon's hit registry at the start of every new swing
@@ -136,6 +137,12 @@ void HEIN::UniversalCombatState::OnEnter(Actor* owner, CombatStateMachineCompone
         {
             blackboard->currentStance = CombatStance::Jumping;
             if (bossBB) bossBB->comboIndex = 0;
+
+            auto* movement = owner->GetComponent<CharacterMovementComponent>();
+            if (movement != nullptr)
+            {
+                movement->ApplyImpulse(DirectX::SimpleMath::Vector3(0.0f, 24.0f, 0.0f));
+            }
         }
         else if (isDodgeState)
         {
@@ -224,6 +231,7 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     auto* playerBB = owner->GetComponent<PlayerBlackBoard>();
     auto* bossBB = owner->GetComponent<BossBlackBoard>();
     bool isDodge = (m_config->lockMovementDirection || m_config->invincibilityEnd > 0.0f || m_config->stateName == "Dodge" || m_config->stateType == "Dodge");
+    bool isBlock = m_config->IsBlockState();
 
     // Souls-like Anticipation Frame Interpolation Pause & Active Hitbox Window
     if (m_config->isAttack && owner != nullptr)
@@ -363,7 +371,7 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     }
 
     // Boss 6-Permutation 3-Hit Combo Continuation:
-    // Only carry on to the 2nd and 3rd combo swings when the current attack lands (lastAttackHit == true)!
+    // Only carry on to the 2nd and 3rd combo swings when the current attack lands (lastAttackHit == true).
     // If the attack misses, let this swing finish and return to Idle so the Boss immediately chases the player.
     if (bossBB && bossBB->lastAttackHit && m_config->isAttack && m_config->stateName.find("Combo") == 0 && !m_isInWindupPause)
     {
@@ -392,10 +400,16 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
         }
     }
 
+    // Death state plays once and remains clamped at the final fallen frame (never transitions to Idle or cancelled)
+    if (m_config->IsDeathState())
+    {
+        return;
+    }
+
     // Movement cancellation for non-looping states (e.g. holding W cancels attack recovery window)
     // Dodge and Stun states must NOT be movement-cancelled; transitions with hasExitTime must wait for exit time
     bool isStun = m_config->IsStunState();
-    if (!m_config->isLooping && !isDodge && !isStun && blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
+    if (!m_config->isLooping && !isDodge && !isStun && !isBlock && blackboard && blackboard->moveIntent.LengthSquared() > 0.1f)
     {
         auto itMove = m_config->transitions.find("OnMove");
         if (itMove != m_config->transitions.end())
@@ -441,7 +455,7 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
         }
 
         // If moving when animation concludes, prefer OnMove over Idle
-        if (blackboard && (blackboard->localMoveIntent.LengthSquared() > 0.1f || (!isDodge && blackboard->moveIntent.LengthSquared() > 0.1f)))
+        if (blackboard && (blackboard->localMoveIntent.LengthSquared() > 0.1f || (!isDodge && !isBlock && blackboard->moveIntent.LengthSquared() > 0.1f)))
         {
             auto itMove = m_config->transitions.find("OnMove");
             if (itMove != m_config->transitions.end() && !itMove->second.requireHit)
@@ -467,7 +481,7 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
     }
 
     // Directional auto-transitions for looping movement states
-    if (m_config->isLooping && blackboard)
+    if (m_config->isLooping && !isBlock && blackboard)
     {
         if (m_config->moveSpeed <= 0.001f) // Idle-like
         {
@@ -476,7 +490,7 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
                 if (blackboard->isLockedOn && std::abs(blackboard->localMoveIntent.x) >= std::abs(blackboard->localMoveIntent.z))
                 {
                     auto it = m_config->transitions.find("OnStrafe");
-                    if (it != m_config->transitions.end())
+                    if (it != m_config->transitions.end() && stateMachine->HasState(it->second.targetState))
                     {
                         stateMachine->ChangeState(it->second.targetState, it->second.blendDuration);
                         return;
@@ -635,7 +649,7 @@ bool HEIN::UniversalCombatState::HandleMessage(Actor* owner, CombatStateMachineC
         {
             if (!m_config->isAttack)
             {
-                // Entering combo opener (Step 0) from Idle / Walk / Dodge
+                // Entering combo opener from Idle / Walk / Dodge
                 if (bossBB->activeComboSequence.empty() || bossBB->comboIndex > 0)
                 {
                     bossBB->RollNextBossComboPattern();
@@ -644,7 +658,7 @@ bool HEIN::UniversalCombatState::HandleMessage(Actor* owner, CombatStateMachineC
             }
             else if (m_config->stateName.find("Combo") == 0)
             {
-                // Chaining from Step 0 -> Step 1 or Step 1 -> Step 2
+                // Chaining to next combo swing in sequence
                 if (bossBB->activeComboSequence.empty())
                 {
                     bossBB->RollNextBossComboPattern();

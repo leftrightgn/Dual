@@ -1,6 +1,6 @@
 #pragma once
 #include "States/ICombatState.h"
-#include "../../../External/Engine/Entities/Actor.h"
+#include "../../External/Engine/Entities/Actor.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -34,7 +34,8 @@ namespace HEIN
 		Dodge = 4,
 		Stun = 5,
 		Jump = 6,
-		GuardCounter = 7
+		GuardCounter = 7,
+		Death = 8
 	};
 
 	enum class StateEffectType
@@ -170,6 +171,13 @@ namespace HEIN
 		bool IsJumpState() const
 		{
 			return stateTypeEnum == CombatStateType::Jump;
+		}
+
+		bool isDeath = false;
+
+		bool IsDeathState() const
+		{
+			return stateTypeEnum == CombatStateType::Death || isDeath || stateName == "Death";
 		}
 
 		/// @brief Maps an input or event key to destination state transition data.

@@ -1,13 +1,13 @@
-//
+﻿//
 // Main.cpp
 //
 
 #include "pch.h"
-#include "../../../External/Engine/ImGui/imgui_impl_win32.h"
-#include <Scene/GameScene/GameScene.h>
-#include <Scene/TitleScene/TitleScene.h>
-#include <Factory/ActorFactory.h>
-#include "../../../External/Engine/Framework/Game.h"
+#include "../../External/Engine/Framework/Game.h"
+#include "../../External/Engine/ImGui/imgui_impl_win32.h"
+#include "Factory/ActorFactory.h"
+#include "Scene/GameScene/GameScene.h"
+#include "Scene/TitleScene/TitleScene.h"
 
 using namespace DirectX;
 
@@ -115,7 +115,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
             HEIN::ActorFactory::RegisterGameComponents();
 
             // Register game scenes. The Game class uses a string-based mapping to instantiate these scenes when requested.
-            g_game->RegisterScene<TitleScene>("TitleScene");
+            g_game->RegisterScene<HEIN::TitleScene>("TitleScene");
             g_game->RegisterScene<GameScene>("GameScene");
 
             // Load the initial scene

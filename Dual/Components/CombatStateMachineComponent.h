@@ -1,14 +1,14 @@
 #pragma once
+#include "States/CombatStates.h"
 #include "../../External/Engine/Common/Event.h"
+#include "../../External/Engine/Common/json.hpp"
 #include "../../External/Engine/Components/IComponent.h"
 #include "../../External/Engine/Message/IObserver.h"
 #include "../../External/Engine/Message/Message.h"
-#include <States/CombatStates.h>
-#include <vector>
-#include <unordered_map>
-#include <string>
 #include <memory>
-#include "../../External/Engine/Common/json.hpp"
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace HEIN
 {
@@ -58,7 +58,7 @@ namespace HEIN
 		/// @brief The maximum duration (in seconds) to hold messages in the buffer.
 		/// PURPOSE: Sets a 200ms window to buffer player inputs (e.g. 0.2f). 
 		/// INTENT: Human reaction times make frame-perfect inputs frustrating. 
-		/// Buffering inputs allows actions to chain seamlessly without dropping them, 
+		/// Buffering inputs allows actions to chain smoothly without dropping inputs, 
 		/// maintaining the fluid feel of the combat.
 		static constexpr float MAX_BUFFER_TIME = 0.2f;
 
@@ -93,7 +93,12 @@ namespace HEIN
 		 * @brief Requests a transition to a new combat state.
 		 * @param stateName The string identifier for the target state.
 		 */
-		void ChangeState(const std::string& stateName, float blendDuration = 0.2f);
+		bool ChangeState(const std::string& stateName, float blendDuration = 0.2f);
+
+		bool HasState(const std::string& stateName) const
+		{
+			return m_states.find(stateName) != m_states.end();
+		}
 
 		/**
 		 * @brief Applies the queued m_pendingState, calling OnExit for the old 
@@ -134,6 +139,21 @@ namespace HEIN
 		{
 			auto it = m_stateConfigs.find(m_currentStateName);
 			return (it != m_stateConfigs.end()) ? &it->second : nullptr;
+		}
+
+		const StateConfig* GetStateConfig(const std::string& name) const
+		{
+			auto it = m_stateConfigs.find(name);
+			return (it != m_stateConfigs.end()) ? &it->second : nullptr;
+		}
+
+		const StateConfig* FindDeathConfig() const
+		{
+			for (const auto& [name, cfg] : m_stateConfigs)
+			{
+				if (cfg.IsDeathState()) return &cfg;
+			}
+			return GetStateConfig("Death");
 		}
 		
 		const std::string& GetCurrentStateName() const { return m_currentStateName; }
