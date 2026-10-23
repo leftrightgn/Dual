@@ -38,6 +38,12 @@
     <ClCompile Include="Components\CombatStateMachineComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="Components\GameFlowStateMachineComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\EncounterTriggerComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
     <ClCompile Include="Components\ShockwaveEmitterComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -59,6 +65,7 @@
     <ClCompile Include="States\CombatStates.cpp">
       <Filter>States</Filter>
     </ClCompile>
+    <ClCompile Include="Components\PossessableComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -95,6 +102,12 @@
     <ClInclude Include="Components\CombatStateMachineComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="Components\GameFlowStateMachineComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\EncounterTriggerComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
     <ClInclude Include="Components\ShockwaveEmitterComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
@@ -123,6 +136,8 @@
       <Filter>States</Filter>
     </ClInclude>
     <ClInclude Include="Components\PossessableComponent.h" />
+    <ClInclude Include="BlackBoard\PlayerBlackBoard.h" />
+    <ClInclude Include="BlackBoard\BossBlackBoard.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

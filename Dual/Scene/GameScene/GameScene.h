@@ -4,14 +4,14 @@
 //--------------------------------------------------------------------------------------
 #pragma once
 #include "pch.h"
-#include "../../../External/Engine/Entities/Actor.h"
-#include "../../../External/Engine/Entities/ActorManager.h"
-#include "../../../External/Engine/Scene/IScene.h"
-#include "../../../External/Engine/Effect/Skybox.h"
-#include "../../../External/Engine/Common/PhysicsSystem.h"
-#include "../../../External/Engine/Common/DamageSystem.h"
-#include "../../../External/Engine/DebugingTools/DebugDisplayController.h"
-#include "../../../External/Engine/Common/ShadowSystem.h"
+#include "../../External/Engine/System/DamageSystem.h"
+#include "../../External/Engine/System/PhysicsSystem.h"
+#include "../../External/Engine/System/ShadowSystem.h"
+#include "../../External/Engine/DebugingTools/DebugDisplayController.h"
+#include "../../External/Engine/Effect/Skybox.h"
+#include "../../External/Engine/Entities/Actor.h"
+#include "../../External/Engine/Entities/ActorManager.h"
+#include "../../External/Engine/Scene/IScene.h"
 
 enum class HitboxDebugScope
 {
@@ -19,6 +19,10 @@ enum class HitboxDebugScope
 	ActiveAttacksOnly = 1,
 	AllColliders = 2
 };
+
+#include "../../Components/GameFlowStateMachineComponent.h"
+#include "../../Components/EncounterTriggerComponent.h"
+using HEIN::GameFlowState;
 
 namespace HEIN
 {
@@ -61,6 +65,8 @@ private:
 	void UpdateDebugTargets();
 
 	// --- Entity & Component Accessors ---
+	float GetDeathAnimDuration() const { return m_deathAnimDuration; }
+	void SetDeathAnimDuration(float duration) { m_deathAnimDuration = duration; }
 	HEIN::Actor* GetPlayerActor();
 	HEIN::Actor* GetEnemyActor();
 	HEIN::CameraController* GetActiveCameraController(GameContext& gameContext);
@@ -68,6 +74,13 @@ private:
 	// --- Setup Helpers ---
 	void SetupCameraModes(GameContext& gameContext, HEIN::CameraController* cameraComp, HEIN::SkinnedModelComponent* modelPointer);
 	void PostSceneLoadInit(GameContext& gameContext);
+	void TriggerVictory(GameContext& gameContext);
+	void TriggerGameOver(GameContext& gameContext);
+	void ChangeFlowState(GameFlowState newState, GameContext& gameContext);
+	void ResetMatch(GameContext& gameContext);
+
+	HEIN::GameFlowStateMachineComponent* GetGameFlowComponent();
+	HEIN::EncounterTriggerComponent* GetActiveEncounterComponent();
 
 private:
 
@@ -91,6 +104,9 @@ private:
 	bool m_isDying = false;
 	float m_deathFreezeTimer = 0.0f;
 	int m_deathFreezeFrames = 15;
+	bool m_isDeathAnimPlaying = false;
+	float m_deathAnimTimer = 0.0f;
+	float m_deathAnimDuration = 3.90f;
 	HEIN::ActorID m_targetVesselID = HEIN::INVALID_ACTOR_ID;
 
 	HEIN::ActorManager m_actorManager;
@@ -99,4 +115,21 @@ private:
 	std::unique_ptr<HEIN::DebugDisplayController> m_debugDisplay;
 	bool m_isPlaying = true;
 	HitboxDebugScope m_hitboxDebugScope = HitboxDebugScope::Off;
+
+	// Elden Ring Camera Features
+	float m_manualUnlockCooldown = 0.0f;
+
+	// Game Flow State Machine
+	GameFlowState m_flowState = GameFlowState::Gameplay;
+	float m_flowTimer = 0.0f;
+	bool m_hasPlayedIntro = false;
+	bool m_isVictory = false;
+	float m_victoryTimer = 0.0f;
+	HEIN::ActorID m_victoryBannerID = HEIN::INVALID_ACTOR_ID;
+	HEIN::ActorID m_backToTitleButtonID = HEIN::INVALID_ACTOR_ID;
+	HEIN::ActorID m_retryButtonID = HEIN::INVALID_ACTOR_ID;
+	HEIN::ActorID m_gameOverBannerID = HEIN::INVALID_ACTOR_ID;
+
+	HEIN::ActorID m_gameManagerID = HEIN::INVALID_ACTOR_ID;
+	HEIN::ActorID m_activeEncounterActorID = HEIN::INVALID_ACTOR_ID;
 };

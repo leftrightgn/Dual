@@ -1,6 +1,6 @@
 #pragma once
-#include "../../External/Engine/Components/IComponent.h"
 #include "../../External/Engine/BehaviourTree/BTNode.h"
+#include "../../External/Engine/Components/IComponent.h"
 #include "../../External/Engine/Entities/Actor.h"
 #include "../../External/Engine/Entities/ActorManager.h"
 
@@ -57,8 +57,12 @@ namespace HEIN
 		 */
 		bool m_hasSetSpawnPosition = false;
 		DirectX::SimpleMath::Vector3 m_spawnPosition = DirectX::SimpleMath::Vector3::Zero;
-		float m_aggroRange = 80.0f;
-
+		float m_aggroRange = 80.0f;
+		bool m_isPaused = false;
+
+		void SetPaused(bool paused) { m_isPaused = paused; }
+		bool IsPaused() const { return m_isPaused; }
+
 		void Update(float deltaTime) override;
 
 		std::string GetComponentName() const override { return "BehaviourTreeComponent"; }
