@@ -153,7 +153,7 @@
             "effects": [],
             "hitboxEnd": 1.149999976158142,
             "hitboxStart": 0.550000011920929,
-            "hitstopFrames": 4,
+            "hitstopFrames": 3,
             "invincibilityEnd": 0.0,
             "invincibilityStart": 0.0,
             "isAttack": true,
@@ -213,8 +213,8 @@
             "turnSpeed": 2.0,
             "type": "DataDriven",
             "windupPauseDuration": 0.10000000149011612,
-            "windupPauseStart": 0.44999998807907104,
-            "windupTimeScale": 0.0
+            "windupPauseStart": 0.4000000059604645,
+            "windupTimeScale": 0.30000001192092896
         },
         {
             "animationName": "Walk",
@@ -303,7 +303,7 @@
             "effects": [],
             "hitboxEnd": 1.0499999523162842,
             "hitboxStart": 0.5,
-            "hitstopFrames": 4,
+            "hitstopFrames": 3,
             "invincibilityEnd": 0.0,
             "invincibilityStart": 0.0,
             "isAttack": true,
@@ -363,7 +363,7 @@
             "turnSpeed": 2.0,
             "type": "DataDriven",
             "windupPauseDuration": 0.10000000149011612,
-            "windupPauseStart": 0.41999998688697815,
+            "windupPauseStart": 0.5,
             "windupTimeScale": 0.0
         },
         {
@@ -378,7 +378,7 @@
             "effects": [],
             "hitboxEnd": 1.5,
             "hitboxStart": 0.8199999928474426,
-            "hitstopFrames": 4,
+            "hitstopFrames": 3,
             "invincibilityEnd": 0.0,
             "invincibilityStart": 0.0,
             "isAttack": true,
@@ -470,7 +470,7 @@
             ],
             "hitboxEnd": 1.850000023841858,
             "hitboxStart": 1.4500000476837158,
-            "hitstopFrames": 6,
+            "hitstopFrames": 5,
             "invincibilityEnd": 0.0,
             "invincibilityStart": 0.0,
             "isAttack": true,
@@ -509,9 +509,9 @@
             },
             "turnSpeed": 2.0,
             "type": "DataDriven",
-            "windupPauseDuration": 0.15000000596046448,
-            "windupPauseStart": 1.25,
-            "windupTimeScale": 0.0
+            "windupPauseDuration": 0.10000000149011612,
+            "windupPauseStart": 1.2999999523162842,
+            "windupTimeScale": 0.15000000596046448
         }
     ]
 }

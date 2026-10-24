@@ -3,25 +3,25 @@
 // Author: HEIN SOE KHANT
 //--------------------------------------------------------------------------------------
 #include "pch.h"
-#include "../../../External/Engine/Common/InputManager.h"
 #include "TitleScene.h"
-#include "../../../External/Engine/Camera/DebugCameraMode.h"
-#include "../../../External/Engine/Camera/ManualCameraMode.h"
-#include "../../../External/Engine/Camera/CameraController.h"
-#include "../../../External/Engine/Components/TransformComponent.h"
-#include "../../../External/Engine/Framework/GameContext.h"
-#include "../../../External/Engine/Scene/SceneManager.h"
-#include "../../../External/Engine/ImGui/imgui.h"
-#include "../../../External/Engine/ImGui/ImGuizmo.h"
-#include "../../../External/Engine/Common/json.hpp"
-#include "../../../External/Engine/Factory/ComponentFactory.h"
 #include "../../Factory/ActorFactory.h"
+#include "../../External/Engine/Camera/CameraController.h"
+#include "../../External/Engine/Camera/DebugCameraMode.h"
+#include "../../External/Engine/Camera/ManualCameraMode.h"
+#include "../../External/Engine/Common/InputManager.h"
+#include "../../External/Engine/Common/json.hpp"
+#include "../../External/Engine/Components/LightComponent.h"
+#include "../../External/Engine/Components/TransformComponent.h"
+#include "../../External/Engine/Factory/ComponentFactory.h"
+#include "../../External/Engine/Framework/GameContext.h"
+#include "../../External/Engine/ImGui/imgui.h"
+#include "../../External/Engine/ImGui/ImGuizmo.h"
+#include "../../External/Engine/Scene/SceneManager.h"
 #include <commdlg.h>
-#include <fstream>
-#include <filesystem>
-#include <Windows.h>
 #include <DirectXMath.h>
-#include "../../../External/Engine/Components/LightComponent.h"
+#include <filesystem>
+#include <fstream>
+#include <Windows.h>
 
 namespace
 {
@@ -55,6 +55,8 @@ namespace
 
 using namespace DirectX;
 
+namespace HEIN
+{
 void TitleScene::OnEnter(GameContext& gameContext)
 {
     // Initialize Core Pipeline & Shadow System
@@ -141,13 +143,33 @@ void TitleScene::OnEnter(GameContext& gameContext)
         float startBtnY = screenH * 0.55f;
         float exitBtnY = startBtnY + btnH + 24.0f;
 
+        // Dynamically resolve default font from discovered assets on disk
+        std::wstring defaultFontPath = L"";
+        const auto discoveredFonts = HEIN::UIButtonComponent::GetDiscoveredFontPaths();
+        for (const auto& fontPath : discoveredFonts)
+        {
+            if (fontPath.find(L"ITZorak") != std::wstring::npos)
+            {
+                defaultFontPath = fontPath;
+                break;
+            }
+        }
+        if (defaultFontPath.empty() && !discoveredFonts.empty())
+        {
+            defaultFontPath = discoveredFonts.front();
+        }
+
         // Setup Title Logo / Banner Text Element
         HEIN::Actor* titleActor = m_actorManager.CreateActor(L"TitleBanner");
         titleActor->AddComponent<HEIN::TransformComponent>();
         auto* titleComp = titleActor->AddComponent<HEIN::UIButtonComponent>();
         titleComp->SetElementType(HEIN::UIElementType::Text);
         titleComp->SetText("D U A L");
-        titleComp->SetFontSize(3.0f);
+        if (!defaultFontPath.empty())
+        {
+            titleComp->SetSpriteFontPath(defaultFontPath, gameContext.deviceResources.GetD3DDevice());
+        }
+        titleComp->SetFontSize(1.35f);
         titleComp->SetTextColor(SimpleMath::Vector4(0.95f, 0.98f, 1.0f, 1.0f));
         titleComp->SetPosition(SimpleMath::Vector2(screenW * 0.38f, screenH * 0.20f));
         titleComp->SetSize(SimpleMath::Vector2(300.0f, 80.0f));
@@ -160,7 +182,11 @@ void TitleScene::OnEnter(GameContext& gameContext)
         auto* subtitleComp = subtitleActor->AddComponent<HEIN::UIButtonComponent>();
         subtitleComp->SetElementType(HEIN::UIElementType::Text);
         subtitleComp->SetText("Action Combat RPG System");
-        subtitleComp->SetFontSize(1.2f);
+        if (!defaultFontPath.empty())
+        {
+            subtitleComp->SetSpriteFontPath(defaultFontPath, gameContext.deviceResources.GetD3DDevice());
+        }
+        subtitleComp->SetFontSize(0.65f);
         subtitleComp->SetTextColor(SimpleMath::Vector4(0.7f, 0.8f, 0.95f, 0.9f));
         subtitleComp->SetPosition(SimpleMath::Vector2(screenW * 0.37f, screenH * 0.30f));
         subtitleComp->SetSize(SimpleMath::Vector2(320.0f, 40.0f));
@@ -174,6 +200,12 @@ void TitleScene::OnEnter(GameContext& gameContext)
         m_startButton = startButtonActor->AddComponent<HEIN::UIButtonComponent>();
         m_startButton->SetElementType(HEIN::UIElementType::Button);
         m_startButton->SetText("START GAME");
+        if (!defaultFontPath.empty())
+        {
+            m_startButton->SetSpriteFontPath(defaultFontPath, gameContext.deviceResources.GetD3DDevice());
+        }
+        m_startButton->SetFontSize(0.85f);
+        m_startButton->SetUseEldenStyle(true);
         m_startButton->SetPosition(SimpleMath::Vector2(btnX, startBtnY));
         m_startButton->SetSize(SimpleMath::Vector2(btnW, btnH));
         m_startButton->Initialize(gameContext, nullptr, nullptr, nullptr);
@@ -186,6 +218,12 @@ void TitleScene::OnEnter(GameContext& gameContext)
         m_exitButton = exitButtonActor->AddComponent<HEIN::UIButtonComponent>();
         m_exitButton->SetElementType(HEIN::UIElementType::Button);
         m_exitButton->SetText("QUIT GAME");
+        if (!defaultFontPath.empty())
+        {
+            m_exitButton->SetSpriteFontPath(defaultFontPath, gameContext.deviceResources.GetD3DDevice());
+        }
+        m_exitButton->SetFontSize(0.85f);
+        m_exitButton->SetUseEldenStyle(true);
         m_exitButton->SetPosition(SimpleMath::Vector2(btnX, exitBtnY));
         m_exitButton->SetSize(SimpleMath::Vector2(btnW, btnH));
         m_exitButton->Initialize(gameContext, nullptr, nullptr, nullptr);
@@ -254,8 +292,12 @@ void TitleScene::OnEnter(GameContext& gameContext)
     gameContext.showColliders = false;
     gameContext.showUI = true;
 
-    // Ensure absolute mouse mode for title menu
+    // Ensure absolute mouse mode for title menu and ensure cursor is visible
+    ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
+    ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+    ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
     Mouse::Get().SetMode(Mouse::MODE_ABSOLUTE);
+    while (ShowCursor(TRUE) < 0);
 }
 
 void TitleScene::OpenEditor()
@@ -321,6 +363,13 @@ void TitleScene::Update(GameContext& gameContext)
 {
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
     m_titlePulseTimer += deltaTime;
+
+    // Keep mouse cursor visible and unlocked in absolute mode for title menu
+    ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
+    ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+    ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
+    Mouse::Get().SetMode(Mouse::MODE_ABSOLUTE);
+    while (ShowCursor(TRUE) < 0);
 
     gameContext.actorManager = &m_actorManager;
     gameContext.shadowSystem = &m_shadowSystem;
@@ -507,12 +556,27 @@ void TitleScene::Update(GameContext& gameContext)
 
     // Safely sync button and camera pointers from ActorManager handles
     HEIN::Actor* startActor = m_actorManager.GetActor(m_startButtonID);
+    if (!startActor)
+    {
+        startActor = m_actorManager.GetActorByName(L"StartButton");
+        if (startActor) m_startButtonID = startActor->GetID();
+    }
     m_startButton = startActor ? startActor->GetComponent<HEIN::UIButtonComponent>() : nullptr;
 
     HEIN::Actor* exitActor = m_actorManager.GetActor(m_exitButtonID);
+    if (!exitActor)
+    {
+        exitActor = m_actorManager.GetActorByName(L"ExitButton");
+        if (exitActor) m_exitButtonID = exitActor->GetID();
+    }
     m_exitButton = exitActor ? exitActor->GetComponent<HEIN::UIButtonComponent>() : nullptr;
 
     HEIN::Actor* camActor = m_actorManager.GetActor(m_cameraID);
+    if (!camActor)
+    {
+        camActor = m_actorManager.GetActorByName(L"TitleCamera");
+        if (camActor) m_cameraID = camActor->GetID();
+    }
     m_cameraController = camActor ? camActor->GetComponent<HEIN::CameraController>() : nullptr;
     gameContext.mainCamera = m_cameraController;
 
@@ -520,12 +584,13 @@ void TitleScene::Update(GameContext& gameContext)
     m_actorManager.UpdateAll(deltaTime);
     m_actorManager.UpdateAllHierarchies();
 
-    // Check Start Button or Enter/Space keys ONLY when playing in game mode (NOT in editor mode)
+    // Check Start Button ONLY when playing in game mode (NOT in editor mode). Keyboard shortcuts, if any, are configured on the button itself.
     bool isEditorMode = (m_debugDisplay != nullptr && m_debugDisplay->isMagnified()) || !m_isPlaying;
     if (!isEditorMode)
     {
         bool isTransitioning = (gameContext.sceneManager != nullptr && gameContext.sceneManager->IsTransitioning());
-        bool startPressed = !isTransitioning && gameContext.showUI && (m_startButton && m_startButton->IsClicked());
+        bool startPressed = !isTransitioning && gameContext.showUI &&
+            (m_startButton && m_startButton->IsClicked());
 
         if (startPressed)
         {
@@ -627,7 +692,7 @@ void TitleScene::RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext
 
     if (activeLight == nullptr || activeLight->GetLightType() == HEIN::LightType::Directional)
     {
-        // Option 2: World-locked texel snapping for Directional Light shadow map
+        // World-locked texel snapping for Directional Light shadow map
         DirectX::SimpleMath::Matrix lightViewOrigin = DirectX::SimpleMath::Matrix::CreateLookAt(
             DirectX::SimpleMath::Vector3::Zero,
             lightDir * 1000.0f,
@@ -725,4 +790,5 @@ void TitleScene::Render(GameContext& gameContext)
         context->OMSetBlendState(gameContext.commonStates.Opaque(), nullptr, 0xFFFFFFFF);
         context->OMSetDepthStencilState(gameContext.commonStates.DepthDefault(), 0);
     }
+}
 }

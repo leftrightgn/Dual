@@ -1,5 +1,20 @@
 #include "pch.h"
 #include "CombatStateMachineComponent.h"
+#include "BlackBoard/BossBlackBoard.h"
+#include "BlackBoard/CombatBlackBoard.h"
+#include "BlackBoard/PlayerBlackBoard.h"
+#include "States/CombatStates.h"
+#include "States/ICombatState.h"
+#include "../../External/Engine/Entities/Actor.h"
+#include "../../External/Engine/Components/ColliderComponent/ColliderComponent.h"
+#include "../../External/Engine/Components/DamageDealerComponent.h"
+#include "../../External/Engine/Components/HealthComponent.h"
+#include "../../External/Engine/Components/TargetTrackingComponent.h"
+#include "../../External/Engine/Message/Messenger.h"
+#include "ImGui/imgui.h"
+#include <filesystem>
+#include <fstream>
+
 namespace {
     std::string CombatStateTypeToString(HEIN::CombatStateType type)
     {
@@ -12,6 +27,7 @@ namespace {
         case HEIN::CombatStateType::Stun: return "Stun";
         case HEIN::CombatStateType::Jump: return "Jump";
         case HEIN::CombatStateType::GuardCounter: return "GuardCounter";
+        case HEIN::CombatStateType::Death: return "Death";
         default: return "Normal";
         }
     }
@@ -25,6 +41,7 @@ namespace {
         if (str == "Stun") return HEIN::CombatStateType::Stun;
         if (str == "Jump") return HEIN::CombatStateType::Jump;
         if (str == "GuardCounter") return HEIN::CombatStateType::GuardCounter;
+        if (str == "Death") return HEIN::CombatStateType::Death;
         return HEIN::CombatStateType::Normal;
     }
 
@@ -49,20 +66,12 @@ namespace {
     }
 }
 
-#include <States/ICombatState.h>
-#include <States/CombatStates.h>
-#include "../../../External/Engine/Entities/Actor.h"
-#include "../../External/Engine/Components/ColliderComponent/ColliderComponent.h"
-#include "../../External/Engine/Message/Messenger.h" 
-#include <BlackBoard/CombatBlackBoard.h>
-#include <BlackBoard/PlayerBlackBoard.h>
-#include <BlackBoard/BossBlackBoard.h>
-#include "../../External/Engine/Components/DamageDealerComponent.h"
-#include "../../External/Engine/Components/HealthComponent.h"
-#include "../../External/Engine/Components/TargetTrackingComponent.h"
-#include <ImGui/imgui.h>
-#include <fstream>
-#include <filesystem>
+
+
+
+
+
+
 
 HEIN::CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner) : IComponent(owner) {}
 
@@ -99,6 +108,16 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
     float rawDt = (m_owner != nullptr && m_owner->GetUnscaledDeltaTime() > 0.0f)
         ? m_owner->GetUnscaledDeltaTime()
         : deltaTime;
+
+    // Automatic death transition for any actor when health component reaches zero
+    auto* health = m_owner ? m_owner->GetComponent<HealthComponent>() : nullptr;
+    if (health && health->isDead() && m_currentStateName != "Death" && m_states.contains("Death"))
+    {
+        m_messageBuffer.clear();
+        ChangeState("Death", 0.15f);
+        ApplyPendingState();
+        return;
+    }
 
     ApplyPendingState();
     // Tick input buffer on unscaled real time so inputs pressed during Hitstop or Wind-Up Pause are never dropped
@@ -240,14 +259,16 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
     }
 }
 
-void HEIN::CombatStateMachineComponent::ChangeState(const std::string& stateName, float blendDuration)
+bool HEIN::CombatStateMachineComponent::ChangeState(const std::string& stateName, float blendDuration)
 {
     auto it = m_states.find(stateName);
     if (it != m_states.end())
     {
         m_pendingState = it->second.get();
         m_pendingBlendDuration = blendDuration;
+        return true;
     }
+    return false;
 }
 
 void HEIN::CombatStateMachineComponent::ApplyPendingState()
@@ -322,6 +343,12 @@ void HEIN::CombatStateMachineComponent::RebuildAllStates()
 
 void HEIN::CombatStateMachineComponent::OnMessageAccepted(Message::MessageID messageID)
 {
+    // Discard any incoming commands or input buffers while in Death state
+    if (m_currentStateName == "Death")
+    {
+        return;
+    }
+
     if (messageID == Message::ATTACK_HIT_CONFIRMED)
     {
         HEIN::CombatBlackBoard* blackboard = m_owner->GetComponent<CombatBlackBoard>();
@@ -755,6 +782,7 @@ void HEIN::CombatStateMachineComponent::DeserializeStatesFromJSON(const nlohmann
                 cfg.moveSpeed = 0.0f;
             }
             if (stateJson.contains("isGuardCounter")) cfg.isGuardCounter = stateJson["isGuardCounter"].get<bool>();
+            if (stateJson.contains("isDeath")) cfg.isDeath = stateJson["isDeath"].get<bool>();
             if (cfg.stateName == "GuardCounter" || cfg.stateType == "GuardCounter")
             {
                 cfg.isGuardCounter = true;
@@ -800,6 +828,10 @@ void HEIN::CombatStateMachineComponent::DeserializeStatesFromJSON(const nlohmann
             else if (cfg.stateName.find("Jump") != std::string::npos)
             {
                 cfg.stateTypeEnum = CombatStateType::Jump;
+            }
+            else if (cfg.stateType == "Death" || cfg.stateName == "Death" || cfg.isDeath)
+            {
+                cfg.stateTypeEnum = CombatStateType::Death;
             }
             else if (cfg.isGuardCounter || cfg.stateName == "GuardCounter")
             {
@@ -945,6 +977,22 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
     if (ImGui::CollapsingHeader("Combat State Machine Component", ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Active State: %s", m_currentStateName.c_str());
+        if (auto* universalState = dynamic_cast<UniversalCombatState*>(m_currentState))
+        {
+            ImGui::SameLine();
+            ImGui::TextDisabled("(Timer: %.2fs)", universalState->GetTimer());
+
+            if (universalState->IsInWindupPause())
+            {
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.15f, 1.0f), "[WIND-UP PAUSE]");
+            }
+            if (universalState->IsWeaponHitboxActive())
+            {
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "[HITBOX ACTIVE]");
+            }
+        }
         if (m_owner)
         {
             ImGui::Text("Actor TimeScale: %.2f | Hitstop: %s (%.3fs)",
@@ -1006,6 +1054,21 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
         for (auto& [name, cfg] : m_stateConfigs)
         {
             ImGui::PushID(name.c_str());
+
+            bool isCurrent = (m_currentStateName == name);
+            if (isCurrent)
+            {
+                ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "[ACTIVE]");
+                ImGui::SameLine();
+            }
+
+            if (ImGui::SmallButton("Play State"))
+            {
+                ChangeState(name, 0.1f);
+                ApplyPendingState();
+            }
+            ImGui::SameLine();
+
             if (ImGui::TreeNode(name.c_str()))
             {
                 char animBuf[128];
@@ -1059,7 +1122,7 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
                     ImGui::Separator();
                     ImGui::TextColored(ImVec4(0.3f, 0.8f, 1.0f, 1.0f), "=== Combat State Role & Effects ===");
                     
-                    const char* stateTypeItems[] = { "Normal", "Attack", "ComboFinisher", "Block", "Dodge", "Stun", "Jump", "GuardCounter" };
+                    const char* stateTypeItems[] = { "Normal", "Attack", "ComboFinisher", "Block", "Dodge", "Stun", "Jump", "GuardCounter", "Death" };
                     int currentTypeIdx = static_cast<int>(cfg.stateTypeEnum);
                     if (ImGui::Combo("Combat State Role", &currentTypeIdx, stateTypeItems, IM_ARRAYSIZE(stateTypeItems)))
                     {

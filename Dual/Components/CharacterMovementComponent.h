@@ -1,6 +1,6 @@
 #pragma once
+#include "SimpleMath.h"
 #include "../../External/Engine/Components/IComponent.h"
-#include <SimpleMath.h>
 #include <vector>
 
 namespace HEIN
@@ -48,6 +48,12 @@ namespace HEIN
 		std::string m_walkAnimName = "Walk";
 		std::string m_idleAnimName = "Idle";
 
+		// Locomotion & Physics Behavior Configuration (Golden Rule compliant)
+		bool m_useLocomotionRootMotion = true;
+		bool m_cancelMoveOnStagger = true;
+		bool m_autoCrossfadeLocomotion = false;
+		bool m_allowLockOnFacing = true;
+
 	public:
 		CharacterMovementComponent(Actor* owner);
 	
@@ -65,6 +71,18 @@ namespace HEIN
 		void SetWalkAnimName(const std::string& name) { m_walkAnimName = name; }
 		const std::string& GetIdleAnimName() const { return m_idleAnimName; }
 		void SetIdleAnimName(const std::string& name) { m_idleAnimName = name; }
+
+		bool GetUseLocomotionRootMotion() const { return m_useLocomotionRootMotion; }
+		void SetUseLocomotionRootMotion(bool enable) { m_useLocomotionRootMotion = enable; }
+
+		bool GetCancelMoveOnStagger() const { return m_cancelMoveOnStagger; }
+		void SetCancelMoveOnStagger(bool enable) { m_cancelMoveOnStagger = enable; }
+
+		bool GetAutoCrossfadeLocomotion() const { return m_autoCrossfadeLocomotion; }
+		void SetAutoCrossfadeLocomotion(bool enable) { m_autoCrossfadeLocomotion = enable; }
+
+		bool GetAllowLockOnFacing() const { return m_allowLockOnFacing; }
+		void SetAllowLockOnFacing(bool enable) { m_allowLockOnFacing = enable; }
 
 		void OnInspectorGUI(GameContext& gameContext) override;
 

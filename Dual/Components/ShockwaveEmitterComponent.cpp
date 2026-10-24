@@ -1,18 +1,18 @@
 #include "pch.h"
 #include "ShockwaveEmitterComponent.h"
-#include "../../../External/Engine/Entities/ActorManager.h"
-#include "../../../External/Engine/Components/TransformComponent.h"
-#include "../../../External/Engine/Components/HealthComponent.h"
-#include "../../../External/Engine/Components/RigidBodyComponent.h"
-#include "CombatStateMachineComponent.h"
+#include "BlackBoard/BossBlackBoard.h"
+#include "BlackBoard/CombatBlackBoard.h"
+#include "BlackBoard/PlayerBlackBoard.h"
 #include "CharacterMovementComponent.h"
-#include <BlackBoard/CombatBlackBoard.h>
-#include <BlackBoard/PlayerBlackBoard.h>
-#include <BlackBoard/BossBlackBoard.h>
-#include "../../../External/Engine/Message/Messenger.h"
-#include "../../../External/Engine/DebugingTools/DebugCollisionRenderer.h"
-#include <algorithm>
+#include "CombatStateMachineComponent.h"
+#include "../../External/Engine/Components/HealthComponent.h"
+#include "../../External/Engine/Components/RigidBodyComponent.h"
+#include "../../External/Engine/Components/TransformComponent.h"
+#include "../../External/Engine/DebugingTools/DebugCollisionRenderer.h"
+#include "../../External/Engine/Entities/ActorManager.h"
+#include "../../External/Engine/Message/Messenger.h"
 #include "../../External/Engine/ImGui/imgui.h"
+#include <algorithm>
 
 namespace HEIN
 {
@@ -243,7 +243,7 @@ namespace HEIN
 			if (isJumping)
 			{
 				// Clean Elden Ring Jump Evade:
-				// Mark as evaluated so when player lands in the hollow core later, they remain unharmed!
+				// Mark as evaluated so when player lands in the hollow core later, they remain unharmed.
 				wave.hitActors.insert(target->GetID());
 				return;
 			}
@@ -251,7 +251,7 @@ namespace HEIN
 			// Grounded Impact: Player failed to jump over the ground shockwave
 			wave.hitActors.insert(target->GetID());
 
-			// Option A: Ground shockwaves cannot be blocked with a shield -> Instant Guard Break
+			// Ground shockwaves cannot be blocked with a shield -> Instant Guard Break
 			if (targetSM && targetSM->IsBlocking())
 			{
 				if (targetPlBB)
@@ -262,6 +262,12 @@ namespace HEIN
 					targetPlBB->guardCounterWindowTimer = 0.0f;
 					targetPlBB->staminaRegenDelayTimer = targetPlBB->guardBreakDelayTimer;
 				}
+				targetSM->ChangeState("Stun", 0.05f);
+				Messenger::GetInstance()->Notify(target->GetID(), Message::HIT_STUN);
+			}
+			else if (targetSM)
+			{
+				// Dispatch hit stun on unblocked blast impact
 				targetSM->ChangeState("Stun", 0.05f);
 				Messenger::GetInstance()->Notify(target->GetID(), Message::HIT_STUN);
 			}
@@ -316,6 +322,12 @@ namespace HEIN
 				if (auto* health = target->GetComponent<HealthComponent>())
 				{
 					health->ApplyDamage(wave.damage);
+				}
+
+				if (auto* targetSM = target->GetComponent<CombatStateMachineComponent>())
+				{
+					targetSM->ChangeState("Stun", 0.05f);
+					Messenger::GetInstance()->Notify(target->GetID(), Message::HIT_STUN);
 				}
 
 				DirectX::SimpleMath::Vector3 pushDir = targetPos - wave.center;

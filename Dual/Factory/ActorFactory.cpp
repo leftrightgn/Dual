@@ -1,49 +1,53 @@
 #include "pch.h"
-#include <BlackBoard/CombatBlackBoard.h>
-#include <Components/PlayerInputComponent.h>
-#include <Components/CharacterMovementComponent.h>
-#include <Components/CombatStateMachineComponent.h>
-#include <Components/ShockwaveEmitterComponent.h>
-#include <Components/PossessableComponent.h>
+#include "ActorFactory.h"
+#include "BehaviourTree/BTAttackNode.h"
 #include "BehaviourTree/BTChaseNode.h"
 #include "BehaviourTree/BTCheckDistance.h"
-#include "BehaviourTree/BTDodgeNode.h"
-#include <Components/BehaviourTreeComponent.h>
-#include "BehaviourTree/BTIdleNode.h"
-#include "BehaviourTree/BTAttackNode.h"
-#include "BehaviourTree/BTCheckTargetStance.h"
-#include "BehaviourTree/BTCooldownDecorator.h"
 #include "BehaviourTree/BTCheckHealth.h"
-#include <utility>
-#include "../../External/Engine/Components/HealthComponent.h"
-#include "../../External/Engine/Components/GaugeComponent.h"
-#include "../../External/Engine/Components/ColliderComponent/CapsuleColliderComponent.h"
-#include "../../External/Engine/Components/BoneLinkComponent.h"
-#include "../../External/Engine/Components/TwoBoneLinkComponent.h"
-#include "../../External/Engine/Components/SocketComponent.h"
-#include "../../External/Engine/Components/RigidBodyComponent.h"
-#include "../../External/Engine/Components/TargetTrackingComponent.h"
-#include "../../External/Engine/Components/DamageDealerComponent.h"
-#include "../../External/Engine/Components/ColliderComponent/OBBColliderComponent.h"
-#include "../../External/Engine/Components/SocketAttachmentComponent.h"
-#include "../../External/Engine/Components/StaticModelComponent.h"
-#include "../../External/Engine/Components/WeaponTrailComponent.h"
-#include "../../External/Engine/Components/ColliderComponent/MeshColliderComponent.h"
-#include "../../External/Engine/Components/ColliderComponent/AABBColliderComponent.h"
+#include "BehaviourTree/BTCheckTargetStance.h"
+#include "BehaviourTree/BTCheckTetherNode.h"
+#include "BehaviourTree/BTCooldownDecorator.h"
+#include "BehaviourTree/BTDodgeNode.h"
+#include "BehaviourTree/BTIdleNode.h"
+#include "BehaviourTree/BTReturnToSpawnNode.h"
+#include "BehaviourTree/BTStrafeNode.h"
+#include "BlackBoard/CombatBlackBoard.h"
+#include "Components/BehaviourTreeComponent.h"
+#include "Components/CharacterMovementComponent.h"
+#include "Components/CombatStateMachineComponent.h"
+#include "Components/PlayerInputComponent.h"
+#include "Components/PossessableComponent.h"
+#include "Components/ShockwaveEmitterComponent.h"
+#include "Components/GameFlowStateMachineComponent.h"
+#include "Components/EncounterTriggerComponent.h"
+#include "Framework/GameConstants.h"
 #include "../../External/Engine/BehaviourTree/BTSelector.h"
 #include "../../External/Engine/BehaviourTree/BTSequence.h"
 #include "../../External/Engine/Camera/CameraController.h"
-#include "../../External/Engine/Factory/ComponentFactory.h"
-#include "ActorFactory.h"
+#include "../../External/Engine/System/DamageSystem.h"
 #include "../../External/Engine/Common/SkeletonProfile.h"
-#include "../../External/Engine/Components/TransformComponent.h"
+#include "../../External/Engine/Components/BoneLinkComponent.h"
+#include "../../External/Engine/Components/ColliderComponent/AABBColliderComponent.h"
+#include "../../External/Engine/Components/ColliderComponent/CapsuleColliderComponent.h"
+#include "../../External/Engine/Components/ColliderComponent/MeshColliderComponent.h"
+#include "../../External/Engine/Components/ColliderComponent/OBBColliderComponent.h"
+#include "../../External/Engine/Components/DamageDealerComponent.h"
+#include "../../External/Engine/Components/GaugeComponent.h"
+#include "../../External/Engine/Components/HealthComponent.h"
 #include "../../External/Engine/Components/ProceduralAnimationComponent.h"
-#include <BehaviourTree/BTReturnToSpawnNode.h>
-#include <BehaviourTree/BTCheckTetherNode.h>
-#include "../../External/Engine/Common/DamageSystem.h"
-#include <BehaviourTree/BTStrafeNode.h>
-#include "../../External/Engine/Message/Messenger.h"
+#include "../../External/Engine/Components/RigidBodyComponent.h"
+#include "../../External/Engine/Components/SocketAttachmentComponent.h"
+#include "../../External/Engine/Components/SocketComponent.h"
+#include "../../External/Engine/Components/StaticModelComponent.h"
+#include "../../External/Engine/Components/TargetTrackingComponent.h"
+#include "../../External/Engine/Components/TransformComponent.h"
+#include "../../External/Engine/Components/TwoBoneLinkComponent.h"
+#include "../../External/Engine/Components/WeaponTrailComponent.h"
+#include "../../External/Engine/Factory/ComponentFactory.h"
 #include "../../External/Engine/Message/Message.h"
+#include "../../External/Engine/Message/Messenger.h"
+#include <utility>
+
 
 HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     ActorManager& actorManager,
@@ -81,6 +85,7 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     spawnData.tpsModel->LoadAnimation("Slash2", L"Resources/Models/knight/slash2.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("Slash3", L"Resources/Models/knight/slash3.sdkmesh_anim");
     spawnData.tpsModel->LoadAnimation("Stun", L"Resources/Models/knight/stun.sdkmesh_anim");
+    spawnData.tpsModel->LoadAnimation("Death", L"Resources/Models/knight/Death.sdkmesh_anim");
     spawnData.tpsModel->SetEnableRootMotion(true); // Root Motion enabled for hybrid walk & attacks
     spawnData.tpsModel->SetVisible(true);
 
@@ -408,7 +413,7 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     socketComp->AddSocket(weaponSocket);
 
     HEIN::RigidBodyComponent* rigidBody = enemyActor->AddComponent<HEIN::RigidBodyComponent>();
-    rigidBody->Initialize(80.0f, true, false);
+    rigidBody->Initialize(GameConstants::Physics::HeavyBossMass, true, false);
     HEIN::CapsuleColliderComponent* rootPushbox = enemyActor->AddComponent<HEIN::CapsuleColliderComponent>();
     rootPushbox->Initialize(5.0f, 17.0f); // Adjust height to match knight model proportions
     rootPushbox->SetOffset(DirectX::SimpleMath::Vector3(0.0f, 90.0f, 0.0f));
@@ -433,7 +438,9 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     bb->spawnPosition = ptransform->GetPosition();
     bb->hasSetSpawnPosition = true;
 
-    enemyActor->AddComponent<HEIN::CharacterMovementComponent>();
+    auto* enemyMove = enemyActor->AddComponent<HEIN::CharacterMovementComponent>();
+    enemyMove->SetUseLocomotionRootMotion(false);
+    enemyMove->SetCancelMoveOnStagger(false);
     enemyActor->AddComponent<HEIN::ShockwaveEmitterComponent>(&actorManager);
 
     SetupEnemyAI(enemyActor, &actorManager, targetID);
@@ -445,6 +452,13 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
         enemyCombat = enemyActor->AddComponent<HEIN::CombatStateMachineComponent>();
     }
     enemyCombat->LoadFromConfigFile("Resources/Data/Combat/Boss_Combat.json");
+
+        // - Encounter trigger component for modular boss cutscenes and match victory
+    auto* encounter = enemyActor->AddComponent<HEIN::EncounterTriggerComponent>();
+    encounter->SetTriggerDistance(70.0f);
+    encounter->SetCinematicTrackName("Boss_Intro");
+    encounter->SetIntroAnimName("Idle");
+    encounter->SetTriggerVictoryOnDeath(true);
 
     enemyActor->Start();
     return spawnData;
@@ -472,6 +486,8 @@ void HEIN::ActorFactory::RegisterGameComponents()
     ComponentFactory::RegisterComponent<BossBlackBoard>("BossBlackBoard");
     ComponentFactory::RegisterComponent<PossessableComponent>("PossessableComponent");
     ComponentFactory::RegisterComponent<ShockwaveEmitterComponent>("ShockwaveEmitterComponent");
+    ComponentFactory::RegisterComponent<GameFlowStateMachineComponent>("GameFlowStateMachineComponent");
+    ComponentFactory::RegisterComponent<EncounterTriggerComponent>("EncounterTriggerComponent");
 
     // UI pulls Stamina (and legacy Block / Dodge) from PlayerBlackBoard or CombatBlackBoard
     GaugeComponent::SetExternalSyncHandler([](Actor* target, GaugeType type, float& outCurrent, float& outMax) -> bool {
@@ -805,10 +821,7 @@ void HEIN::ActorFactory::RegisterGameComponents()
 
         if (!isBlocked && !skipHitStun)
         {
-            if (isHeavyAttack || (dealer && dealer->CausesStun()))
-            {
-                Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
-            }
+            Messenger::GetInstance()->Notify(victim->GetID(), Message::HIT_STUN);
         }
 
         if (!isBlocked && !isParried && !isGuardCounterAttack)
@@ -1018,9 +1031,13 @@ void HEIN::ActorFactory::PossessVessel(
         rb->SetVelocity(DirectX::SimpleMath::Vector3::Zero);
     }
 
-    // Switch to Idle animation
+    // Switch to Idle animation and ensure Death animation is loaded
     if (auto* model = vessel->GetComponent<HEIN::SkinnedModelComponent>())
     {
+        if (!model->HasAnimation("Death"))
+        {
+            model->LoadAnimation("Death", L"Resources/Models/knight/Death.sdkmesh_anim");
+        }
         model->ChangeAnimation("Idle");
     }
 

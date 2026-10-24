@@ -1,12 +1,11 @@
 #include "pch.h"
 #include "CharacterMovementComponent.h"
-#include "../../External/Engine/Components/TransformComponent.h"
 #include "BlackBoard/CombatBlackBoard.h"
-#include "../../External/Engine/Entities/Actor.h"
 #include "../../External/Engine/Components/RigidBodyComponent.h"
 #include "../../External/Engine/Components/SkinnedModelComponent.h"
+#include "../../External/Engine/Components/TransformComponent.h"
+#include "../../External/Engine/Entities/Actor.h"
 #include "../../External/Engine/ImGui/imgui.h"
-
 
 HEIN::CharacterMovementComponent::CharacterMovementComponent(Actor* owner)
 	: IComponent(owner)
@@ -84,13 +83,11 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 		}
 	}
 
-	bool isEnemy = (m_owner != nullptr && m_owner->GetActorType() == HEIN::ActorType::Enemy);
 	bool allowRootMotion = m_blackboard->hasRootMotion;
 
-	if (isEnemy)
+	if (!m_useLocomotionRootMotion)
 	{
-		// For the Enemy: do not use root motion for regular movement (Walk, Strafe, etc.).
-		// But when jumping or attacking: if there is root motion in the animation, use it!
+		// When locomotion root motion is disabled, only attack and jump animations drive root motion
 		bool isAttackOrJump = (
 			m_blackboard->isAttacking ||
 			m_blackboard->isJumping ||
@@ -134,8 +131,8 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 	}
 	else
 	{
-		// FAST-ACTION COMBAT: Only cancel movement if player is staggered! Attacks can move fluidly!
-		if (!isEnemy && m_blackboard->currentStance == HEIN::CombatStance::Staggered)
+		// Stagger handling: cancel move intent if configured for this actor
+		if (m_cancelMoveOnStagger && m_blackboard->currentStance == HEIN::CombatStance::Staggered)
 		{
 			m_blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		}
@@ -177,8 +174,8 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 		}
 	}
 
-	// Automatic animation blending for Ghost form
-	if (m_owner != nullptr && m_owner->GetActorType() == HEIN::ActorType::Ghost)
+	// Automatic animation blending for locomotion (e.g. Ghost or simple creatures)
+	if (m_autoCrossfadeLocomotion)
 	{
 		auto* model = !m_skinnedModels.empty() ? m_skinnedModels[0] : nullptr;
 		if (model)
@@ -199,9 +196,10 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 			}
 		}
 	}
-	if (m_blackboard->isLockedOn && m_blackboard->currentStance == HEIN::CombatStance::Strafing &&  m_blackboard->dirToTarget.LengthSquared() > 0.001f)
+	const bool isLockedOn = m_blackboard->isLockedOn && m_allowLockOnFacing;
+	if (isLockedOn && m_blackboard->isAttacking && m_blackboard->dirToTarget.LengthSquared() > 0.001f)
 	{
-		// Force character to face the lock-on target while strafing
+		// Force character to face the lock-on target when locked on (idle, moving, or attacking)
 		float targetYaw = atan2f(m_blackboard->dirToTarget.x, m_blackboard->dirToTarget.z);
 		float modelOffset = DirectX::XM_PI;
 		targetYaw += modelOffset;
@@ -212,7 +210,9 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 		while (difference < -DirectX::XM_PI) difference += DirectX::XM_2PI;
 		while (difference > DirectX::XM_PI) difference -= DirectX::XM_2PI;
 
-		currentRot.y += difference * m_blackboard->currentTurnSpeed * deltaTime;
+		float turnSpeed = (m_blackboard->currentTurnSpeed > 0.0f) ? m_blackboard->currentTurnSpeed : 12.0f;
+		turnSpeed = std::max(turnSpeed, 24.0f);
+		currentRot.y += difference * turnSpeed * deltaTime;
 
 		currentRot.x = 0.0f;
 		currentRot.z = 0.0f;
@@ -233,6 +233,26 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 		while (difference > DirectX::XM_PI) difference -= DirectX::XM_2PI;
 
 		float turnSpeed = (m_blackboard->currentTurnSpeed > 0.0f) ? m_blackboard->currentTurnSpeed : 10.0f;
+		currentRot.y += difference * turnSpeed * deltaTime;
+
+		currentRot.x = 0.0f;
+		currentRot.z = 0.0f;
+
+		m_transform->SetRotationEuler(currentRot);
+	}
+	else if (isLockedOn && m_blackboard->dirToTarget.LengthSquared() > 0.001f)
+	{
+		// Smoothly face the lock-on target when idle
+		float targetYaw = atan2f(m_blackboard->dirToTarget.x, m_blackboard->dirToTarget.z);
+		float modelOffset = DirectX::XM_PI;
+		targetYaw += modelOffset;
+		DirectX::SimpleMath::Vector3 currentRot = m_transform->GetRotationEuler();
+
+		float difference = targetYaw - currentRot.y;
+		while (difference < -DirectX::XM_PI) difference += DirectX::XM_2PI;
+		while (difference > DirectX::XM_PI) difference -= DirectX::XM_2PI;
+
+		float turnSpeed = (m_blackboard->currentTurnSpeed > 0.0f) ? m_blackboard->currentTurnSpeed : 8.0f;
 		currentRot.y += difference * turnSpeed * deltaTime;
 
 		currentRot.x = 0.0f;
@@ -261,6 +281,12 @@ void HEIN::CharacterMovementComponent::OnInspectorGUI(GameContext& /*gameContext
 			ImGui::DragFloat("Move Speed", &m_blackboard->currentSpeed, 0.5f, 0.0f, 200.0f);
 			ImGui::DragFloat("Turn Speed", &m_blackboard->currentTurnSpeed, 0.1f, 0.0f, 50.0f);
 		}
+		ImGui::Separator();
+		ImGui::Text("Locomotion & Physics Behavior:");
+		ImGui::Checkbox("Use Locomotion Root Motion", &m_useLocomotionRootMotion);
+		ImGui::Checkbox("Cancel Move on Stagger", &m_cancelMoveOnStagger);
+		ImGui::Checkbox("Auto Crossfade Locomotion", &m_autoCrossfadeLocomotion);
+		ImGui::Checkbox("Allow Lock-On Facing", &m_allowLockOnFacing);
 	}
 }
 
@@ -270,6 +296,10 @@ nlohmann::json HEIN::CharacterMovementComponent::Serialize()
 	data["Friction"] = m_friction;
 	data["WalkAnimName"] = m_walkAnimName;
 	data["IdleAnimName"] = m_idleAnimName;
+	data["UseLocomotionRootMotion"] = m_useLocomotionRootMotion;
+	data["CancelMoveOnStagger"] = m_cancelMoveOnStagger;
+	data["AutoCrossfadeLocomotion"] = m_autoCrossfadeLocomotion;
+	data["AllowLockOnFacing"] = m_allowLockOnFacing;
 	return data;
 }
 
@@ -279,4 +309,8 @@ void HEIN::CharacterMovementComponent::Deserialize(const nlohmann::json& data)
 	if (data.contains("Friction")) m_friction = data["Friction"];
 	if (data.contains("WalkAnimName")) m_walkAnimName = data["WalkAnimName"].get<std::string>();
 	if (data.contains("IdleAnimName")) m_idleAnimName = data["IdleAnimName"].get<std::string>();
+	if (data.contains("UseLocomotionRootMotion")) m_useLocomotionRootMotion = data["UseLocomotionRootMotion"];
+	if (data.contains("CancelMoveOnStagger")) m_cancelMoveOnStagger = data["CancelMoveOnStagger"];
+	if (data.contains("AutoCrossfadeLocomotion")) m_autoCrossfadeLocomotion = data["AutoCrossfadeLocomotion"];
+	if (data.contains("AllowLockOnFacing")) m_allowLockOnFacing = data["AllowLockOnFacing"];
 }

@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "BehaviourTreeComponent.h"
-#include <BlackBoard/CombatBlackBoard.h>
+#include "BlackBoard/CombatBlackBoard.h"
 #include "CombatStateMachineComponent.h"
 #include "../../External/Engine/Components/TransformComponent.h"
-#include <ImGui/imgui.h>
+#include "../../External/Engine/ImGui/imgui.h"
 
 HEIN::BehaviourTreeComponent::BehaviourTreeComponent(Actor* owner)
 	: IComponent(owner)
@@ -37,17 +37,45 @@ void HEIN::BehaviourTreeComponent::Start()
 }
 
 void HEIN::BehaviourTreeComponent::Update(float deltaTime)
+
 {
-	HEIN::Actor* target = (m_actorManager && m_targetID != INVALID_ACTOR_ID) ? m_actorManager->GetActor(m_targetID) : nullptr;
-	if (target == nullptr || m_targetID == INVALID_ACTOR_ID)
+
+	if (m_isPaused)
+
 	{
-		// Target is dead or invalid: stop moving, unlock, and return to Idle
+
+		if (auto* blackboard = GetOwner()->GetComponent<HEIN::BossBlackBoard>())
+
+		{
+
+			blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+
+			blackboard->isLockedOn = false;
+
+			blackboard->isAttacking = false;
+
+			blackboard->activeNodeName = "Cinematic (Paused)";
+
+		}
+
+		return;
+
+	}
+
+
+
+	HEIN::Actor* target = (m_actorManager && m_targetID != INVALID_ACTOR_ID) ? m_actorManager->GetActor(m_targetID) : nullptr;
+	if (target == nullptr || m_targetID == INVALID_ACTOR_ID || target->GetActorType() == HEIN::ActorType::Ghost)
+	{
+		// - Target is dead, invalid, or an intangible Ghost: stop moving, unlock, and return to Idle
 		if (auto* blackboard = GetOwner()->GetComponent<HEIN::BossBlackBoard>())
 		{
 			blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 			blackboard->isLockedOn = false;
 			blackboard->isAttacking = false;
-			blackboard->activeNodeName = "Idle (Target Lost)";
+			blackboard->activeNodeName = (target && target->GetActorType() == HEIN::ActorType::Ghost)
+				? "Idle (Ignoring Ghost)"
+				: "Idle (Target Lost)";
 		}
 		if (auto* sm = GetOwner()->GetComponent<HEIN::CombatStateMachineComponent>())
 		{

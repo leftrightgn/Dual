@@ -29,6 +29,12 @@ namespace GameConstants
         constexpr float ColliderVerticalOffset = 90.0f;
     }
 
+    namespace Physics
+    {
+        constexpr float StandardCharacterMass = 80.0f;
+        constexpr float HeavyBossMass = 160.0f;
+    }
+
     namespace Combat
     {
         constexpr float DefaultKnockbackForce = 25.0f;
