@@ -29,10 +29,12 @@
     ],
     "BarTrackTexturePath": "",
     "Columns": 1,
+    "DescFontSize": 0.699999988079071,
     "EndCapLength": 12.0,
     "EndCapThickness": 2.0,
     "FadeInDuration": 0.5,
     "FadeOutDuration": 0.44999998807907104,
+    "FontSize": 1.0,
     "Fps": 24.0,
     "HoldDuration": 1.2000000476837158,
     "LoopAnimation": true,
@@ -40,6 +42,7 @@
     "NeedleLength": 18.0,
     "NeedlePulseSpeed": 4.0,
     "NeedleThickness": 3.0,
+    "PercentageFontSize": 0.75,
     "Rows": 1,
     "SegmentCount": 10,
     "ShowEndCaps": true,
@@ -47,6 +50,7 @@
     "ShowNeedle": true,
     "ShowPercentageText": false,
     "ShowTips": true,
+    "SpriteFontPath": "Resources/Font/Cinzel-Bold24.spritefont",
     "TexturePath": "",
     "TintColor": [
         0.0,
@@ -55,8 +59,8 @@
         1.0
     ],
     "TipNormalizedPos": [
-        0.05999999865889549,
-        0.7200000286102295
+        0.03431778773665428,
+        0.6971428394317627
     ],
     "Tips": [
         {
@@ -76,5 +80,6 @@
             "title": "Aerial Launch"
         }
     ],
+    "TitleFontSize": 0.8500000238418579,
     "TotalFrames": 1
 }
