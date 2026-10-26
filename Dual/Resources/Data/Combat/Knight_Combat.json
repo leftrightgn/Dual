@@ -674,7 +674,60 @@
             "hitboxEnd": 0.0,
             "hitboxStart": 0.0,
             "hitstopFrames": 5,
-            "invincibilityEnd": 0.6499999761581421,
+            "invincibilityEnd": 0.0,
+            "enterImpulse": [ 0.0, 30.0, 0.0 ],
+            "colliderModifiers": [
+                {
+                    "colliderTag": "PlayerRoot",
+                    "startTime": 0.0,
+                    "endTime": 0.75,
+                    "enableCollider": true,
+                    "followRootMotionY": true,
+                    "heightScale": 0.65,
+                    "radiusScale": 1.0,
+                    "offsetDelta": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "colliderTag": "RupLegCollider",
+                    "startTime": 0.05,
+                    "endTime": 0.65,
+                    "enableCollider": false,
+                    "followRootMotionY": false,
+                    "heightScale": 1.0,
+                    "radiusScale": 1.0,
+                    "offsetDelta": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "colliderTag": "RLegCollider",
+                    "startTime": 0.05,
+                    "endTime": 0.65,
+                    "enableCollider": false,
+                    "followRootMotionY": false,
+                    "heightScale": 1.0,
+                    "radiusScale": 1.0,
+                    "offsetDelta": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "colliderTag": "LupLegCollider",
+                    "startTime": 0.05,
+                    "endTime": 0.65,
+                    "enableCollider": false,
+                    "followRootMotionY": false,
+                    "heightScale": 1.0,
+                    "radiusScale": 1.0,
+                    "offsetDelta": [ 0.0, 0.0, 0.0 ]
+                },
+                {
+                    "colliderTag": "LLegCollider",
+                    "startTime": 0.05,
+                    "endTime": 0.65,
+                    "enableCollider": false,
+                    "followRootMotionY": false,
+                    "heightScale": 1.0,
+                    "radiusScale": 1.0,
+                    "offsetDelta": [ 0.0, 0.0, 0.0 ]
+                }
+            ],
             "invincibilityStart": 0.0,
             "isAttack": false,
             "isBlock": false,
@@ -684,7 +737,7 @@
             "moveSpeed": 25.0,
             "name": "Jump",
             "secondaryAnimationName": "",
-            "staminaCost": 0.0,
+            "staminaCost": 10.0,
             "staminaDamage": 20.0,
             "stateDuration": 0.75,
             "strikeSpeedMultiplier": 1.149999976158142,

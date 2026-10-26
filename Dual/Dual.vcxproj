@@ -256,6 +256,7 @@
     <ClInclude Include="Components\GameFlowStateMachineComponent.h" />
     <ClInclude Include="Components\EncounterTriggerComponent.h" />
     <ClInclude Include="Components\ShockwaveEmitterComponent.h" />
+
     <ClInclude Include="Components\PlayerInputComponent.h" />
     <ClInclude Include="BehaviourTree\BTAttackNode.h" />
     <ClInclude Include="BehaviourTree\BTChaseNode.h" />
@@ -270,6 +271,7 @@
     <ClCompile Include="Components\GameFlowStateMachineComponent.cpp" />
     <ClCompile Include="Components\EncounterTriggerComponent.cpp" />
     <ClCompile Include="Components\ShockwaveEmitterComponent.cpp" />
+
     <ClCompile Include="Components\PlayerInputComponent.cpp" />
     <ClCompile Include="BehaviourTree\BTAttackNode.cpp" />
     <ClCompile Include="BehaviourTree\BTChaseNode.cpp" />

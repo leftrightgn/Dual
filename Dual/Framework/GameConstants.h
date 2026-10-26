@@ -95,8 +95,19 @@ namespace GameConstants
     {
         constexpr int GroundRingSegments = 36;
         constexpr int LongitudeArchCount = 8;
+        constexpr int LongitudeArchSteps = 16;
         constexpr float DomeHeightQuarter = 0.25f;
         constexpr float DomeHeightHalf = 0.50f;
         constexpr float DomeHeightThreeQuarters = 0.75f;
+        constexpr float InitialWaveRadius = 1.0f;
+        constexpr float DefaultMaxLifetime = 1.1f;
+        constexpr float MinCustomDuration = 0.05f;
+        constexpr float DefaultWaveThickness = 3.5f;
+        constexpr float WavefrontOuterBuffer = 1.5f;
+        constexpr float JumpEvadeMinHeightOffset = 1.2f;
+        constexpr float JumpEvadeMinUpwardVelocity = 0.5f;
+        constexpr float GroundRingYOffset = 0.25f;
+        constexpr float InnerRippleMinRadius = 4.0f;
+        constexpr float InnerRippleRadiusRatio = 0.65f;
     }
 }

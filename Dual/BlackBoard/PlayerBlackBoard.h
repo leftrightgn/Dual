@@ -24,8 +24,6 @@ namespace HEIN
 		float blockCooldownTimer = 0.0f;          // Debounce timer for incoming hits
 
 		// Post-action delays before recovery begins
-		float attackRegenDelay = 0.70f;           // Post-attack pause before stamina regen starts
-		float dodgeRegenDelay = 0.45f;            // Post-dodge pause before stamina regen starts
 		float exhaustedRegenDelay = 1.20f;        // Extended delay when completely exhausted (stamina <= 0)
 		float staminaRegenDelayTimer = 0.0f;      // Current active countdown timer before recovery starts
 		float guardBreakDelayTimer = 2.0f;        // Delay before stamina recovery begins after guard break
@@ -43,10 +41,7 @@ namespace HEIN
 		int deflectStacks = 0;                    // Consecutive deflects build bonus damage/knockback (+20% per stack)
 		int maxDeflectStacks = 4;                 // Up to +80% bonus
 
-		// Combat Costs & Absorption
-		float dodgeStaminaCost = 15.0f;           // Flat stamina cost per dodge roll
-		float lightAttackStaminaCost = 18.0f;     // Flat stamina cost per light attack (Slash1, Slash2)
-		float comboFinisherStaminaCost = 25.0f;   // Flat stamina cost for 3rd hit finisher (Slash3)
+		// Combat Absorption
 		float guardPhysicalAbsorption = 0.85f;    // Percentage of physical damage absorbed on block (15% chip damage)
 
 		// Data-Driven Defensive Tuning
@@ -67,6 +62,25 @@ namespace HEIN
 
 		PlayerBlackBoard(Actor* owner)
 			: CombatBlackBoard(owner)
+		{
+			useStamina = true;
+		}
+
+		bool HasAvailableStamina() const override
+		{
+			return !useStamina || (!isBlockBroken && currentBlockStamina > 0.0f);
+		}
+
+		void ConsumeStamina(float cost, float regenDelay = -1.0f) override
+		{
+			if (!useStamina || cost <= 0.0f) return;
+			currentBlockStamina = std::max(minStaminaFloor, currentBlockStamina - cost);
+			staminaRegenDelayTimer = (currentBlockStamina <= 0.0f)
+				? exhaustedRegenDelay
+				: ((regenDelay >= 0.0f) ? regenDelay : baseStaminaRegenDelay);
+			currentStamina = std::max(0.0f, currentBlockStamina);
+		}
+		void InitPlayerDefaults()
 		{
 		}
 
@@ -113,8 +127,7 @@ namespace HEIN
 					staminaRecoveryRate = 60.0f;
 					blockRecoveryRate = 60.0f;
 					blockHeldRecoveryRate = 12.0f;
-					attackRegenDelay = 0.40f;
-					dodgeRegenDelay = 0.25f;
+					baseStaminaRegenDelay = 0.30f;
 				}
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Normal (40/s)"))
@@ -122,8 +135,7 @@ namespace HEIN
 					staminaRecoveryRate = 40.0f;
 					blockRecoveryRate = 40.0f;
 					blockHeldRecoveryRate = 6.0f;
-					attackRegenDelay = 0.70f;
-					dodgeRegenDelay = 0.45f;
+					baseStaminaRegenDelay = 0.55f;
 				}
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Hardcore (20/s)"))
@@ -131,15 +143,13 @@ namespace HEIN
 					staminaRecoveryRate = 20.0f;
 					blockRecoveryRate = 20.0f;
 					blockHeldRecoveryRate = 2.0f;
-					attackRegenDelay = 1.00f;
-					dodgeRegenDelay = 0.65f;
+					baseStaminaRegenDelay = 0.85f;
 				}
 
 				// Recovery Delays & Cooldowns
 				if (ImGui::TreeNodeEx("Recovery Delays & Cooldowns", ImGuiTreeNodeFlags_None))
 				{
-					ImGui::DragFloat("Post-Attack Delay (s)", &attackRegenDelay, 0.05f, 0.0f, 5.0f, "%.2fs");
-					ImGui::DragFloat("Post-Dodge Delay (s)", &dodgeRegenDelay, 0.05f, 0.0f, 5.0f, "%.2fs");
+					ImGui::DragFloat("Base Stamina Regen Delay (s)", &baseStaminaRegenDelay, 0.05f, 0.0f, 5.0f, "%.2fs");
 					ImGui::DragFloat("Exhaustion Penalty Delay (s)", &exhaustedRegenDelay, 0.05f, 0.0f, 5.0f, "%.2fs");
 					ImGui::DragFloat("Guard Break Recovery Delay (s)", &guardBreakDelayTimer, 0.1f, 0.0f, 10.0f, "%.2fs");
 					ImGui::DragFloat("Block Hit Cooldown (s)", &blockCooldownDuration, 0.01f, 0.01f, 1.0f, "%.2fs");
@@ -149,15 +159,12 @@ namespace HEIN
 
 				ImGui::Separator();
 				// -------------------------------------------------------------
-				// Stamina Capacity & Action Costs
+				// Stamina Capacity & Guard Boost
 				// -------------------------------------------------------------
-				ImGui::TextColored(ImVec4(0.3f, 0.85f, 1.0f, 1.0f), "Capacity & Action Costs");
+				ImGui::TextColored(ImVec4(0.3f, 0.85f, 1.0f, 1.0f), "Stamina Capacity & Guard Boost");
 				ImGui::DragFloat("Max Stamina", &maxBlockStamina, 1.0f, 10.0f, 1000.0f, "%.0f");
 				ImGui::DragFloat("Current Stamina", &currentBlockStamina, 0.5f, -30.0f, maxBlockStamina, "%.1f");
 				ImGui::DragFloat("Guard Boost (%)", &guardBoost, 0.5f, 0.0f, 100.0f, "%.1f%%");
-				ImGui::DragFloat("Light Attack Stamina Cost", &lightAttackStaminaCost, 0.5f, 0.0f, 100.0f, "%.1f");
-				ImGui::DragFloat("Combo Finisher Stamina Cost", &comboFinisherStaminaCost, 0.5f, 0.0f, 100.0f, "%.1f");
-				ImGui::DragFloat("Dodge Stamina Cost", &dodgeStaminaCost, 0.5f, 0.0f, 100.0f, "%.1f");
 
 				ImGui::Separator();
 				// -------------------------------------------------------------
@@ -204,13 +211,9 @@ namespace HEIN
 			data["BlockHeldRecoveryRate"] = blockHeldRecoveryRate;
 			data["GuardBoost"] = guardBoost;
 			data["BlockCooldownDuration"] = blockCooldownDuration;
-			data["AttackRegenDelay"] = attackRegenDelay;
-			data["DodgeRegenDelay"] = dodgeRegenDelay;
+			data["BaseStaminaRegenDelay"] = baseStaminaRegenDelay;
 			data["ExhaustedRegenDelay"] = exhaustedRegenDelay;
 			data["GuardBreakDelayTimer"] = guardBreakDelayTimer;
-			data["DodgeStaminaCost"] = dodgeStaminaCost;
-			data["LightAttackStaminaCost"] = lightAttackStaminaCost;
-			data["ComboFinisherStaminaCost"] = comboFinisherStaminaCost;
 			data["GuardPhysicalAbsorption"] = guardPhysicalAbsorption;
 			data["CurrentSpeed"] = currentSpeed;
 			data["CurrentTurnSpeed"] = currentTurnSpeed;
@@ -237,13 +240,10 @@ namespace HEIN
 			if (data.contains("BlockHeldRecoveryRate")) blockHeldRecoveryRate = data["BlockHeldRecoveryRate"];
 			if (data.contains("GuardBoost")) guardBoost = data["GuardBoost"];
 			if (data.contains("BlockCooldownDuration")) blockCooldownDuration = data["BlockCooldownDuration"];
-			if (data.contains("AttackRegenDelay")) attackRegenDelay = data["AttackRegenDelay"];
-			if (data.contains("DodgeRegenDelay")) dodgeRegenDelay = data["DodgeRegenDelay"];
+			if (data.contains("BaseStaminaRegenDelay")) baseStaminaRegenDelay = data["BaseStaminaRegenDelay"];
+			else if (data.contains("DodgeRegenDelay")) baseStaminaRegenDelay = data["DodgeRegenDelay"];
 			if (data.contains("ExhaustedRegenDelay")) exhaustedRegenDelay = data["ExhaustedRegenDelay"];
 			if (data.contains("GuardBreakDelayTimer")) guardBreakDelayTimer = data["GuardBreakDelayTimer"];
-			if (data.contains("DodgeStaminaCost")) dodgeStaminaCost = data["DodgeStaminaCost"];
-			if (data.contains("LightAttackStaminaCost")) lightAttackStaminaCost = data["LightAttackStaminaCost"];
-			if (data.contains("ComboFinisherStaminaCost")) comboFinisherStaminaCost = data["ComboFinisherStaminaCost"];
 			if (data.contains("GuardPhysicalAbsorption")) guardPhysicalAbsorption = data["GuardPhysicalAbsorption"];
 			if (data.contains("CurrentSpeed")) currentSpeed = data["CurrentSpeed"];
 			if (data.contains("CurrentTurnSpeed")) currentTurnSpeed = data["CurrentTurnSpeed"];
