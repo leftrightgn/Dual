@@ -7,6 +7,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dual", "Dual\Dual.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HEIN_Engine", "External\Engine\HEIN_Engine.vcxproj", "{7B25AEB1-3C1E-45A1-910F-7E1184E03743}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HEIN_Editor", "Editor\HEIN_Editor.vcxproj", "{A4F23E11-92D1-4B7C-A5F8-7F1840C22E01}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dual_Gameplay", "Dual_Gameplay\Dual_Gameplay.vcxproj", "{C1928374-45B6-4F1E-9A8B-3C2D1E0F9A8B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +25,14 @@ Global
 		{7B25AEB1-3C1E-45A1-910F-7E1184E03743}.Debug|x64.Build.0 = Debug|x64
 		{7B25AEB1-3C1E-45A1-910F-7E1184E03743}.Release|x64.ActiveCfg = Release|x64
 		{7B25AEB1-3C1E-45A1-910F-7E1184E03743}.Release|x64.Build.0 = Release|x64
+		{A4F23E11-92D1-4B7C-A5F8-7F1840C22E01}.Debug|x64.ActiveCfg = Debug|x64
+		{A4F23E11-92D1-4B7C-A5F8-7F1840C22E01}.Debug|x64.Build.0 = Debug|x64
+		{A4F23E11-92D1-4B7C-A5F8-7F1840C22E01}.Release|x64.ActiveCfg = Release|x64
+		{A4F23E11-92D1-4B7C-A5F8-7F1840C22E01}.Release|x64.Build.0 = Release|x64
+		{C1928374-45B6-4F1E-9A8B-3C2D1E0F9A8B}.Debug|x64.ActiveCfg = Debug|x64
+		{C1928374-45B6-4F1E-9A8B-3C2D1E0F9A8B}.Debug|x64.Build.0 = Debug|x64
+		{C1928374-45B6-4F1E-9A8B-3C2D1E0F9A8B}.Release|x64.ActiveCfg = Release|x64
+		{C1928374-45B6-4F1E-9A8B-3C2D1E0F9A8B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

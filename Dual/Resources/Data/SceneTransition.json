@@ -29,7 +29,7 @@
     ],
     "BarTrackTexturePath": "",
     "Columns": 1,
-    "DescFontSize": 0.699999988079071,
+    "DescFontSize": 0.6499999761581421,
     "EndCapLength": 12.0,
     "EndCapThickness": 2.0,
     "FadeInDuration": 0.5,
@@ -49,6 +49,7 @@
     "ShowLoadingBar": true,
     "ShowNeedle": true,
     "ShowPercentageText": false,
+    "ShowTipLine": true,
     "ShowTips": true,
     "SpriteFontPath": "Resources/Font/Cinzel-Bold24.spritefont",
     "TexturePath": "",
@@ -58,9 +59,41 @@
         0.0,
         1.0
     ],
+    "TipDescColor": [
+        0.7200000286102295,
+        0.699999988079071,
+        0.6200000047683716,
+        0.8999999761581421
+    ],
+    "TipDescOffset": [
+        0.0,
+        30.0
+    ],
+    "TipLineColor": [
+        0.8799999952316284,
+        0.8199999928474426,
+        0.6200000047683716,
+        0.5
+    ],
+    "TipLineLength": 310.0,
+    "TipLineOffset": [
+        0.0,
+        22.0
+    ],
+    "TipLineThickness": 1.0,
     "TipNormalizedPos": [
-        0.03431778773665428,
+        0.03400000184774399,
         0.6971428394317627
+    ],
+    "TipTitleColor": [
+        0.8799999952316284,
+        0.8199999928474426,
+        0.6200000047683716,
+        1.0
+    ],
+    "TipTitleOffset": [
+        -2.0,
+        -17.0
     ],
     "Tips": [
         {
@@ -80,6 +113,6 @@
             "title": "Aerial Launch"
         }
     ],
-    "TitleFontSize": 0.8500000238418579,
+    "TitleFontSize": 0.800000011920929,
     "TotalFrames": 1
 }

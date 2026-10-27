@@ -377,3 +377,8 @@ Dual/Resources/Models/stage/*.sdkmesh
 
 /CommitNotes/
 /プログラムのアピール関連.docx
+
+.gemini/
+
+# Standalone Export Output
+Build/

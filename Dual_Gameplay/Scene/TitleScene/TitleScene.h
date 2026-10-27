@@ -1,0 +1,64 @@
+//--------------------------------------------------------------------------------------
+// File: TitleScene.h
+// Author: HEIN SOE KHANT
+//--------------------------------------------------------------------------------------
+#pragma once
+#include "pch.h"
+#include "../../External/Engine/Camera/CameraController.h"
+#include "../../External/Engine/System/ShadowSystem.h"
+#include "../../External/Engine/Components/UIButtonComponent.h"
+#include "../../External/Engine/DebugingTools/DebugDisplayController.h"
+#include "../../External/Engine/Effect/Skybox.h"
+#include "../../External/Engine/Entities/Actor.h"
+#include "../../External/Engine/Entities/ActorManager.h"
+#include "../../External/Engine/Scene/IScene.h"
+
+/**
+ * @class TitleScene
+ * @brief Handles the initial start menu, UI interactions, and scene transitions.
+ * 
+ * Manages the "Start Game" and "Quit Game" buttons, as well as a debug/editor
+ * interface for tweaking the title layout and automatically saving changes.
+ */
+namespace HEIN
+{
+class TitleScene : public IScene
+{
+public:
+    TitleScene() = default;
+    ~TitleScene() override = default;
+
+    void OnEnter(GameContext& gameContext) override;
+    void OnExit(GameContext& gameContext) override;
+    void Update(GameContext& gameContext) override;
+    void Render(GameContext& gameContext) override;
+    void SaveScene(GameContext& gameContext) override;
+
+private:
+    void OpenEditor();
+    void UnloadEditor(GameContext& gameContext);
+    void RenderShadowPhase(GameContext& gameContext, ID3D11DeviceContext* context);
+
+    std::unique_ptr<HEIN::Skybox> m_skybox;
+    HEIN::ShadowSystem m_shadowSystem;
+
+    DirectX::SimpleMath::Matrix m_proj;
+    DirectX::SimpleMath::Matrix m_world;
+
+    HEIN::ActorManager m_actorManager;
+
+    HEIN::ActorID m_cameraID = HEIN::INVALID_ACTOR_ID;
+    HEIN::ActorID m_startButtonID = HEIN::INVALID_ACTOR_ID;
+    HEIN::ActorID m_exitButtonID = HEIN::INVALID_ACTOR_ID;
+
+    HEIN::UIButtonComponent* m_startButton = nullptr;
+    HEIN::UIButtonComponent* m_exitButton = nullptr;
+    HEIN::CameraController* m_cameraController = nullptr;
+
+    std::unique_ptr<HEIN::DebugDisplayController> m_debugDisplay;
+    bool m_isPlaying = true;
+
+    float m_titlePulseTimer = 0.0f;
+    float m_autoSaveTimer = 0.0f;
+};
+}

@@ -1,241 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Framework">
+      <UniqueIdentifier>{7c4b8e92-3a5f-4d6b-9c8e-1f2a3b4c5d6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
   <ItemGroup>
     <Manifest Include="settings.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Scene\GameScene\GameScene.cpp">
-      <Filter>Scene\GameScene</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\TitleScene\TitleScene.cpp">
-      <Filter>Scene\TitleScene</Filter>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Framework\Main.cpp">
       <Filter>Framework</Filter>
     </ClCompile>
-    <ClCompile Include="Factory\ActorFactory.cpp">
-      <Filter>Factory</Filter>
-    </ClCompile>
-    <ClCompile Include="BehaviourTree\BTAttackNode.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
-    <ClCompile Include="BehaviourTree\BTChaseNode.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
-    <ClCompile Include="BehaviourTree\BTCheckDistance.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
-    <ClCompile Include="BehaviourTree\BTDodgeNode.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
-    <ClCompile Include="BehaviourTree\BTStrafeNode.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\CharacterMovementComponent.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\CombatStateMachineComponent.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\GameFlowStateMachineComponent.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\EncounterTriggerComponent.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\ShockwaveEmitterComponent.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\PlayerInputComponent.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\BehaviourTreeComponent.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="BehaviourTree\BTCheckHealth.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
-    <ClCompile Include="BehaviourTree\BTCheckTargetStance.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
-    <ClCompile Include="BehaviourTree\BTCooldownDecorator.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
-    <ClCompile Include="States\CombatStates.cpp">
-      <Filter>States</Filter>
-    </ClCompile>
-    <ClCompile Include="Components\PossessableComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Framework\GameConstants.h">
-      <Filter>Framework</Filter>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\GameScene\GameScene.h">
-      <Filter>Scene\GameScene</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\TitleScene\TitleScene.h">
-      <Filter>Scene\TitleScene</Filter>
-    </ClInclude>
-    <ClInclude Include="Factory\ActorFactory.h">
-      <Filter>Factory</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviourTree\BTAttackNode.h">
-      <Filter>BehaviourTree</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviourTree\BTChaseNode.h">
-      <Filter>BehaviourTree</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviourTree\BTCheckDistance.h">
-      <Filter>BehaviourTree</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviourTree\BTDodgeNode.h">
-      <Filter>BehaviourTree</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviourTree\BTStrafeNode.h">
-      <Filter>BehaviourTree</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\CharacterMovementComponent.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\CombatStateMachineComponent.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\GameFlowStateMachineComponent.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\EncounterTriggerComponent.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\ShockwaveEmitterComponent.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\PlayerInputComponent.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="BlackBoard\CombatBlackBoard.h">
-      <Filter>BlackBoard</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\BehaviourTreeComponent.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviourTree\BTCheckHealth.h">
-      <Filter>BehaviourTree</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviourTree\BTCheckTargetStance.h">
-      <Filter>BehaviourTree</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviourTree\BTCooldownDecorator.h">
-      <Filter>BehaviourTree</Filter>
-    </ClInclude>
-    <ClInclude Include="States\CombatStates.h">
-      <Filter>States</Filter>
-    </ClInclude>
-    <ClInclude Include="States\ICombatState.h">
-      <Filter>States</Filter>
-    </ClInclude>
-    <ClInclude Include="Components\PossessableComponent.h" />
-    <ClInclude Include="BlackBoard\PlayerBlackBoard.h" />
-    <ClInclude Include="BlackBoard\BossBlackBoard.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="resource.rc" />
+    <ResourceCompile Include="resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="directx.ico" />
-    <Image Include="Resources\Models\knight\Body.dds" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="Common">
-      <UniqueIdentifier>{a355142e-3d25-4fca-922d-aeadbfedb2ae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectXTK_Utilities">
-      <UniqueIdentifier>{c86a2feb-a710-4e0f-8e6f-fabd949787bc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene">
-      <UniqueIdentifier>{6ee32f6a-f298-4e46-bb2f-07cf73db150a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene\BaseScene">
-      <UniqueIdentifier>{fad1c948-86ef-4cb2-acb4-185a59b4a139}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene\GameScene">
-      <UniqueIdentifier>{0d9d6f68-4a02-4f44-994a-620e016fcc76}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene\TitleScene">
-      <UniqueIdentifier>{1d9d6f68-4a02-4f44-994a-620e016fcc77}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Effect">
-      <UniqueIdentifier>{5915fa9b-369f-46a7-b832-10067f3f5875}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Entities">
-      <UniqueIdentifier>{a2f0aa4b-4b55-4981-806f-addef4a328fb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="States">
-      <UniqueIdentifier>{8f06f2e5-d093-4aef-9400-0558a41c0845}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Camera">
-      <UniqueIdentifier>{4780256a-30e1-4ac8-a139-628d7794971c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Components">
-      <UniqueIdentifier>{9a06591c-ad84-479e-9d8c-ea99a26b1195}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{d39c8c10-12c7-4c95-b4dd-ed97dd5cbbb5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="BlackBoard">
-      <UniqueIdentifier>{323a272c-8af8-44fd-a7ab-d2215a1c0777}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Framework">
-      <UniqueIdentifier>{ff47a537-cbd8-4b0c-b57b-e1562a993356}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Components\ColliderComponent">
-      <UniqueIdentifier>{97b6bd58-ac24-430f-8eee-8d43fa6bdb6f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ImGui">
-      <UniqueIdentifier>{645f9198-81cc-4177-9663-39b3d0ec71ab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Factory">
-      <UniqueIdentifier>{0b41e055-baed-449d-8b94-87d6031a8b88}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="BehaviourTree">
-      <UniqueIdentifier>{f9777594-de78-4196-9ffd-6d28381a3228}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Message">
-      <UniqueIdentifier>{f9235b91-6e95-4153-a32e-1c6878d4dd28}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DebugingTools">
-      <UniqueIdentifier>{15e6802d-4ad2-49b9-88b5-97ebd7096072}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="States\CombatStates.cpp" />
-    <ClCompile Include="BehaviourTree\BTCheckTetherNode.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
-    <ClCompile Include="BehaviourTree\BTIdleNode.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
-    <ClCompile Include="BehaviourTree\BTReturnToSpawnNode.cpp">
-      <Filter>BehaviourTree</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="States\CombatStates.h" />
-    <ClInclude Include="States\ICombatState.h" />
-    <ClInclude Include="BehaviourTree\BTCheckTetherNode.h">
-      <Filter>BehaviourTree</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviourTree\BTIdleNode.h">
-      <Filter>BehaviourTree</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviourTree\BTReturnToSpawnNode.h">
-      <Filter>BehaviourTree</Filter>
-    </ClInclude>
+    <Image Include="directx.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

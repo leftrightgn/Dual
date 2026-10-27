@@ -1,0 +1,52 @@
+#pragma once
+#include "../../External/Engine/BehaviourTree/BTNode.h"
+#include "../../External/Engine/Entities/Actor.h"
+#include "../../External/Engine/Entities/ActorManager.h"
+#include "Framework/GameConstants.h"
+
+namespace HEIN
+{
+	/**
+	 * @brief BTAttackNode is an Action Node responsible for executing and timing an attack animation.
+	 * 
+	 * RESPONSIBILITY & DECOUPLING:
+	 * Interfaces with the CombatStateMachine by writing to the Actor's intent/input buffer. 
+	 * Reads from CombatBlackBoard for target tracking and alignment, keeping AI logic separate from combat physics.
+	 * 
+	 * STATE EVALUATION:
+	 * - Success: Returns Success once the m_attackDuration timer completes.
+	 * - Running: Returns Running while the attack timer is actively ticking (locks the tree into this node).
+	 * - Failure: Returns Failure if the target is invalid or if the node is unexpectedly interrupted.
+	 */
+	class BTAttackNode : public BTNode
+	{
+	private:
+
+		float m_attackDuration;
+		float m_timer;
+
+		float m_minAttackDis;
+		bool m_isAttacking;
+		bool m_isHeavyAttack;
+
+		float m_heavyTrackRatio = GameConstants::BossAI::HeavyTrackRatio;
+		float m_comboTrackTime = GameConstants::BossAI::ComboTrackTime;
+		float m_heavyTurnSpeed = GameConstants::BossAI::HeavyTurnSpeed;
+		float m_comboTurnSpeed = GameConstants::BossAI::ComboTurnSpeed;
+		float m_lungeSpeed = GameConstants::BossAI::HeavyLungeSpeed;
+		float m_stepSpeed = GameConstants::BossAI::ComboStepSpeed;
+		float m_lungeDistanceThreshold = GameConstants::BossAI::HeavyLungeDistanceThreshold;
+		float m_stepDistanceThreshold = GameConstants::BossAI::ComboStepDistanceThreshold;
+
+	public:
+
+		BTAttackNode(float attackDuration, float minAttackDis = 12.0f, bool isHeavyAttack = false);
+
+		BTNodeState Tick(
+			HEIN::Actor* self,
+			HEIN::ActorManager* manager,
+			HEIN::ActorID targetID,
+			float deltaTime
+		) override;
+	};
+}

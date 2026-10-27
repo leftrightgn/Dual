@@ -111,6 +111,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
             g_game->Initialize(hwnd, rc.right - rc.left, rc.bottom - rc.top);
 
+            // Standalone game boots cleanly in pure runtime mode with zero editor overlay
+            g_game->SetEditorApplication(false);
+
             // Register game reflection components
             HEIN::ActorFactory::RegisterGameComponents();
 
