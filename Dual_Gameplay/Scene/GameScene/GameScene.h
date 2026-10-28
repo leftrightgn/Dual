@@ -117,6 +117,8 @@ private:
 
 	// Elden Ring Camera Features
 	float m_manualUnlockCooldown = 0.0f;
+	bool m_isGameViewFocused = false;
+	bool m_wasGameViewFocused = false;
 
 	// Game Flow State Machine
 	GameFlowState m_flowState = GameFlowState::Gameplay;

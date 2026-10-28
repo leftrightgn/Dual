@@ -380,5 +380,3 @@ Dual/Resources/Models/stage/*.sdkmesh
 
 .gemini/
 
-# Standalone Export Output
-Build/

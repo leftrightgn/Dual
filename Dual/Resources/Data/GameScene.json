@@ -95,13 +95,13 @@
                             ]
                         },
                         "Fov": 0.8726646304130554,
-                        "PosX": 12.097761154174805,
-                        "PosY": -64.96627807617188,
-                        "PosZ": -1385.7452392578125,
-                        "RotW": 0.9743437767028809,
-                        "RotX": -0.06342167407274246,
-                        "RotY": 0.21548821032047272,
-                        "RotZ": 0.014026489108800888
+                        "PosX": 21.320749282836914,
+                        "PosY": -66.47621154785156,
+                        "PosZ": -1391.953857421875,
+                        "RotW": 0.9414963722229004,
+                        "RotX": -0.04506833478808403,
+                        "RotY": 0.3336140811443329,
+                        "RotZ": 0.015969717875123024
                     },
                     "Type": "CameraController"
                 }
@@ -255,9 +255,9 @@
                 {
                     "Data": {
                         "Position": [
-                            -5.267673015594482,
-                            -85.57230377197266,
-                            -1419.689208984375
+                            -4.475351810455322,
+                            -86.01252746582031,
+                            -1421.04833984375
                         ],
                         "Rotation": [
                             0.0,
@@ -423,7 +423,7 @@
                     "Data": {
                         "ColliderTag": "BodyCollider",
                         "Enabled": true,
-                        "Height": 3.6937549114227295,
+                        "Height": 3.7047007083892822,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -450,7 +450,7 @@
                     "Data": {
                         "ColliderTag": "RarmCollider",
                         "Enabled": true,
-                        "Height": 2.5574276447296143,
+                        "Height": 2.5574123859405518,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -477,7 +477,7 @@
                     "Data": {
                         "ColliderTag": "RforearmCollider",
                         "Enabled": true,
-                        "Height": 2.160288095474243,
+                        "Height": 2.160315752029419,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -504,7 +504,7 @@
                     "Data": {
                         "ColliderTag": "LarmCollider",
                         "Enabled": true,
-                        "Height": 2.5574307441711426,
+                        "Height": 2.557431221008301,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -531,7 +531,7 @@
                     "Data": {
                         "ColliderTag": "LforearmCollider",
                         "Enabled": true,
-                        "Height": 2.160304069519043,
+                        "Height": 2.160327911376953,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -558,7 +558,7 @@
                     "Data": {
                         "ColliderTag": "RupLegCollider",
                         "Enabled": true,
-                        "Height": 4.17017936706543,
+                        "Height": 4.170142650604248,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -585,7 +585,7 @@
                     "Data": {
                         "ColliderTag": "RLegCollider",
                         "Enabled": true,
-                        "Height": 3.698077440261841,
+                        "Height": 3.698159694671631,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -612,7 +612,7 @@
                     "Data": {
                         "ColliderTag": "LupLegCollider",
                         "Enabled": true,
-                        "Height": 4.170210361480713,
+                        "Height": 4.170164585113525,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -639,7 +639,7 @@
                     "Data": {
                         "ColliderTag": "LLegCollider",
                         "Enabled": true,
-                        "Height": 3.6981444358825684,
+                        "Height": 3.698120594024658,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -1208,7 +1208,7 @@
                     "Data": {
                         "ColliderTag": "BodyCollider",
                         "Enabled": true,
-                        "Height": 6.485997676849365,
+                        "Height": 6.482369899749756,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1235,7 +1235,7 @@
                     "Data": {
                         "ColliderTag": "RArmCollider",
                         "Enabled": true,
-                        "Height": 7.395660400390625,
+                        "Height": 7.395627021789551,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1262,7 +1262,7 @@
                     "Data": {
                         "ColliderTag": "RForearmCollider",
                         "Enabled": true,
-                        "Height": 4.741049289703369,
+                        "Height": 4.741005897521973,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1289,7 +1289,7 @@
                     "Data": {
                         "ColliderTag": "LArmCollider",
                         "Enabled": true,
-                        "Height": 7.395534515380859,
+                        "Height": 7.395574569702148,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1316,7 +1316,7 @@
                     "Data": {
                         "ColliderTag": "LForearmCollider",
                         "Enabled": true,
-                        "Height": 4.740967273712158,
+                        "Height": 4.74092960357666,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1343,7 +1343,7 @@
                     "Data": {
                         "ColliderTag": "RUpLegCollider",
                         "Enabled": true,
-                        "Height": 5.742807388305664,
+                        "Height": 5.7428297996521,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1370,7 +1370,7 @@
                     "Data": {
                         "ColliderTag": "RLegCollider",
                         "Enabled": true,
-                        "Height": 4.903119087219238,
+                        "Height": 4.903070449829102,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1397,7 +1397,7 @@
                     "Data": {
                         "ColliderTag": "LUpLegCollider",
                         "Enabled": true,
-                        "Height": 5.742994785308838,
+                        "Height": 5.743154525756836,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1424,7 +1424,7 @@
                     "Data": {
                         "ColliderTag": "LLegCollider",
                         "Enabled": true,
-                        "Height": 4.9026947021484375,
+                        "Height": 4.90269660949707,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -2667,12 +2667,12 @@
                     "Data": {
                         "CastShadows": true,
                         "Color": [
-                            0.07571607828140259,
-                            0.08442879468202591,
-                            0.11274510622024536,
+                            0.06018047779798508,
+                            0.047866202890872955,
+                            0.11764705181121826,
                             1.0
                         ],
-                        "Intensity": 0.699999988079071,
+                        "Intensity": 5.099999904632568,
                         "LightType": 0,
                         "Range": 500.0,
                         "SpotAngle": 45.0
@@ -3095,7 +3095,7 @@
                     "Data": {
                         "ColliderTag": "BodyCollider",
                         "Enabled": true,
-                        "Height": 3.696817636489868,
+                        "Height": 3.695037364959717,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3122,7 +3122,7 @@
                     "Data": {
                         "ColliderTag": "RarmCollider",
                         "Enabled": true,
-                        "Height": 2.5574328899383545,
+                        "Height": 2.5574188232421875,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3149,7 +3149,7 @@
                     "Data": {
                         "ColliderTag": "RforearmCollider",
                         "Enabled": true,
-                        "Height": 2.160344362258911,
+                        "Height": 2.160386562347412,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3176,7 +3176,7 @@
                     "Data": {
                         "ColliderTag": "LarmCollider",
                         "Enabled": true,
-                        "Height": 2.5574307441711426,
+                        "Height": 2.5574474334716797,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3203,7 +3203,7 @@
                     "Data": {
                         "ColliderTag": "LforearmCollider",
                         "Enabled": true,
-                        "Height": 2.160339832305908,
+                        "Height": 2.16033935546875,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3230,7 +3230,7 @@
                     "Data": {
                         "ColliderTag": "RupLegCollider",
                         "Enabled": true,
-                        "Height": 4.170208930969238,
+                        "Height": 4.170223236083984,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3257,7 +3257,7 @@
                     "Data": {
                         "ColliderTag": "RLegCollider",
                         "Enabled": true,
-                        "Height": 3.698103904724121,
+                        "Height": 3.698124647140503,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3284,7 +3284,7 @@
                     "Data": {
                         "ColliderTag": "LupLegCollider",
                         "Enabled": true,
-                        "Height": 4.170196533203125,
+                        "Height": 4.170199394226074,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3311,7 +3311,7 @@
                     "Data": {
                         "ColliderTag": "LLegCollider",
                         "Enabled": true,
-                        "Height": 3.698103427886963,
+                        "Height": 3.6980934143066406,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,

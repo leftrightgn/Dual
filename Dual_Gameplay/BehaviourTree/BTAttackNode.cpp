@@ -85,7 +85,7 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 	// For 3-hit combo: step forward during each swing's wind-up if the player is > 20.0f away.
 	if (m_isHeavyAttack)
 	{
-		if (m_timer < (m_attackDuration * m_comboTrackTime) && blackboard->distanceToTarget > m_lungeDistanceThreshold)
+		if (m_timer < (m_attackDuration * m_heavyTrackRatio) && blackboard->distanceToTarget > m_lungeDistanceThreshold)
 		{
 			blackboard->moveIntent = blackboard->dirToTarget;
 			blackboard->currentSpeed = m_lungeSpeed;
@@ -110,7 +110,7 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 
 	// Send initial attack trigger on node entry; subsequent combo steps (2nd & 3rd swings)
 	// Advance in UniversalCombatState::Update for the 3-hit combo sequence.
-	if (m_timer == 0.0f)
+	if (m_timer == 0.0f && self)
 	{
 		if (m_isHeavyAttack)
 		{

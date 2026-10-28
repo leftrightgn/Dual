@@ -312,6 +312,8 @@ void GameScene::OnEnter(GameContext& gameContext)
     {
         OpenEditor();
         m_isPlaying = false;
+        m_isGameViewFocused = false;
+        gameContext.isGameViewFocused = false;
         gameContext.isEditorMode = true;
         gameContext.showColliders = true;
         gameContext.showUI = true;
@@ -420,6 +422,15 @@ void GameScene::OnExit(GameContext& gameContext)
     m_actorManager.ClearAllActors();
 
     m_hitboxDebugScope = HitboxDebugScope::Off;
+    m_wasGameViewFocused = false;
+    ::ClipCursor(nullptr);
+    m_isGameViewFocused = false;
+    gameContext.isGameViewFocused = false;
+    ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
+    ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+    ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
+    DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    while (ShowCursor(TRUE) < 0);
 
     m_skybox.reset();
 
@@ -469,20 +480,25 @@ void GameScene::Update(GameContext& gameContext)
 
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
 
-    // Editor & Tooling Phase (Lazy-loaded on F3 in editor application, disabled in standalone game)
-
-    if (gameContext.isEditorApplication && m_debugDisplay == nullptr)
-
+    // Editor & Tooling Phase: F3 toggles between Editor UI Mode and Fullscreen Gameplay Mode
+    if (gameContext.isEditorApplication)
     {
-
         if (HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::EditorToggle))
-
         {
-
-            OpenEditor();
-
+            if (m_debugDisplay == nullptr)
+            {
+                OpenEditor();
+            }
+            else
+            {
+                // When F3 is pressed, DebugDisplayController toggles m_isVisible.
+                // If entering fullscreen gameplay mode (editor UI was visible), ensure playing simulation is active
+                if (m_debugDisplay->isVisible())
+                {
+                    m_isPlaying = true;
+                }
+            }
         }
-
     }
 
     if (m_debugDisplay != nullptr)
@@ -810,60 +826,97 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
 #endif
     }
 
-    if (HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Escape))
+    bool isSceneViewOnly = (m_debugDisplay != nullptr && m_debugDisplay->isVisible() && m_debugDisplay->GetViewportLayout() == EditorViewportLayout::SceneViewOnly);
 
+    // Escape Key Handling:
+    // In Editor Mode: If Game View is currently focused, Escape releases focus back to the editor UI.
+    // When Game View is not focused (or in standalone game), Escape returns to TitleScene.
+    if (gameContext.isEditorApplication)
     {
-
-        if (gameContext.sceneManager)
-
+        if (m_isGameViewFocused)
         {
-
-            gameContext.sceneManager->LoadScene("TitleScene");
-
-            return;
-
+            if (HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Escape) ||
+                ImGui::IsKeyPressed(ImGuiKey_Escape))
+            {
+                m_isGameViewFocused = false;
+            }
         }
-
+        else
+        {
+            if (HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Escape))
+            {
+                if (gameContext.sceneManager)
+                {
+                    gameContext.sceneManager->LoadScene("TitleScene");
+                    return;
+                }
+            }
+        }
+    }
+    else
+    {
+        if (HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Escape))
+        {
+            if (gameContext.sceneManager)
+            {
+                gameContext.sceneManager->LoadScene("TitleScene");
+                return;
+            }
+        }
     }
 
     HEIN::CameraController* camera = GetActiveCameraController(gameContext);
-
     HEIN::Actor* player = GetPlayerActor();
 
-    bool isGameViewCaptured = (m_debugDisplay != nullptr && m_debugDisplay->IsGameViewCaptured());
-
-    bool isUICapturingMouse = !isGameViewCaptured && (ImGui::GetIO().WantCaptureMouse || ImGuizmo::IsUsing() || ImGuizmo::IsOver());
-
-    bool isUICapturingKeyboard = !isGameViewCaptured && ImGui::GetIO().WantCaptureKeyboard;
-
-    bool isSceneViewOnly = (m_debugDisplay != nullptr && m_debugDisplay->isVisible() && m_debugDisplay->GetViewportLayout() == EditorViewportLayout::SceneViewOnly);
-
-    // Intro Cutscene Input: allow player to skip intro cutscene with Space, Enter, or Escape
-
-    if (m_flowState == GameFlowState::Intro)
-
+    // Editor vs. Fullscreen Gameplay Focus Management:
+    // When editor UI (inspector, hierarchy, docks) is visible:
+    // Never change or capture the mouse on click; keep mouse visible desktop arrow in absolute mode.
+    // When editor UI is closed via F3 (only gameplay):
+    // Hide cursor and capture mouse in relative mode for full player and camera control.
+    if (gameContext.isEditorApplication)
     {
-
-        if (ImGui::IsKeyPressed(ImGuiKey_Space) || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Escape) ||
-
-            HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Jump) ||
-
-            HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Possess))
-
+        bool isEditorUIVisible = (m_debugDisplay != nullptr && m_debugDisplay->isVisible());
+        if (isEditorUIVisible)
         {
-
-            ChangeFlowState(GameFlowState::Gameplay, gameContext);
-
+            m_isGameViewFocused = false;
         }
-
+        else
+        {
+            m_isGameViewFocused = (m_flowState == GameFlowState::Gameplay && !m_isVictory && m_isPlaying);
+        }
+    }
+    else
+    {
+        m_isGameViewFocused = (m_flowState == GameFlowState::Gameplay && !m_isVictory);
     }
 
-    // Cursor Visibility & Mouse Mode Management:
-    // Cursor should ONLY appear at Victory ("YOU WIN"), Game Over, Title Scene, or Editor mode.
-    // In normal gameplay mode, cursor is completely hidden and mouse operates in relative mode.
-    bool isEditorActive = (m_debugDisplay != nullptr && m_debugDisplay->isVisible());
-    if (m_flowState == GameFlowState::Victory || m_flowState == GameFlowState::GameOver || m_isVictory || (isEditorActive && !isGameViewCaptured))
+    gameContext.isGameViewFocused = m_isGameViewFocused;
+
+    // Intro Cutscene Input: allow player to skip intro cutscene with Space, Enter, or Escape
+    if (m_flowState == GameFlowState::Intro)
     {
+        if (ImGui::IsKeyPressed(ImGuiKey_Space) || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Escape) ||
+            HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Jump) ||
+            HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Possess))
+        {
+            ChangeFlowState(GameFlowState::Gameplay, gameContext);
+        }
+    }
+
+    bool focusJustAcquired = (m_isGameViewFocused && !m_wasGameViewFocused);
+    m_wasGameViewFocused = m_isGameViewFocused;
+
+    if (focusJustAcquired && gameContext.inputManager != nullptr)
+    {
+        gameContext.inputManager->ResetMouseDelta();
+    }
+
+    // Cursor Visibility, Confinement & Mouse Mode Management:
+    // When Game View is focused: Cursor is hidden and mouse operates in relative mode (raw deltas).
+    // When Game View is NOT focused (or in menus/editor): Cursor is visible and mouse operates in absolute mode.
+    if (!m_isGameViewFocused)
+    {
+        ::ClipCursor(nullptr);
         ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
         ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
         ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
@@ -875,102 +928,57 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
         ImGui::SetMouseCursor(ImGuiMouseCursor_None);
         ::SetCursor(nullptr);
+        DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_RELATIVE);
         while (ShowCursor(FALSE) >= 0);
-        if (camera != nullptr)
+
+        HWND hWnd = gameContext.deviceResources.GetWindow();
+        if (hWnd != nullptr && ::GetForegroundWindow() == hWnd)
         {
-            camera->UpdateMouseMode();
-        }
-        else
-        {
-            DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_RELATIVE);
+            const D3D11_VIEWPORT& gameVp = gameContext.gameViewport;
+            POINT ptTopLeft = { static_cast<LONG>(gameVp.TopLeftX), static_cast<LONG>(gameVp.TopLeftY) };
+            POINT ptBottomRight = { static_cast<LONG>(gameVp.TopLeftX + gameVp.Width), static_cast<LONG>(gameVp.TopLeftY + gameVp.Height) };
+            ::ClientToScreen(hWnd, &ptTopLeft);
+            ::ClientToScreen(hWnd, &ptBottomRight);
+            RECT clipRect = { ptTopLeft.x, ptTopLeft.y, ptBottomRight.x, ptBottomRight.y };
+            ::ClipCursor(&clipRect);
         }
     }
 
     // Camera Input Processing
-
     if (!isSceneViewOnly && camera != nullptr)
-
     {
-
-        if (m_flowState == GameFlowState::Intro || m_flowState == GameFlowState::Victory || m_flowState == GameFlowState::GameOver || m_isVictory)
-
+        if (m_flowState == GameFlowState::Intro || m_flowState == GameFlowState::Victory || m_flowState == GameFlowState::GameOver || m_isVictory || !m_isGameViewFocused || focusJustAcquired)
         {
-
             HEIN::CameraInputState cameraInput;
-
             cameraInput.mouseX = 0.0f;
-
             cameraInput.mouseY = 0.0f;
-
             cameraInput.isLeftMouseDown = false;
-
             cameraInput.scrollWheelDelta = 0.0f;
-
             cameraInput.ignoreScroll = true;
-
             cameraInput.ignoreMovement = true;
-
             camera->ProcessInput(cameraInput);
-
         }
-
         else
-
         {
-
             HEIN::CameraInputState cameraInput;
-
             const DirectX::Mouse::State& mouseState = gameContext.mouseState;
 
             if (mouseState.positionMode == DirectX::Mouse::MODE_RELATIVE)
-
             {
-
-                cameraInput.mouseX = isUICapturingMouse ? 0.0f : static_cast<float>(mouseState.x);
-
-                cameraInput.mouseY = isUICapturingMouse ? 0.0f : static_cast<float>(mouseState.y);
-
+                cameraInput.mouseX = static_cast<float>(mouseState.x);
+                cameraInput.mouseY = static_cast<float>(mouseState.y);
             }
-
             else
-
             {
-
-                // In absolute mode (cursor free / UI mode), do NOT feed raw screen pixel coordinates into rotation delta.
-
-                // Only feed delta if right-click dragging and UI is not capturing mouse.
-
-                if (!isUICapturingMouse && mouseState.rightButton && gameContext.inputManager != nullptr)
-
-                {
-
-                    auto mouseDelta = gameContext.inputManager->GetMouseDelta();
-
-                    cameraInput.mouseX = static_cast<float>(mouseDelta.first);
-
-                    cameraInput.mouseY = static_cast<float>(mouseDelta.second);
-
-                }
-
-                else
-
-                {
-
-                    cameraInput.mouseX = 0.0f;
-
-                    cameraInput.mouseY = 0.0f;
-
-                }
-
+                auto mouseDelta = gameContext.inputManager->GetMouseDelta();
+                cameraInput.mouseX = static_cast<float>(mouseDelta.first);
+                cameraInput.mouseY = static_cast<float>(mouseDelta.second);
             }
 
-            cameraInput.isLeftMouseDown = isUICapturingMouse ? false : mouseState.leftButton;
-
+            cameraInput.isLeftMouseDown = mouseState.leftButton;
             cameraInput.scrollWheelDelta = static_cast<float>(mouseState.scrollWheelValue);
-
-            cameraInput.ignoreScroll = isUICapturingMouse;
-
-            cameraInput.ignoreMovement = isUICapturingKeyboard;
+            cameraInput.ignoreScroll = false;
+            cameraInput.ignoreMovement = false;
 
             camera->ProcessInput(cameraInput);
 
@@ -1013,8 +1021,12 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
         }
     }
 
-    // Player Input Processing
-    if (m_isPlaying && player != nullptr && !m_isDying && m_flowState == GameFlowState::Gameplay && !m_isVictory && !isSceneViewOnly && !isUICapturingMouse && !isUICapturingKeyboard)
+    // Player Input Processing: Requires active Play Mode, valid player actor, and focused Game View
+    bool canControlPlayer = m_isPlaying && player != nullptr && !m_isDying && 
+                            m_flowState == GameFlowState::Gameplay && !m_isVictory && 
+                            !isSceneViewOnly && m_isGameViewFocused;
+
+    if (canControlPlayer)
     {
         gameContext.inputManager->BroadCastPlayerInput(gameContext, player->GetID());
         if (auto* inputComp = player->GetComponent<HEIN::PlayerInputComponent>())
@@ -1022,7 +1034,7 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
             inputComp->ProcessInput(gameContext);
         }
 
-        // - If player attacks, auto-engage Lock-On camera targeting nearby encounter or enemy actor
+        // If player attacks, auto-engage Lock-On camera targeting nearby encounter or enemy actor
         if (!m_isGhost && player->GetActorType() != HEIN::ActorType::Ghost && HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Attack))
         {
             if (camera != nullptr)
@@ -1057,6 +1069,19 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
                     }
                 }
             }
+        }
+    }
+    else if (m_isPlaying && player != nullptr && gameContext.isEditorApplication && !m_isGameViewFocused)
+    {
+        // When Game View is not focused in editor play mode, hold player stationary
+        if (auto* messenger = HEIN::Messenger::GetInstance())
+        {
+            messenger->Notify(player->GetID(), HEIN::Message::PLAYER_STOP_MOVEMENT);
+            messenger->Notify(player->GetID(), HEIN::Message::PLAYER_STOP_BLOCK);
+        }
+        if (auto* inputComp = player->GetComponent<HEIN::PlayerInputComponent>())
+        {
+            inputComp->ProcessInput(gameContext);
         }
     }
     else if (player != nullptr && m_flowState == GameFlowState::Intro)
@@ -2650,6 +2675,14 @@ void GameScene::HandleEditorActions(GameContext& gameContext)
             UnloadEditor(gameContext);
             return;
         }
+        else
+        {
+            // In editor exe when Play is pressed: keep mouse unchanged and unrestricted (desktop arrow, absolute mode)
+            if (m_debugDisplay && m_debugDisplay->GetViewportLayout() == EditorViewportLayout::SceneViewOnly)
+            {
+                m_debugDisplay->SetViewportLayout(EditorViewportLayout::GameViewOnly);
+            }
+        }
     }
     else if (!m_debugDisplay->isVisible())
     {
@@ -2666,6 +2699,8 @@ void GameScene::HandleEditorActions(GameContext& gameContext)
     {
 
         m_isPlaying = false;
+        m_isGameViewFocused = false;
+        gameContext.isGameViewFocused = false;
 
     }
 
