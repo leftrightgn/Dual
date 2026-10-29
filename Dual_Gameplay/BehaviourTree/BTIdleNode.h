@@ -23,5 +23,16 @@ namespace HEIN
 			HEIN::ActorID targetID,
 			float deltaTime
 		) override;
+
+		void Abort(
+			HEIN::Actor* self, 
+			HEIN::ActorManager* manager, 
+			HEIN::ActorID targetID
+		) override;
+
+		void Reset() override;
+
+		std::string GetNodeName() const override { return "Idle Node"; }
+		std::string GetNodeDetails() const override { return "Fallback Idle / Stand Still"; }
 	};
 }

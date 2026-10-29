@@ -2,6 +2,7 @@
 #include "ActorFactory.h"
 #include "BehaviourTree/BTAttackNode.h"
 #include "BehaviourTree/BTChaseNode.h"
+#include "BehaviourTree/BTCheckActionCooldown.h"
 #include "BehaviourTree/BTCheckDistance.h"
 #include "BehaviourTree/BTCheckHealth.h"
 #include "BehaviourTree/BTCheckTargetStance.h"
@@ -10,7 +11,7 @@
 #include "BehaviourTree/BTDodgeNode.h"
 #include "BehaviourTree/BTIdleNode.h"
 #include "BehaviourTree/BTReturnToSpawnNode.h"
-#include "BehaviourTree/BTStrafeNode.h"
+
 #include "BlackBoard/CombatBlackBoard.h"
 #include "BlackBoard/PlayerBlackBoard.h"
 #include "BlackBoard/BossBlackBoard.h"
@@ -914,6 +915,10 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
 {
     if (!enemyActor || !actorManager) return;
 
+    if (!enemyActor->GetComponent<HEIN::CombatBlackBoard>())
+    {
+        enemyActor->AddComponent<HEIN::CombatBlackBoard>();
+    }
     if (!enemyActor->GetComponent<HEIN::TargetTrackingComponent>())
     {
         enemyActor->AddComponent<HEIN::TargetTrackingComponent>(actorManager, HEIN::ActorType::Player);
@@ -955,23 +960,26 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
     std::unique_ptr<HEIN::BTSequence> p2GuardBreak = std::make_unique<HEIN::BTSequence>();
     p2GuardBreak->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::CloseGuardBreakDistance));
     p2GuardBreak->AddChild(std::make_unique<HEIN::BTCheckTargetStance>(CombatStance::Blocking));
-    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2GuardBreakCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::CloseGuardBreakDistance, true)));
+    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCheckActionCooldown>());
+    p2GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2GuardBreakCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::CloseGuardBreakDistance, true, GameConstants::BossAI::Phase2AttackPacingCooldown)));
     phase2Combat->AddChild(std::move(p2GuardBreak));
 
-    // Heavy Attack Ground Slam Mix-Up (Elden Ring Shockwave Stomp every ~2.0s)
+    // Heavy Attack Ground Slam Mix-Up
     std::unique_ptr<HEIN::BTSequence> p2Heavy = std::make_unique<HEIN::BTSequence>();
     p2Heavy->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::HeavyAttackDistance));
-    p2Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2HeavyCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::HeavyAttackDistance, true)));
+    p2Heavy->AddChild(std::make_unique<HEIN::BTCheckActionCooldown>());
+    p2Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2HeavyCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::HeavyAttackDistance, true, GameConstants::BossAI::Phase2AttackPacingCooldown)));
     phase2Combat->AddChild(std::move(p2Heavy));
 
     // Relentless 3-Hit Combo Chain (6 Permutations: 123, 132, 213, 231, 312, 321)
     std::unique_ptr<HEIN::BTSequence> p2Combo = std::make_unique<HEIN::BTSequence>();
     p2Combo->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::ComboAttackDistance));
-    p2Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2ComboCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::ComboAttackDuration, GameConstants::BossAI::ComboAttackDistance, false)));
+    p2Combo->AddChild(std::make_unique<HEIN::BTCheckActionCooldown>());
+    p2Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2ComboCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::ComboAttackDuration, GameConstants::BossAI::ComboAttackDistance, false, GameConstants::BossAI::Phase2AttackPacingCooldown)));
     phase2Combat->AddChild(std::move(p2Combo));
 
     // Fast gap closer (chase speed increased to 130.0f)
-    phase2Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(GameConstants::BossAI::ChaseArrivalDistance, GameConstants::BossAI::Phase2ChaseSpeed));
+    phase2Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(GameConstants::BossAI::ChaseArrivalDistance, GameConstants::BossAI::Phase2ChaseSpeed, true));
 
     phase2Branch->AddChild(std::move(phase2Combat));
     aiBrain->AddChild(std::move(phase2Branch));
@@ -988,23 +996,26 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
     std::unique_ptr<HEIN::BTSequence> p1GuardBreak = std::make_unique<HEIN::BTSequence>();
     p1GuardBreak->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::CloseGuardBreakDistance));
     p1GuardBreak->AddChild(std::make_unique<HEIN::BTCheckTargetStance>(CombatStance::Blocking));
-    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P1GuardBreakCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::CloseGuardBreakDistance, true)));
+    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCheckActionCooldown>());
+    p1GuardBreak->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P1GuardBreakCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::CloseGuardBreakDistance, true, GameConstants::BossAI::Phase1AttackPacingCooldown)));
     phase1Combat->AddChild(std::move(p1GuardBreak));
 
     // Heavy Attack Ground Slam Mix-Up (Elden Ring Shockwave Stomp every ~3.0s)
     std::unique_ptr<HEIN::BTSequence> p1Heavy = std::make_unique<HEIN::BTSequence>();
-    p1Heavy->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, 32.0f));
-    p1Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(3.0f, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::HeavyAttackDistance, true)));
+    p1Heavy->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::HeavyAttackDistance));
+    p1Heavy->AddChild(std::make_unique<HEIN::BTCheckActionCooldown>());
+    p1Heavy->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P1HeavyCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::HeavyAttackDuration, GameConstants::BossAI::HeavyAttackDistance, true, GameConstants::BossAI::Phase1AttackPacingCooldown)));
     phase1Combat->AddChild(std::move(p1Heavy));
 
     // 3-Hit Combo Strike (6 Permutations: 123, 132, 213, 231, 312, 321)
     std::unique_ptr<HEIN::BTSequence> p1Combo = std::make_unique<HEIN::BTSequence>();
     p1Combo->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::ComboAttackDistance));
-    p1Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2ComboCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::ComboAttackDuration, GameConstants::BossAI::ComboAttackDistance, false)));
+    p1Combo->AddChild(std::make_unique<HEIN::BTCheckActionCooldown>());
+    p1Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P1ComboCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::ComboAttackDuration, GameConstants::BossAI::ComboAttackDistance, false, GameConstants::BossAI::Phase1AttackPacingCooldown)));
     phase1Combat->AddChild(std::move(p1Combo));
 
     // Deliberate pursuit (chase speed increased to 85.0f)
-    phase1Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(GameConstants::BossAI::ChaseArrivalDistance, GameConstants::BossAI::Phase1ChaseSpeed));
+    phase1Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(GameConstants::BossAI::ChaseArrivalDistance, GameConstants::BossAI::Phase1ChaseSpeed, true));
 
     phase1Branch->AddChild(std::move(phase1Combat));
     aiBrain->AddChild(std::move(phase1Branch));

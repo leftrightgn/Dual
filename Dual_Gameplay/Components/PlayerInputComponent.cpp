@@ -5,7 +5,9 @@
 #include "../../External/Engine/Entities/ActorManager.h"
 #include "../../External/Engine/Camera/CameraController.h"
 #include "../../External/Engine/Framework/GameContext.h"
+#if HEIN_WITH_EDITOR
 #include "../../External/Engine/ImGui/imgui.h"
+#endif
 #include "../../External/Engine/Message/Message.h"
 #include "../../External/Engine/Message/Messenger.h"
 #include "Components/CombatStateMachineComponent.h"
@@ -113,6 +115,7 @@ void HEIN::PlayerInputComponent::OnMessageAccepted(Message::MessageID messageID)
 	}
 }
 
+#if HEIN_WITH_EDITOR
 void HEIN::PlayerInputComponent::OnInspectorGUI(GameContext& /*gameContext*/)
 {
 	if (ImGui::CollapsingHeader("PlayerInputComponent", ImGuiTreeNodeFlags_DefaultOpen))
@@ -122,4 +125,7 @@ void HEIN::PlayerInputComponent::OnInspectorGUI(GameContext& /*gameContext*/)
 		ImGui::Text("Local Intent: (%.2f, %.2f, %.2f)", m_localInput.x, m_localInput.y, m_localInput.z);
 	}
 }
+#else
+void HEIN::PlayerInputComponent::OnInspectorGUI(GameContext& /*gameContext*/) {}
+#endif
 } // namespace HEIN

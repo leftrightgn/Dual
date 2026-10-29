@@ -12,77 +12,129 @@ namespace HEIN
 HEIN::BTAttackNode::BTAttackNode(
 	float attackDuration,
 	float minAttackDistance,
-	bool isHeavyAttack
+	bool isHeavyAttack,
+	float postAttackCooldown
 )
 	: m_attackDuration(attackDuration)
 	, m_timer(0.0f)
 	, m_minAttackDis(minAttackDistance)
 	, m_isAttacking(false)
 	, m_isHeavyAttack(isHeavyAttack)
+	, m_postAttackCooldown(postAttackCooldown)
 {
 }
 
-HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/, float deltaTime)
+void BTAttackNode::OnEnter(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/)
 {
-	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
-	if (blackboard == nullptr) return BTNodeState::Failure;
+	m_timer = 0.0f;
+	m_isAttacking = false;
+	m_isActive = true;
+	m_currentState = BTNodeState::Running;
 
-	float rawDt = (self && self->GetUnscaledDeltaTime() > 0.0f) ? self->GetUnscaledDeltaTime() : deltaTime;
+	if (!self) return;
 
-	const std::string expectedPrefix = m_isHeavyAttack ? "Heavy Attack" : "Combo Attack";
-	if (m_timer > 0.0f && blackboard->activeNodeName.find(expectedPrefix) == std::string::npos)
+	auto* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+	if (!blackboard) return;
+
+	blackboard->activeNodeName = GetNodeName();
+
+	auto* bossBB = dynamic_cast<HEIN::BossBlackBoard*>(blackboard);
+	if (bossBB && !m_isHeavyAttack)
 	{
-		// Node was previously interrupted by a higher-priority branch (e.g. Dodge); reset timer
-		m_timer = 0.0f;
+		bossBB->RollNextBossComboPattern();
+		blackboard->activeNodeName = "Combo Attack [" + bossBB->activeComboPatternName + "]";
 	}
 
-	if (m_timer == 0.0f)
+	if (m_isHeavyAttack)
+	{
+		Messenger::GetInstance()->Notify(self->GetID(), Message::ENEMY_ACTION_HEAVY_ATTACK);
+	}
+	else
+	{
+		Messenger::GetInstance()->Notify(self->GetID(), Message::PLAYER_ACTION_ATTACK);
+	}
+
+	m_isAttacking = true;
+	blackboard->isAttacking = true;
+	blackboard->isLockedOn = true;
+}
+
+void BTAttackNode::OnExit(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/)
+{
+	if (self)
+	{
+		auto* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+		if (blackboard)
+		{
+			blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+			blackboard->localMoveIntent = DirectX::SimpleMath::Vector3::Zero;
+			blackboard->isAttacking = false;
+			blackboard->isLockedOn = false;
+		}
+		Messenger::GetInstance()->Notify(self->GetID(), Message::SET_WEAPON_INACTIVE);
+		Messenger::GetInstance()->Notify(self->GetID(), Message::RESET_WEAPON_SWING);
+	}
+	m_isAttacking = false;
+	m_timer = 0.0f;
+}
+
+void BTAttackNode::Abort(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID)
+{
+	OnExit(self, manager, targetID);
+	m_isActive = false;
+	m_currentState = BTNodeState::Failure;
+}
+
+void BTAttackNode::Reset()
+{
+	m_timer = 0.0f;
+	m_isAttacking = false;
+	m_isActive = false;
+	m_currentState = BTNodeState::Failure;
+}
+
+HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float deltaTime)
+{
+	if (!self) return BTNodeState::Failure;
+
+	auto* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+	if (!blackboard) return BTNodeState::Failure;
+
+	if (!m_isActive || m_currentState != BTNodeState::Running)
 	{
 		if (blackboard->distanceToTarget > m_minAttackDis)
 		{
+			m_isActive = false;
+			m_currentState = BTNodeState::Failure;
 			return BTNodeState::Failure;
 		}
-
-		if (!m_isHeavyAttack)
-		{
-			// Roll next 3-hit combo permutation (123, 132, 213, 231, 312, 321)
-			blackboard->RollNextBossComboPattern();
-		}
+		OnEnter(self, manager, targetID);
 	}
 
-	blackboard->activeNodeName = m_isHeavyAttack
-		? "Heavy Attack Node"
-		: ("Combo Attack [" + blackboard->activeComboPatternName + "]");
+	if (blackboard->currentHealth <= 0.0f || blackboard->currentStance == HEIN::CombatStance::Staggered)
+	{
+		OnExit(self, manager, targetID);
+		m_isActive = false;
+		m_currentState = BTNodeState::Failure;
+		return BTNodeState::Failure;
+	}
 
-	// Rotational tracking:
-	// - Heavy jump attack: track up to 60% of animation so the leap aims directly at the player.
-	// - 3-Hit Combo: re-acquire target angle during the wind-up phase of each of the 3 swings.
+	if (false)
+	{
+		OnExit(self, manager, targetID);
+		m_isActive = false;
+		m_currentState = BTNodeState::Failure;
+		return BTNodeState::Failure;
+	}
+
+	float rawDt = (self->GetUnscaledDeltaTime() > 0.0f) ? self->GetUnscaledDeltaTime() : deltaTime;
+
 	bool shouldTrackTarget = m_isHeavyAttack
 		? (m_timer < (m_attackDuration * m_heavyTrackRatio))
 		: (m_timer < m_comboTrackTime || blackboard->currentStance == HEIN::CombatStance::AttackWindup);
 
-	if (shouldTrackTarget)
-	{
-		// Calculate desired rotation to face the target directly.
-		// Adds PI to yaw because standard orientation might be reversed depending on the model's forward vector.
-		float targetYaw = atan2f(blackboard->dirToTarget.x, blackboard->dirToTarget.z) + DirectX::XM_PI;
-		DirectX::SimpleMath::Quaternion targetRotation = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(targetYaw, 0.0f, 0.0f);
+	blackboard->isLockedOn = shouldTrackTarget;
 
-		HEIN::TransformComponent* transform = self->GetComponent<HEIN::TransformComponent>();
-		if (transform != nullptr)
-		{
-			DirectX::SimpleMath::Quaternion currentRot = transform->GetRotation();
-
-			float turnSpeed = m_isHeavyAttack ? m_heavyTurnSpeed : m_comboTurnSpeed;
-
-			DirectX::SimpleMath::Quaternion newRot = DirectX::SimpleMath::Quaternion::Slerp(currentRot, targetRotation, rawDt * turnSpeed);
-			transform->SetRotation(newRot);
-		}
-	}
-
-	// Forward combat step during wind-up:
-	// For heavy attack: the jump animation naturally propels the boss 15-18 units forward.
-	// For 3-hit combo: step forward during each swing's wind-up if the player is > 20.0f away.
 	if (m_isHeavyAttack)
 	{
 		if (m_timer < (m_attackDuration * m_heavyTrackRatio) && blackboard->distanceToTarget > m_lungeDistanceThreshold)
@@ -108,45 +160,38 @@ HEIN::BTNodeState HEIN::BTAttackNode::Tick(HEIN::Actor* self, HEIN::ActorManager
 		}
 	}
 
-	// Send initial attack trigger on node entry; subsequent combo steps (2nd & 3rd swings)
-	// Advance in UniversalCombatState::Update for the 3-hit combo sequence.
-	if (m_timer == 0.0f && self)
-	{
-		if (m_isHeavyAttack)
-		{
-			Messenger::GetInstance()->Notify(self->GetID(), Message::ENEMY_ACTION_HEAVY_ATTACK);
-		}
-		else
-		{
-			Messenger::GetInstance()->Notify(self->GetID(), Message::PLAYER_ACTION_ATTACK);
-		}
-	}
-
 	m_timer += rawDt;
 
-	// If the first swing missed, don't wait for the full 3-hit duration — finish and chase.
-	if (!m_isHeavyAttack && m_timer >= GameConstants::BossAI::EarlySwingMissTimeout && blackboard->comboIndex == 0 && !blackboard->lastAttackHit)
+	auto* bossBB = dynamic_cast<HEIN::BossBlackBoard*>(blackboard);
+	int currentComboIdx = bossBB ? bossBB->comboIndex : 0;
+	bool isComplete = false;
+	if (!m_isHeavyAttack && m_timer >= GameConstants::BossAI::EarlySwingMissTimeout && currentComboIdx == 0 && !blackboard->lastAttackHit) { isComplete = true; } else if (false)
 	{
-		m_timer = 0.0f;
+		OnExit(self, manager, targetID);
+		m_isActive = false;
+		m_currentState = BTNodeState::Success;
 		return BTNodeState::Success;
 	}
 
-	// If the state machine is no longer in an attack state (full 3-hit combo or heavy attack completed),
-	// finish the node so the AI transitions smoothly to its next decision (e.g. Chase or next combo).
 	if (m_timer > GameConstants::BossAI::AttackStateMinCheckTime && !blackboard->isAttacking &&
 		blackboard->currentStance != HEIN::CombatStance::AttackRelese &&
-		blackboard->currentStance != HEIN::CombatStance::AttackWindup)
+		blackboard->currentStance != HEIN::CombatStance::AttackWindup) { isComplete = true; } else if (false)
 	{
-		m_timer = 0.0f;
+		OnExit(self, manager, targetID);
+		m_isActive = false;
+		m_currentState = BTNodeState::Success;
 		return BTNodeState::Success;
 	}
 
-	if (m_timer >= m_attackDuration)
+	if (m_timer >= m_attackDuration) { isComplete = true; } if (isComplete) { if (m_postAttackCooldown > 0.0f) blackboard->actionCooldownTimer = m_postAttackCooldown; } if (isComplete)
 	{
-		m_timer = 0.0f;
+		OnExit(self, manager, targetID);
+		m_isActive = false;
+		m_currentState = BTNodeState::Success;
 		return BTNodeState::Success;
 	}
 
+	m_currentState = BTNodeState::Running;
 	return BTNodeState::Running;
 }
 } // namespace HEIN

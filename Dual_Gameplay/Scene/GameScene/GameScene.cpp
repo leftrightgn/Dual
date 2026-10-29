@@ -270,6 +270,8 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     m_backToTitleButtonID = HEIN::INVALID_ACTOR_ID;
 
+    m_possessPromptID = HEIN::INVALID_ACTOR_ID;
+
     m_playerID = HEIN::INVALID_ACTOR_ID;
 
     m_enemyID = HEIN::INVALID_ACTOR_ID;
@@ -317,7 +319,9 @@ void GameScene::OnEnter(GameContext& gameContext)
         gameContext.isEditorMode = true;
         gameContext.showColliders = true;
         gameContext.showUI = true;
+#if HEIN_WITH_EDITOR
         ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
+#endif
         DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
         while (ShowCursor(TRUE) < 0);
     }
@@ -330,8 +334,10 @@ void GameScene::OnEnter(GameContext& gameContext)
         gameContext.showUI = true;
 
         // In gameplay mode, keep mouse cursor hidden and relative
+#if HEIN_WITH_EDITOR
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
         ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+#endif
         ::SetCursor(nullptr);
         DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_RELATIVE);
         while (ShowCursor(FALSE) >= 0);
@@ -426,8 +432,10 @@ void GameScene::OnExit(GameContext& gameContext)
     ::ClipCursor(nullptr);
     m_isGameViewFocused = false;
     gameContext.isGameViewFocused = false;
+#if HEIN_WITH_EDITOR
     ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+#endif
     ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
     DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
     while (ShowCursor(TRUE) < 0);
@@ -446,8 +454,10 @@ void GameScene::OnExit(GameContext& gameContext)
 
     gameContext.mainCamera = nullptr;
 
+#if HEIN_WITH_EDITOR
     ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+#endif
     ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
     DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
     while (ShowCursor(TRUE) < 0);
@@ -479,6 +489,12 @@ void GameScene::Update(GameContext& gameContext)
     gameContext.shadowSystem = &m_shadowSystem;
 
     float deltaTime = static_cast<float>(gameContext.timer.GetElapsedSeconds());
+
+    bool isEditorVisible = (m_debugDisplay != nullptr && m_debugDisplay->isVisible());
+    gameContext.gameViewport = isEditorVisible
+        ? m_debugDisplay->GetDebugUI().GetGameViewport(gameContext)
+        : gameContext.deviceResources.GetScreenViewport();
+    HEIN::UIButtonComponent::SetActiveUIViewport(gameContext.gameViewport);
 
     // Editor & Tooling Phase: F3 toggles between Editor UI Mode and Fullscreen Gameplay Mode
     if (gameContext.isEditorApplication)
@@ -611,43 +627,7 @@ void GameScene::Render(GameContext& gameContext)
 
     }
 
-    // Ghost Possession Prompt Overlay
-
-    if (gameContext.showUI && !gameContext.isSceneViewPass && m_isGhost && m_targetVesselID != HEIN::INVALID_ACTOR_ID)
-
-    {
-
-        D3D11_VIEWPORT vp = isEditorVisible
-
-            ? m_debugDisplay->GetDebugUI().GetGameViewport(gameContext)
-
-            : gameContext.deviceResources.GetScreenViewport();
-
-        if (!isEditorVisible || m_debugDisplay->GetDebugUI().GetViewportLayout() != EditorViewportLayout::SceneViewOnly)
-
-        {
-
-            float uiScale = std::min(vp.Width / 1280.0f, vp.Height / 720.0f);
-
-            ImGui::SetNextWindowPos(ImVec2(vp.TopLeftX + vp.Width * 0.5f, vp.TopLeftY + vp.Height * 0.78f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-
-            ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs;
-
-            if (ImGui::Begin("PossessOverlayPrompt", nullptr, flags))
-
-            {
-
-                ImGui::SetWindowFontScale(std::max(0.5f, 1.8f * uiScale));
-
-                ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.8f, 1.0f), "[Q] POSSESS VESSEL");
-
-                ImGui::End();
-
-            }
-
-        }
-
-    }
+    // Ghost possession prompt is managed directly by scene UI actor (PossessPrompt)
 
     // Victory banner and return button are managed directly by scene UI actors (VictoryBanner and BackToTitleButton)
 
@@ -667,8 +647,8 @@ void GameScene::Render(GameContext& gameContext)
 
         {
 
+#if HEIN_WITH_EDITOR
             float uiScale = std::min(vp.Width / 1280.0f, vp.Height / 720.0f);
-
             ImGui::SetNextWindowPos(ImVec2(vp.TopLeftX + 24.0f, vp.TopLeftY + 24.0f), ImGuiCond_Always);
 
             ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs;
@@ -785,6 +765,7 @@ void GameScene::Render(GameContext& gameContext)
                 ImGui::End();
 
             }
+#endif
 
         }
 
@@ -835,8 +816,12 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
     {
         if (m_isGameViewFocused)
         {
-            if (HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Escape) ||
-                ImGui::IsKeyPressed(ImGuiKey_Escape))
+#if HEIN_WITH_EDITOR
+            bool isEscape = HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Escape) || ImGui::IsKeyPressed(ImGuiKey_Escape);
+#else
+            bool isEscape = HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Escape);
+#endif
+            if (isEscape)
             {
                 m_isGameViewFocused = false;
             }
@@ -882,12 +867,13 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
         }
         else
         {
-            m_isGameViewFocused = (m_flowState == GameFlowState::Gameplay && !m_isVictory && m_isPlaying);
+            m_isPlaying = true;
+            m_isGameViewFocused = ((m_flowState == GameFlowState::Gameplay || m_flowState == GameFlowState::Intro) && !m_isVictory);
         }
     }
     else
     {
-        m_isGameViewFocused = (m_flowState == GameFlowState::Gameplay && !m_isVictory);
+        m_isGameViewFocused = ((m_flowState == GameFlowState::Gameplay || m_flowState == GameFlowState::Intro) && !m_isVictory);
     }
 
     gameContext.isGameViewFocused = m_isGameViewFocused;
@@ -895,9 +881,16 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
     // Intro Cutscene Input: allow player to skip intro cutscene with Space, Enter, or Escape
     if (m_flowState == GameFlowState::Intro)
     {
-        if (ImGui::IsKeyPressed(ImGuiKey_Space) || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Escape) ||
+#if HEIN_WITH_EDITOR
+        bool skipIntro = ImGui::IsKeyPressed(ImGuiKey_Space) || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Escape) ||
             HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Jump) ||
-            HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Possess))
+            HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Possess);
+#else
+        bool skipIntro = HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Jump) ||
+            HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Possess) ||
+            HEIN::InputManager::WasActionPressed(gameContext, HEIN::InputAction::Escape);
+#endif
+        if (skipIntro)
         {
             ChangeFlowState(GameFlowState::Gameplay, gameContext);
         }
@@ -917,16 +910,20 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
     if (!m_isGameViewFocused)
     {
         ::ClipCursor(nullptr);
+#if HEIN_WITH_EDITOR
         ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
         ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+#endif
         ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
         DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
         while (ShowCursor(TRUE) < 0);
     }
     else
     {
+#if HEIN_WITH_EDITOR
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
         ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+#endif
         ::SetCursor(nullptr);
         DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_RELATIVE);
         while (ShowCursor(FALSE) >= 0);
@@ -935,18 +932,57 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
         if (hWnd != nullptr && ::GetForegroundWindow() == hWnd)
         {
             const D3D11_VIEWPORT& gameVp = gameContext.gameViewport;
-            POINT ptTopLeft = { static_cast<LONG>(gameVp.TopLeftX), static_cast<LONG>(gameVp.TopLeftY) };
-            POINT ptBottomRight = { static_cast<LONG>(gameVp.TopLeftX + gameVp.Width), static_cast<LONG>(gameVp.TopLeftY + gameVp.Height) };
-            ::ClientToScreen(hWnd, &ptTopLeft);
-            ::ClientToScreen(hWnd, &ptBottomRight);
-            RECT clipRect = { ptTopLeft.x, ptTopLeft.y, ptBottomRight.x, ptBottomRight.y };
-            ::ClipCursor(&clipRect);
+            if (gameVp.Width > 10.0f && gameVp.Height > 10.0f)
+            {
+                POINT ptTopLeft = { static_cast<LONG>(gameVp.TopLeftX), static_cast<LONG>(gameVp.TopLeftY) };
+                POINT ptBottomRight = { static_cast<LONG>(gameVp.TopLeftX + gameVp.Width), static_cast<LONG>(gameVp.TopLeftY + gameVp.Height) };
+                ::ClientToScreen(hWnd, &ptTopLeft);
+                ::ClientToScreen(hWnd, &ptBottomRight);
+                RECT clipRect = { ptTopLeft.x, ptTopLeft.y, ptBottomRight.x, ptBottomRight.y };
+                ::ClipCursor(&clipRect);
+            }
+            else
+            {
+                ::ClipCursor(nullptr);
+            }
         }
     }
 
     // Camera Input Processing
     if (!isSceneViewOnly && camera != nullptr)
     {
+#if HEIN_WITH_EDITOR
+        bool isEditorUIVisible = (m_debugDisplay != nullptr && m_debugDisplay->isVisible());
+        if (gameContext.isEditorApplication && isEditorUIVisible)
+        {
+            // Windowed Editor Mode: Game View controls behave like Scene View inspection
+            HEIN::CameraInputState cameraInput;
+            const ImVec2& gamePos = m_debugDisplay->GetDebugUI().GetGameContentPos();
+            const ImVec2& gameSize = m_debugDisplay->GetDebugUI().GetGameContentSize();
+            ImGuiIO& io = ImGui::GetIO();
+
+            bool isMouseInGame = (gameSize.x > 10.0f && gameSize.y > 10.0f &&
+                                  io.MousePos.x >= gamePos.x && io.MousePos.x <= gamePos.x + gameSize.x &&
+                                  io.MousePos.y >= gamePos.y && io.MousePos.y <= gamePos.y + gameSize.y);
+            bool isGameHovered = isMouseInGame || m_debugDisplay->GetDebugUI().IsGameViewHovered();
+            bool isRightDown = gameContext.mouseState.rightButton || io.MouseDown[ImGuiMouseButton_Right];
+            bool isMiddleDown = gameContext.mouseState.middleButton || io.MouseDown[ImGuiMouseButton_Middle];
+            bool isGizmoActive = ImGuizmo::IsOver() || ImGuizmo::IsUsing();
+
+            if ((isGameHovered || isRightDown || isMiddleDown) && !isGizmoActive)
+            {
+                cameraInput.mouseX = io.MouseDelta.x;
+                cameraInput.mouseY = io.MouseDelta.y;
+                cameraInput.isRightMouseDown = isRightDown;
+                cameraInput.isMiddleMouseDown = isMiddleDown;
+                cameraInput.scrollWheelDelta = io.MouseWheel * 120.0f;
+                cameraInput.ignoreScroll = (io.MouseWheel == 0.0f);
+                cameraInput.ignoreMovement = false;
+                camera->ProcessInput(cameraInput);
+            }
+        }
+        else
+#endif
         if (m_flowState == GameFlowState::Intro || m_flowState == GameFlowState::Victory || m_flowState == GameFlowState::GameOver || m_isVictory || !m_isGameViewFocused || focusJustAcquired)
         {
             HEIN::CameraInputState cameraInput;
@@ -976,8 +1012,8 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
             }
 
             cameraInput.isLeftMouseDown = mouseState.leftButton;
-            cameraInput.scrollWheelDelta = static_cast<float>(mouseState.scrollWheelValue);
-            cameraInput.ignoreScroll = false;
+            cameraInput.scrollWheelDelta = 0.0f;
+            cameraInput.ignoreScroll = true;
             cameraInput.ignoreMovement = false;
 
             camera->ProcessInput(cameraInput);
@@ -1254,6 +1290,30 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
 
         }
 
+    }
+
+    // Update PossessPrompt UI visibility only during active gameplay simulation
+    // In edit mode (!m_isPlaying), preserve whatever visibility the user configured in the inspector/JSON
+    if (m_isPlaying)
+    {
+        HEIN::Actor* promptActor = m_actorManager.GetActor(m_possessPromptID);
+        if (!promptActor)
+        {
+            promptActor = m_actorManager.GetActorByName(L"PossessPrompt");
+            if (promptActor)
+            {
+                m_possessPromptID = promptActor->GetID();
+            }
+        }
+        if (promptActor)
+        {
+            bool canPossess = (m_isGhost && m_targetVesselID != HEIN::INVALID_ACTOR_ID);
+            promptActor->SetVisible(canPossess);
+            if (auto* ui = promptActor->GetComponent<HEIN::UIButtonComponent>())
+            {
+                ui->SetVisible(canPossess);
+            }
+        }
     }
 
 }
@@ -1584,8 +1644,10 @@ void GameScene::ProcessLifecyclePhase(GameContext& gameContext, float deltaTime)
 
             else if (currentActor->GetID() != m_victoryBannerID && currentActor->GetID() != m_backToTitleButtonID &&
                      currentActor->GetID() != m_gameOverBannerID && currentActor->GetID() != m_retryButtonID &&
+                     currentActor->GetID() != m_possessPromptID &&
                      currentActor->GetTag() != L"VictoryBanner" && currentActor->GetTag() != L"BackToTitleButton" &&
-                     currentActor->GetTag() != L"GameOverBanner" && currentActor->GetTag() != L"RetryButton")
+                     currentActor->GetTag() != L"GameOverBanner" && currentActor->GetTag() != L"RetryButton" &&
+                     currentActor->GetTag() != L"PossessPrompt")
 
             {
 
@@ -2675,14 +2737,7 @@ void GameScene::HandleEditorActions(GameContext& gameContext)
             UnloadEditor(gameContext);
             return;
         }
-        else
-        {
-            // In editor exe when Play is pressed: keep mouse unchanged and unrestricted (desktop arrow, absolute mode)
-            if (m_debugDisplay && m_debugDisplay->GetViewportLayout() == EditorViewportLayout::SceneViewOnly)
-            {
-                m_debugDisplay->SetViewportLayout(EditorViewportLayout::GameViewOnly);
-            }
-        }
+        // In editor application: preserve dockable viewport layout so Scene View remains active and responsive
     }
     else if (!m_debugDisplay->isVisible())
     {
@@ -3372,6 +3427,21 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
     if (retryBtnAct) { retryBtnAct->SetVisible(false); retryBtnAct->SetActive(false); m_retryButtonID = retryBtnAct->GetID(); }
     else m_retryButtonID = HEIN::INVALID_ACTOR_ID;
 
+    auto possessPromptAct = m_actorManager.GetActorByName(L"PossessPrompt");
+    if (possessPromptAct)
+    {
+        m_possessPromptID = possessPromptAct->GetID();
+        if (m_isPlaying)
+        {
+            possessPromptAct->SetVisible(false);
+            if (auto* ui = possessPromptAct->GetComponent<HEIN::UIButtonComponent>())
+            {
+                ui->SetVisible(false);
+            }
+        }
+    }
+    else m_possessPromptID = HEIN::INVALID_ACTOR_ID;
+
     // Reset health and invincibility on all loaded actors for fresh gameplay state
 
     for (const auto& pair : m_actorManager.GetAllActors())
@@ -4053,8 +4123,10 @@ void GameScene::TriggerVictory(GameContext& gameContext)
     m_enemyID = HEIN::INVALID_ACTOR_ID;
 
     // Restore mouse cursor to absolute mode and ensure it is visible for UI interaction
+#if HEIN_WITH_EDITOR
     ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+#endif
     ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
     DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
     while (ShowCursor(TRUE) < 0);
@@ -4453,8 +4525,10 @@ void GameScene::TriggerGameOver(GameContext& gameContext)
     }
 
     // Restore mouse cursor to absolute mode and ensure it is visible for UI interaction
+#if HEIN_WITH_EDITOR
     ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+#endif
     ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
     DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
     while (ShowCursor(TRUE) < 0);
@@ -4623,6 +4697,20 @@ void GameScene::ResetMatch(GameContext& gameContext)
     if (auto* backBtn = m_actorManager.GetActor(m_backToTitleButtonID)) { backBtn->SetVisible(false); backBtn->SetActive(false); }
 
     else if (auto* bAct = m_actorManager.GetActorByName(L"BackToTitleButton")) { bAct->SetVisible(false); bAct->SetActive(false); }
+
+    if (m_isPlaying)
+    {
+        if (auto* possessAct = m_actorManager.GetActor(m_possessPromptID))
+        {
+            possessAct->SetVisible(false);
+            if (auto* ui = possessAct->GetComponent<HEIN::UIButtonComponent>()) { ui->SetVisible(false); }
+        }
+        else if (auto* pAct = m_actorManager.GetActorByName(L"PossessPrompt"))
+        {
+            pAct->SetVisible(false);
+            if (auto* ui = pAct->GetComponent<HEIN::UIButtonComponent>()) { ui->SetVisible(false); }
+        }
+    }
 
     m_isVictory = false;
 

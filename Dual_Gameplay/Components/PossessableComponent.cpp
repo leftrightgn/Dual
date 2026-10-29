@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "PossessableComponent.h"
+#if HEIN_WITH_EDITOR
+#include "../../External/Engine/ImGui/imgui.h"
+#endif
 
 namespace HEIN
 {
@@ -23,6 +26,7 @@ void HEIN::PossessableComponent::Deserialize(const nlohmann::json& data)
 	if (data.contains("IsOccupied")) m_isOccupied = data["IsOccupied"];
 }
 
+#if HEIN_WITH_EDITOR
 void HEIN::PossessableComponent::OnInspectorGUI(GameContext& /*gameContext*/)
 {
 	if (ImGui::CollapsingHeader("PossessableComponent", ImGuiTreeNodeFlags_DefaultOpen))
@@ -31,4 +35,7 @@ void HEIN::PossessableComponent::OnInspectorGUI(GameContext& /*gameContext*/)
 		ImGui::Checkbox("Is Occupied", &m_isOccupied);
 	}
 }
+#else
+void HEIN::PossessableComponent::OnInspectorGUI(GameContext& /*gameContext*/) {}
+#endif
 } // namespace HEIN

@@ -16,10 +16,16 @@ namespace HEIN
 
 		float m_attackRange;
 		float m_walkSpeed;
+		bool m_succeedOnArrival;
 
 	public:
 
-		BTChaseNode(float attackRange, float walkSpeed);
+		BTChaseNode(float attackRange, float walkSpeed, bool succeedOnArrival = false);
+
+		void OnEnter(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID) override;
+		void OnExit(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID) override;
+		void Abort(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID) override;
+		void Reset() override;
 
 		BTNodeState Tick(
 			HEIN::Actor* self,
@@ -27,5 +33,8 @@ namespace HEIN
 			HEIN::ActorID targetID,
 			float deltaTime
 		) override;
+
+		std::string GetNodeName() const override { return "Chase Node"; }
+		std::string GetNodeDetails() const override { return "Spd: " + std::to_string(m_walkSpeed).substr(0, 4) + " | Range: " + std::to_string(m_attackRange).substr(0, 4); }
 	};
 }

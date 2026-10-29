@@ -5,6 +5,7 @@
 #include "../../External/Engine/Components/IComponent.h"
 #include "../../External/Engine/Message/IObserver.h"
 #include "../../External/Engine/Message/Message.h"
+#include "../../External/Engine/DebugingTools/GenericNodeGraphView.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -75,6 +76,20 @@ namespace HEIN
 		 * - Reusability: Multiple enemies/archetypes can reference the exact same combat asset file.
 		 */
 		std::string m_configPath = "";
+
+		/// @brief visual node 
+		bool m_showNodeEditor = false;
+		bool m_showStateDetailsEditor = false;
+		std::string m_lastTransitionFrom = "";
+		std::string m_lastTransitionTo = "";
+		float m_transitionPulseTimer = 0.0f;
+		GenericNodeGraphView m_nodeGraphView;
+
+
+		void RenderNodeGraph();
+		void RenderStateDetailsWindow();
+		std::string m_selectedNodeName = "";
+
 
 	public:
 		CombatStateMachineComponent(Actor* owner);
@@ -190,6 +205,8 @@ namespace HEIN
 		void OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad);
 
 		void RebuildAllStates();
+
+
 	};
 }
 

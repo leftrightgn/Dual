@@ -5,6 +5,10 @@
 
 #pragma once
 
+#ifndef HEIN_WITH_EDITOR
+#define HEIN_WITH_EDITOR 1
+#endif
+
 #include <winsdkver.h>
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0603

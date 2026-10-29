@@ -1,23 +1,48 @@
 #include "pch.h"
 #include "BTIdleNode.h"
 #include "BlackBoard/CombatBlackBoard.h"
-#include "BlackBoard/BossBlackBoard.h"
 
 namespace HEIN
 {
-HEIN::BTNodeState HEIN::BTIdleNode::Tick(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/, float /*deltaTime*/)
+HEIN::BTNodeState HEIN::BTIdleNode::Tick(
+	HEIN::Actor* self, 
+	HEIN::ActorManager* /*manager*/, 
+	HEIN::ActorID /*targetID*/, 
+	float /*deltaTime*/
+)
 {
-	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
+	if (!self) return BTNodeState::Failure;
+
+	HEIN::CombatBlackBoard* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
 	if (blackboard == nullptr) return BTNodeState::Failure;
 
-	// Tell the debugger what the AI is thinking
 	blackboard->activeNodeName = "Idle / Waiting";
-
-	// Clear movement and lock-on so the enemy stops walking
 	blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 	blackboard->localMoveIntent = DirectX::SimpleMath::Vector3::Zero;
 	blackboard->isLockedOn = false;
 
-	return BTNodeState::Success;
+	return BTNodeState::Running;
+}
+
+void HEIN::BTIdleNode::Abort(
+	HEIN::Actor* self, 
+	HEIN::ActorManager* manager, 
+	HEIN::ActorID targetID
+)
+{
+	if (self)
+	{
+		if (auto* blackboard = self->GetComponent<HEIN::CombatBlackBoard>())
+		{
+			blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+			blackboard->localMoveIntent = DirectX::SimpleMath::Vector3::Zero;
+		}
+	}
+	BTNode::Abort(self, manager, targetID);
+}
+
+void HEIN::BTIdleNode::Reset()
+{
+	BTNode::Reset();
 }
 } // namespace HEIN

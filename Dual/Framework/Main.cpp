@@ -4,10 +4,12 @@
 
 #include "pch.h"
 #include "../../External/Engine/Framework/Game.h"
-#include "../../External/Engine/ImGui/imgui_impl_win32.h"
 #include "Factory/ActorFactory.h"
 #include "Scene/GameScene/GameScene.h"
 #include "Scene/TitleScene/TitleScene.h"
+#if HEIN_WITH_EDITOR
+#include "../../External/Engine/ImGui/imgui_impl_win32.h"
+#endif
 
 using namespace DirectX;
 
@@ -34,7 +36,9 @@ extern "C"
     __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
     __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
+#if HEIN_WITH_EDITOR
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
 // ウインドウスタイル
 #define WS_MYSTYLE ( WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX )
 
@@ -56,6 +60,18 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     if (FAILED(hr))
         return 1;
+
+    // Normalize asset working directory to Dual project root where Resources directory resides
+    if (!std::filesystem::exists("Resources") && std::filesystem::exists("../Dual/Resources"))
+    {
+        std::error_code ec;
+        std::filesystem::current_path("../Dual", ec);
+    }
+    else if (!std::filesystem::exists("Resources") && std::filesystem::exists("Dual/Resources"))
+    {
+        std::error_code ec;
+        std::filesystem::current_path("Dual", ec);
+    }
 
     // キーボード
     std::unique_ptr<Keyboard> keyboard = std::make_unique<Keyboard>();
@@ -165,10 +181,12 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
  */
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+#if HEIN_WITH_EDITOR
     if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
     {
         return true;
     }
+#endif
 
     static bool s_in_sizemove = false;
     static bool s_in_suspend = false;

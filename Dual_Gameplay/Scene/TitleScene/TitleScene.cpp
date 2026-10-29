@@ -309,8 +309,10 @@ void TitleScene::OnEnter(GameContext& gameContext)
     }
 
     // Ensure absolute mouse mode for title menu and ensure cursor is visible
+#if HEIN_WITH_EDITOR
     ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+#endif
     ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
     Mouse::Get().SetMode(Mouse::MODE_ABSOLUTE);
     while (ShowCursor(TRUE) < 0);
@@ -398,8 +400,10 @@ void TitleScene::Update(GameContext& gameContext)
     m_titlePulseTimer += deltaTime;
 
     // Keep mouse cursor visible and unlocked in absolute mode for title menu
+#if HEIN_WITH_EDITOR
     ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+#endif
     ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
     Mouse::Get().SetMode(Mouse::MODE_ABSOLUTE);
     while (ShowCursor(TRUE) < 0);

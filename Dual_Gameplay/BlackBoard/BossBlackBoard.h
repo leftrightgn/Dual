@@ -11,20 +11,10 @@ namespace HEIN
 	 */
 	struct BossBlackBoard : public CombatBlackBoard
 	{
-		// AI Behaviour Tree & Perception State
-		std::string activeNodeName = "None";
+		// Boss Cutscene Flag
 		bool hasBeenSeenByPlayer = false;
-		bool hasSetSpawnPosition = false;
-		DirectX::SimpleMath::Vector3 spawnPosition = DirectX::SimpleMath::Vector3::Zero;
-		float aggroRange = 80.0f;
-		bool isLeashing = false;
 
-		CombatStance targetStance = CombatStance::Idle;
-		bool isTargetAttacking = false;
-		float targetHealth = 100.0f;
-		float actionCooldownTimer = 0.0f;
-
-		// Multi-Parry Boss Threshold Tracking (Elden Ring Style)
+		// Multi-Parry Boss Threshold Tracking 
 		int currentParryCount = 0;
 		int parriesRequiredForStagger = 2; // Phase 1
 		int phase2ParriesRequired = 3;     // Phase 2
@@ -81,6 +71,28 @@ namespace HEIN
 		{
 		}
 
+		nlohmann::json Serialize() override
+		{
+			nlohmann::json data = CombatBlackBoard::Serialize();
+			data["ParriesRequiredForStagger"] = parriesRequiredForStagger;
+			data["Phase2ParriesRequired"] = phase2ParriesRequired;
+			data["Phase2HealthThresholdPct"] = phase2HealthThresholdPct;
+			data["ParryDecayDelay"] = parryDecayDelay;
+			data["HasBeenSeenByPlayer"] = hasBeenSeenByPlayer;
+			return data;
+		}
+
+		void Deserialize(const nlohmann::json& data) override
+		{
+			CombatBlackBoard::Deserialize(data);
+			if (data.contains("ParriesRequiredForStagger")) parriesRequiredForStagger = data["ParriesRequiredForStagger"];
+			if (data.contains("Phase2ParriesRequired")) phase2ParriesRequired = data["Phase2ParriesRequired"];
+			if (data.contains("Phase2HealthThresholdPct")) phase2HealthThresholdPct = data["Phase2HealthThresholdPct"];
+			if (data.contains("ParryDecayDelay")) parryDecayDelay = data["ParryDecayDelay"];
+			if (data.contains("HasBeenSeenByPlayer")) hasBeenSeenByPlayer = data["HasBeenSeenByPlayer"];
+		}
+
+#if HEIN_WITH_EDITOR
 		void OnInspectorGUI(GameContext& /*gameContext*/) override
 		{
 			if (ImGui::CollapsingHeader("BossBlackBoard", ImGuiTreeNodeFlags_DefaultOpen))
@@ -114,6 +126,9 @@ namespace HEIN
 				ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", currentVelocity.x, currentVelocity.y, currentVelocity.z);
 			}
 		}
+#else
+		void OnInspectorGUI(GameContext& /*gameContext*/) override {}
+#endif
 
 		std::string GetComponentName() const override { return "BossBlackBoard"; }
 	};

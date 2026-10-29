@@ -166,6 +166,9 @@
     <ClInclude Include="BehaviourTree\BTChaseNode.h">
       <Filter>BehaviourTree</Filter>
     </ClInclude>
+    <ClInclude Include="BehaviourTree\BTCheckActionCooldown.h">
+      <Filter>BehaviourTree</Filter>
+    </ClInclude>
     <ClInclude Include="BehaviourTree\BTCheckDistance.h">
       <Filter>BehaviourTree</Filter>
     </ClInclude>

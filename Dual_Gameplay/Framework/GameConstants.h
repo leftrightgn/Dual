@@ -50,10 +50,11 @@ namespace GameConstants
     {
         // Distance Thresholds
         constexpr float CloseGuardBreakDistance = 30.0f;
-        constexpr float HeavyAttackDistance = 32.0f;
+        constexpr float HeavyAttackDistance = 40.0f;
         constexpr float ComboAttackDistance = 28.0f;
         constexpr float ChaseArrivalDistance = 25.0f;
         constexpr float StrafeDistance = 35.0f;
+        constexpr float StrafeOrbitRadius = 25.0f;
         constexpr float TetherMaxDistance = 500.0f;
         constexpr float HeavyLungeDistanceThreshold = 22.0f;
         constexpr float ComboStepDistanceThreshold = 20.0f;
@@ -61,6 +62,8 @@ namespace GameConstants
         // Speeds
         constexpr float Phase1ChaseSpeed = 95.0f;
         constexpr float Phase2ChaseSpeed = 130.0f;
+        constexpr float Phase1StrafeSpeed = 50.0f;
+        constexpr float Phase2StrafeSpeed = 75.0f;
         constexpr float HeavyLungeSpeed = 35.0f;
         constexpr float ComboStepSpeed = 30.0f;
         constexpr float HeavyTurnSpeed = 5.0f;
@@ -72,7 +75,9 @@ namespace GameConstants
         constexpr float DodgeActionDuration = 1.20f;
         constexpr float P1GuardBreakCooldown = 0.80f;
         constexpr float P2GuardBreakCooldown = 0.50f;
+        constexpr float P1HeavyCooldown = 3.00f;
         constexpr float P2HeavyCooldown = 2.00f;
+        constexpr float P1ComboCooldown = 2.00f;
         constexpr float P2ComboCooldown = 0.40f;
         constexpr float HeavyAttackDuration = 3.20f;
         constexpr float ComboAttackDuration = 6.00f;
@@ -80,6 +85,10 @@ namespace GameConstants
         constexpr float AttackStateMinCheckTime = 0.40f;
         constexpr float HeavyTrackRatio = 0.60f;
         constexpr float ComboTrackTime = 0.45f;
+        constexpr float Phase1StrafeDuration = 2.00f;
+        constexpr float Phase2StrafeDuration = 1.20f;
+        constexpr float Phase1AttackPacingCooldown = 1.80f;
+        constexpr float Phase2AttackPacingCooldown = 0.80f;
     }
 
     namespace Weapons

@@ -39,7 +39,7 @@
                                             "fov": 54.20000076293945,
                                             "lookAt": [
                                                 -197.1027374267578,
-                                                -91.40518188476563,
+                                                -91.40518188476562,
                                                 -1647.1575927734375
                                             ]
                                         }
@@ -52,13 +52,13 @@
                                             "duration": 2.4000000953674316,
                                             "eye": [
                                                 -87.99171447753906,
-                                                -93.45535278320313,
+                                                -93.45535278320312,
                                                 -1401.2298583984375
                                             ],
                                             "fov": 45.0,
                                             "lookAt": [
                                                 -89.99171447753906,
-                                                -91.45535278320313,
+                                                -91.45535278320312,
                                                 -1408.7298583984375
                                             ]
                                         },
@@ -95,13 +95,13 @@
                             ]
                         },
                         "Fov": 0.8726646304130554,
-                        "PosX": 21.320749282836914,
-                        "PosY": -66.47621154785156,
-                        "PosZ": -1391.953857421875,
-                        "RotW": 0.9414963722229004,
-                        "RotX": -0.04506833478808403,
-                        "RotY": 0.3336140811443329,
-                        "RotZ": 0.015969717875123024
+                        "PosX": -23.99334144592285,
+                        "PosY": -62.01385498046875,
+                        "PosZ": -1353.5242919921875,
+                        "RotW": 0.9474074244499207,
+                        "RotX": -0.12273658812046051,
+                        "RotY": 0.2931092083454132,
+                        "RotZ": 0.037972286343574524
                     },
                     "Type": "CameraController"
                 }
@@ -255,15 +255,15 @@
                 {
                     "Data": {
                         "Position": [
-                            -4.475351810455322,
-                            -86.01252746582031,
-                            -1421.04833984375
+                            -44.29387664794922,
+                            -87.64068603515625,
+                            -1383.9859619140625
                         ],
                         "Rotation": [
-                            0.0,
-                            -0.3902128040790558,
-                            0.0,
-                            0.9207246899604797
+                            -0.0,
+                            0.16241289675235748,
+                            -0.0,
+                            0.9867228865623474
                         ],
                         "Scale": [
                             0.10000001639127731,
@@ -277,12 +277,16 @@
                     "Data": {
                         "Animations": [
                             {
+                                "Name": "Idle",
+                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
+                            },
+                            {
                                 "Name": "Slash3",
                                 "Path": "Resources/Models/knight/slash3.sdkmesh_anim"
                             },
                             {
-                                "Name": "Idle",
-                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
+                                "Name": "Slash2",
+                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
                             },
                             {
                                 "Name": "Walk",
@@ -293,20 +297,16 @@
                                 "Path": "Resources/Models/knight/roll.sdkmesh_anim"
                             },
                             {
-                                "Name": "Slash2",
-                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
-                            },
-                            {
                                 "Name": "Block",
                                 "Path": "Resources/Models/knight/block.sdkmesh_anim"
                             },
                             {
-                                "Name": "Slash1",
-                                "Path": "Resources/Models/knight/slash1.sdkmesh_anim"
-                            },
-                            {
                                 "Name": "Stun",
                                 "Path": "Resources/Models/knight/stun.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Slash1",
+                                "Path": "Resources/Models/knight/slash1.sdkmesh_anim"
                             },
                             {
                                 "Name": "Jump",
@@ -423,7 +423,7 @@
                     "Data": {
                         "ColliderTag": "BodyCollider",
                         "Enabled": true,
-                        "Height": 3.7047007083892822,
+                        "Height": 3.69534969329834,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -450,7 +450,7 @@
                     "Data": {
                         "ColliderTag": "RarmCollider",
                         "Enabled": true,
-                        "Height": 2.5574123859405518,
+                        "Height": 2.557436227798462,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -477,7 +477,7 @@
                     "Data": {
                         "ColliderTag": "RforearmCollider",
                         "Enabled": true,
-                        "Height": 2.160315752029419,
+                        "Height": 2.1603379249572754,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -504,7 +504,7 @@
                     "Data": {
                         "ColliderTag": "LarmCollider",
                         "Enabled": true,
-                        "Height": 2.557431221008301,
+                        "Height": 2.5573980808258057,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -531,7 +531,7 @@
                     "Data": {
                         "ColliderTag": "LforearmCollider",
                         "Enabled": true,
-                        "Height": 2.160327911376953,
+                        "Height": 2.1603951454162598,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -558,7 +558,7 @@
                     "Data": {
                         "ColliderTag": "RupLegCollider",
                         "Enabled": true,
-                        "Height": 4.170142650604248,
+                        "Height": 4.170214653015137,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -585,7 +585,7 @@
                     "Data": {
                         "ColliderTag": "RLegCollider",
                         "Enabled": true,
-                        "Height": 3.698159694671631,
+                        "Height": 3.698085069656372,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -612,7 +612,7 @@
                     "Data": {
                         "ColliderTag": "LupLegCollider",
                         "Enabled": true,
-                        "Height": 4.170164585113525,
+                        "Height": 4.170130252838135,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -639,7 +639,7 @@
                     "Data": {
                         "ColliderTag": "LLegCollider",
                         "Enabled": true,
-                        "Height": 3.698120594024658,
+                        "Height": 3.6980679035186768,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -1115,9 +1115,9 @@
                 {
                     "Data": {
                         "Position": [
-                            -200.221923828125,
+                            -200.11073303222656,
                             -109.43873596191406,
-                            -1655.1995849609375
+                            -1655.0164794921875
                         ],
                         "Rotation": [
                             0.0,
@@ -1141,28 +1141,28 @@
                                 "Path": "Resources/Models/Boss/idle.sdkmesh_anim"
                             },
                             {
-                                "Name": "Walk",
-                                "Path": "Resources/Models/Boss/running.sdkmesh_anim"
+                                "Name": "Combo1",
+                                "Path": "Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim"
                             },
                             {
                                 "Name": "Dodge",
                                 "Path": "Resources/Models/Boss/dodgeR.sdkmesh_anim"
                             },
                             {
-                                "Name": "Combo1",
-                                "Path": "Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim"
+                                "Name": "Walk",
+                                "Path": "Resources/Models/Boss/running.sdkmesh_anim"
                             },
                             {
                                 "Name": "Combo2",
                                 "Path": "Resources/Models/Boss/Standing Melee Attack Downward.sdkmesh_anim"
                             },
                             {
-                                "Name": "Combo3",
-                                "Path": "Resources/Models/Boss/Standing Melee Attack Backhand.sdkmesh_anim"
-                            },
-                            {
                                 "Name": "OneHand",
                                 "Path": "Resources/Models/Boss/Standing Melee Attack Horizontal.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Combo3",
+                                "Path": "Resources/Models/Boss/Standing Melee Attack Backhand.sdkmesh_anim"
                             },
                             {
                                 "Name": "HeavyAttack",
@@ -1208,7 +1208,7 @@
                     "Data": {
                         "ColliderTag": "BodyCollider",
                         "Enabled": true,
-                        "Height": 6.482369899749756,
+                        "Height": 6.482790946960449,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1235,7 +1235,7 @@
                     "Data": {
                         "ColliderTag": "RArmCollider",
                         "Enabled": true,
-                        "Height": 7.395627021789551,
+                        "Height": 7.395695686340332,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1262,7 +1262,7 @@
                     "Data": {
                         "ColliderTag": "RForearmCollider",
                         "Enabled": true,
-                        "Height": 4.741005897521973,
+                        "Height": 4.741001605987549,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1289,7 +1289,7 @@
                     "Data": {
                         "ColliderTag": "LArmCollider",
                         "Enabled": true,
-                        "Height": 7.395574569702148,
+                        "Height": 7.395538330078125,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1316,7 +1316,7 @@
                     "Data": {
                         "ColliderTag": "LForearmCollider",
                         "Enabled": true,
-                        "Height": 4.74092960357666,
+                        "Height": 4.740917205810547,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1343,7 +1343,7 @@
                     "Data": {
                         "ColliderTag": "RUpLegCollider",
                         "Enabled": true,
-                        "Height": 5.7428297996521,
+                        "Height": 5.742825031280518,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1370,7 +1370,7 @@
                     "Data": {
                         "ColliderTag": "RLegCollider",
                         "Enabled": true,
-                        "Height": 4.903070449829102,
+                        "Height": 4.903078556060791,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1397,7 +1397,7 @@
                     "Data": {
                         "ColliderTag": "LUpLegCollider",
                         "Enabled": true,
-                        "Height": 5.743154525756836,
+                        "Height": 5.743079662322998,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1424,7 +1424,7 @@
                     "Data": {
                         "ColliderTag": "LLegCollider",
                         "Enabled": true,
-                        "Height": 4.90269660949707,
+                        "Height": 4.902695178985596,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1622,7 +1622,27 @@
                     "Type": "GaugeComponent"
                 },
                 {
-                    "Data": null,
+                    "Data": {
+                        "AggroRange": 80.0,
+                        "CurrentHealth": 100.0,
+                        "CurrentSpeed": 0.0,
+                        "CurrentStamina": 100.0,
+                        "CurrentTurnSpeed": 10.0,
+                        "HasBeenSeenByPlayer": false,
+                        "HasSetSpawnPosition": true,
+                        "MaxHealth": 100.0,
+                        "MaxStamina": 100.0,
+                        "ParriesRequiredForStagger": 2,
+                        "ParryDecayDelay": 8.0,
+                        "Phase2HealthThresholdPct": 0.5,
+                        "Phase2ParriesRequired": 3,
+                        "SpawnPosition": [
+                            -203.60589599609375,
+                            -109.47433471679688,
+                            -1666.9375
+                        ],
+                        "UseStamina": false
+                    },
                     "Type": "BossBlackBoard"
                 },
                 {
@@ -2693,7 +2713,7 @@
                 {
                     "Data": {
                         "Position": [
-                            974.1641235351563,
+                            974.1641235351562,
                             -76.134765625,
                             -930.9750366210938
                         ],
@@ -2712,7 +2732,22 @@
                     "Type": "TransformComponent"
                 },
                 {
-                    "Data": null,
+                    "Data": {
+                        "AggroRange": 80.0,
+                        "CurrentHealth": 100.0,
+                        "CurrentSpeed": 55.0,
+                        "CurrentStamina": 100.0,
+                        "CurrentTurnSpeed": 25.0,
+                        "HasSetSpawnPosition": false,
+                        "MaxHealth": 100.0,
+                        "MaxStamina": 100.0,
+                        "SpawnPosition": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "UseStamina": false
+                    },
                     "Type": "CombatBlackBoard"
                 },
                 {
@@ -2927,9 +2962,9 @@
                 {
                     "Data": {
                         "Position": [
-                            126.34517669677734,
+                            126.33790588378906,
                             -88.96723937988281,
-                            -1227.1063232421875
+                            -1227.0784912109375
                         ],
                         "Rotation": [
                             0.0,
@@ -2949,16 +2984,12 @@
                     "Data": {
                         "Animations": [
                             {
-                                "Name": "Idle",
-                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
-                            },
-                            {
                                 "Name": "Slash3",
                                 "Path": "Resources/Models/knight/slash3.sdkmesh_anim"
                             },
                             {
-                                "Name": "Slash2",
-                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
+                                "Name": "Idle",
+                                "Path": "Resources/Models/knight/idle.sdkmesh_anim"
                             },
                             {
                                 "Name": "Walk",
@@ -2969,16 +3000,20 @@
                                 "Path": "Resources/Models/knight/Dodge.sdkmesh_anim"
                             },
                             {
+                                "Name": "Slash2",
+                                "Path": "Resources/Models/knight/slash2.sdkmesh_anim"
+                            },
+                            {
                                 "Name": "Block",
                                 "Path": "Resources/Models/knight/block.sdkmesh_anim"
                             },
                             {
-                                "Name": "Stun",
-                                "Path": "Resources/Models/knight/stun.sdkmesh_anim"
-                            },
-                            {
                                 "Name": "Slash1",
                                 "Path": "Resources/Models/knight/slash1.sdkmesh_anim"
+                            },
+                            {
+                                "Name": "Stun",
+                                "Path": "Resources/Models/knight/stun.sdkmesh_anim"
                             },
                             {
                                 "Name": "Jump",
@@ -3095,7 +3130,7 @@
                     "Data": {
                         "ColliderTag": "BodyCollider",
                         "Enabled": true,
-                        "Height": 3.695037364959717,
+                        "Height": 3.695347309112549,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3122,7 +3157,7 @@
                     "Data": {
                         "ColliderTag": "RarmCollider",
                         "Enabled": true,
-                        "Height": 2.5574188232421875,
+                        "Height": 2.557448625564575,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3149,7 +3184,7 @@
                     "Data": {
                         "ColliderTag": "RforearmCollider",
                         "Enabled": true,
-                        "Height": 2.160386562347412,
+                        "Height": 2.160325527191162,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3176,7 +3211,7 @@
                     "Data": {
                         "ColliderTag": "LarmCollider",
                         "Enabled": true,
-                        "Height": 2.5574474334716797,
+                        "Height": 2.5573737621307373,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3203,7 +3238,7 @@
                     "Data": {
                         "ColliderTag": "LforearmCollider",
                         "Enabled": true,
-                        "Height": 2.16033935546875,
+                        "Height": 2.1603379249572754,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3230,7 +3265,7 @@
                     "Data": {
                         "ColliderTag": "RupLegCollider",
                         "Enabled": true,
-                        "Height": 4.170223236083984,
+                        "Height": 4.170201778411865,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3257,7 +3292,7 @@
                     "Data": {
                         "ColliderTag": "RLegCollider",
                         "Enabled": true,
-                        "Height": 3.698124647140503,
+                        "Height": 3.6981258392333984,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3284,7 +3319,7 @@
                     "Data": {
                         "ColliderTag": "LupLegCollider",
                         "Enabled": true,
-                        "Height": 4.170199394226074,
+                        "Height": 4.170196056365967,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3311,7 +3346,7 @@
                     "Data": {
                         "ColliderTag": "LLegCollider",
                         "Enabled": true,
-                        "Height": 3.6980934143066406,
+                        "Height": 3.698091745376587,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3489,7 +3524,22 @@
                     "Type": "GaugeComponent"
                 },
                 {
-                    "Data": null,
+                    "Data": {
+                        "AggroRange": 80.0,
+                        "CurrentHealth": 100.0,
+                        "CurrentSpeed": 0.0,
+                        "CurrentStamina": 100.0,
+                        "CurrentTurnSpeed": 10.0,
+                        "HasSetSpawnPosition": false,
+                        "MaxHealth": 100.0,
+                        "MaxStamina": 100.0,
+                        "SpawnPosition": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "UseStamina": false
+                    },
                     "Type": "CombatBlackBoard"
                 },
                 {
@@ -3715,6 +3765,83 @@
             "IsActive": false,
             "IsVisible": false,
             "Name": "BackToTitleButton",
+            "OwnerID": 0
+        },
+        {
+            "ActorType": 0,
+            "Children": [],
+            "Components": [
+                {
+                    "Data": {
+                        "Position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Type": "TransformComponent"
+                },
+                {
+                    "Data": {
+                        "BeamHeightScale": 1.2000000476837158,
+                        "BeamWidthScale": 1.2000000476837158,
+                        "DrawDiamonds": true,
+                        "DrawFallbackBox": false,
+                        "ElementType": 0,
+                        "FontSize": 0.8500000238418579,
+                        "GlowColorA": 0.699999988079071,
+                        "GlowColorB": 0.8500000238418579,
+                        "GlowColorG": 1.0,
+                        "GlowColorR": 0.20000000298023224,
+                        "HoverTex": "",
+                        "HoverTextColorA": 1.0,
+                        "HoverTextColorB": 0.8500000238418579,
+                        "HoverTextColorG": 1.0,
+                        "HoverTextColorR": 0.20000000298023224,
+                        "IsVisible": true,
+                        "NormalTex": "",
+                        "NormalTextColorA": 1.0,
+                        "NormalTextColorB": 0.8500000238418579,
+                        "NormalTextColorG": 1.0,
+                        "NormalTextColorR": 0.20000000298023224,
+                        "PosX": 440.0,
+                        "PosY": 560.0,
+                        "PressedTex": "",
+                        "SizeX": 400.0,
+                        "SizeY": 60.0,
+                        "SpriteFontPath": "Resources/Font/Cinzel-Bold.spritefont",
+                        "SubmitKeys": [],
+                        "Text": "[Q] POSSESS VESSEL",
+                        "TextColorA": 1.0,
+                        "TextColorB": 0.8500000238418579,
+                        "TextColorG": 1.0,
+                        "TextColorR": 0.20000000298023224,
+                        "TextOffsetX": 0.0,
+                        "TextOffsetY": 0.0,
+                        "TintA": 1.0,
+                        "TintB": 1.0,
+                        "TintG": 1.0,
+                        "TintR": 1.0,
+                        "UseEldenStyle": true
+                    },
+                    "Type": "UIButtonComponent"
+                }
+            ],
+            "EnableFrustumCulling": false,
+            "IsActive": true,
+            "IsVisible": true,
+            "Name": "PossessPrompt",
             "OwnerID": 0
         }
     ]

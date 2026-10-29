@@ -34,11 +34,19 @@ namespace HEIN
 
 		BTDodgeNode(float cooldown = 3.0f);
 
+		void OnEnter(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID) override;
+		void OnExit(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID) override;
+		void Abort(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID) override;
+		void Reset() override;
+
 		BTNodeState Tick(
 			HEIN::Actor* self,
 			HEIN::ActorManager* manager,
 			HEIN::ActorID targetID,
 			float deltaTime
 		) override;
+
+		std::string GetNodeName() const override { return "Dodge Node"; }
+		std::string GetNodeDetails() const override { return "Cooldown: " + std::to_string(m_cooldown).substr(0, 4) + "s"; }
 	};
 }

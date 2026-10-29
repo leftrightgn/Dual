@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "BTCheckTargetStance.h"
-#include "BlackBoard/BossBlackBoard.h"
+#include "BlackBoard/CombatBlackBoard.h"
 
 namespace HEIN
 {
@@ -16,18 +16,20 @@ HEIN::BTCheckTargetStance::BTCheckTargetStance(bool checkIsAttacking)
 {
 }
 
-HEIN::BTNodeState HEIN::BTCheckTargetStance::Tick(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/, float /*deltaTime*/)
+HEIN::BTNodeState HEIN::BTCheckTargetStance::Tick(
+	HEIN::Actor* self, 
+	HEIN::ActorManager* /*manager*/, 
+	HEIN::ActorID /*targetID*/, 
+	float /*deltaTime*/
+)
 {
-	auto* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
+	if (!self) return BTNodeState::Failure;
+
+	auto* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
 	if (!blackboard) return BTNodeState::Failure;
 
 	if (m_checkIsAttacking)
 	{
-		// Keep reactive dodge sequence latched while the actor is actively mid-dodge
-		if (blackboard->currentStance == CombatStance::Dodging)
-		{
-			return BTNodeState::Success;
-		}
 		return blackboard->isTargetAttacking ? BTNodeState::Success : BTNodeState::Failure;
 	}
 

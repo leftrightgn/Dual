@@ -3,6 +3,7 @@
 #include "../../External/Engine/Components/IComponent.h"
 #include "../../External/Engine/Entities/Actor.h"
 #include "../../External/Engine/Entities/ActorManager.h"
+#include "../../External/Engine/DebugingTools/GenericNodeGraphView.h"
 
 namespace HEIN
 {
@@ -31,7 +32,12 @@ namespace HEIN
 		/// @brief The ID of the target actor (e.g. the player) this AI is focusing on.
 		HEIN::ActorID m_targetID;
 
+		bool m_showNodeEditor = false;
+		GenericNodeGraphView m_nodeGraphView;
+
 	public:
+		void EnsureInitialized();
+		void RenderNodeGraph();
 		BehaviourTreeComponent(Actor* owner);
 
 		/**
@@ -57,12 +63,18 @@ namespace HEIN
 		 */
 		bool m_hasSetSpawnPosition = false;
 		DirectX::SimpleMath::Vector3 m_spawnPosition = DirectX::SimpleMath::Vector3::Zero;
-		float m_aggroRange = 80.0f;
-		bool m_isPaused = false;
-
-		void SetPaused(bool paused) { m_isPaused = paused; }
-		bool IsPaused() const { return m_isPaused; }
-
+		float m_aggroRange = 80.0f;
+
+		bool m_isPaused = false;
+
+
+
+		void SetPaused(bool paused) { m_isPaused = paused; }
+
+		bool IsPaused() const { return m_isPaused; }
+
+
+
 		void Update(float deltaTime) override;
 
 		std::string GetComponentName() const override { return "BehaviourTreeComponent"; }

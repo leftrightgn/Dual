@@ -269,6 +269,8 @@ namespace HEIN
 
 		const StateConfig& GetConfig() const { return *m_config; }
 		float GetTimer() const { return m_timer; }
+		float GetActualDuration() const { return m_actualDuration; }
+		float GetDuration() const { return m_config ? m_config->stateDuration : m_actualDuration; }
 		bool IsInWindupPause() const { return m_isInWindupPause; }
 	};
 

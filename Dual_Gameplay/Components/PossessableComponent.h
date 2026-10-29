@@ -1,6 +1,5 @@
 #pragma once
 #include "../../External/Engine/Components/IComponent.h"
-#include "../../External/Engine/ImGui/imgui.h"
 
 namespace HEIN
 {

@@ -1,34 +1,80 @@
 #include "pch.h"
 #include "BTReturnToSpawnNode.h"
 #include "BlackBoard/CombatBlackBoard.h"
-#include "BlackBoard/BossBlackBoard.h"
-#include "Components/CombatStateMachineComponent.h"
 #include "Components/TransformComponent.h"
-#include "Message/Message.h"
-#include "Message/Messenger.h"
+#include "../../External/Engine/Message/Message.h"
+#include "../../External/Engine/Message/Messenger.h"
 
 namespace HEIN
 {
-HEIN::BTReturnToSpawnNode::BTReturnToSpawnNode(float walkSpeed)
+BTReturnToSpawnNode::BTReturnToSpawnNode(float walkSpeed)
 	: m_walkSpeed(walkSpeed)
 {
 }
 
-HEIN::BTNodeState HEIN::BTReturnToSpawnNode::Tick(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/, float deltaTime)
+void BTReturnToSpawnNode::OnEnter(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/)
 {
-	HEIN::BossBlackBoard* blackboard = self->GetComponent<HEIN::BossBlackBoard>();
-	HEIN::TransformComponent* transform = self->GetComponent<HEIN::TransformComponent>();
+	m_isActive = true;
+	m_currentState = BTNodeState::Running;
+	if (self)
+	{
+		auto* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+		if (blackboard)
+		{
+			blackboard->activeNodeName = GetNodeName();
+			blackboard->isLockedOn = false;
+			blackboard->isAttacking = false;
+		}
+		Messenger::GetInstance()->Notify(self->GetID(), Message::PLAYER_EXIT_STRAFE);
+	}
+}
 
-	if (blackboard == nullptr || transform == nullptr) return BTNodeState::Failure;
+void BTReturnToSpawnNode::OnExit(HEIN::Actor* self, HEIN::ActorManager* /*manager*/, HEIN::ActorID /*targetID*/)
+{
+	if (self)
+	{
+		auto* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+		if (blackboard)
+		{
+			blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
+			blackboard->localMoveIntent = DirectX::SimpleMath::Vector3::Zero;
+		}
+	}
+	m_isActive = false;
+}
+
+void BTReturnToSpawnNode::Abort(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID)
+{
+	OnExit(self, manager, targetID);
+	m_isActive = false;
+	m_currentState = BTNodeState::Failure;
+}
+
+void BTReturnToSpawnNode::Reset()
+{
+	m_isActive = false;
+	m_currentState = BTNodeState::Failure;
+}
+
+BTNodeState BTReturnToSpawnNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID, float /*deltaTime*/)
+{
+	if (!self) return BTNodeState::Failure;
+
+	auto* blackboard = self->GetComponent<HEIN::CombatBlackBoard>();
+	auto* transform = self->GetComponent<HEIN::TransformComponent>();
+
+	if (!blackboard || !transform) return BTNodeState::Failure;
+
+	if (!m_isActive || m_currentState != BTNodeState::Running)
+	{
+		OnEnter(self, manager, targetID);
+	}
 
 	DirectX::SimpleMath::Vector3 currentPos = transform->GetPosition();
 	DirectX::SimpleMath::Vector3 dirToHome = blackboard->spawnPosition - currentPos;
-
-	// Evaluate horizontal distance on the XZ plane, ignoring vertical displacement
 	dirToHome.y = 0.0f;
 	float distanceToHome = dirToHome.Length();
 
-	// If reached, succeed this node to prevent falling back to combat.
 	if (distanceToHome < 2.0f)
 	{
 		blackboard->activeNodeName = "Idle at Spawn";
@@ -36,26 +82,21 @@ HEIN::BTNodeState HEIN::BTReturnToSpawnNode::Tick(HEIN::Actor* self, HEIN::Actor
 		blackboard->localMoveIntent = DirectX::SimpleMath::Vector3::Zero;
 		blackboard->isLockedOn = false;
 		blackboard->isLeashing = false;
-		
-		// Wait at home.
+
+		OnExit(self, manager, targetID);
+		m_currentState = BTNodeState::Success;
 		return BTNodeState::Success;
 	}
 
-	// Far from spawn; return to spawn position.
 	blackboard->activeNodeName = "Returning to Spawn";
 	blackboard->isLockedOn = false;
 	blackboard->isAttacking = false;
-	Messenger::GetInstance()->Notify(self->GetID(), Message::PLAYER_EXIT_STRAFE);
 
 	dirToHome.Normalize();
 	blackboard->moveIntent = dirToHome;
 	blackboard->currentSpeed = m_walkSpeed;
 
-	float targetYaw = std::atan2(dirToHome.x, dirToHome.z) + DirectX::XM_PI;
-	DirectX::SimpleMath::Quaternion targetRotation = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(targetYaw, 0.0f, 0.0f);
-	DirectX::SimpleMath::Quaternion currentRot = transform->GetRotation();
-	transform->SetRotation(DirectX::SimpleMath::Quaternion::Slerp(currentRot, targetRotation, std::clamp(deltaTime * 10.0f, 0.0f, 1.0f)));
-
+	m_currentState = BTNodeState::Running;
 	return BTNodeState::Running;
 }
 } // namespace HEIN

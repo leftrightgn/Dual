@@ -11,7 +11,9 @@
 #include "../../External/Engine/DebugingTools/DebugCollisionRenderer.h"
 #include "../../External/Engine/Entities/ActorManager.h"
 #include "../../External/Engine/Message/Messenger.h"
+#if HEIN_WITH_EDITOR
 #include "../../External/Engine/ImGui/imgui.h"
+#endif
 #include <algorithm>
 
 namespace HEIN
@@ -440,6 +442,7 @@ namespace HEIN
 			}
 		}
 	}
+#if HEIN_WITH_EDITOR
 
 	void ShockwaveEmitterComponent::OnInspectorGUI(GameContext& /*gameContext*/)
 	{
@@ -457,4 +460,7 @@ namespace HEIN
 			Clear();
 		}
 	}
+#else
+void ShockwaveEmitterComponent::OnInspectorGUI(GameContext& /*gameContext*/) {}
+#endif
 }

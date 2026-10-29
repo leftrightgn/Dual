@@ -40,5 +40,8 @@ namespace HEIN
 			HEIN::ActorID targetID,
 			float deltaTime
 		) override;
+
+		std::string GetNodeName() const override { return "Check Distance"; }
+		std::string GetNodeDetails() const override { return "Range: " + std::to_string(m_minDistance).substr(0, 4) + " - " + std::to_string(m_maxDistance).substr(0, 4); }
 	};
 }

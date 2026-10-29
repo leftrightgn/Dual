@@ -28,6 +28,7 @@ namespace HEIN
 		float m_minAttackDis;
 		bool m_isAttacking;
 		bool m_isHeavyAttack;
+		float m_postAttackCooldown;
 
 		float m_heavyTrackRatio = GameConstants::BossAI::HeavyTrackRatio;
 		float m_comboTrackTime = GameConstants::BossAI::ComboTrackTime;
@@ -40,7 +41,12 @@ namespace HEIN
 
 	public:
 
-		BTAttackNode(float attackDuration, float minAttackDis = 12.0f, bool isHeavyAttack = false);
+		BTAttackNode(float attackDuration, float minAttackDis = 12.0f, bool isHeavyAttack = false, float postAttackCooldown = 0.0f);
+
+		void OnEnter(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID) override;
+		void OnExit(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID) override;
+		void Abort(HEIN::Actor* self, HEIN::ActorManager* manager, HEIN::ActorID targetID) override;
+		void Reset() override;
 
 		BTNodeState Tick(
 			HEIN::Actor* self,
@@ -48,5 +54,8 @@ namespace HEIN
 			HEIN::ActorID targetID,
 			float deltaTime
 		) override;
+
+		std::string GetNodeName() const override { return m_isHeavyAttack ? "Heavy Attack" : "Combo Attack"; }
+		std::string GetNodeDetails() const override { return "Dur: " + std::to_string(m_attackDuration).substr(0, 4) + "s | Dis: " + std::to_string(m_minAttackDis).substr(0, 4); }
 	};
 }

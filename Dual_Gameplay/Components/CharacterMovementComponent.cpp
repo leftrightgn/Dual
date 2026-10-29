@@ -5,7 +5,10 @@
 #include "../../External/Engine/Components/SkinnedModelComponent.h"
 #include "../../External/Engine/Components/TransformComponent.h"
 #include "../../External/Engine/Entities/Actor.h"
+#if HEIN_WITH_EDITOR
 #include "../../External/Engine/ImGui/imgui.h"
+#endif
+#include <cmath>
 
 namespace HEIN
 {
@@ -31,7 +34,25 @@ void HEIN::CharacterMovementComponent::Start()
 
 void HEIN::CharacterMovementComponent::ApplyImpulse(const DirectX::SimpleMath::Vector3& impulse)
 {
-	m_impulseVelocity += impulse;
+	float mass = 1.0f;
+	if (m_rigidBody != nullptr)
+	{
+		mass = m_rigidBody->GetMass();
+		if (std::isnan(mass) || mass <= 0.001f) mass = 1.0f;
+	}
+	else if (m_owner != nullptr)
+	{
+		m_rigidBody = m_owner->GetComponent<HEIN::RigidBodyComponent>();
+		if (m_rigidBody != nullptr)
+		{
+			mass = m_rigidBody->GetMass();
+			if (std::isnan(mass) || mass <= 0.001f) mass = 1.0f;
+		}
+	}
+
+	// Delta v = Impulse * (1.0f / mass)
+	DirectX::SimpleMath::Vector3 massWeightedDeltaV = impulse * (1.0f / mass);
+	m_impulseVelocity += massWeightedDeltaV;
 }
 
 void HEIN::CharacterMovementComponent::Update(float deltaTime)
@@ -270,6 +291,7 @@ void HEIN::CharacterMovementComponent::Update(float deltaTime)
 	}
 }
 
+#if HEIN_WITH_EDITOR
 void HEIN::CharacterMovementComponent::OnInspectorGUI(GameContext& /*gameContext*/)
 {
 	if (ImGui::CollapsingHeader("CharacterMovementComponent", ImGuiTreeNodeFlags_DefaultOpen))
@@ -297,6 +319,9 @@ void HEIN::CharacterMovementComponent::OnInspectorGUI(GameContext& /*gameContext
 		ImGui::Checkbox("Allow Lock-On Facing", &m_allowLockOnFacing);
 	}
 }
+#else
+void HEIN::CharacterMovementComponent::OnInspectorGUI(GameContext& /*gameContext*/) {}
+#endif
 
 nlohmann::json HEIN::CharacterMovementComponent::Serialize()
 {

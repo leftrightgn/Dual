@@ -84,6 +84,7 @@ namespace HEIN
 		{
 		}
 
+#if HEIN_WITH_EDITOR
 		void OnInspectorGUI(GameContext& /*gameContext*/) override
 		{
 			if (ImGui::CollapsingHeader("PlayerBlackBoard", ImGuiTreeNodeFlags_DefaultOpen))
@@ -201,6 +202,9 @@ namespace HEIN
 				ImGui::Text("Velocity: (%.2f, %.2f, %.2f)", currentVelocity.x, currentVelocity.y, currentVelocity.z);
 			}
 		}
+#else
+		void OnInspectorGUI(GameContext& /*gameContext*/) override {}
+#endif
 
 		nlohmann::json Serialize() override
 		{

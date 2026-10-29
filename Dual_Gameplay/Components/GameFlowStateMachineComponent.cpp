@@ -12,7 +12,9 @@
 #include "../../External/Engine/Components/SkinnedModelComponent.h"
 #include "../../External/Engine/Components/TransformComponent.h"
 #include "../../External/Engine/Framework/GameContext.h"
+#if HEIN_WITH_EDITOR
 #include "../../External/Engine/ImGui/imgui.h"
+#endif
 
 namespace HEIN
 {
@@ -443,6 +445,7 @@ void HEIN::GameFlowStateMachineComponent::ResetMatch(GameContext& gameContext)
 
 
 
+#if HEIN_WITH_EDITOR
 void HEIN::GameFlowStateMachineComponent::OnInspectorGUI(GameContext& gameContext)
 
 {
@@ -584,6 +587,9 @@ void HEIN::GameFlowStateMachineComponent::OnInspectorGUI(GameContext& gameContex
 	}
 
 }
+#else
+void HEIN::GameFlowStateMachineComponent::OnInspectorGUI(GameContext& /*gameContext*/) {}
+#endif
 
 
 

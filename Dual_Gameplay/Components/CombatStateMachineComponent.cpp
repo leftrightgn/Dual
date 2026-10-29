@@ -11,7 +11,10 @@
 #include "../../External/Engine/Components/HealthComponent.h"
 #include "../../External/Engine/Components/TargetTrackingComponent.h"
 #include "../../External/Engine/Message/Messenger.h"
+#if HEIN_WITH_EDITOR
 #include "ImGui/imgui.h"
+#include "ImGui/imNodes.h"
+#endif
 #include <filesystem>
 #include <fstream>
 
@@ -279,6 +282,24 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
             blackboard->isLockedOn = tracking->IsLockedOn();
         }
     }
+
+    if (m_transitionPulseTimer > 0.0f)
+    {
+        m_transitionPulseTimer -= rawDt;
+        if (m_transitionPulseTimer < 0.0f)
+        {
+            m_transitionPulseTimer = 0.0f;
+        }
+    }
+
+    if (m_showNodeEditor)
+    {
+        RenderNodeGraph();
+    }
+    if (m_showStateDetailsEditor)
+    {
+        RenderStateDetailsWindow();
+    }
 }
 
 bool HEIN::CombatStateMachineComponent::ChangeState(const std::string& stateName, float blendDuration)
@@ -296,6 +317,8 @@ bool HEIN::CombatStateMachineComponent::ChangeState(const std::string& stateName
 void HEIN::CombatStateMachineComponent::ApplyPendingState()
 {
     if (m_pendingState == nullptr) return;
+
+    std::string previousStateName = m_currentStateName;
 
     if (m_currentState != nullptr)
     {
@@ -318,6 +341,13 @@ void HEIN::CombatStateMachineComponent::ApplyPendingState()
     {
         // Inject the precise blend duration specific to the arrow that caused this transition
         m_currentState->OnEnter(m_owner, this, m_pendingBlendDuration);
+    }
+
+    if (!previousStateName.empty() && previousStateName != m_currentStateName)
+    {
+        m_lastTransitionFrom = previousStateName;
+        m_lastTransitionTo = m_currentStateName;
+        m_transitionPulseTimer = 0.65f;
     }
 }
 
@@ -1060,10 +1090,256 @@ void HEIN::CombatStateMachineComponent::DeserializeStatesFromJSON(const nlohmann
     RebuildAllStates();
 }
 
+#if HEIN_WITH_EDITOR
+void HEIN::CombatStateMachineComponent::RenderNodeGraph()
+{
+    GenericGraphDesc graph;
+    graph.graphTitle = "Combat State Machine - Node View";
+    graph.activeNodeName = m_currentStateName;
+    graph.onRenderToolbarExtra = [this]()
+    {
+        if (ImGui::Button("Open State Editor Window"))
+        {
+            m_showStateDetailsEditor = true;
+        }
+    };
+
+    int nodeId = 1;
+    int pinId = 1000;
+    int linkId = 5000;
+
+    std::unordered_map<int, std::string> nodeIdToName;
+    std::unordered_map<std::string, int> stateToInputPin;
+    std::unordered_map<std::string, int> transitionToOutputPin;
+
+    // Build Generic Nodes
+    for (const auto& [name, cfg] : m_stateConfigs)
+    {
+        GenericGraphNode node;
+        node.id = nodeId;
+        node.title = name;
+        node.isActive = (name == m_currentStateName);
+
+        if (node.isActive && m_currentState)
+        {
+            if (auto* universalState = dynamic_cast<UniversalCombatState*>(m_currentState))
+            {
+                float duration = universalState->GetDuration();
+                float timer = universalState->GetTimer();
+                node.progress = (duration > 0.0f) ? (timer / duration) : 0.0f;
+            }
+        }
+
+        char subBuf[128];
+        sprintf_s(subBuf, "Anim: %s | Dur: %.2fs | Spd: %.1f", cfg.animationName.c_str(), cfg.stateDuration, cfg.moveSpeed);
+        node.subtitle = subBuf;
+
+        // Master Input Pin
+        node.inputPins.push_back({ pinId, "Enter", true });
+        stateToInputPin[name] = pinId++;
+
+        // Output Pins (Transitions)
+        for (const auto& [eventTag, transition] : cfg.transitions)
+        {
+            node.outputPins.push_back({ pinId, eventTag + " -> " + transition.targetState, false });
+            transitionToOutputPin[name + eventTag] = pinId++;
+        }
+
+        nodeIdToName[nodeId] = name;
+        graph.nodes.push_back(node);
+        nodeId++;
+    }
+
+    // Build Generic Links with dynamic chromatic pulse
+    for (const auto& [name, cfg] : m_stateConfigs)
+    {
+        for (const auto& [eventTag, transition] : cfg.transitions)
+        {
+            if (stateToInputPin.find(transition.targetState) != stateToInputPin.end())
+            {
+                GenericGraphLink link;
+                link.id = linkId++;
+                link.startPinId = transitionToOutputPin[name + eventTag];
+                link.endPinId = stateToInputPin[transition.targetState];
+                link.isPulsing = (m_transitionPulseTimer > 0.0f && name == m_lastTransitionFrom && transition.targetState == m_lastTransitionTo);
+                link.pulseTimer = m_transitionPulseTimer;
+                graph.links.push_back(link);
+            }
+        }
+    }
+
+    int selectedNodeId = 0;
+    m_nodeGraphView.Render(graph, &m_showNodeEditor, &selectedNodeId);
+
+    if (selectedNodeId > 0 && nodeIdToName.find(selectedNodeId) != nodeIdToName.end())
+    {
+        m_selectedNodeName = nodeIdToName[selectedNodeId];
+    }
+}
+
+void HEIN::CombatStateMachineComponent::RenderStateDetailsWindow()
+{
+    ImGui::SetNextWindowSize(ImVec2(500, 650), ImGuiCond_FirstUseEver);
+    if (!ImGui::Begin("Combat State Machine - State Editor", &m_showStateDetailsEditor))
+    {
+        ImGui::End();
+        return;
+    }
+
+    if (m_stateConfigs.empty())
+    {
+        ImGui::TextDisabled("No states configured in this state machine.");
+        ImGui::End();
+        return;
+    }
+
+    bool configChanged = false;
+
+    if (ImGui::BeginCombo("Editing State", m_selectedNodeName.empty() ? "<Select a State>" : m_selectedNodeName.c_str()))
+    {
+        for (auto& [name, cfg] : m_stateConfigs)
+        {
+            bool isSelected = (m_selectedNodeName == name);
+            if (ImGui::Selectable(name.c_str(), isSelected))
+            {
+                m_selectedNodeName = name;
+            }
+            if (isSelected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    if (!m_selectedNodeName.empty() && m_stateConfigs.contains(m_selectedNodeName))
+    {
+        auto& cfg = m_stateConfigs[m_selectedNodeName];
+        ImGui::PushID(m_selectedNodeName.c_str());
+
+        bool isCurrent = (m_currentStateName == m_selectedNodeName);
+        if (isCurrent)
+        {
+            ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "[ACTIVE]");
+            ImGui::SameLine();
+        }
+
+        if (ImGui::Button("Play State Live"))
+        {
+            ChangeState(m_selectedNodeName, 0.1f);
+            ApplyPendingState();
+        }
+
+        char animBuf[128];
+        strcpy_s(animBuf, cfg.animationName.c_str());
+        if (ImGui::InputText("Primary Animation", animBuf, sizeof(animBuf)))
+        {
+            cfg.animationName = animBuf;
+            configChanged = true;
+        }
+
+        char secAnimBuf[128];
+        strcpy_s(secAnimBuf, cfg.secondaryAnimationName.c_str());
+        if (ImGui::InputText("Secondary Animation", secAnimBuf, sizeof(secAnimBuf)))
+        {
+            cfg.secondaryAnimationName = secAnimBuf;
+            configChanged = true;
+        }
+
+        if (ImGui::DragFloat("Move Speed", &cfg.moveSpeed, 0.5f, 0.0f, 100.0f)) configChanged = true;
+        if (ImGui::DragFloat("State Duration", &cfg.stateDuration, 0.05f, 0.0f, 10.0f)) configChanged = true;
+        if (ImGui::DragFloat("Turn Speed", &cfg.turnSpeed, 0.5f, 0.0f, 50.0f)) configChanged = true;
+        if (ImGui::DragFloat3("Enter Impulse", &cfg.enterImpulse.x, 0.5f, -200.0f, 200.0f)) configChanged = true;
+
+        if (ImGui::Checkbox("Is Looping", &cfg.isLooping)) configChanged = true;
+        ImGui::SameLine();
+        if (ImGui::Checkbox("Is Attack", &cfg.isAttack)) configChanged = true;
+        ImGui::SameLine();
+        if (ImGui::Checkbox("Is Block", &cfg.isBlock)) configChanged = true;
+        ImGui::SameLine();
+        if (ImGui::Checkbox("Is Guard Counter", &cfg.isGuardCounter)) configChanged = true;
+        if (ImGui::Checkbox("Lock Direction", &cfg.lockMovementDirection)) configChanged = true;
+
+        if (ImGui::DragFloatRange2("Invincibility Window", &cfg.invincibilityStart, &cfg.invincibilityEnd, 0.05f, 0.0f, 10.0f, "Start: %.2f", "End: %.2f"))
+        {
+            configChanged = true;
+        }
+
+        ImGui::Separator();
+        ImGui::TextColored(ImVec4(0.3f, 0.8f, 1.0f, 1.0f), "=== Combat State Role, Cost & Effects ===");
+        const char* stateRoleItems[] = { "Normal", "Attack", "ComboFinisher", "Block", "Dodge", "Stun", "Jump", "GuardCounter", "Death" };
+        int currentRoleIdx = static_cast<int>(cfg.stateTypeEnum);
+        if (ImGui::Combo("Combat State Role", &currentRoleIdx, stateRoleItems, IM_ARRAYSIZE(stateRoleItems)))
+        {
+            cfg.stateTypeEnum = static_cast<CombatStateType>(currentRoleIdx);
+            cfg.isAttack = cfg.IsAttackState();
+            cfg.isBlock = cfg.IsBlockState();
+            cfg.isGuardCounter = (cfg.stateTypeEnum == CombatStateType::GuardCounter);
+            cfg.isDeath = cfg.IsDeathState();
+            configChanged = true;
+        }
+        if (ImGui::DragFloat("Stamina Cost", &cfg.staminaCost, 0.5f, 0.0f, 200.0f, "%.1f (0 = Free)")) configChanged = true;
+        if (ImGui::DragFloat("Stamina Regen Delay (-1 = Base Default)", &cfg.staminaRegenDelay, 0.05f, -1.0f, 5.0f, "%.2f s")) configChanged = true;
+
+        if (cfg.isAttack)
+        {
+            if (ImGui::DragFloat("Stamina Damage (On Shield)", &cfg.staminaDamage, 1.0f, 0.0f, 200.0f, "%.0f")) configChanged = true;
+            if (ImGui::SliderInt("Combo Step (-1=Auto, 0=Opener, 1=Mid, 2=Finisher)", &cfg.comboPermutationStep, -1, 2)) configChanged = true;
+
+            ImGui::Separator();
+            ImGui::TextColored(ImVec4(1.0f, 0.65f, 0.2f, 1.0f), "(Wind-Up & Hitstop)");
+            if (ImGui::DragFloat("Wind-Up Pause Start (s)", &cfg.windupPauseStart, 0.01f, 0.0f, 5.0f, "%.2f")) configChanged = true;
+            if (ImGui::DragFloat("Wind-Up Hold Duration (s)", &cfg.windupPauseDuration, 0.01f, 0.0f, 2.0f, "%.2f")) configChanged = true;
+            if (ImGui::SliderFloat("Wind-Up TimeScale (0=Freeze)", &cfg.windupTimeScale, 0.0f, 1.0f, "%.2f")) configChanged = true;
+            if (ImGui::SliderFloat("Strike Release Speed", &cfg.strikeSpeedMultiplier, 0.5f, 2.5f, "%.2fx")) configChanged = true;
+            if (ImGui::SliderInt("Hitstop Frames (60fps)", &cfg.hitstopFrames, 0, 20)) configChanged = true;
+            if (ImGui::DragFloatRange2("Active Hitbox Window", &cfg.hitboxStart, &cfg.hitboxEnd, 0.02f, 0.0f, 5.0f, "Start: %.2f", "End: %.2f"))
+            {
+                configChanged = true;
+            }
+        }
+
+        ImGui::Separator();
+        if (ImGui::TreeNode("Transitions (Arrows / Links)"))
+        {
+            std::string transitionToRemove = "";
+            for (auto& [eventTag, transition] : cfg.transitions)
+            {
+                ImGui::PushID(eventTag.c_str());
+                ImGui::TextColored(ImVec4(1, 0.8f, 0, 1), "[ %s ] -> %s", eventTag.c_str(), transition.targetState.c_str());
+                ImGui::SameLine();
+                if (ImGui::Button("Delete"))
+                {
+                    transitionToRemove = eventTag;
+                }
+                ImGui::PopID();
+            }
+            if (!transitionToRemove.empty())
+            {
+                cfg.transitions.erase(transitionToRemove);
+                configChanged = true;
+            }
+            ImGui::TreePop();
+        }
+
+        ImGui::PopID();
+    }
+
+    if (configChanged)
+    {
+        RebuildAllStates();
+    }
+
+    ImGui::End();
+}
+
 void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContext*/)
 {
     if (ImGui::CollapsingHeader("Combat State Machine Component", ImGuiTreeNodeFlags_DefaultOpen))
     {
+        // TRIGGER FOR VISUAL GRAPH
+        ImGui::Checkbox("Open Visual Combat Node View", &m_showNodeEditor);
+        ImGui::SameLine();
+        ImGui::Checkbox("Open Combat State Editor", &m_showStateDetailsEditor);
+
+        // RUNTIME DEBUG INFO
         ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Active State: %s", m_currentStateName.c_str());
         if (auto* universalState = dynamic_cast<UniversalCombatState*>(m_currentState))
         {
@@ -1111,7 +1387,7 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
         }
         ImGui::Separator();
 
-        // Modular Combat Asset Management
+        // ASSET MANAGEMENT
         char pathBuf[256] = { 0 };
         strncpy_s(pathBuf, m_configPath.c_str(), sizeof(pathBuf) - 1);
         if (ImGui::InputText("Combat Asset Path", pathBuf, sizeof(pathBuf)))
@@ -1135,458 +1411,468 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
         }
         ImGui::Separator();
 
+        // SELECTED STATE EDITOR (Replaces the massive loop)
         bool configChanged = false;
         std::string stateToRemove = "";
 
-        for (auto& [name, cfg] : m_stateConfigs)
+        if (ImGui::BeginCombo("Editing State", m_selectedNodeName.empty() ? "<Select a State>" : m_selectedNodeName.c_str()))
         {
-            ImGui::PushID(name.c_str());
+            for (auto& [name, cfg] : m_stateConfigs)
+            {
+                bool isSelected = (m_selectedNodeName == name);
+                if (ImGui::Selectable(name.c_str(), isSelected))
+                {
+                    m_selectedNodeName = name;
+                }
+                if (isSelected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
 
-            bool isCurrent = (m_currentStateName == name);
+        if (!m_selectedNodeName.empty() && m_stateConfigs.contains(m_selectedNodeName))
+        {
+            auto& cfg = m_stateConfigs[m_selectedNodeName];
+            ImGui::PushID(m_selectedNodeName.c_str());
+
+            bool isCurrent = (m_currentStateName == m_selectedNodeName);
             if (isCurrent)
             {
                 ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "[ACTIVE]");
                 ImGui::SameLine();
             }
 
-            if (ImGui::SmallButton("Play State"))
+            if (ImGui::Button("Play State"))
             {
-                ChangeState(name, 0.1f);
+                ChangeState(m_selectedNodeName, 0.1f);
                 ApplyPendingState();
             }
-            ImGui::SameLine();
 
-            if (ImGui::TreeNode(name.c_str()))
+            char animBuf[128];
+            strcpy_s(animBuf, cfg.animationName.c_str());
+            if (ImGui::InputText("Primary Animation", animBuf, sizeof(animBuf)))
             {
-                char animBuf[128];
-                strcpy_s(animBuf, cfg.animationName.c_str());
-                if (ImGui::InputText("Primary Animation", animBuf, sizeof(animBuf)))
-                {
-                    cfg.animationName = animBuf;
-                    configChanged = true;
-                }
+                cfg.animationName = animBuf;
+                configChanged = true;
+            }
 
-                char secAnimBuf[128];
-                strcpy_s(secAnimBuf, cfg.secondaryAnimationName.c_str());
-                if (ImGui::InputText("Secondary Animation", secAnimBuf, sizeof(secAnimBuf)))
-                {
-                    cfg.secondaryAnimationName = secAnimBuf;
-                    configChanged = true;
-                }
+            char secAnimBuf[128];
+            strcpy_s(secAnimBuf, cfg.secondaryAnimationName.c_str());
+            if (ImGui::InputText("Secondary Animation", secAnimBuf, sizeof(secAnimBuf)))
+            {
+                cfg.secondaryAnimationName = secAnimBuf;
+                configChanged = true;
+            }
 
-                if (ImGui::DragFloat("Move Speed", &cfg.moveSpeed, 0.5f, 0.0f, 100.0f)) configChanged = true;
-                if (ImGui::DragFloat("State Duration", &cfg.stateDuration, 0.05f, 0.0f, 10.0f)) configChanged = true;
-                if (ImGui::DragFloat("Turn Speed", &cfg.turnSpeed, 0.5f, 0.0f, 50.0f)) configChanged = true;
-                if (ImGui::DragFloat3("Enter Impulse", &cfg.enterImpulse.x, 0.5f, -200.0f, 200.0f)) configChanged = true;
+            if (ImGui::DragFloat("Move Speed", &cfg.moveSpeed, 0.5f, 0.0f, 100.0f)) configChanged = true;
+            if (ImGui::DragFloat("State Duration", &cfg.stateDuration, 0.05f, 0.0f, 10.0f)) configChanged = true;
+            if (ImGui::DragFloat("Turn Speed", &cfg.turnSpeed, 0.5f, 0.0f, 50.0f)) configChanged = true;
+            if (ImGui::DragFloat3("Enter Impulse", &cfg.enterImpulse.x, 0.5f, -200.0f, 200.0f)) configChanged = true;
 
-                if (ImGui::Checkbox("Is Looping", &cfg.isLooping)) configChanged = true;
-                ImGui::SameLine();
-                if (ImGui::Checkbox("Is Attack", &cfg.isAttack)) configChanged = true;
-                ImGui::SameLine();
-                if (ImGui::Checkbox("Is Block", &cfg.isBlock)) configChanged = true;
-                ImGui::SameLine();
-                if (ImGui::Checkbox("Is Guard Counter", &cfg.isGuardCounter)) configChanged = true;
-                if (ImGui::Checkbox("Lock Direction", &cfg.lockMovementDirection)) configChanged = true;
+            if (ImGui::Checkbox("Is Looping", &cfg.isLooping)) configChanged = true;
+            ImGui::SameLine();
+            if (ImGui::Checkbox("Is Attack", &cfg.isAttack)) configChanged = true;
+            ImGui::SameLine();
+            if (ImGui::Checkbox("Is Block", &cfg.isBlock)) configChanged = true;
+            ImGui::SameLine();
+            if (ImGui::Checkbox("Is Guard Counter", &cfg.isGuardCounter)) configChanged = true;
+            if (ImGui::Checkbox("Lock Direction", &cfg.lockMovementDirection)) configChanged = true;
 
-                if (ImGui::DragFloatRange2("Invincibility Window", &cfg.invincibilityStart, &cfg.invincibilityEnd, 0.05f, 0.0f, 10.0f, "Start: %.2f", "End: %.2f"))
-                {
-                    configChanged = true;
-                }
+            if (ImGui::DragFloatRange2("Invincibility Window", &cfg.invincibilityStart, &cfg.invincibilityEnd, 0.05f, 0.0f, 10.0f, "Start: %.2f", "End: %.2f"))
+            {
+                configChanged = true;
+            }
+
+            ImGui::Separator();
+            ImGui::TextColored(ImVec4(0.3f, 0.8f, 1.0f, 1.0f), "=== Combat State Role, Cost & Effects ===");
+            const char* stateRoleItems[] = { "Normal", "Attack", "ComboFinisher", "Block", "Dodge", "Stun", "Jump", "GuardCounter", "Death" };
+            int currentRoleIdx = static_cast<int>(cfg.stateTypeEnum);
+            if (ImGui::Combo("Combat State Role", &currentRoleIdx, stateRoleItems, IM_ARRAYSIZE(stateRoleItems)))
+            {
+                cfg.stateTypeEnum = static_cast<CombatStateType>(currentRoleIdx);
+                cfg.isAttack = cfg.IsAttackState();
+                cfg.isBlock = cfg.IsBlockState();
+                cfg.isGuardCounter = (cfg.stateTypeEnum == CombatStateType::GuardCounter);
+                cfg.isDeath = cfg.IsDeathState();
+                configChanged = true;
+            }
+            if (ImGui::DragFloat("Stamina Cost", &cfg.staminaCost, 0.5f, 0.0f, 200.0f, "%.1f (0 = Free)")) configChanged = true;
+            if (ImGui::DragFloat("Stamina Regen Delay (-1 = Base Default)", &cfg.staminaRegenDelay, 0.05f, -1.0f, 5.0f, "%.2f s")) configChanged = true;
+
+            if (cfg.isAttack)
+            {
+                if (ImGui::DragFloat("Stamina Damage (On Shield)", &cfg.staminaDamage, 1.0f, 0.0f, 200.0f, "%.0f")) configChanged = true;
+                if (ImGui::SliderInt("Combo Step (-1=Auto, 0=Opener, 1=Mid, 2=Finisher)", &cfg.comboPermutationStep, -1, 2)) configChanged = true;
 
                 ImGui::Separator();
-                ImGui::TextColored(ImVec4(0.3f, 0.8f, 1.0f, 1.0f), "=== Combat State Role, Cost & Effects ===");
-                const char* stateRoleItems[] = { "Normal", "Attack", "ComboFinisher", "Block", "Dodge", "Stun", "Jump", "GuardCounter", "Death" };
-                int currentRoleIdx = static_cast<int>(cfg.stateTypeEnum);
-                if (ImGui::Combo("Combat State Role", &currentRoleIdx, stateRoleItems, IM_ARRAYSIZE(stateRoleItems)))
+                ImGui::TextColored(ImVec4(1.0f, 0.65f, 0.2f, 1.0f), "(Wind-Up & Hitstop)");
+                if (ImGui::DragFloat("Wind-Up Pause Start (s)", &cfg.windupPauseStart, 0.01f, 0.0f, 5.0f, "%.2f")) configChanged = true;
+                if (ImGui::DragFloat("Wind-Up Hold Duration (s)", &cfg.windupPauseDuration, 0.01f, 0.0f, 2.0f, "%.2f")) configChanged = true;
+                if (ImGui::SliderFloat("Wind-Up TimeScale (0=Freeze)", &cfg.windupTimeScale, 0.0f, 1.0f, "%.2f")) configChanged = true;
+                if (ImGui::SliderFloat("Strike Release Speed", &cfg.strikeSpeedMultiplier, 0.5f, 2.5f, "%.2fx")) configChanged = true;
+                if (ImGui::SliderInt("Hitstop Frames (60fps)", &cfg.hitstopFrames, 0, 20)) configChanged = true;
+                if (ImGui::DragFloatRange2("Active Hitbox Window", &cfg.hitboxStart, &cfg.hitboxEnd, 0.02f, 0.0f, 5.0f, "Start: %.2f", "End: %.2f"))
                 {
-                    cfg.stateTypeEnum = static_cast<CombatStateType>(currentRoleIdx);
-                    cfg.isAttack = cfg.IsAttackState();
-                    cfg.isBlock = cfg.IsBlockState();
-                    cfg.isGuardCounter = (cfg.stateTypeEnum == CombatStateType::GuardCounter);
-                    cfg.isDeath = cfg.IsDeathState();
                     configChanged = true;
                 }
-                if (ImGui::DragFloat("Stamina Cost", &cfg.staminaCost, 0.5f, 0.0f, 200.0f, "%.1f (0 = Free)")) configChanged = true;
-                if (ImGui::DragFloat("Stamina Regen Delay (-1 = Base Default)", &cfg.staminaRegenDelay, 0.05f, -1.0f, 5.0f, "%.2f s")) configChanged = true;
+            }
 
-                if (cfg.isAttack)
+            ImGui::Separator();
+            ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.2f, 1.0f), "Modular State Action Effects (%zu active)", cfg.effects.size());
+
+            if (ImGui::Button("+ Add Shockwave Effect"))
+            {
+                StateEffectConfig newWave;
+                newWave.type = StateEffectType::Shockwave;
+                newWave.triggerTime = cfg.hitboxStart;
+                cfg.effects.push_back(newWave);
+                configChanged = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("+ Add Camera Shake"))
+            {
+                StateEffectConfig newShake;
+                newShake.type = StateEffectType::CameraShake;
+                newShake.triggerTime = cfg.hitboxStart;
+                cfg.effects.push_back(newShake);
+                configChanged = true;
+            }
+
+            int effectToDelete = -1;
+            for (int effIdx = 0; effIdx < static_cast<int>(cfg.effects.size()); ++effIdx)
+            {
+                auto& eff = cfg.effects[effIdx];
+                ImGui::PushID(effIdx);
+                ImGui::Separator();
+                ImGui::Text("[%d] %s", effIdx + 1, StateEffectTypeToString(eff.type).c_str());
+                ImGui::SameLine();
+                if (ImGui::Button("Delete Effect"))
                 {
-                    if (ImGui::DragFloat("Stamina Damage (On Shield)", &cfg.staminaDamage, 1.0f, 0.0f, 200.0f, "%.0f")) configChanged = true;
-                    if (ImGui::SliderInt("Combo Step (-1=Auto, 0=Opener, 1=Mid, 2=Finisher)", &cfg.comboPermutationStep, -1, 2)) configChanged = true;
+                    effectToDelete = effIdx;
+                }
 
-                    ImGui::Separator();
-                    ImGui::TextColored(ImVec4(1.0f, 0.65f, 0.2f, 1.0f), "(Wind-Up & Hitstop)");
-                    if (ImGui::DragFloat("Wind-Up Pause Start (s)", &cfg.windupPauseStart, 0.01f, 0.0f, 5.0f, "%.2f")) configChanged = true;
-                    if (ImGui::DragFloat("Wind-Up Hold Duration (s)", &cfg.windupPauseDuration, 0.01f, 0.0f, 2.0f, "%.2f")) configChanged = true;
-                    if (ImGui::SliderFloat("Wind-Up TimeScale (0=Freeze)", &cfg.windupTimeScale, 0.0f, 1.0f, "%.2f")) configChanged = true;
-                    if (ImGui::SliderFloat("Strike Release Speed", &cfg.strikeSpeedMultiplier, 0.5f, 2.5f, "%.2fx")) configChanged = true;
-                    if (ImGui::SliderInt("Hitstop Frames (60fps)", &cfg.hitstopFrames, 0, 20)) configChanged = true;
-                    if (ImGui::DragFloatRange2("Active Hitbox Window", &cfg.hitboxStart, &cfg.hitboxEnd, 0.02f, 0.0f, 5.0f, "Start: %.2f", "End: %.2f"))
+                if (ImGui::DragFloat("Trigger Time (s)", &eff.triggerTime, 0.02f, 0.0f, 5.0f, "%.2f s")) configChanged = true;
+
+                if (eff.type == StateEffectType::Shockwave)
+                {
+                    if (ImGui::DragFloat("Wave Radius", &eff.radius, 0.5f, 1.0f, 100.0f, "%.1f m")) configChanged = true;
+                    if (ImGui::DragFloat("Wave Duration", &eff.duration, 0.05f, 0.1f, 5.0f, "%.2f s")) configChanged = true;
+                    if (ImGui::DragFloat("Wave Damage", &eff.damage, 1.0f, 0.0f, 500.0f, "%.0f")) configChanged = true;
+                    if (ImGui::DragFloat("Wave Knockback", &eff.knockbackForce, 1.0f, 0.0f, 100.0f, "%.1f")) configChanged = true;
+                    if (ImGui::DragFloat("Forward Offset", &eff.forwardOffset, 0.5f, -20.0f, 50.0f, "%.1f m")) configChanged = true;
+                    if (ImGui::Checkbox("Ground Only (Jump Evadable)", &eff.isGroundOnly)) configChanged = true;
+                }
+                else if (eff.type == StateEffectType::CameraShake)
+                {
+                    if (ImGui::SliderFloat("Shake Intensity", &eff.shakeIntensity, 0.0f, 2.0f, "%.2f")) configChanged = true;
+                    if (ImGui::SliderFloat("Shake Duration", &eff.shakeDuration, 0.05f, 2.0f, "%.2f s")) configChanged = true;
+                }
+                ImGui::PopID();
+            }
+
+            if (effectToDelete >= 0 && effectToDelete < static_cast<int>(cfg.effects.size()))
+            {
+                cfg.effects.erase(cfg.effects.begin() + effectToDelete);
+                configChanged = true;
+            }
+            ImGui::Separator();
+
+            if (ImGui::TreeNode("State Collider Modifiers (Hurtbox Immunity / Root Resize)"))
+            {
+                std::vector<std::string> actorColliderTags;
+                if (m_owner)
+                {
+                    for (auto* col : m_owner->GetComponents<ColliderComponent>())
                     {
-                        configChanged = true;
+                        if (!col) continue;
+                        std::wstring wTag = col->GetColliderTag();
+                        if (!wTag.empty())
+                        {
+                            actorColliderTags.emplace_back(wTag.begin(), wTag.end());
+                        }
                     }
                 }
 
-                ImGui::Separator();
-                ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.2f, 1.0f), "Modular State Action Effects (%zu active)", cfg.effects.size());
-
-                if (ImGui::Button("+ Add Shockwave Effect"))
+                if (ImGui::Button("+ Add Collider Modifier"))
                 {
-                    StateEffectConfig newWave;
-                    newWave.type = StateEffectType::Shockwave;
-                    newWave.triggerTime = cfg.hitboxStart;
-                    cfg.effects.push_back(newWave);
-                    configChanged = true;
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("+ Add Camera Shake"))
-                {
-                    StateEffectConfig newShake;
-                    newShake.type = StateEffectType::CameraShake;
-                    newShake.triggerTime = cfg.hitboxStart;
-                    cfg.effects.push_back(newShake);
+                    StateColliderModifier newMod;
+                    if (!actorColliderTags.empty()) newMod.colliderTag = actorColliderTags[0];
+                    newMod.endTime = (cfg.stateDuration > 0.0f) ? cfg.stateDuration : 1.0f;
+                    cfg.colliderModifiers.push_back(newMod);
                     configChanged = true;
                 }
 
-                int effectToDelete = -1;
-                for (int effIdx = 0; effIdx < static_cast<int>(cfg.effects.size()); ++effIdx)
+                int modToDelete = -1;
+                for (int modIdx = 0; modIdx < static_cast<int>(cfg.colliderModifiers.size()); ++modIdx)
                 {
-                    auto& eff = cfg.effects[effIdx];
-                    ImGui::PushID(effIdx);
+                    auto& mod = cfg.colliderModifiers[modIdx];
+                    ImGui::PushID(modIdx);
                     ImGui::Separator();
-                    ImGui::Text("[%d] %s", effIdx + 1, StateEffectTypeToString(eff.type).c_str());
+
+                    if (!actorColliderTags.empty())
+                    {
+                        int selectedIdx = 0;
+                        for (int k = 0; k < static_cast<int>(actorColliderTags.size()); ++k)
+                        {
+                            if (actorColliderTags[k] == mod.colliderTag)
+                            {
+                                selectedIdx = k;
+                                break;
+                            }
+                        }
+                        if (ImGui::BeginCombo("Target Collider", mod.colliderTag.empty() ? "<Select>" : mod.colliderTag.c_str()))
+                        {
+                            for (int k = 0; k < static_cast<int>(actorColliderTags.size()); ++k)
+                            {
+                                bool isSelected = (selectedIdx == k);
+                                if (ImGui::Selectable(actorColliderTags[k].c_str(), isSelected))
+                                {
+                                    mod.colliderTag = actorColliderTags[k];
+                                    configChanged = true;
+                                }
+                                if (isSelected) ImGui::SetItemDefaultFocus();
+                            }
+                            ImGui::EndCombo();
+                        }
+                    }
+                    else
+                    {
+                        char tagBuf[128] = { 0 };
+                        strncpy_s(tagBuf, mod.colliderTag.c_str(), sizeof(tagBuf) - 1);
+                        if (ImGui::InputText("Target Collider Tag", tagBuf, sizeof(tagBuf)))
+                        {
+                            mod.colliderTag = tagBuf;
+                            configChanged = true;
+                        }
+                    }
+
                     ImGui::SameLine();
-                    if (ImGui::Button("Delete Effect"))
+                    if (ImGui::SmallButton("Delete"))
                     {
-                        effectToDelete = effIdx;
+                        modToDelete = modIdx;
                     }
 
-                    if (ImGui::DragFloat("Trigger Time (s)", &eff.triggerTime, 0.02f, 0.0f, 5.0f, "%.2f s")) configChanged = true;
-
-                    if (eff.type == StateEffectType::Shockwave)
-                    {
-                        if (ImGui::DragFloat("Wave Radius", &eff.radius, 0.5f, 1.0f, 100.0f, "%.1f m")) configChanged = true;
-                        if (ImGui::DragFloat("Wave Duration", &eff.duration, 0.05f, 0.1f, 5.0f, "%.2f s")) configChanged = true;
-                        if (ImGui::DragFloat("Wave Damage", &eff.damage, 1.0f, 0.0f, 500.0f, "%.0f")) configChanged = true;
-                        if (ImGui::DragFloat("Wave Knockback", &eff.knockbackForce, 1.0f, 0.0f, 100.0f, "%.1f")) configChanged = true;
-                        if (ImGui::DragFloat("Forward Offset", &eff.forwardOffset, 0.5f, -20.0f, 50.0f, "%.1f m")) configChanged = true;
-                        if (ImGui::Checkbox("Ground Only (Jump Evadable)", &eff.isGroundOnly)) configChanged = true;
-                    }
-                    else if (eff.type == StateEffectType::CameraShake)
-                    {
-                        if (ImGui::SliderFloat("Shake Intensity", &eff.shakeIntensity, 0.0f, 2.0f, "%.2f")) configChanged = true;
-                        if (ImGui::SliderFloat("Shake Duration", &eff.shakeDuration, 0.05f, 2.0f, "%.2f s")) configChanged = true;
-                    }
+                    if (ImGui::DragFloatRange2("Active Window (s)", &mod.startTime, &mod.endTime, 0.02f, 0.0f, 10.0f, "Start: %.2f", "End: %.2f")) configChanged = true;
+                    if (ImGui::Checkbox("Collider Enabled (Uncheck = Immune)", &mod.enableCollider)) configChanged = true;
+                    ImGui::SameLine();
+                    if (ImGui::Checkbox("Follow Root Bone Y", &mod.followRootMotionY)) configChanged = true;
+                    if (ImGui::DragFloat("Height Scale", &mod.heightScale, 0.02f, 0.1f, 5.0f, "%.2fx")) configChanged = true;
+                    if (ImGui::DragFloat("Radius Scale", &mod.radiusScale, 0.02f, 0.1f, 5.0f, "%.2fx")) configChanged = true;
+                    if (ImGui::DragFloat3("Offset Delta", &mod.offsetDelta.x, 0.5f, -200.0f, 200.0f)) configChanged = true;
                     ImGui::PopID();
                 }
 
-                if (effectToDelete >= 0 && effectToDelete < static_cast<int>(cfg.effects.size()))
+                if (modToDelete >= 0 && modToDelete < static_cast<int>(cfg.colliderModifiers.size()))
                 {
-                    cfg.effects.erase(cfg.effects.begin() + effectToDelete);
+                    cfg.colliderModifiers.erase(cfg.colliderModifiers.begin() + modToDelete);
                     configChanged = true;
                 }
-                ImGui::Separator();
+                ImGui::TreePop();
+            }
 
-                if (ImGui::TreeNode("State Collider Modifiers (Hurtbox Immunity / Root Resize)"))
+            if (ImGui::TreeNode("Transitions (Arrows / Links)"))
+            {
+                if (ImGui::Button("Quick: Set ALL to Instant Cancel (Skip Anim)"))
                 {
-                    std::vector<std::string> actorColliderTags;
-                    if (m_owner)
+                    for (auto& [k, t] : cfg.transitions)
                     {
-                        for (auto* col : m_owner->GetComponents<ColliderComponent>())
-                        {
-                            if (!col) continue;
-                            std::wstring wTag = col->GetColliderTag();
-                            if (!wTag.empty())
-                            {
-                                actorColliderTags.emplace_back(wTag.begin(), wTag.end());
-                            }
-                        }
+                        if (!t.hasExitTime) t.canInterrupt = true;
                     }
-
-                    if (ImGui::Button("+ Add Collider Modifier"))
+                    configChanged = true;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Quick: Reset to Timed Windows"))
+                {
+                    for (auto& [k, t] : cfg.transitions)
                     {
-                        StateColliderModifier newMod;
-                        if (!actorColliderTags.empty()) newMod.colliderTag = actorColliderTags[0];
-                        newMod.endTime = (cfg.stateDuration > 0.0f) ? cfg.stateDuration : 1.0f;
-                        cfg.colliderModifiers.push_back(newMod);
+                        if (!t.hasExitTime) { t.canInterrupt = false; t.windowStart = 0.4f; t.windowEnd = 1.1f; }
+                    }
+                    configChanged = true;
+                }
+
+                std::string transitionToRemove = "";
+                for (auto& [eventTag, transition] : cfg.transitions)
+                {
+                    ImGui::PushID(eventTag.c_str());
+                    ImGui::TextColored(ImVec4(1, 0.8f, 0, 1), "[ %s ]", eventTag.c_str());
+
+                    char targetBuf[128];
+                    strcpy_s(targetBuf, transition.targetState.c_str());
+                    if (ImGui::InputText("Target State", targetBuf, sizeof(targetBuf)))
+                    {
+                        transition.targetState = targetBuf;
                         configChanged = true;
                     }
 
-                    int modToDelete = -1;
-                    for (int modIdx = 0; modIdx < static_cast<int>(cfg.colliderModifiers.size()); ++modIdx)
+                    char triggerBuf[128];
+                    strcpy_s(triggerBuf, transition.triggerEvent.c_str());
+                    if (ImGui::InputText("Trigger Event", triggerBuf, sizeof(triggerBuf)))
                     {
-                        auto& mod = cfg.colliderModifiers[modIdx];
-                        ImGui::PushID(modIdx);
-                        ImGui::Separator();
+                        transition.triggerEvent = triggerBuf;
+                        configChanged = true;
+                    }
 
-                        if (!actorColliderTags.empty())
+                    if (ImGui::DragFloat("Blend Duration", &transition.blendDuration, 0.01f, 0.0f, 2.0f, "%.2f s"))
+                    {
+                        configChanged = true;
+                    }
+
+                    if (ImGui::Checkbox("Has Exit Time", &transition.hasExitTime))
+                    {
+                        configChanged = true;
+                    }
+
+                    if (ImGui::Checkbox("Require Hit Confirm (Combos)", &transition.requireHit))
+                    {
+                        configChanged = true;
+                    }
+
+                    if (!transition.hasExitTime)
+                    {
+                        if (ImGui::Checkbox("Instant Cancel (Skip Animation on Press)", &transition.canInterrupt))
                         {
-                            int selectedIdx = 0;
-                            for (int k = 0; k < static_cast<int>(actorColliderTags.size()); ++k)
-                            {
-                                if (actorColliderTags[k] == mod.colliderTag)
-                                {
-                                    selectedIdx = k;
-                                    break;
-                                }
-                            }
-                            if (ImGui::BeginCombo("Target Collider", mod.colliderTag.empty() ? "<Select>" : mod.colliderTag.c_str()))
-                            {
-                                for (int k = 0; k < static_cast<int>(actorColliderTags.size()); ++k)
-                                {
-                                    bool isSelected = (selectedIdx == k);
-                                    if (ImGui::Selectable(actorColliderTags[k].c_str(), isSelected))
-                                    {
-                                        mod.colliderTag = actorColliderTags[k];
-                                        configChanged = true;
-                                    }
-                                    if (isSelected) ImGui::SetItemDefaultFocus();
-                                }
-                                ImGui::EndCombo();
-                            }
+                            configChanged = true;
+                        }
+
+                        if (transition.canInterrupt)
+                        {
+                            ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.4f, 1.0f), "  -> Mode: Instant Skip on Input");
                         }
                         else
                         {
-                            char tagBuf[128] = { 0 };
-                            strncpy_s(tagBuf, mod.colliderTag.c_str(), sizeof(tagBuf) - 1);
-                            if (ImGui::InputText("Target Collider Tag", tagBuf, sizeof(tagBuf)))
-                            {
-                                mod.colliderTag = tagBuf;
-                                configChanged = true;
-                            }
-                        }
-
-                        ImGui::SameLine();
-                        if (ImGui::SmallButton("Delete"))
-                        {
-                            modToDelete = modIdx;
-                        }
-
-                        if (ImGui::DragFloatRange2("Active Window (s)", &mod.startTime, &mod.endTime, 0.02f, 0.0f, 10.0f, "Start: %.2f", "End: %.2f")) configChanged = true;
-                        if (ImGui::Checkbox("Collider Enabled (Uncheck = Immune)", &mod.enableCollider)) configChanged = true;
-                        ImGui::SameLine();
-                        if (ImGui::Checkbox("Follow Root Bone Y", &mod.followRootMotionY)) configChanged = true;
-                        if (ImGui::DragFloat("Height Scale", &mod.heightScale, 0.02f, 0.1f, 5.0f, "%.2fx")) configChanged = true;
-                        if (ImGui::DragFloat("Radius Scale", &mod.radiusScale, 0.02f, 0.1f, 5.0f, "%.2fx")) configChanged = true;
-                        if (ImGui::DragFloat3("Offset Delta", &mod.offsetDelta.x, 0.5f, -200.0f, 200.0f)) configChanged = true;
-                        ImGui::PopID();
-                    }
-
-                    if (modToDelete >= 0 && modToDelete < static_cast<int>(cfg.colliderModifiers.size()))
-                    {
-                        cfg.colliderModifiers.erase(cfg.colliderModifiers.begin() + modToDelete);
-                        configChanged = true;
-                    }
-                    ImGui::TreePop();
-                }
-
-                if (ImGui::TreeNode("Transitions (Arrows / Links)"))
-                {
-                    if (ImGui::Button("Quick: Set ALL to Instant Cancel (Skip Anim)"))
-                    {
-                        for (auto& [k, t] : cfg.transitions)
-                        {
-                            if (!t.hasExitTime) t.canInterrupt = true;
-                        }
-                        configChanged = true;
-                    }
-                    ImGui::SameLine();
-                    if (ImGui::Button("Quick: Reset to Timed Windows"))
-                    {
-                        for (auto& [k, t] : cfg.transitions)
-                        {
-                            if (!t.hasExitTime) { t.canInterrupt = false; t.windowStart = 0.4f; t.windowEnd = 1.1f; }
-                        }
-                        configChanged = true;
-                    }
-
-                    std::string transitionToRemove = "";
-                    for (auto& [eventTag, transition] : cfg.transitions)
-                    {
-                        ImGui::PushID(eventTag.c_str());
-                        ImGui::TextColored(ImVec4(1, 0.8f, 0, 1), "[ %s ]", eventTag.c_str());
-
-                        char targetBuf[128];
-                        strcpy_s(targetBuf, transition.targetState.c_str());
-                        if (ImGui::InputText("Target State", targetBuf, sizeof(targetBuf)))
-                        {
-                            transition.targetState = targetBuf;
-                            configChanged = true;
-                        }
-
-                        char triggerBuf[128];
-                        strcpy_s(triggerBuf, transition.triggerEvent.c_str());
-                        if (ImGui::InputText("Trigger Event", triggerBuf, sizeof(triggerBuf)))
-                        {
-                            transition.triggerEvent = triggerBuf;
-                            configChanged = true;
-                        }
-
-                        if (ImGui::DragFloat("Blend Duration", &transition.blendDuration, 0.01f, 0.0f, 2.0f, "%.2f s"))
-                        {
-                            configChanged = true;
-                        }
-
-                        if (ImGui::Checkbox("Has Exit Time", &transition.hasExitTime))
-                        {
-                            configChanged = true;
-                        }
-
-                        if (ImGui::Checkbox("Require Hit Confirm (Combos)", &transition.requireHit))
-                        {
-                            configChanged = true;
-                        }
-
-                        if (!transition.hasExitTime)
-                        {
-                            if (ImGui::Checkbox("Instant Cancel (Skip Animation on Press)", &transition.canInterrupt))
+                            if (ImGui::DragFloatRange2("Combo Window", &transition.windowStart, &transition.windowEnd, 0.05f, 0.0f, 10.0f, "Open: %.2f", "Close: %.2f"))
                             {
                                 configChanged = true;
                             }
-
-                            if (transition.canInterrupt)
-                            {
-                                ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.4f, 1.0f), "  -> Mode: Instant Skip on Input");
-                            }
-                            else
-                            {
-                                if (ImGui::DragFloatRange2("Combo Window", &transition.windowStart, &transition.windowEnd, 0.05f, 0.0f, 10.0f, "Open: %.2f", "Close: %.2f"))
-                                {
-                                    configChanged = true;
-                                }
-                            }
                         }
-
-                        if (ImGui::Button("Delete Transition"))
-                        {
-                            transitionToRemove = eventTag;
-                        }
-
-                        ImGui::Separator();
-                        ImGui::PopID();
                     }
 
-                    if (!transitionToRemove.empty())
+                    if (ImGui::Button("Delete Transition"))
                     {
-                        cfg.transitions.erase(transitionToRemove);
-                        configChanged = true;
+                        transitionToRemove = eventTag;
                     }
 
-                    static char newEventTagBuf[64] = "OnAttack";
-                    static char newTargetStateBuf[64] = "Slash1";
-                    ImGui::InputText("New Event Key", newEventTagBuf, sizeof(newEventTagBuf));
-                    ImGui::InputText("New Target State", newTargetStateBuf, sizeof(newTargetStateBuf));
-                    if (ImGui::Button("+ Add Transition Link"))
-                    {
-                        if (strlen(newEventTagBuf) > 0 && strlen(newTargetStateBuf) > 0)
-                        {
-                            TransitionData tData;
-                            tData.targetState = newTargetStateBuf;
-                            tData.triggerEvent = newEventTagBuf;
-                            tData.blendDuration = 0.2f;
-                            cfg.transitions[newEventTagBuf] = tData;
-                            configChanged = true;
-                        }
-                    }
-
-                    ImGui::TreePop();
+                    ImGui::Separator();
+                    ImGui::PopID();
                 }
 
-                bool isComboState = (cfg.stateType == "OneHand" || !cfg.comboAnimationNames.empty() || !cfg.comboEndTimes.empty());
-                if (isComboState && ImGui::TreeNode("Combo Settings (Multi-Stage)"))
+                if (!transitionToRemove.empty())
                 {
-                    size_t stageCount = cfg.comboAnimationNames.size();
-                    if (stageCount == 0 && !cfg.comboEndTimes.empty())
-                    {
-                        stageCount = cfg.comboEndTimes.size();
-                    }
-
-                    int toRemoveIndex = -1;
-                    for (size_t i = 0; i < stageCount; ++i)
-                    {
-                        ImGui::PushID(static_cast<int>(i));
-                        ImGui::Text("Stage %zu:", i + 1);
-
-                        // Animation name
-                        if (i < cfg.comboAnimationNames.size())
-                        {
-                            char comboAnimBuf[64];
-                            strcpy_s(comboAnimBuf, cfg.comboAnimationNames[i].c_str());
-                            if (ImGui::InputText("Anim Name", comboAnimBuf, sizeof(comboAnimBuf)))
-                            {
-                                cfg.comboAnimationNames[i] = comboAnimBuf;
-                                configChanged = true;
-                            }
-                        }
-
-                        // Window Start
-                        if (i >= cfg.comboWindowStarts.size())
-                        {
-                            cfg.comboWindowStarts.resize(i + 1, 1.0f);
-                        }
-                        if (ImGui::DragFloat("Window Open", &cfg.comboWindowStarts[i], 0.05f, 0.0f, 10.0f))
-                            configChanged = true;
-
-                        // Stage End
-                        if (i >= cfg.comboEndTimes.size())
-                        {
-                            cfg.comboEndTimes.resize(i + 1, 1.5f);
-                        }
-                        if (ImGui::DragFloat("Stage End", &cfg.comboEndTimes[i], 0.05f, 0.0f, 10.0f))
-                            configChanged = true;
-
-                        // Blend duration
-                        if (i >= cfg.comboBlendDurations.size())
-                        {
-                            cfg.comboBlendDurations.resize(i + 1, 0.1f);
-                        }
-                        if (ImGui::DragFloat("Blend In", &cfg.comboBlendDurations[i], 0.02f, 0.0f, 2.0f))
-                            configChanged = true;
-
-                        if (ImGui::Button("Remove Stage"))
-                        {
-                            toRemoveIndex = static_cast<int>(i);
-                        }
-
-                        ImGui::Separator();
-                        ImGui::PopID();
-                    }
-
-                    if (toRemoveIndex >= 0)
-                    {
-                        if (toRemoveIndex < static_cast<int>(cfg.comboAnimationNames.size()))
-                            cfg.comboAnimationNames.erase(cfg.comboAnimationNames.begin() + toRemoveIndex);
-                        if (toRemoveIndex < static_cast<int>(cfg.comboWindowStarts.size()))
-                            cfg.comboWindowStarts.erase(cfg.comboWindowStarts.begin() + toRemoveIndex);
-                        if (toRemoveIndex < static_cast<int>(cfg.comboEndTimes.size()))
-                            cfg.comboEndTimes.erase(cfg.comboEndTimes.begin() + toRemoveIndex);
-                        if (toRemoveIndex < static_cast<int>(cfg.comboBlendDurations.size()))
-                            cfg.comboBlendDurations.erase(cfg.comboBlendDurations.begin() + toRemoveIndex);
-                        configChanged = true;
-                    }
-
-                    if (ImGui::Button("+ Add Combo Stage"))
-                    {
-                        std::string newAnim = "Slash" + std::to_string(cfg.comboAnimationNames.size() + 1);
-                        cfg.comboAnimationNames.push_back(newAnim);
-                        cfg.comboWindowStarts.push_back(1.0f);
-                        cfg.comboEndTimes.push_back(1.5f);
-                        cfg.comboBlendDurations.push_back(0.1f);
-                        configChanged = true;
-                    }
-
-                    if (ImGui::DragFloat("Combo Exit Blend", &cfg.comboExitBlendDuration, 0.02f, 0.0f, 2.0f))
-                        configChanged = true;
-
-                    ImGui::TreePop();
+                    cfg.transitions.erase(transitionToRemove);
+                    configChanged = true;
                 }
 
-                if (ImGui::Button("Delete This State"))
+                static char newEventTagBuf[64] = "OnAttack";
+                static char newTargetStateBuf[64] = "Slash1";
+                ImGui::InputText("New Event Key", newEventTagBuf, sizeof(newEventTagBuf));
+                ImGui::InputText("New Target State", newTargetStateBuf, sizeof(newTargetStateBuf));
+                if (ImGui::Button("+ Add Transition Link"))
                 {
-                    stateToRemove = name;
+                    if (strlen(newEventTagBuf) > 0 && strlen(newTargetStateBuf) > 0)
+                    {
+                        TransitionData tData;
+                        tData.targetState = newTargetStateBuf;
+                        tData.triggerEvent = newEventTagBuf;
+                        tData.blendDuration = 0.2f;
+                        cfg.transitions[newEventTagBuf] = tData;
+                        configChanged = true;
+                    }
                 }
 
                 ImGui::TreePop();
+            }
+
+            bool isComboState = (cfg.stateType == "OneHand" || !cfg.comboAnimationNames.empty() || !cfg.comboEndTimes.empty());
+            if (isComboState && ImGui::TreeNode("Combo Settings (Multi-Stage)"))
+            {
+                size_t stageCount = cfg.comboAnimationNames.size();
+                if (stageCount == 0 && !cfg.comboEndTimes.empty())
+                {
+                    stageCount = cfg.comboEndTimes.size();
+                }
+
+                int toRemoveIndex = -1;
+                for (size_t i = 0; i < stageCount; ++i)
+                {
+                    ImGui::PushID(static_cast<int>(i));
+                    ImGui::Text("Stage %zu:", i + 1);
+
+                    // Animation name
+                    if (i < cfg.comboAnimationNames.size())
+                    {
+                        char comboAnimBuf[64];
+                        strcpy_s(comboAnimBuf, cfg.comboAnimationNames[i].c_str());
+                        if (ImGui::InputText("Anim Name", comboAnimBuf, sizeof(comboAnimBuf)))
+                        {
+                            cfg.comboAnimationNames[i] = comboAnimBuf;
+                            configChanged = true;
+                        }
+                    }
+
+                    // Window Start
+                    if (i >= cfg.comboWindowStarts.size())
+                    {
+                        cfg.comboWindowStarts.resize(i + 1, 1.0f);
+                    }
+                    if (ImGui::DragFloat("Window Open", &cfg.comboWindowStarts[i], 0.05f, 0.0f, 10.0f))
+                        configChanged = true;
+
+                    // Stage End
+                    if (i >= cfg.comboEndTimes.size())
+                    {
+                        cfg.comboEndTimes.resize(i + 1, 1.5f);
+                    }
+                    if (ImGui::DragFloat("Stage End", &cfg.comboEndTimes[i], 0.05f, 0.0f, 10.0f))
+                        configChanged = true;
+
+                    // Blend duration
+                    if (i >= cfg.comboBlendDurations.size())
+                    {
+                        cfg.comboBlendDurations.resize(i + 1, 0.1f);
+                    }
+                    if (ImGui::DragFloat("Blend In", &cfg.comboBlendDurations[i], 0.02f, 0.0f, 2.0f))
+                        configChanged = true;
+
+                    if (ImGui::Button("Remove Stage"))
+                    {
+                        toRemoveIndex = static_cast<int>(i);
+                    }
+
+                    ImGui::Separator();
+                    ImGui::PopID();
+                }
+
+                if (toRemoveIndex >= 0)
+                {
+                    if (toRemoveIndex < static_cast<int>(cfg.comboAnimationNames.size()))
+                        cfg.comboAnimationNames.erase(cfg.comboAnimationNames.begin() + toRemoveIndex);
+                    if (toRemoveIndex < static_cast<int>(cfg.comboWindowStarts.size()))
+                        cfg.comboWindowStarts.erase(cfg.comboWindowStarts.begin() + toRemoveIndex);
+                    if (toRemoveIndex < static_cast<int>(cfg.comboEndTimes.size()))
+                        cfg.comboEndTimes.erase(cfg.comboEndTimes.begin() + toRemoveIndex);
+                    if (toRemoveIndex < static_cast<int>(cfg.comboBlendDurations.size()))
+                        cfg.comboBlendDurations.erase(cfg.comboBlendDurations.begin() + toRemoveIndex);
+                    configChanged = true;
+                }
+
+                if (ImGui::Button("+ Add Combo Stage"))
+                {
+                    std::string newAnim = "Slash" + std::to_string(cfg.comboAnimationNames.size() + 1);
+                    cfg.comboAnimationNames.push_back(newAnim);
+                    cfg.comboWindowStarts.push_back(1.0f);
+                    cfg.comboEndTimes.push_back(1.5f);
+                    cfg.comboBlendDurations.push_back(0.1f);
+                    configChanged = true;
+                }
+
+                if (ImGui::DragFloat("Combo Exit Blend", &cfg.comboExitBlendDuration, 0.02f, 0.0f, 2.0f))
+                    configChanged = true;
+
+                ImGui::TreePop();
+            }
+
+            if (ImGui::Button("Delete This State", ImVec2(-1, 30)))
+            {
+                stateToRemove = m_selectedNodeName;
             }
             ImGui::PopID();
         }
@@ -1594,6 +1880,7 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
         if (!stateToRemove.empty())
         {
             m_stateConfigs.erase(stateToRemove);
+            m_selectedNodeName = "";
             configChanged = true;
         }
 
@@ -1617,6 +1904,7 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
                 newCfg.transitions["Exit"] = exitT;
 
                 m_stateConfigs[newStateNameBuf] = newCfg;
+                m_selectedNodeName = newStateNameBuf;
                 configChanged = true;
             }
         }
@@ -1627,4 +1915,9 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
         }
     }
 }
+#else
+void HEIN::CombatStateMachineComponent::RenderNodeGraph() {}
+void HEIN::CombatStateMachineComponent::RenderStateDetailsWindow() {}
+void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContext*/) {}
+#endif
 } // namespace HEIN

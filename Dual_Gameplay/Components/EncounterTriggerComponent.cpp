@@ -13,7 +13,9 @@
 #include "../../External/Engine/Components/TransformComponent.h"
 #include "../../External/Engine/Entities/ActorManager.h"
 #include "../../External/Engine/Framework/GameContext.h"
+#if HEIN_WITH_EDITOR
 #include "../../External/Engine/ImGui/imgui.h"
+#endif
 
 namespace HEIN
 {
@@ -437,6 +439,7 @@ void HEIN::EncounterTriggerComponent::Draw(
 	}
 }
 
+#if HEIN_WITH_EDITOR
 void HEIN::EncounterTriggerComponent::OnInspectorGUI(GameContext& gameContext)
 {
 	if (ImGui::CollapsingHeader("Encounter Trigger Component", ImGuiTreeNodeFlags_DefaultOpen))
@@ -491,6 +494,9 @@ void HEIN::EncounterTriggerComponent::OnInspectorGUI(GameContext& gameContext)
 		}
 	}
 }
+#else
+void HEIN::EncounterTriggerComponent::OnInspectorGUI(GameContext& /*gameContext*/) {}
+#endif
 
 nlohmann::json HEIN::EncounterTriggerComponent::Serialize()
 {

@@ -130,6 +130,7 @@ private:
 	HEIN::ActorID m_backToTitleButtonID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_retryButtonID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_gameOverBannerID = HEIN::INVALID_ACTOR_ID;
+	HEIN::ActorID m_possessPromptID = HEIN::INVALID_ACTOR_ID;
 
 	HEIN::ActorID m_gameManagerID = HEIN::INVALID_ACTOR_ID;
 	HEIN::ActorID m_activeEncounterActorID = HEIN::INVALID_ACTOR_ID;

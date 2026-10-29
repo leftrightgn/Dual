@@ -61,7 +61,8 @@ namespace HEIN
 	
 		void Update(float deltaTime) override;
 
-		/// @brief Applies an instantaneous physical impulse vector (e.g. hit knockback) to the character.
+		/// @brief Applies an instantaneous physical impulse vector (e.g. hit knockback) to the character,
+		/// scaling velocity delta by inverse mass from RigidBodyComponent in adherence to Newton's second law.
 		void ApplyImpulse(const DirectX::SimpleMath::Vector3& impulse);
 
 		DirectX::SimpleMath::Vector3 GetImpulseVelocity() const { return m_impulseVelocity; }
