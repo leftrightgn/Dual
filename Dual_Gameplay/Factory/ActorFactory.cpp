@@ -11,6 +11,7 @@
 #include "BehaviourTree/BTDodgeNode.h"
 #include "BehaviourTree/BTIdleNode.h"
 #include "BehaviourTree/BTReturnToSpawnNode.h"
+#include "BehaviourTree/BTStrafeNode.h"
 
 #include "BlackBoard/CombatBlackBoard.h"
 #include "BlackBoard/PlayerBlackBoard.h"
@@ -23,7 +24,8 @@
 #include "Components/ShockwaveEmitterComponent.h"
 #include "Components/GameFlowStateMachineComponent.h"
 #include "Components/EncounterTriggerComponent.h"
-#include "../../External/Engine/Components/HitEffectComponent.h"
+#include "../../External/Engine/Components/ParticleComponent.h"
+#include "../../External/Engine/Components/SoundComponent.h"
 #include "Framework/GameConstants.h"
 #include "../../External/Engine/BehaviourTree/BTSelector.h"
 #include "../../External/Engine/BehaviourTree/BTSequence.h"
@@ -46,7 +48,6 @@
 #include "../../External/Engine/Components/TargetTrackingComponent.h"
 #include "../../External/Engine/Components/TransformComponent.h"
 #include "../../External/Engine/Components/TwoBoneLinkComponent.h"
-#include "../../External/Engine/Components/WeaponTrailComponent.h"
 #include "../../External/Engine/Factory/ComponentFactory.h"
 #include "../../External/Engine/Message/Message.h"
 #include "../../External/Engine/Message/Messenger.h"
@@ -114,7 +115,8 @@ HEIN::PlayerSpawnData HEIN::ActorFactory::CreateKnight(
     playerActor->AddComponent<HEIN::CharacterMovementComponent>();
     playerActor->AddComponent<HEIN::ProceduralAnimationComponent>(&actorManager);
     playerActor->AddComponent<HEIN::ShockwaveEmitterComponent>(&actorManager);
-    playerActor->AddComponent<HEIN::HitEffectComponent>();
+    auto* playerVFX = playerActor->AddComponent<HEIN::ParticleComponent>();
+    playerVFX->LoadAsset("Resources/Data/VFX/CombatImpact.json");
 
     playerActor->Start();
     return spawnData;
@@ -176,8 +178,8 @@ HEIN::ActorID HEIN::ActorFactory::CreateSword(
     socketAttachment->Initialize(wielderID, L"WeaponSocket");
     actorManager.SetParent(sword->GetID(), wielderID, false);
 
-    HEIN::WeaponTrailComponent* swordTrail = sword->AddComponent<HEIN::WeaponTrailComponent>(&actorManager);
-    swordTrail->ApplyTarnishedGoldPreset();
+    HEIN::ParticleComponent* swordTrail = sword->AddComponent<HEIN::ParticleComponent>(&actorManager);
+    swordTrail->LoadAsset("Resources/Data/VFX/GoldenSlashTrail.json");
     swordTrail->AutoFitOffsetsFromWeapon();
 
     sword->Start();
@@ -254,8 +256,8 @@ HEIN::ActorID HEIN::ActorFactory::CreateAxe(
     socketAttachment->Initialize(wielderID, L"WeaponSocket");
     actorManager.SetParent(axe->GetID(), wielderID, false);
 
-    HEIN::WeaponTrailComponent* axeTrail = axe->AddComponent<HEIN::WeaponTrailComponent>(&actorManager);
-    axeTrail->ApplyBossBloodflamePreset();
+    HEIN::ParticleComponent* axeTrail = axe->AddComponent<HEIN::ParticleComponent>(&actorManager);
+    axeTrail->LoadAsset("Resources/Data/VFX/BloodflameSlashTrail.json");
     axeTrail->AutoFitOffsetsFromWeapon();
 
     axe->Start();
@@ -448,7 +450,8 @@ HEIN::EnemySpawnData HEIN::ActorFactory::CreateEnemy(
     enemyMove->SetUseLocomotionRootMotion(false);
     enemyMove->SetCancelMoveOnStagger(false);
     enemyActor->AddComponent<HEIN::ShockwaveEmitterComponent>(&actorManager);
-    enemyActor->AddComponent<HEIN::HitEffectComponent>();
+    auto* enemyVFX = enemyActor->AddComponent<HEIN::ParticleComponent>();
+    enemyVFX->LoadAsset("Resources/Data/VFX/CombatImpact.json");
 
     SetupEnemyAI(enemyActor, &actorManager, targetID);
 
@@ -857,35 +860,16 @@ void HEIN::ActorFactory::RegisterGameComponents()
             rb->SetHorizontalVelocity(rb->GetVelocity() + impulse);
         }
 
-        // Trigger 3D Combat Impact VFX (Steel Sparks on Block/Parry, Blood Splatter on Flesh Hits)
-        if (victimTrans)
+        // Trigger 3D Combat Impact VFX via physical collision payload
+        if (auto* particleComp = victim->GetComponent<HEIN::ParticleComponent>())
         {
-            auto* hitFX = victim->GetComponent<HitEffectComponent>();
-            if (!hitFX)
-            {
-                hitFX = victim->AddComponent<HitEffectComponent>();
-                hitFX->Start();
-            }
+            DirectX::SimpleMath::Vector3 contactPos = (dealer && dealer->GetLastContactPoint() != DirectX::SimpleMath::Vector3::Zero)
+                ? dealer->GetLastContactPoint()
+                : (victimTrans ? (victimTrans->GetPosition() + DirectX::SimpleMath::Vector3(0.0f, particleComp->GetImpactHeightOffset(), 0.0f)) : DirectX::SimpleMath::Vector3::Zero);
 
-            DirectX::SimpleMath::Vector3 victimPos = victimTrans->GetPosition();
-            DirectX::SimpleMath::Vector3 contactPos = victimPos
-                + DirectX::SimpleMath::Vector3(0.0f, hitFX->GetImpactHeightOffset(), 0.0f)
-                - dir * 2.8f;
-
-            if (dealer && dealer->GetOwner())
-            {
-                if (auto* weaponTrans = dealer->GetOwner()->GetComponent<TransformComponent>())
-                {
-                    DirectX::SimpleMath::Matrix weaponWorld = weaponTrans->GetWorldMatrix();
-                    DirectX::SimpleMath::Vector3 bladeWorld = weaponWorld.Translation();
-                    if (auto* obb = dealer->GetOwner()->GetComponent<OBBColliderComponent>())
-                    {
-                        bladeWorld = DirectX::SimpleMath::Vector3::Transform(obb->GetOffset(), weaponWorld);
-                    }
-                    contactPos = DirectX::SimpleMath::Vector3::Lerp(contactPos, bladeWorld, 0.45f);
-                    contactPos.y = std::clamp(contactPos.y, victimPos.y + 3.5f, victimPos.y + 15.5f);
-                }
-            }
+            DirectX::SimpleMath::Vector3 impactNormal = (dealer && dealer->GetLastContactNormal() != DirectX::SimpleMath::Vector3::Zero)
+                ? -dealer->GetLastContactNormal()
+                : -dir;
 
             float vfxIntensity = 1.0f;
             if (isHeavyAttack || isComboFinisher)
@@ -897,13 +881,68 @@ void HEIN::ActorFactory::RegisterGameComponents()
                 vfxIntensity = 1.65f;
             }
 
-            if (isBlocked || isParried)
+            HEIN::CombatImpactDesc impact;
+            impact.contactPoint  = contactPos;
+            impact.contactNormal = impactNormal;
+            impact.intensity     = vfxIntensity;
+
+            if (isParried)
             {
-                hitFX->EmitBlockSparks(contactPos, -dir, isParried, vfxIntensity);
+                impact.impactType = HEIN::CombatImpactType::Parry;
+            }
+            else if (isBlocked)
+            {
+                impact.impactType = (playerBB && playerBB->currentBlockStamina <= 0.0f)
+                    ? HEIN::CombatImpactType::GuardBreak
+                    : HEIN::CombatImpactType::Block;
+            }
+            else
+            {
+                impact.impactType    = HEIN::CombatImpactType::Damage;
+                impact.contactNormal = dir;
+            }
+
+            particleComp->OnCombatImpact(impact);
+        }
+
+        // Dispatch reactive combat impact audio (clash with BGM ducking, shield block, guard break, or flesh hit)
+        SoundComponent* impactSoundComp = victim->GetComponent<SoundComponent>();
+        if (!impactSoundComp && attacker)
+        {
+            impactSoundComp = attacker->GetComponent<SoundComponent>();
+        }
+        if (impactSoundComp)
+        {
+            float audioIntensity = 1.0f;
+            if (isHeavyAttack || isComboFinisher)
+            {
+                audioIntensity = 1.2f;
+            }
+            if (isGuardCounterAttack || isParried)
+            {
+                audioIntensity = 1.3f;
+            }
+
+            if (isParried)
+            {
+                impactSoundComp->PlayCombatImpact(CombatImpactSoundType::ParryClash, audioIntensity);
+            }
+            else if (playerBB && playerBB->isBlockBroken)
+            {
+                impactSoundComp->PlayCombatImpact(CombatImpactSoundType::GuardBreak, audioIntensity);
+            }
+            else if (isBlocked)
+            {
+                impactSoundComp->PlayCombatImpact(CombatImpactSoundType::BlockGuard, audioIntensity);
             }
             else if (applyDamage)
             {
-                hitFX->EmitBlood(contactPos, dir, vfxIntensity);
+                impactSoundComp->PlayCombatImpact(
+                    (isHeavyAttack || isComboFinisher || isGuardCounterAttack)
+                        ? CombatImpactSoundType::HeavyHit
+                        : CombatImpactSoundType::FleshHit,
+                    audioIntensity
+                );
             }
         }
 
@@ -978,6 +1017,12 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
     p2Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P2ComboCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::ComboAttackDuration, GameConstants::BossAI::ComboAttackDistance, false, GameConstants::BossAI::Phase2AttackPacingCooldown)));
     phase2Combat->AddChild(std::move(p2Combo));
 
+    // Tactical Strafe & Repositioning in close range during attack pacing cooldown
+    std::unique_ptr<HEIN::BTSequence> p2Strafe = std::make_unique<HEIN::BTSequence>();
+    p2Strafe->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::StrafeDistance));
+    p2Strafe->AddChild(std::make_unique<HEIN::BTStrafeNode>(GameConstants::BossAI::Phase2StrafeSpeed, GameConstants::BossAI::StrafeOrbitRadius, GameConstants::BossAI::Phase2StrafeDuration, true));
+    phase2Combat->AddChild(std::move(p2Strafe));
+
     // Fast gap closer (chase speed increased to 130.0f)
     phase2Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(GameConstants::BossAI::ChaseArrivalDistance, GameConstants::BossAI::Phase2ChaseSpeed, true));
 
@@ -1013,6 +1058,12 @@ void HEIN::ActorFactory::SetupEnemyAI(Actor* enemyActor, ActorManager* actorMana
     p1Combo->AddChild(std::make_unique<HEIN::BTCheckActionCooldown>());
     p1Combo->AddChild(std::make_unique<HEIN::BTCooldownDecorator>(GameConstants::BossAI::P1ComboCooldown, std::make_unique<HEIN::BTAttackNode>(GameConstants::BossAI::ComboAttackDuration, GameConstants::BossAI::ComboAttackDistance, false, GameConstants::BossAI::Phase1AttackPacingCooldown)));
     phase1Combat->AddChild(std::move(p1Combo));
+
+    // Tactical Strafe & Repositioning in close range during attack pacing cooldown
+    std::unique_ptr<HEIN::BTSequence> p1Strafe = std::make_unique<HEIN::BTSequence>();
+    p1Strafe->AddChild(std::make_unique<HEIN::BTCheckDistance>(0.0f, GameConstants::BossAI::StrafeDistance));
+    p1Strafe->AddChild(std::make_unique<HEIN::BTStrafeNode>(GameConstants::BossAI::Phase1StrafeSpeed, GameConstants::BossAI::StrafeOrbitRadius, GameConstants::BossAI::Phase1StrafeDuration, true));
+    phase1Combat->AddChild(std::move(p1Strafe));
 
     // Deliberate pursuit (chase speed increased to 85.0f)
     phase1Combat->AddChild(std::make_unique<HEIN::BTChaseNode>(GameConstants::BossAI::ChaseArrivalDistance, GameConstants::BossAI::Phase1ChaseSpeed, true));
@@ -1095,6 +1146,37 @@ void HEIN::ActorFactory::PossessVessel(
         vessel->AddComponent<HEIN::CharacterMovementComponent>();
     }
 
+    // Ensure vessel has a SoundComponent configured for combat SFX and reactive impact cues
+    SoundComponent* vesselSound = vessel->GetComponent<SoundComponent>();
+    if (!vesselSound)
+    {
+        vesselSound = vessel->AddComponent<SoundComponent>();
+    }
+    if (vesselSound && vesselSound->GetCues().empty())
+    {
+        bool copiedFromCombatActor = false;
+        for (const auto& [id, actorPtr] : actorManager.GetAllActors())
+        {
+            if (actorPtr && actorPtr.get() != vessel && actorPtr->GetComponent<CombatStateMachineComponent>())
+            {
+                if (auto* existingSound = actorPtr->GetComponent<SoundComponent>())
+                {
+                    if (!existingSound->GetCues().empty())
+                    {
+                        nlohmann::json soundJson = existingSound->Serialize();
+                        vesselSound->Deserialize(soundJson);
+                        copiedFromCombatActor = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!copiedFromCombatActor)
+        {
+            vesselSound->ApplyCombatCharacterPreset();
+        }
+    }
+
     if (auto* rb = vessel->GetComponent<HEIN::RigidBodyComponent>())
     {
         rb->SetKinematic(false);
@@ -1134,7 +1216,7 @@ void HEIN::ActorFactory::PossessVessel(
                 damageDealer->Start();
                 hasWeapon = true;
             }
-            if (auto* weaponTrail = child->GetComponent<HEIN::WeaponTrailComponent>())
+            if (auto* weaponTrail = child->GetComponent<HEIN::ParticleComponent>())
             {
                 weaponTrail->Start();
             }
