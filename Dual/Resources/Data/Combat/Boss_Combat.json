@@ -3,6 +3,7 @@
     "states": [
         {
             "animationName": "Idle",
+            "colliderModifiers": [],
             "combatStateType": "Normal",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -11,6 +12,11 @@
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
             "effects": [],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.0,
             "hitboxStart": 0.0,
             "hitstopFrames": 5,
@@ -26,6 +32,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 20.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 0.0,
             "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
@@ -78,6 +85,7 @@
         },
         {
             "animationName": "Dodge",
+            "colliderModifiers": [],
             "combatStateType": "Dodge",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -85,7 +93,18 @@
             "comboExitBlendDuration": 0.20000000298023224,
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
-            "effects": [],
+            "effects": [
+                {
+                    "assetKey": "Dodge",
+                    "triggerTime": 0.03999999910593033,
+                    "type": "SoundCue"
+                }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.0,
             "hitboxStart": 0.0,
             "hitstopFrames": 5,
@@ -101,6 +120,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 20.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 0.0,
             "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
@@ -143,6 +163,7 @@
         },
         {
             "animationName": "Combo1",
+            "colliderModifiers": [],
             "combatStateType": "Attack",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -150,7 +171,18 @@
             "comboExitBlendDuration": 0.20000000298023224,
             "comboPermutationStep": 0,
             "comboWindowStarts": [],
-            "effects": [],
+            "effects": [
+                {
+                    "assetKey": "Slash1",
+                    "triggerTime": 0.07999999821186066,
+                    "type": "SoundCue"
+                }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 1.149999976158142,
             "hitboxStart": 0.550000011920929,
             "hitstopFrames": 3,
@@ -166,6 +198,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 40.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 0.0,
             "strikeSpeedMultiplier": 1.1800000667572021,
             "transitions": {
@@ -218,6 +251,7 @@
         },
         {
             "animationName": "Walk",
+            "colliderModifiers": [],
             "combatStateType": "Normal",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -226,6 +260,11 @@
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
             "effects": [],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.0,
             "hitboxStart": 0.0,
             "hitstopFrames": 5,
@@ -241,6 +280,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 20.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 0.0,
             "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
@@ -293,6 +333,7 @@
         },
         {
             "animationName": "Combo2",
+            "colliderModifiers": [],
             "combatStateType": "Attack",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -300,7 +341,18 @@
             "comboExitBlendDuration": 0.20000000298023224,
             "comboPermutationStep": 1,
             "comboWindowStarts": [],
-            "effects": [],
+            "effects": [
+                {
+                    "assetKey": "Slash2",
+                    "triggerTime": 0.07999999821186066,
+                    "type": "SoundCue"
+                }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 1.0499999523162842,
             "hitboxStart": 0.5,
             "hitstopFrames": 3,
@@ -316,6 +368,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 40.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 0.0,
             "strikeSpeedMultiplier": 1.2000000476837158,
             "transitions": {
@@ -368,6 +421,7 @@
         },
         {
             "animationName": "Combo3",
+            "colliderModifiers": [],
             "combatStateType": "ComboFinisher",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -375,7 +429,18 @@
             "comboExitBlendDuration": 0.20000000298023224,
             "comboPermutationStep": 2,
             "comboWindowStarts": [],
-            "effects": [],
+            "effects": [
+                {
+                    "assetKey": "Slash3",
+                    "triggerTime": 0.10000000149011612,
+                    "type": "SoundCue"
+                }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 1.5,
             "hitboxStart": 0.8199999928474426,
             "hitstopFrames": 3,
@@ -391,6 +456,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 60.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 0.0,
             "strikeSpeedMultiplier": 1.2200000286102295,
             "transitions": {
@@ -443,6 +509,7 @@
         },
         {
             "animationName": "HeavyAttack",
+            "colliderModifiers": [],
             "combatStateType": "Attack",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -466,7 +533,17 @@
                     "shakeIntensity": 1.5499999523162842,
                     "triggerTime": 1.4500000476837158,
                     "type": "CameraShake"
+                },
+                {
+                    "assetKey": "HeavySlam",
+                    "triggerTime": 1.2000000476837158,
+                    "type": "SoundCue"
                 }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
             ],
             "hitboxEnd": 1.850000023841858,
             "hitboxStart": 1.4500000476837158,
@@ -483,6 +560,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 75.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 0.0,
             "strikeSpeedMultiplier": 1.25,
             "transitions": {

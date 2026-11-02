@@ -1,0 +1,210 @@
+{
+    "AssetType": "VFXAsset",
+    "Version": 1,
+    "ImpactHeightOffset": 8.5,
+    "Emitters": [
+        {
+            "SlotName": "CrimsonDroplets",
+            "TriggerCue": "OnDamage",
+            "ShaderName": "Particle_PS",
+            "CustomTexturePath": "",
+            "BlendMode": 0,
+            "Shape": 1,
+            "Enabled": true,
+            "Looping": false,
+            "RateOverTime": 0.0,
+            "BurstCount": 48,
+            "SpreadCone": 0.45,
+            "SpawnRadius": 0.1,
+            "LocalOffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "SpeedMin": 6.0,
+            "SpeedMax": 18.0,
+            "LifetimeMin": 0.25,
+            "LifetimeMax": 0.55,
+            "SizeStart": 0.55,
+            "SizeEnd": 0.12,
+            "Gravity": 28.0,
+            "Drag": 0.92,
+            "Turbulence": 0.35,
+            "ProceduralStyle": 0,
+            "StartColor": [
+                0.85,
+                0.05,
+                0.05,
+                1.0
+            ],
+            "EndColor": [
+                0.35,
+                0.01,
+                0.01,
+                0.0
+            ]
+        },
+        {
+            "SlotName": "SteelBlockSparks",
+            "TriggerCue": "OnBlock",
+            "ShaderName": "Particle_PS",
+            "CustomTexturePath": "",
+            "BlendMode": 1,
+            "Shape": 1,
+            "Enabled": true,
+            "Looping": false,
+            "RateOverTime": 0.0,
+            "BurstCount": 36,
+            "SpreadCone": 0.65,
+            "SpawnRadius": 0.05,
+            "LocalOffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "SpeedMin": 12.0,
+            "SpeedMax": 26.0,
+            "LifetimeMin": 0.15,
+            "LifetimeMax": 0.35,
+            "SizeStart": 0.35,
+            "SizeEnd": 0.08,
+            "Gravity": 18.0,
+            "Drag": 0.88,
+            "Turbulence": 0.2,
+            "ProceduralStyle": 1,
+            "StartColor": [
+                1.0,
+                0.85,
+                0.35,
+                1.0
+            ],
+            "EndColor": [
+                1.0,
+                0.45,
+                0.05,
+                0.0
+            ]
+        },
+        {
+            "SlotName": "ParryShockRing",
+            "TriggerCue": "OnParry",
+            "ShaderName": "Particle_PS",
+            "CustomTexturePath": "",
+            "BlendMode": 1,
+            "Shape": 2,
+            "Enabled": true,
+            "Looping": false,
+            "RateOverTime": 0.0,
+            "BurstCount": 16,
+            "SpreadCone": 0.95,
+            "SpawnRadius": 0.2,
+            "LocalOffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "SpeedMin": 4.0,
+            "SpeedMax": 12.0,
+            "LifetimeMin": 0.2,
+            "LifetimeMax": 0.4,
+            "SizeStart": 0.25,
+            "SizeEnd": 1.85,
+            "Gravity": 0.0,
+            "Drag": 0.95,
+            "Turbulence": 0.1,
+            "ProceduralStyle": 3,
+            "StartColor": [
+                0.65,
+                0.9,
+                1.0,
+                1.0
+            ],
+            "EndColor": [
+                0.15,
+                0.4,
+                1.0,
+                0.0
+            ]
+        },
+        {
+            "SlotName": "GuardBreakShock",
+            "TriggerCue": "OnGuardBreak",
+            "ShaderName": "Particle_PS",
+            "CustomTexturePath": "",
+            "BlendMode": 1,
+            "Shape": 0,
+            "Enabled": true,
+            "Looping": false,
+            "RateOverTime": 0.0,
+            "BurstCount": 60,
+            "SpreadCone": 1.0,
+            "SpawnRadius": 0.3,
+            "LocalOffset": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "SpeedMin": 10.0,
+            "SpeedMax": 24.0,
+            "LifetimeMin": 0.3,
+            "LifetimeMax": 0.7,
+            "SizeStart": 0.6,
+            "SizeEnd": 0.1,
+            "Gravity": 12.0,
+            "Drag": 0.9,
+            "Turbulence": 0.4,
+            "ProceduralStyle": 3,
+            "StartColor": [
+                1.0,
+                0.95,
+                0.7,
+                1.0
+            ],
+            "EndColor": [
+                1.0,
+                0.2,
+                0.0,
+                0.0
+            ]
+        }
+    ],
+    "TrailModule": {
+        "Enabled": false,
+        "HasCustomOffsets": false,
+        "ShowDebugBladeLine": false,
+        "EnablePhase2Boost": false,
+        "ShaderName": "WeaponTrail_PS",
+        "BlendMode": 1,
+        "BaseOffset": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "TipOffset": [
+            0.0,
+            0.0,
+            1.5
+        ],
+        "Lifetime": 0.3,
+        "Subdivisions": 4,
+        "MinVertexDistance": 0.1,
+        "CoreColor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+        ],
+        "EdgeColor": [
+            1.0,
+            1.0,
+            1.0,
+            0.0
+        ],
+        "EmissiveIntensity": 1.0,
+        "TipFalloffPower": 1.0,
+        "NoiseScale": 2.0,
+        "NoiseScrollSpeed": 1.0,
+        "ErosionStrength": 0.2,
+        "LeadingEdgeSharpness": 1.5
+    }
+}

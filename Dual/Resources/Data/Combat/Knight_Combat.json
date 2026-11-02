@@ -3,6 +3,7 @@
     "states": [
         {
             "animationName": "Idle",
+            "colliderModifiers": [],
             "combatStateType": "Normal",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -11,6 +12,11 @@
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
             "effects": [],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.0,
             "hitboxStart": 0.0,
             "hitstopFrames": 5,
@@ -26,6 +32,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 20.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 1.0,
             "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
@@ -108,6 +115,7 @@
         },
         {
             "animationName": "Slash3",
+            "colliderModifiers": [],
             "combatStateType": "ComboFinisher",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -115,7 +123,18 @@
             "comboExitBlendDuration": 0.30000001192092896,
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
-            "effects": [],
+            "effects": [
+                {
+                    "assetKey": "Slash3",
+                    "triggerTime": 0.6000000238418579,
+                    "type": "SoundCue"
+                }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.8199999928474426,
             "hitboxStart": 0.46000000834465027,
             "hitstopFrames": 8,
@@ -131,6 +150,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 25.0,
             "staminaDamage": 30.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 1.0499999523162842,
             "strikeSpeedMultiplier": 1.2200000286102295,
             "transitions": {
@@ -193,6 +213,7 @@
         },
         {
             "animationName": "Dodge",
+            "colliderModifiers": [],
             "combatStateType": "Dodge",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -200,7 +221,18 @@
             "comboExitBlendDuration": 0.30000001192092896,
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
-            "effects": [],
+            "effects": [
+                {
+                    "assetKey": "Dodge",
+                    "triggerTime": 0.4000000059604645,
+                    "type": "SoundCue"
+                }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.0,
             "hitboxStart": 0.0,
             "hitstopFrames": 5,
@@ -216,6 +248,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 20.0,
             "staminaDamage": 20.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 1.0,
             "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
@@ -268,6 +301,7 @@
         },
         {
             "animationName": "Walk",
+            "colliderModifiers": [],
             "combatStateType": "Normal",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -276,6 +310,11 @@
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
             "effects": [],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.0,
             "hitboxStart": 0.0,
             "hitstopFrames": 5,
@@ -291,6 +330,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 20.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 1.2999999523162842,
             "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
@@ -363,6 +403,7 @@
         },
         {
             "animationName": "Slash2",
+            "colliderModifiers": [],
             "combatStateType": "Attack",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -370,7 +411,18 @@
             "comboExitBlendDuration": 0.30000001192092896,
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
-            "effects": [],
+            "effects": [
+                {
+                    "assetKey": "Slash2",
+                    "triggerTime": 0.6000000238418579,
+                    "type": "SoundCue"
+                }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.949999988079071,
             "hitboxStart": 0.5199999809265137,
             "hitstopFrames": 5,
@@ -386,6 +438,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 15.0,
             "staminaDamage": 20.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 1.2000000476837158,
             "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
@@ -448,6 +501,7 @@
         },
         {
             "animationName": "Slash1",
+            "colliderModifiers": [],
             "combatStateType": "Attack",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -455,7 +509,18 @@
             "comboExitBlendDuration": 0.30000001192092896,
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
-            "effects": [],
+            "effects": [
+                {
+                    "assetKey": "Slash1",
+                    "triggerTime": 0.6000000238418579,
+                    "type": "SoundCue"
+                }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.8500000238418579,
             "hitboxStart": 0.47999998927116394,
             "hitstopFrames": 5,
@@ -471,6 +536,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 15.0,
             "staminaDamage": 18.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 1.149999976158142,
             "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
@@ -533,6 +599,7 @@
         },
         {
             "animationName": "Stun",
+            "colliderModifiers": [],
             "combatStateType": "Stun",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -540,7 +607,18 @@
             "comboExitBlendDuration": 0.30000001192092896,
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
-            "effects": [],
+            "effects": [
+                {
+                    "assetKey": "Dodge",
+                    "triggerTime": 0.03999999910593033,
+                    "type": "SoundCue"
+                }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.0,
             "hitboxStart": 0.0,
             "hitstopFrames": 5,
@@ -556,6 +634,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 20.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 0.5,
             "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
@@ -578,6 +657,7 @@
         },
         {
             "animationName": "Block",
+            "colliderModifiers": [],
             "combatStateType": "Block",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -586,6 +666,11 @@
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
             "effects": [],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.0,
             "hitboxStart": 0.0,
             "hitstopFrames": 5,
@@ -601,6 +686,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 20.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 1.0,
             "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
@@ -663,6 +749,78 @@
         },
         {
             "animationName": "Jump",
+            "colliderModifiers": [
+                {
+                    "colliderTag": "PlayerRoot",
+                    "enableCollider": true,
+                    "endTime": 0.75,
+                    "followRootMotionY": true,
+                    "heightScale": 0.6499999761581421,
+                    "offsetDelta": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "radiusScale": 1.0,
+                    "startTime": 0.0
+                },
+                {
+                    "colliderTag": "RupLegCollider",
+                    "enableCollider": false,
+                    "endTime": 0.6499999761581421,
+                    "followRootMotionY": false,
+                    "heightScale": 1.0,
+                    "offsetDelta": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "radiusScale": 1.0,
+                    "startTime": 0.05000000074505806
+                },
+                {
+                    "colliderTag": "RLegCollider",
+                    "enableCollider": false,
+                    "endTime": 0.6499999761581421,
+                    "followRootMotionY": false,
+                    "heightScale": 1.0,
+                    "offsetDelta": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "radiusScale": 1.0,
+                    "startTime": 0.05000000074505806
+                },
+                {
+                    "colliderTag": "LupLegCollider",
+                    "enableCollider": false,
+                    "endTime": 0.6499999761581421,
+                    "followRootMotionY": false,
+                    "heightScale": 1.0,
+                    "offsetDelta": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "radiusScale": 1.0,
+                    "startTime": 0.05000000074505806
+                },
+                {
+                    "colliderTag": "LLegCollider",
+                    "enableCollider": false,
+                    "endTime": 0.6499999761581421,
+                    "followRootMotionY": false,
+                    "heightScale": 1.0,
+                    "offsetDelta": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "radiusScale": 1.0,
+                    "startTime": 0.05000000074505806
+                }
+            ],
             "combatStateType": "Jump",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -671,63 +829,15 @@
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
             "effects": [],
+            "enterImpulse": [
+                0.0,
+                30.0,
+                0.0
+            ],
             "hitboxEnd": 0.0,
             "hitboxStart": 0.0,
             "hitstopFrames": 5,
             "invincibilityEnd": 0.0,
-            "enterImpulse": [ 0.0, 30.0, 0.0 ],
-            "colliderModifiers": [
-                {
-                    "colliderTag": "PlayerRoot",
-                    "startTime": 0.0,
-                    "endTime": 0.75,
-                    "enableCollider": true,
-                    "followRootMotionY": true,
-                    "heightScale": 0.65,
-                    "radiusScale": 1.0,
-                    "offsetDelta": [ 0.0, 0.0, 0.0 ]
-                },
-                {
-                    "colliderTag": "RupLegCollider",
-                    "startTime": 0.05,
-                    "endTime": 0.65,
-                    "enableCollider": false,
-                    "followRootMotionY": false,
-                    "heightScale": 1.0,
-                    "radiusScale": 1.0,
-                    "offsetDelta": [ 0.0, 0.0, 0.0 ]
-                },
-                {
-                    "colliderTag": "RLegCollider",
-                    "startTime": 0.05,
-                    "endTime": 0.65,
-                    "enableCollider": false,
-                    "followRootMotionY": false,
-                    "heightScale": 1.0,
-                    "radiusScale": 1.0,
-                    "offsetDelta": [ 0.0, 0.0, 0.0 ]
-                },
-                {
-                    "colliderTag": "LupLegCollider",
-                    "startTime": 0.05,
-                    "endTime": 0.65,
-                    "enableCollider": false,
-                    "followRootMotionY": false,
-                    "heightScale": 1.0,
-                    "radiusScale": 1.0,
-                    "offsetDelta": [ 0.0, 0.0, 0.0 ]
-                },
-                {
-                    "colliderTag": "LLegCollider",
-                    "startTime": 0.05,
-                    "endTime": 0.65,
-                    "enableCollider": false,
-                    "followRootMotionY": false,
-                    "heightScale": 1.0,
-                    "radiusScale": 1.0,
-                    "offsetDelta": [ 0.0, 0.0, 0.0 ]
-                }
-            ],
             "invincibilityStart": 0.0,
             "isAttack": false,
             "isBlock": false,
@@ -739,6 +849,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 10.0,
             "staminaDamage": 20.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 0.75,
             "strikeSpeedMultiplier": 1.149999976158142,
             "transitions": {
@@ -811,6 +922,7 @@
         },
         {
             "animationName": "Slash3",
+            "colliderModifiers": [],
             "combatStateType": "GuardCounter",
             "comboAnimationNames": [],
             "comboBlendDurations": [],
@@ -818,7 +930,18 @@
             "comboExitBlendDuration": 0.30000001192092896,
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
-            "effects": [],
+            "effects": [
+                {
+                    "assetKey": "Slash3",
+                    "triggerTime": 0.10000000149011612,
+                    "type": "SoundCue"
+                }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.8199999928474426,
             "hitboxStart": 0.46000000834465027,
             "hitstopFrames": 9,
@@ -834,6 +957,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 20.0,
             "staminaDamage": 45.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 1.0499999523162842,
             "strikeSpeedMultiplier": 1.25,
             "transitions": {
@@ -886,15 +1010,26 @@
         },
         {
             "animationName": "Death",
+            "colliderModifiers": [],
             "combatStateType": "Death",
-            "isDeath": true,
             "comboAnimationNames": [],
             "comboBlendDurations": [],
             "comboEndTimes": [],
             "comboExitBlendDuration": 0.30000001192092896,
             "comboPermutationStep": -1,
             "comboWindowStarts": [],
-            "effects": [],
+            "effects": [
+                {
+                    "assetKey": "Dodge",
+                    "triggerTime": 0.03999999910593033,
+                    "type": "SoundCue"
+                }
+            ],
+            "enterImpulse": [
+                0.0,
+                0.0,
+                0.0
+            ],
             "hitboxEnd": 0.0,
             "hitboxStart": 0.0,
             "hitstopFrames": 0,
@@ -910,6 +1045,7 @@
             "secondaryAnimationName": "",
             "staminaCost": 0.0,
             "staminaDamage": 0.0,
+            "staminaRegenDelay": -1.0,
             "stateDuration": 3.9000000953674316,
             "strikeSpeedMultiplier": 1.0,
             "transitions": {},

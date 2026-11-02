@@ -1,0 +1,45 @@
+{
+    "AssetType": "VFXAsset",
+    "Emitters": [],
+    "ImpactHeightOffset": 0.0,
+    "TrailModule": {
+        "BaseOffset": [
+            1.75,
+            143.54998779296875,
+            0.0
+        ],
+        "BlendMode": 1,
+        "CoreColor": [
+            1.0,
+            0.9200000166893005,
+            0.6499999761581421,
+            1.0
+        ],
+        "EdgeColor": [
+            0.8500000238418579,
+            0.550000011920929,
+            0.07999999821186066,
+            0.75
+        ],
+        "EmissiveIntensity": 2.799999952316284,
+        "EnablePhase2Boost": false,
+        "Enabled": true,
+        "ErosionStrength": 0.2199999988079071,
+        "HasCustomOffsets": true,
+        "LeadingEdgeSharpness": 1.600000023841858,
+        "Lifetime": 0.3199999928474426,
+        "MinVertexDistance": 0.11999999731779099,
+        "NoiseScale": 2.4000000953674316,
+        "NoiseScrollSpeed": 1.600000023841858,
+        "ShaderName": "WeaponTrail_PS",
+        "ShowDebugBladeLine": false,
+        "Subdivisions": 4,
+        "TipFalloffPower": 1.4500000476837158,
+        "TipOffset": [
+            1.75,
+            583.5499877929688,
+            0.0
+        ]
+    },
+    "Version": 1
+}

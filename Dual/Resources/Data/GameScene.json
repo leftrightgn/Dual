@@ -95,13 +95,13 @@
                             ]
                         },
                         "Fov": 0.8726646304130554,
-                        "PosX": -23.99334144592285,
-                        "PosY": -62.01385498046875,
-                        "PosZ": -1353.5242919921875,
-                        "RotW": 0.9474074244499207,
-                        "RotX": -0.12273658812046051,
-                        "RotY": 0.2931092083454132,
-                        "RotZ": 0.037972286343574524
+                        "PosX": -60.85649490356445,
+                        "PosY": -75.1242446899414,
+                        "PosZ": -1388.9735107421875,
+                        "RotW": 0.9256646633148193,
+                        "RotX": -0.04152744263410568,
+                        "RotY": 0.3756812512874603,
+                        "RotZ": 0.016853922978043556
                     },
                     "Type": "CameraController"
                 }
@@ -187,44 +187,8 @@
                             "Type": "SocketAttachmentComponent"
                         },
                         {
-                            "Data": {
-                                "BaseOffset": [
-                                    1.75,
-                                    143.54998779296875,
-                                    0.0
-                                ],
-                                "BlendMode": 0,
-                                "CoreColor": [
-                                    0.9200000166893005,
-                                    0.9700000286102295,
-                                    1.0,
-                                    0.9200000166893005
-                                ],
-                                "EdgeColor": [
-                                    0.41999998688697815,
-                                    0.6800000071525574,
-                                    0.949999988079071,
-                                    0.7799999713897705
-                                ],
-                                "EmissiveIntensity": 2.0,
-                                "EnablePhase2Boost": false,
-                                "ErosionStrength": 0.8199999928474426,
-                                "HasCustomOffsets": false,
-                                "LeadingEdgeSharpness": 8.0,
-                                "Lifetime": 0.18000000715255737,
-                                "MinVertexDistance": 0.15000000596046448,
-                                "NoiseScale": 2.200000047683716,
-                                "NoiseScrollSpeed": 3.200000047683716,
-                                "ShowDebugBladeLine": true,
-                                "Subdivisions": 4,
-                                "TipFalloffPower": 0.5699999928474426,
-                                "TipOffset": [
-                                    1.75,
-                                    583.5499877929688,
-                                    0.0
-                                ]
-                            },
-                            "Type": "WeaponTrailComponent"
+                            "Type": "ParticleComponent",
+                            "AssetPath": "Resources/Data/VFX/GoldenSlashTrail.json"
                         }
                     ],
                     "EnableFrustumCulling": true,
@@ -255,15 +219,15 @@
                 {
                     "Data": {
                         "Position": [
-                            -44.29387664794922,
-                            -87.64068603515625,
-                            -1383.9859619140625
+                            -88.60885620117188,
+                            -94.54747009277344,
+                            -1419.2586669921875
                         ],
                         "Rotation": [
                             -0.0,
-                            0.16241289675235748,
-                            -0.0,
-                            0.9867228865623474
+                            -0.9817216992378235,
+                            0.0,
+                            -0.19032235443592072
                         ],
                         "Scale": [
                             0.10000001639127731,
@@ -423,7 +387,7 @@
                     "Data": {
                         "ColliderTag": "BodyCollider",
                         "Enabled": true,
-                        "Height": 3.69534969329834,
+                        "Height": 3.6934995651245117,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -450,7 +414,7 @@
                     "Data": {
                         "ColliderTag": "RarmCollider",
                         "Enabled": true,
-                        "Height": 2.557436227798462,
+                        "Height": 2.5573763847351074,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -477,7 +441,7 @@
                     "Data": {
                         "ColliderTag": "RforearmCollider",
                         "Enabled": true,
-                        "Height": 2.1603379249572754,
+                        "Height": 2.1603024005889893,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -504,7 +468,7 @@
                     "Data": {
                         "ColliderTag": "LarmCollider",
                         "Enabled": true,
-                        "Height": 2.5573980808258057,
+                        "Height": 2.557431936264038,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -531,7 +495,7 @@
                     "Data": {
                         "ColliderTag": "LforearmCollider",
                         "Enabled": true,
-                        "Height": 2.1603951454162598,
+                        "Height": 2.160315752029419,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -558,7 +522,7 @@
                     "Data": {
                         "ColliderTag": "RupLegCollider",
                         "Enabled": true,
-                        "Height": 4.170214653015137,
+                        "Height": 4.1702117919921875,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -585,7 +549,7 @@
                     "Data": {
                         "ColliderTag": "RLegCollider",
                         "Enabled": true,
-                        "Height": 3.698085069656372,
+                        "Height": 3.698113203048706,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -612,7 +576,7 @@
                     "Data": {
                         "ColliderTag": "LupLegCollider",
                         "Enabled": true,
-                        "Height": 4.170130252838135,
+                        "Height": 4.170207500457764,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -639,7 +603,7 @@
                     "Data": {
                         "ColliderTag": "LLegCollider",
                         "Enabled": true,
-                        "Height": 3.6980679035186768,
+                        "Height": 3.698108673095703,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -916,55 +880,220 @@
                     "Type": "ShockwaveEmitterComponent"
                 },
                 {
+                    "Type": "ParticleComponent",
+                    "AssetPath": "Resources/Data/VFX/CombatImpact.json"
+                },
+                {
                     "Data": {
-                        "BloodGravity": 48.0,
-                        "BloodParticleCount": 30,
-                        "BloodPrimaryColor": [
-                            0.6800000071525574,
-                            0.019999999552965164,
-                            0.019999999552965164,
-                            0.9599999785423279
+                        "BlockGuardCue": "Guard_Block",
+                        "Cues": [
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Slash1",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.11999999731779099,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Slash_Swing.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.04100000113248825,
+                                "PlayOnStart": false,
+                                "Volume": 1.5
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Slash2",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Slash_Swing.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05000000074505806,
+                                "PlayOnStart": false,
+                                "Volume": 0.9200000166893005
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Slash3",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.15000000596046448,
+                                "DuckReleaseSpeed": 3.5,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.550000011920929,
+                                "FilePath": "Resources/Audio/Slash_Swing.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.03999999910593033,
+                                "PlayOnStart": false,
+                                "Volume": 1.0
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "HeavySlam",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.2199999988079071,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.44999998807907104,
+                                "FilePath": "Resources/Audio/Slash_Heavy.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.029999999329447746,
+                                "PlayOnStart": false,
+                                "Volume": 1.0499999523162842
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Dodge",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Dodge_Roll.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.03999999910593033,
+                                "PlayOnStart": false,
+                                "Volume": 0.800000011920929
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Footstep",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Footstep.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05999999865889549,
+                                "PlayOnStart": false,
+                                "Volume": 0.6499999761581421
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Clash_Parry",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.3499999940395355,
+                                "DuckReleaseSpeed": 2.799999952316284,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/Clash_Parry.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.03999999910593033,
+                                "PlayOnStart": false,
+                                "Volume": 1.100000023841858
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Guard_Block",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.14000000059604645,
+                                "DuckReleaseSpeed": 4.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.550000011920929,
+                                "FilePath": "Resources/Audio/Guard_Block.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05000000074505806,
+                                "PlayOnStart": false,
+                                "Volume": 0.949999988079071
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Guard_Break",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.44999998807907104,
+                                "DuckReleaseSpeed": 2.4000000953674316,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.2199999988079071,
+                                "FilePath": "Resources/Audio/Guard_Break.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.029999999329447746,
+                                "PlayOnStart": false,
+                                "Volume": 1.100000023841858
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Hit_Flesh",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Hit_Flesh.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05000000074505806,
+                                "PlayOnStart": false,
+                                "Volume": 0.949999988079071
+                            }
                         ],
-                        "BloodSecondaryColor": [
-                            0.2800000011920929,
-                            0.009999999776482582,
-                            0.009999999776482582,
-                            0.8199999928474426
-                        ],
-                        "BloodSize": 0.75,
-                        "BloodSpeed": 28.0,
-                        "EmissiveIntensity": 2.4000000953674316,
-                        "EnableBlood": true,
-                        "EnableSparks": true,
-                        "ErosionStrength": 0.7799999713897705,
-                        "ImpactHeightOffset": 9.5,
-                        "NoiseScale": 1.850000023841858,
-                        "ParryFlashColor": [
-                            1.0,
-                            0.8799999952316284,
-                            0.3799999952316284,
-                            1.0
-                        ],
-                        "ParryParticleCount": 64,
-                        "SparkCoreColor": [
-                            1.0,
-                            0.949999988079071,
-                            0.7599999904632568,
-                            1.0
-                        ],
-                        "SparkEdgeColor": [
-                            1.0,
-                            0.41999998688697815,
-                            0.05999999865889549,
-                            1.0
-                        ],
-                        "SparkGravity": 55.0,
-                        "SparkParticleCount": 36,
-                        "SparkSize": 0.41999998688697815,
-                        "SparkSpeed": 46.0,
-                        "SparkStretch": 0.06499999761581421
+                        "FleshHitCue": "Hit_Flesh",
+                        "GuardBreakCue": "Guard_Break",
+                        "HeavyHitCue": "Slash_Heavy",
+                        "ParryClashCue": "Clash_Parry"
                     },
-                    "Type": "HitEffectComponent"
+                    "Type": "SoundComponent"
                 }
             ],
             "EnableFrustumCulling": true,
@@ -1047,44 +1176,8 @@
                             "Type": "SocketAttachmentComponent"
                         },
                         {
-                            "Data": {
-                                "BaseOffset": [
-                                    -2.3965516090393066,
-                                    43.85100173950195,
-                                    0.7321594953536987
-                                ],
-                                "BlendMode": 0,
-                                "CoreColor": [
-                                    1.0,
-                                    0.0,
-                                    0.0,
-                                    0.9599999785423279
-                                ],
-                                "EdgeColor": [
-                                    0.813725471496582,
-                                    0.05954087898135185,
-                                    0.0,
-                                    0.8999999761581421
-                                ],
-                                "EmissiveIntensity": 2.5,
-                                "EnablePhase2Boost": true,
-                                "ErosionStrength": 0.800000011920929,
-                                "HasCustomOffsets": true,
-                                "LeadingEdgeSharpness": 6.0,
-                                "Lifetime": 0.25999999046325684,
-                                "MinVertexDistance": 0.15000000596046448,
-                                "NoiseScale": 1.7999999523162842,
-                                "NoiseScrollSpeed": 2.5,
-                                "ShowDebugBladeLine": true,
-                                "Subdivisions": 4,
-                                "TipFalloffPower": 0.4699999988079071,
-                                "TipOffset": [
-                                    -1.7263617515563965,
-                                    131.85467529296875,
-                                    0.5274074077606201
-                                ]
-                            },
-                            "Type": "WeaponTrailComponent"
+                            "Type": "ParticleComponent",
+                            "AssetPath": "Resources/Data/VFX/BloodflameSlashTrail.json"
                         }
                     ],
                     "EnableFrustumCulling": true,
@@ -1115,9 +1208,9 @@
                 {
                     "Data": {
                         "Position": [
-                            -200.11073303222656,
+                            -200.1102752685547,
                             -109.43873596191406,
-                            -1655.0164794921875
+                            -1655.13671875
                         ],
                         "Rotation": [
                             0.0,
@@ -1208,7 +1301,7 @@
                     "Data": {
                         "ColliderTag": "BodyCollider",
                         "Enabled": true,
-                        "Height": 6.482790946960449,
+                        "Height": 6.512269020080566,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1235,7 +1328,7 @@
                     "Data": {
                         "ColliderTag": "RArmCollider",
                         "Enabled": true,
-                        "Height": 7.395695686340332,
+                        "Height": 7.395822048187256,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1262,7 +1355,7 @@
                     "Data": {
                         "ColliderTag": "RForearmCollider",
                         "Enabled": true,
-                        "Height": 4.741001605987549,
+                        "Height": 4.741060733795166,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1289,7 +1382,7 @@
                     "Data": {
                         "ColliderTag": "LArmCollider",
                         "Enabled": true,
-                        "Height": 7.395538330078125,
+                        "Height": 7.3955397605896,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1316,7 +1409,7 @@
                     "Data": {
                         "ColliderTag": "LForearmCollider",
                         "Enabled": true,
-                        "Height": 4.740917205810547,
+                        "Height": 4.740862846374512,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1343,7 +1436,7 @@
                     "Data": {
                         "ColliderTag": "RUpLegCollider",
                         "Enabled": true,
-                        "Height": 5.742825031280518,
+                        "Height": 5.742803573608398,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1370,7 +1463,7 @@
                     "Data": {
                         "ColliderTag": "RLegCollider",
                         "Enabled": true,
-                        "Height": 4.903078556060791,
+                        "Height": 4.903027057647705,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1397,7 +1490,7 @@
                     "Data": {
                         "ColliderTag": "LUpLegCollider",
                         "Enabled": true,
-                        "Height": 5.743079662322998,
+                        "Height": 5.742982864379883,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1424,7 +1517,7 @@
                     "Data": {
                         "ColliderTag": "LLegCollider",
                         "Enabled": true,
-                        "Height": 4.902695178985596,
+                        "Height": 4.9026994705200195,
                         "IsTrigger": true,
                         "Layer": 8,
                         "Mask": 4294967295,
@@ -1680,55 +1773,220 @@
                     "Type": "EncounterTriggerComponent"
                 },
                 {
+                    "Type": "ParticleComponent",
+                    "AssetPath": "Resources/Data/VFX/CombatImpact.json"
+                },
+                {
                     "Data": {
-                        "BloodGravity": 60.5,
-                        "BloodParticleCount": 96,
-                        "BloodPrimaryColor": [
-                            0.6800000071525574,
-                            0.019999999552965164,
-                            0.019999999552965164,
-                            0.9599999785423279
+                        "BlockGuardCue": "Guard_Block",
+                        "Cues": [
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Slash1",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Slash_Swing.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05000000074505806,
+                                "PlayOnStart": false,
+                                "Volume": 0.8999999761581421
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Slash2",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Slash_Swing.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05000000074505806,
+                                "PlayOnStart": false,
+                                "Volume": 0.9200000166893005
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Slash3",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.15000000596046448,
+                                "DuckReleaseSpeed": 3.5,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.550000011920929,
+                                "FilePath": "Resources/Audio/Slash_Swing.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.03999999910593033,
+                                "PlayOnStart": false,
+                                "Volume": 1.0
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "HeavySlam",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.2199999988079071,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.44999998807907104,
+                                "FilePath": "Resources/Audio/Slash_Heavy.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.029999999329447746,
+                                "PlayOnStart": false,
+                                "Volume": 1.0499999523162842
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Dodge",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Dodge_Roll.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.03999999910593033,
+                                "PlayOnStart": false,
+                                "Volume": 0.800000011920929
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Footstep",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Footstep.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05999999865889549,
+                                "PlayOnStart": false,
+                                "Volume": 0.6499999761581421
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Clash_Parry",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.3499999940395355,
+                                "DuckReleaseSpeed": 2.799999952316284,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/Clash_Parry.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.03999999910593033,
+                                "PlayOnStart": false,
+                                "Volume": 1.100000023841858
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Guard_Block",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.14000000059604645,
+                                "DuckReleaseSpeed": 4.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.550000011920929,
+                                "FilePath": "Resources/Audio/Guard_Block.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05000000074505806,
+                                "PlayOnStart": false,
+                                "Volume": 0.949999988079071
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Guard_Break",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.44999998807907104,
+                                "DuckReleaseSpeed": 2.4000000953674316,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.2199999988079071,
+                                "FilePath": "Resources/Audio/Guard_Break.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.029999999329447746,
+                                "PlayOnStart": false,
+                                "Volume": 1.100000023841858
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Hit_Flesh",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Hit_Flesh.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05000000074505806,
+                                "PlayOnStart": false,
+                                "Volume": 0.949999988079071
+                            }
                         ],
-                        "BloodSecondaryColor": [
-                            0.36764705181121826,
-                            0.021626295521855354,
-                            0.021626295521855354,
-                            0.8199999928474426
-                        ],
-                        "BloodSize": 0.33000001311302185,
-                        "BloodSpeed": 42.0,
-                        "EmissiveIntensity": 2.4000000953674316,
-                        "EnableBlood": true,
-                        "EnableSparks": true,
-                        "ErosionStrength": 0.6200000047683716,
-                        "ImpactHeightOffset": 1.399999976158142,
-                        "NoiseScale": 4.099999904632568,
-                        "ParryFlashColor": [
-                            1.0,
-                            0.8799999952316284,
-                            0.3799999952316284,
-                            1.0
-                        ],
-                        "ParryParticleCount": 64,
-                        "SparkCoreColor": [
-                            1.0,
-                            0.949999988079071,
-                            0.7599999904632568,
-                            1.0
-                        ],
-                        "SparkEdgeColor": [
-                            1.0,
-                            0.41999998688697815,
-                            0.05999999865889549,
-                            1.0
-                        ],
-                        "SparkGravity": 55.0,
-                        "SparkParticleCount": 36,
-                        "SparkSize": 0.41999998688697815,
-                        "SparkSpeed": 46.0,
-                        "SparkStretch": 0.06499999761581421
+                        "FleshHitCue": "Hit_Flesh",
+                        "GuardBreakCue": "Guard_Break",
+                        "HeavyHitCue": "Slash_Heavy",
+                        "ParryClashCue": "Clash_Parry"
                     },
-                    "Type": "HitEffectComponent"
+                    "Type": "SoundComponent"
                 }
             ],
             "EnableFrustumCulling": true,
@@ -2894,44 +3152,8 @@
                             "Type": "SocketAttachmentComponent"
                         },
                         {
-                            "Data": {
-                                "BaseOffset": [
-                                    1.75,
-                                    40.0,
-                                    0.0
-                                ],
-                                "BlendMode": 0,
-                                "CoreColor": [
-                                    1.0,
-                                    0.9700000286102295,
-                                    0.8600000143051147,
-                                    0.949999988079071
-                                ],
-                                "EdgeColor": [
-                                    0.8799999952316284,
-                                    0.6800000071525574,
-                                    0.30000001192092896,
-                                    0.8500000238418579
-                                ],
-                                "EmissiveIntensity": 2.299999952316284,
-                                "EnablePhase2Boost": false,
-                                "ErosionStrength": 0.7799999713897705,
-                                "HasCustomOffsets": true,
-                                "LeadingEdgeSharpness": 7.5,
-                                "Lifetime": 0.20000000298023224,
-                                "MinVertexDistance": 0.3700000047683716,
-                                "NoiseScale": 2.0,
-                                "NoiseScrollSpeed": 2.799999952316284,
-                                "ShowDebugBladeLine": true,
-                                "Subdivisions": 4,
-                                "TipFalloffPower": 0.8100000023841858,
-                                "TipOffset": [
-                                    1.75,
-                                    280.0,
-                                    0.0
-                                ]
-                            },
-                            "Type": "WeaponTrailComponent"
+                            "Type": "ParticleComponent",
+                            "AssetPath": "Resources/Data/VFX/GoldenSlashTrail.json"
                         }
                     ],
                     "EnableFrustumCulling": true,
@@ -2962,9 +3184,9 @@
                 {
                     "Data": {
                         "Position": [
-                            126.33790588378906,
+                            126.39323425292969,
                             -88.96723937988281,
-                            -1227.0784912109375
+                            -1227.0599365234375
                         ],
                         "Rotation": [
                             0.0,
@@ -3130,7 +3352,7 @@
                     "Data": {
                         "ColliderTag": "BodyCollider",
                         "Enabled": true,
-                        "Height": 3.695347309112549,
+                        "Height": 3.7094554901123047,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3157,7 +3379,7 @@
                     "Data": {
                         "ColliderTag": "RarmCollider",
                         "Enabled": true,
-                        "Height": 2.557448625564575,
+                        "Height": 2.557427406311035,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3184,7 +3406,7 @@
                     "Data": {
                         "ColliderTag": "RforearmCollider",
                         "Enabled": true,
-                        "Height": 2.160325527191162,
+                        "Height": 2.1603188514709473,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3211,7 +3433,7 @@
                     "Data": {
                         "ColliderTag": "LarmCollider",
                         "Enabled": true,
-                        "Height": 2.5573737621307373,
+                        "Height": 2.557438611984253,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3238,7 +3460,7 @@
                     "Data": {
                         "ColliderTag": "LforearmCollider",
                         "Enabled": true,
-                        "Height": 2.1603379249572754,
+                        "Height": 2.160334587097168,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3265,7 +3487,7 @@
                     "Data": {
                         "ColliderTag": "RupLegCollider",
                         "Enabled": true,
-                        "Height": 4.170201778411865,
+                        "Height": 4.170156478881836,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3292,7 +3514,7 @@
                     "Data": {
                         "ColliderTag": "RLegCollider",
                         "Enabled": true,
-                        "Height": 3.6981258392333984,
+                        "Height": 3.698082447052002,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3319,7 +3541,7 @@
                     "Data": {
                         "ColliderTag": "LupLegCollider",
                         "Enabled": true,
-                        "Height": 4.170196056365967,
+                        "Height": 4.170196533203125,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3346,7 +3568,7 @@
                     "Data": {
                         "ColliderTag": "LLegCollider",
                         "Enabled": true,
-                        "Height": 3.698091745376587,
+                        "Height": 3.6981005668640137,
                         "IsTrigger": true,
                         "Layer": 4,
                         "Mask": 40,
@@ -3560,6 +3782,218 @@
                         "Radius": 25.0
                     },
                     "Type": "PossessableComponent"
+                },
+                {
+                    "Data": {
+                        "BlockGuardCue": "Guard_Block",
+                        "Cues": [
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Slash1",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Slash_Swing1.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05000000074505806,
+                                "PlayOnStart": false,
+                                "Volume": 0.8999999761581421
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Slash2",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Slash_Swing2.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05000000074505806,
+                                "PlayOnStart": false,
+                                "Volume": 0.9200000166893005
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Slash3",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.15000000596046448,
+                                "DuckReleaseSpeed": 3.5,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.550000011920929,
+                                "FilePath": "Resources/Audio/Slash_Heavy.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.03999999910593033,
+                                "PlayOnStart": false,
+                                "Volume": 1.0
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "HeavySlam",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.2199999988079071,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.44999998807907104,
+                                "FilePath": "Resources/Audio/Slash_Heavy.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.029999999329447746,
+                                "PlayOnStart": false,
+                                "Volume": 1.0499999523162842
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Dodge",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Dodge_Roll.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.03999999910593033,
+                                "PlayOnStart": false,
+                                "Volume": 0.800000011920929
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Footstep",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Footstep.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05999999865889549,
+                                "PlayOnStart": false,
+                                "Volume": 0.6499999761581421
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Clash_Parry",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.3499999940395355,
+                                "DuckReleaseSpeed": 2.799999952316284,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/Clash_Parry.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.03999999910593033,
+                                "PlayOnStart": false,
+                                "Volume": 1.100000023841858
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Guard_Block",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.14000000059604645,
+                                "DuckReleaseSpeed": 4.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.550000011920929,
+                                "FilePath": "Resources/Audio/Guard_Block.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05000000074505806,
+                                "PlayOnStart": false,
+                                "Volume": 0.949999988079071
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Guard_Break",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": true,
+                                "DuckHoldDuration": 0.44999998807907104,
+                                "DuckReleaseSpeed": 2.4000000953674316,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.2199999988079071,
+                                "FilePath": "Resources/Audio/Guard_Break.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.029999999329447746,
+                                "PlayOnStart": false,
+                                "Volume": 1.100000023841858
+                            },
+                            {
+                                "Bus": "CombatSFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Hit_Flesh",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.0,
+                                "DuckReleaseSpeed": 3.0,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 1.0,
+                                "FilePath": "Resources/Audio/Hit_Flesh.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.05000000074505806,
+                                "PlayOnStart": false,
+                                "Volume": 0.949999988079071
+                            }
+                        ],
+                        "FleshHitCue": "Hit_Flesh",
+                        "GuardBreakCue": "Guard_Break",
+                        "HeavyHitCue": "Slash_Heavy",
+                        "ParryClashCue": "Clash_Parry"
+                    },
+                    "Type": "SoundComponent"
                 }
             ],
             "EnableFrustumCulling": true,
@@ -3600,11 +4034,127 @@
                         "CurrentState": 2,
                         "DrawDebugTriggerRange": true,
                         "EnableIntroCinematic": true,
+                        "GameOverBgmCue": "BGM_GameOver",
+                        "GameplayBgmCue": "BGM_Arena",
                         "HasPlayedIntro": false,
+                        "IntroBgmCue": "BGM_Intro",
                         "IntroMaxDuration": 8.5,
-                        "IntroTrackName": "Boss_Intro"
+                        "IntroTrackName": "Boss_Intro",
+                        "VictoryBgmCue": "BGM_Victory"
                     },
                     "Type": "GameFlowStateMachineComponent"
+                },
+                {
+                    "Data": {
+                        "BlockGuardCue": "Guard_Block",
+                        "Cues": [
+                            {
+                                "Bus": "BGM",
+                                "CrossfadeDuration": 2.009999990463257,
+                                "CueName": "BGM_Arena",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/BGM_Arena.wav",
+                                "Is3D": false,
+                                "IsLooping": true,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.029999999329447746,
+                                "PitchVariance": 0.0,
+                                "PlayOnStart": true,
+                                "Volume": 0.14000000059604645
+                            },
+                            {
+                                "Bus": "BGM",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "BGM_Intro",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/BGM_Intro.wav",
+                                "Is3D": false,
+                                "IsLooping": true,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.0,
+                                "PlayOnStart": false,
+                                "Volume": 0.8500000238418579
+                            },
+                            {
+                                "Bus": "BGM",
+                                "CrossfadeDuration": 0.800000011920929,
+                                "CueName": "BGM_Victory",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/BGM_Victory.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.0,
+                                "PlayOnStart": false,
+                                "Volume": 0.8500000238418579
+                            },
+                            {
+                                "Bus": "BGM",
+                                "CrossfadeDuration": 0.800000011920929,
+                                "CueName": "BGM_GameOver",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/BGM_GameOver.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.0,
+                                "PlayOnStart": false,
+                                "Volume": 0.8500000238418579
+                            },
+                            {
+                                "Bus": "Ambient",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "Wind_Ambient",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/Wind.wav",
+                                "Is3D": false,
+                                "IsLooping": true,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.03999999910593033,
+                                "PlayOnStart": true,
+                                "Volume": 0.23999999463558197
+                            }
+                        ],
+                        "FleshHitCue": "Hit_Flesh",
+                        "GuardBreakCue": "Guard_Break",
+                        "HeavyHitCue": "Slash_Heavy",
+                        "ParryClashCue": "Clash_Parry"
+                    },
+                    "Type": "SoundComponent"
                 }
             ],
             "EnableFrustumCulling": false,
@@ -3642,6 +4192,7 @@
                     "Data": {
                         "BeamHeightScale": 1.0,
                         "BeamWidthScale": 1.0,
+                        "ClickSoundCue": "UI_Click",
                         "DrawDiamonds": false,
                         "DrawFallbackBox": false,
                         "ElementType": 2,
@@ -3650,6 +4201,7 @@
                         "GlowColorB": 0.3799999952316284,
                         "GlowColorG": 0.8600000143051147,
                         "GlowColorR": 0.9800000190734863,
+                        "HoverSoundCue": "UI_Hover",
                         "HoverTex": "",
                         "HoverTextColorA": 1.0,
                         "HoverTextColorB": 0.3799999952316284,
@@ -3719,6 +4271,7 @@
                     "Data": {
                         "BeamHeightScale": 1.2000000476837158,
                         "BeamWidthScale": 1.2000000476837158,
+                        "ClickSoundCue": "UI_Click",
                         "DrawDiamonds": true,
                         "DrawFallbackBox": false,
                         "ElementType": 0,
@@ -3727,6 +4280,7 @@
                         "GlowColorB": 0.3499999940395355,
                         "GlowColorG": 0.8199999928474426,
                         "GlowColorR": 1.0,
+                        "HoverSoundCue": "UI_Hover",
                         "HoverTex": "",
                         "HoverTextColorA": 1.0,
                         "HoverTextColorB": 0.800000011920929,
@@ -3759,6 +4313,58 @@
                         "UseEldenStyle": true
                     },
                     "Type": "UIButtonComponent"
+                },
+                {
+                    "Data": {
+                        "BlockGuardCue": "Guard_Block",
+                        "Cues": [
+                            {
+                                "Bus": "UISFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "UI_Hover",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/UI_Hover.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.019999999552965164,
+                                "PlayOnStart": false,
+                                "Volume": 0.75
+                            },
+                            {
+                                "Bus": "UISFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "UI_Click",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/UI_Click.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.009999999776482582,
+                                "PlayOnStart": false,
+                                "Volume": 0.949999988079071
+                            }
+                        ],
+                        "FleshHitCue": "Hit_Flesh",
+                        "GuardBreakCue": "Guard_Break",
+                        "HeavyHitCue": "Slash_Heavy",
+                        "ParryClashCue": "Clash_Parry"
+                    },
+                    "Type": "SoundComponent"
                 }
             ],
             "EnableFrustumCulling": false,
@@ -3796,6 +4402,7 @@
                     "Data": {
                         "BeamHeightScale": 1.2000000476837158,
                         "BeamWidthScale": 1.2000000476837158,
+                        "ClickSoundCue": "UI_Click",
                         "DrawDiamonds": true,
                         "DrawFallbackBox": false,
                         "ElementType": 0,
@@ -3804,12 +4411,13 @@
                         "GlowColorB": 0.8500000238418579,
                         "GlowColorG": 1.0,
                         "GlowColorR": 0.20000000298023224,
+                        "HoverSoundCue": "UI_Hover",
                         "HoverTex": "",
                         "HoverTextColorA": 1.0,
                         "HoverTextColorB": 0.8500000238418579,
                         "HoverTextColorG": 1.0,
                         "HoverTextColorR": 0.20000000298023224,
-                        "IsVisible": true,
+                        "IsVisible": false,
                         "NormalTex": "",
                         "NormalTextColorA": 1.0,
                         "NormalTextColorB": 0.8500000238418579,
@@ -3836,11 +4444,63 @@
                         "UseEldenStyle": true
                     },
                     "Type": "UIButtonComponent"
+                },
+                {
+                    "Data": {
+                        "BlockGuardCue": "Guard_Block",
+                        "Cues": [
+                            {
+                                "Bus": "UISFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "UI_Hover",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/UI_Hover.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.019999999552965164,
+                                "PlayOnStart": false,
+                                "Volume": 0.75
+                            },
+                            {
+                                "Bus": "UISFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "UI_Click",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/UI_Click.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.009999999776482582,
+                                "PlayOnStart": false,
+                                "Volume": 0.949999988079071
+                            }
+                        ],
+                        "FleshHitCue": "Hit_Flesh",
+                        "GuardBreakCue": "Guard_Break",
+                        "HeavyHitCue": "Slash_Heavy",
+                        "ParryClashCue": "Clash_Parry"
+                    },
+                    "Type": "SoundComponent"
                 }
             ],
             "EnableFrustumCulling": false,
             "IsActive": true,
-            "IsVisible": true,
+            "IsVisible": false,
             "Name": "PossessPrompt",
             "OwnerID": 0
         }

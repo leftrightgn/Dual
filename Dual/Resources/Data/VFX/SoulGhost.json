@@ -1,0 +1,87 @@
+{
+    "AssetType": "VFXAsset",
+    "Version": 1,
+    "ImpactHeightOffset": 0.0,
+    "Emitters": [
+        {
+            "SlotName": "SoulWisps",
+            "TriggerCue": "OnSpawn",
+            "ShaderName": "Particle_PS",
+            "CustomTexturePath": "",
+            "BlendMode": 1,
+            "Shape": 0,
+            "Enabled": true,
+            "Looping": true,
+            "RateOverTime": 24.0,
+            "BurstCount": 0,
+            "SpreadCone": 0.4,
+            "SpawnRadius": 0.8,
+            "LocalOffset": [
+                0.0,
+                0.5,
+                0.0
+            ],
+            "SpeedMin": 1.5,
+            "SpeedMax": 4.5,
+            "LifetimeMin": 0.8,
+            "LifetimeMax": 1.6,
+            "SizeStart": 0.45,
+            "SizeEnd": 0.05,
+            "Gravity": 3.5,
+            "Drag": 0.96,
+            "Turbulence": 0.5,
+            "ProceduralStyle": 2,
+            "StartColor": [
+                0.25,
+                0.85,
+                1.0,
+                0.85
+            ],
+            "EndColor": [
+                0.05,
+                0.2,
+                0.8,
+                0.0
+            ]
+        }
+    ],
+    "TrailModule": {
+        "Enabled": false,
+        "HasCustomOffsets": false,
+        "ShowDebugBladeLine": false,
+        "EnablePhase2Boost": false,
+        "ShaderName": "WeaponTrail_PS",
+        "BlendMode": 1,
+        "BaseOffset": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "TipOffset": [
+            0.0,
+            0.0,
+            1.5
+        ],
+        "Lifetime": 0.3,
+        "Subdivisions": 4,
+        "MinVertexDistance": 0.1,
+        "CoreColor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+        ],
+        "EdgeColor": [
+            1.0,
+            1.0,
+            1.0,
+            0.0
+        ],
+        "EmissiveIntensity": 1.0,
+        "TipFalloffPower": 1.0,
+        "NoiseScale": 2.0,
+        "NoiseScrollSpeed": 1.0,
+        "ErosionStrength": 0.2,
+        "LeadingEdgeSharpness": 1.5
+    }
+}

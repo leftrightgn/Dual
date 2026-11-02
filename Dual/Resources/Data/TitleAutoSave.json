@@ -76,6 +76,7 @@
                     "Data": {
                         "BeamHeightScale": 1.399999976158142,
                         "BeamWidthScale": 1.350000023841858,
+                        "ClickSoundCue": "UI_Click",
                         "DrawDiamonds": false,
                         "DrawFallbackBox": false,
                         "ElementType": 0,
@@ -84,6 +85,7 @@
                         "GlowColorB": 0.3499999940395355,
                         "GlowColorG": 0.8199999928474426,
                         "GlowColorR": 1.0,
+                        "HoverSoundCue": "UI_Hover",
                         "HoverTex": "",
                         "HoverTextColorA": 1.0,
                         "HoverTextColorB": 0.8199999928474426,
@@ -116,6 +118,58 @@
                         "UseEldenStyle": true
                     },
                     "Type": "UIButtonComponent"
+                },
+                {
+                    "Data": {
+                        "BlockGuardCue": "Guard_Block",
+                        "Cues": [
+                            {
+                                "Bus": "UISFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "UI_Hover",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/UI_Hover.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.019999999552965164,
+                                "PlayOnStart": false,
+                                "Volume": 0.75
+                            },
+                            {
+                                "Bus": "UISFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "UI_Click",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/UI_Click.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.009999999776482582,
+                                "PlayOnStart": false,
+                                "Volume": 0.949999988079071
+                            }
+                        ],
+                        "FleshHitCue": "Hit_Flesh",
+                        "GuardBreakCue": "Guard_Break",
+                        "HeavyHitCue": "Slash_Heavy",
+                        "ParryClashCue": "Clash_Parry"
+                    },
+                    "Type": "SoundComponent"
                 }
             ],
             "EnableFrustumCulling": true,
@@ -153,6 +207,7 @@
                     "Data": {
                         "BeamHeightScale": 1.399999976158142,
                         "BeamWidthScale": 1.0499999523162842,
+                        "ClickSoundCue": "UI_Click",
                         "DrawDiamonds": false,
                         "DrawFallbackBox": false,
                         "ElementType": 0,
@@ -161,6 +216,7 @@
                         "GlowColorB": 0.3499999940395355,
                         "GlowColorG": 0.8199999928474426,
                         "GlowColorR": 1.0,
+                        "HoverSoundCue": "UI_Hover",
                         "HoverTex": "",
                         "HoverTextColorA": 1.0,
                         "HoverTextColorB": 0.8199999928474426,
@@ -193,6 +249,58 @@
                         "UseEldenStyle": true
                     },
                     "Type": "UIButtonComponent"
+                },
+                {
+                    "Data": {
+                        "BlockGuardCue": "Guard_Block",
+                        "Cues": [
+                            {
+                                "Bus": "UISFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "UI_Hover",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/UI_Hover.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.019999999552965164,
+                                "PlayOnStart": false,
+                                "Volume": 0.75
+                            },
+                            {
+                                "Bus": "UISFX",
+                                "CrossfadeDuration": 1.2000000476837158,
+                                "CueName": "UI_Click",
+                                "DuckAttackSpeed": 28.0,
+                                "DuckEnabled": false,
+                                "DuckHoldDuration": 0.30000001192092896,
+                                "DuckReleaseSpeed": 3.200000047683716,
+                                "DuckTargetBus": "BGM",
+                                "DuckTargetVolume": 0.25,
+                                "FilePath": "Resources/Audio/UI_Click.wav",
+                                "Is3D": false,
+                                "IsLooping": false,
+                                "MaxDistance": 160.0,
+                                "MinDistance": 15.0,
+                                "Pitch": 0.0,
+                                "PitchVariance": 0.009999999776482582,
+                                "PlayOnStart": false,
+                                "Volume": 0.949999988079071
+                            }
+                        ],
+                        "FleshHitCue": "Hit_Flesh",
+                        "GuardBreakCue": "Guard_Break",
+                        "HeavyHitCue": "Slash_Heavy",
+                        "ParryClashCue": "Clash_Parry"
+                    },
+                    "Type": "SoundComponent"
                 }
             ],
             "EnableFrustumCulling": true,
@@ -449,6 +557,7 @@
                     "Data": {
                         "BeamHeightScale": 1.399999976158142,
                         "BeamWidthScale": 1.350000023841858,
+                        "ClickSoundCue": "UI_Click",
                         "DrawDiamonds": true,
                         "DrawFallbackBox": false,
                         "ElementType": 1,
@@ -457,6 +566,7 @@
                         "GlowColorB": 0.3499999940395355,
                         "GlowColorG": 0.8199999928474426,
                         "GlowColorR": 1.0,
+                        "HoverSoundCue": "UI_Hover",
                         "HoverTex": "",
                         "HoverTextColorA": 1.0,
                         "HoverTextColorB": 0.8199999928474426,
