@@ -168,6 +168,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
             fprintf(fp, "Crash: %s\n", e.what());
             fclose(fp);
         }
+        g_game.reset();
         return -1;
     }
 }

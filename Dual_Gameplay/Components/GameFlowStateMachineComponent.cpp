@@ -10,10 +10,13 @@
 #include "../../External/Engine/Components/HealthComponent.h"
 #include "../../External/Engine/Components/RigidBodyComponent.h"
 #include "../../External/Engine/Components/SkinnedModelComponent.h"
+#include "../../External/Engine/Components/SoundComponent.h"
 #include "../../External/Engine/Components/TransformComponent.h"
 #include "../../External/Engine/Framework/GameContext.h"
+#include "../../External/Engine/System/AudioSystem.h"
 #if HEIN_WITH_EDITOR
 #include "../../External/Engine/ImGui/imgui.h"
+#include "../../External/Engine/ImGui/imgui_stdlib.h"
 #endif
 
 namespace HEIN
@@ -311,6 +314,14 @@ void HEIN::GameFlowStateMachineComponent::ChangeState(GameFlowState newState, Ga
 
 		FreezeBossAndPlayer(gameContext);
 
+		if (GetOwner())
+		{
+			if (auto* soundComp = GetOwner()->GetComponent<SoundComponent>())
+			{
+				soundComp->PlayCueOrFallbackPath(m_introBgmCue, AudioBus::BGM, 1.0f);
+			}
+		}
+
 		if (gameContext.mainCamera)
 
 		{
@@ -337,6 +348,14 @@ void HEIN::GameFlowStateMachineComponent::ChangeState(GameFlowState newState, Ga
 
 		UnfreezeBossAndPlayer(gameContext);
 
+		if (GetOwner())
+		{
+			if (auto* soundComp = GetOwner()->GetComponent<SoundComponent>())
+			{
+				soundComp->PlayCueOrFallbackPath(m_gameplayBgmCue, AudioBus::BGM, 1.0f);
+			}
+		}
+
 		if (gameContext.mainCamera)
 
 		{
@@ -355,6 +374,14 @@ void HEIN::GameFlowStateMachineComponent::ChangeState(GameFlowState newState, Ga
 
 		TriggerVictory(gameContext);
 
+		if (GetOwner())
+		{
+			if (auto* soundComp = GetOwner()->GetComponent<SoundComponent>())
+			{
+				soundComp->PlayCueOrFallbackPath(m_victoryBgmCue, AudioBus::BGM, 1.0f);
+			}
+		}
+
 		break;
 
 
@@ -362,6 +389,14 @@ void HEIN::GameFlowStateMachineComponent::ChangeState(GameFlowState newState, Ga
 	case GameFlowState::GameOver:
 
 		TriggerGameOver(gameContext);
+
+		if (GetOwner())
+		{
+			if (auto* soundComp = GetOwner()->GetComponent<SoundComponent>())
+			{
+				soundComp->PlayCueOrFallbackPath(m_gameOverBgmCue, AudioBus::BGM, 1.0f);
+			}
+		}
 
 		break;
 
@@ -438,6 +473,11 @@ void HEIN::GameFlowStateMachineComponent::ResetMatch(GameContext& gameContext)
 	m_isGameOver = false;
 
 	m_hasPlayedIntro = false;
+
+	if (AudioSystem* audio = AudioSystem::GetInstance())
+	{
+		audio->ResetAllDucking();
+	}
 
 	ChangeState(GameFlowState::Gameplay, gameContext);
 
@@ -584,6 +624,30 @@ void HEIN::GameFlowStateMachineComponent::OnInspectorGUI(GameContext& gameContex
 
 		}
 
+		ImGui::Separator();
+		if (ImGui::TreeNodeEx("Game Flow BGM Cues (SoundComponent)", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			SoundComponent* soundComp = GetOwner() ? GetOwner()->GetComponent<SoundComponent>() : nullptr;
+			if (!soundComp)
+			{
+				ImGui::TextDisabled("No SoundComponent attached to GameManager Actor yet.");
+				if (GetOwner() && ImGui::Button("+ Attach SoundComponent with BGM Preset"))
+				{
+					soundComp = GetOwner()->AddComponent<SoundComponent>();
+					soundComp->ApplyBGMPreset();
+					soundComp->Start();
+				}
+			}
+			else
+			{
+				ImGui::InputText("Intro BGM Cue", &m_introBgmCue);
+				ImGui::InputText("Gameplay BGM Cue", &m_gameplayBgmCue);
+				ImGui::InputText("Victory BGM Cue", &m_victoryBgmCue);
+				ImGui::InputText("GameOver BGM Cue", &m_gameOverBgmCue);
+			}
+			ImGui::TreePop();
+		}
+
 	}
 
 }
@@ -614,6 +678,11 @@ nlohmann::json HEIN::GameFlowStateMachineComponent::Serialize()
 	data["IntroTrackName"] = m_introTrackName;
 
 	data["HasPlayedIntro"] = m_hasPlayedIntro;
+
+	data["IntroBgmCue"] = m_introBgmCue;
+	data["GameplayBgmCue"] = m_gameplayBgmCue;
+	data["VictoryBgmCue"] = m_victoryBgmCue;
+	data["GameOverBgmCue"] = m_gameOverBgmCue;
 
 	return data;
 
@@ -654,6 +723,15 @@ void HEIN::GameFlowStateMachineComponent::Deserialize(const nlohmann::json& data
 	if (data.contains("HasPlayedIntro") && data["HasPlayedIntro"].is_boolean())
 
 		m_hasPlayedIntro = data["HasPlayedIntro"].get<bool>();
+
+	if (data.contains("IntroBgmCue") && data["IntroBgmCue"].is_string())
+		m_introBgmCue = data["IntroBgmCue"].get<std::string>();
+	if (data.contains("GameplayBgmCue") && data["GameplayBgmCue"].is_string())
+		m_gameplayBgmCue = data["GameplayBgmCue"].get<std::string>();
+	if (data.contains("VictoryBgmCue") && data["VictoryBgmCue"].is_string())
+		m_victoryBgmCue = data["VictoryBgmCue"].get<std::string>();
+	if (data.contains("GameOverBgmCue") && data["GameOverBgmCue"].is_string())
+		m_gameOverBgmCue = data["GameOverBgmCue"].get<std::string>();
 
 }
 } // namespace HEIN

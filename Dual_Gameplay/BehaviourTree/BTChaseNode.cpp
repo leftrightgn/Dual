@@ -79,7 +79,7 @@ BTNodeState BTChaseNode::Tick(HEIN::Actor* self, HEIN::ActorManager* manager, HE
 		blackboard->moveIntent = DirectX::SimpleMath::Vector3::Zero;
 		blackboard->localMoveIntent = DirectX::SimpleMath::Vector3::Zero;
 		blackboard->isLockedOn = true;
-		blackboard->activeNodeName = "In Melee Range (Waiting)";
+		blackboard->activeNodeName = "In Melee Range";
 
 		OnExit(self, manager, targetID);
 		BTNodeState resultState = m_succeedOnArrival ? BTNodeState::Success : BTNodeState::Failure;

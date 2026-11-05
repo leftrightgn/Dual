@@ -9,6 +9,7 @@
 #include "../../External/Engine/Components/ColliderComponent/ColliderComponent.h"
 #include "../../External/Engine/Components/DamageDealerComponent.h"
 #include "../../External/Engine/Components/HealthComponent.h"
+#include "../../External/Engine/Components/SoundComponent.h"
 #include "../../External/Engine/Components/TargetTrackingComponent.h"
 #include "../../External/Engine/Message/Messenger.h"
 #if HEIN_WITH_EDITOR
@@ -18,60 +19,58 @@
 #include <filesystem>
 #include <fstream>
 
-namespace {
-    std::string CombatStateTypeToString(HEIN::CombatStateType type)
+namespace HEIN
+{
+    static std::string CombatStateTypeToString(CombatStateType type)
     {
         switch (type)
         {
-        case HEIN::CombatStateType::Attack: return "Attack";
-        case HEIN::CombatStateType::ComboFinisher: return "ComboFinisher";
-        case HEIN::CombatStateType::Block: return "Block";
-        case HEIN::CombatStateType::Dodge: return "Dodge";
-        case HEIN::CombatStateType::Stun: return "Stun";
-        case HEIN::CombatStateType::Jump: return "Jump";
-        case HEIN::CombatStateType::GuardCounter: return "GuardCounter";
-        case HEIN::CombatStateType::Death: return "Death";
+        case CombatStateType::Attack: return "Attack";
+        case CombatStateType::ComboFinisher: return "ComboFinisher";
+        case CombatStateType::Block: return "Block";
+        case CombatStateType::Dodge: return "Dodge";
+        case CombatStateType::Stun: return "Stun";
+        case CombatStateType::Jump: return "Jump";
+        case CombatStateType::GuardCounter: return "GuardCounter";
+        case CombatStateType::Death: return "Death";
         default: return "Normal";
         }
     }
 
-    HEIN::CombatStateType StringToCombatStateType(const std::string& str)
+    static CombatStateType StringToCombatStateType(const std::string& str)
     {
-        if (str == "Attack") return HEIN::CombatStateType::Attack;
-        if (str == "ComboFinisher") return HEIN::CombatStateType::ComboFinisher;
-        if (str == "Block") return HEIN::CombatStateType::Block;
-        if (str == "Dodge") return HEIN::CombatStateType::Dodge;
-        if (str == "Stun") return HEIN::CombatStateType::Stun;
-        if (str == "Jump") return HEIN::CombatStateType::Jump;
-        if (str == "GuardCounter") return HEIN::CombatStateType::GuardCounter;
-        if (str == "Death") return HEIN::CombatStateType::Death;
-        return HEIN::CombatStateType::Normal;
+        if (str == "Attack") return CombatStateType::Attack;
+        if (str == "ComboFinisher") return CombatStateType::ComboFinisher;
+        if (str == "Block") return CombatStateType::Block;
+        if (str == "Dodge") return CombatStateType::Dodge;
+        if (str == "Stun") return CombatStateType::Stun;
+        if (str == "Jump") return CombatStateType::Jump;
+        if (str == "GuardCounter") return CombatStateType::GuardCounter;
+        if (str == "Death") return CombatStateType::Death;
+        return CombatStateType::Normal;
     }
 
-    std::string StateEffectTypeToString(HEIN::StateEffectType type)
+    static std::string StateEffectTypeToString(StateEffectType type)
     {
         switch (type)
         {
-        case HEIN::StateEffectType::Shockwave: return "Shockwave";
-        case HEIN::StateEffectType::CameraShake: return "CameraShake";
-        case HEIN::StateEffectType::SoundCue: return "SoundCue";
-        case HEIN::StateEffectType::VFX: return "VFX";
+        case StateEffectType::Shockwave: return "Shockwave";
+        case StateEffectType::CameraShake: return "CameraShake";
+        case StateEffectType::SoundCue: return "SoundCue";
+        case StateEffectType::VFX: return "VFX";
         default: return "Shockwave";
         }
     }
 
-    HEIN::StateEffectType StringToStateEffectType(const std::string& str)
+    static StateEffectType StringToStateEffectType(const std::string& str)
     {
-        if (str == "CameraShake") return HEIN::StateEffectType::CameraShake;
-        if (str == "SoundCue") return HEIN::StateEffectType::SoundCue;
-        if (str == "VFX") return HEIN::StateEffectType::VFX;
-        return HEIN::StateEffectType::Shockwave;
+        if (str == "CameraShake") return StateEffectType::CameraShake;
+        if (str == "SoundCue") return StateEffectType::SoundCue;
+        if (str == "VFX") return StateEffectType::VFX;
+        return StateEffectType::Shockwave;
     }
-}
 
-namespace HEIN
-{
-HEIN::CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner) : IComponent(owner) {}
+CombatStateMachineComponent::CombatStateMachineComponent(Actor* owner) : IComponent(owner) {}
 
 HEIN::CombatStateMachineComponent::~CombatStateMachineComponent()
 {
@@ -83,7 +82,11 @@ HEIN::CombatStateMachineComponent::~CombatStateMachineComponent()
 
 void HEIN::CombatStateMachineComponent::Start()
 {
-    Messenger::GetInstance()->Register(m_owner->GetID(), this);
+    if (Messenger* msg = Messenger::GetInstance())
+    {
+        msg->Register(m_owner->GetID(), this);
+    }
+    EnsureDefaultCombatSoundCues();
 
     // Ensure the default state animation is applied now that SkinnedModelComponent has loaded its animations
     std::string startState = m_defaultStateName;
@@ -291,7 +294,11 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
             m_transitionPulseTimer = 0.0f;
         }
     }
+}
 
+void HEIN::CombatStateMachineComponent::LateUpdate(float /*deltaTime*/)
+{
+#if HEIN_WITH_EDITOR
     if (m_showNodeEditor)
     {
         RenderNodeGraph();
@@ -300,6 +307,7 @@ void HEIN::CombatStateMachineComponent::Update(float deltaTime)
     {
         RenderStateDetailsWindow();
     }
+#endif
 }
 
 bool HEIN::CombatStateMachineComponent::ChangeState(const std::string& stateName, float blendDuration)
@@ -552,6 +560,90 @@ bool HEIN::CombatStateMachineComponent::IsGuardCounter() const
     return false;
 }
 
+void CombatStateMachineComponent::EnsureDefaultCombatSoundCues()
+{
+    bool modified = false;
+    for (auto& [name, cfg] : m_stateConfigs)
+    {
+        bool hasSoundCue = false;
+        for (auto& fx : cfg.effects)
+        {
+            if (fx.type == StateEffectType::SoundCue)
+            {
+                hasSoundCue = true;
+                // - Normalize legacy WAV stem keys to match SoundComponent preset cue names
+                if (fx.assetKey == "Slash_Swing1")
+                {
+                    fx.assetKey = "Slash1";
+                    modified = true;
+                }
+                else if (fx.assetKey == "Slash_Swing2")
+                {
+                    fx.assetKey = "Slash2";
+                    modified = true;
+                }
+                else if (fx.assetKey == "Slash_Heavy")
+                {
+                    fx.assetKey = (name == "HeavyAttack" || name == "HighSpinAttack") ? "HeavySlam" : "Slash3";
+                    modified = true;
+                }
+                else if (fx.assetKey == "Dodge_Roll")
+                {
+                    fx.assetKey = "Dodge";
+                    modified = true;
+                }
+                break;
+            }
+        }
+        if (hasSoundCue)
+        {
+            continue;
+        }
+
+        if (name == "HeavyAttack" || name == "HighSpinAttack")
+        {
+            StateEffectConfig sfx;
+            sfx.type = StateEffectType::SoundCue;
+            sfx.assetKey = "HeavySlam";
+            sfx.triggerTime = 0.12f;
+            cfg.effects.push_back(sfx);
+            modified = true;
+        }
+        else if (cfg.stateTypeEnum == CombatStateType::ComboFinisher || cfg.isGuardCounter || name == "Slash3" || name == "Combo3")
+        {
+            StateEffectConfig sfx;
+            sfx.type = StateEffectType::SoundCue;
+            sfx.assetKey = "Slash3";
+            sfx.triggerTime = 0.10f;
+            cfg.effects.push_back(sfx);
+            modified = true;
+        }
+        else if (cfg.isAttack || cfg.IsAttackState())
+        {
+            StateEffectConfig sfx;
+            sfx.type = StateEffectType::SoundCue;
+            sfx.assetKey = (name == "Slash2" || name == "Combo2") ? "Slash2" : "Slash1";
+            sfx.triggerTime = 0.08f;
+            cfg.effects.push_back(sfx);
+            modified = true;
+        }
+        else if (cfg.IsDodgeState() || name == "Dodge" || name == "Roll")
+        {
+            StateEffectConfig sfx;
+            sfx.type = StateEffectType::SoundCue;
+            sfx.assetKey = "Dodge";
+            sfx.triggerTime = 0.04f;
+            cfg.effects.push_back(sfx);
+            modified = true;
+        }
+    }
+
+    if (modified)
+    {
+        RebuildAllStates();
+    }
+}
+
 void HEIN::CombatStateMachineComponent::OnTriggerOverLap(const HEIN::TriggerEventPayLoad& payLoad)
 {
     // Keeping original hit detection payload stub
@@ -623,17 +715,16 @@ bool HEIN::CombatStateMachineComponent::SaveToConfigFile(const std::string& path
     std::string targetPath = path.empty() ? m_configPath : path;
     if (targetPath.empty()) return false;
 
-    namespace fs = std::filesystem;
     std::error_code ec;
     std::string writePath = targetPath;
-    if (!fs::exists("Resources", ec) && fs::exists("Dual/Resources", ec))
+    if (!std::filesystem::exists("Resources", ec) && std::filesystem::exists("Dual/Resources", ec))
     {
         if (writePath.find("Dual/") != 0)
         {
             writePath = "Dual/" + writePath;
         }
     }
-    fs::create_directories(fs::path(writePath).parent_path(), ec);
+    std::filesystem::create_directories(std::filesystem::path(writePath).parent_path(), ec);
 
     std::ofstream file(writePath);
     if (!file.is_open()) return false;
@@ -784,6 +875,39 @@ nlohmann::json HEIN::CombatStateMachineComponent::Serialize()
         stateJson["hitstopFrames"] = cfg.hitstopFrames;
         stateJson["hitboxStart"] = cfg.hitboxStart;
         stateJson["hitboxEnd"] = cfg.hitboxEnd;
+        stateJson["combatStateType"] = CombatStateTypeToString(cfg.stateTypeEnum);
+        stateJson["staminaCost"] = cfg.staminaCost;
+        stateJson["staminaRegenDelay"] = cfg.staminaRegenDelay;
+        stateJson["staminaDamage"] = cfg.staminaDamage;
+        stateJson["comboPermutationStep"] = cfg.comboPermutationStep;
+        stateJson["enterImpulse"] = { cfg.enterImpulse.x, cfg.enterImpulse.y, cfg.enterImpulse.z };
+
+        stateJson["effects"] = nlohmann::json::array();
+        for (const auto& eff : cfg.effects)
+        {
+            nlohmann::json effJson;
+            effJson["type"] = StateEffectTypeToString(eff.type);
+            effJson["triggerTime"] = eff.triggerTime;
+            if (eff.type == StateEffectType::Shockwave)
+            {
+                effJson["radius"] = eff.radius;
+                effJson["duration"] = eff.duration;
+                effJson["damage"] = eff.damage;
+                effJson["knockbackForce"] = eff.knockbackForce;
+                effJson["forwardOffset"] = eff.forwardOffset;
+                effJson["isGroundOnly"] = eff.isGroundOnly;
+            }
+            else if (eff.type == StateEffectType::CameraShake)
+            {
+                effJson["shakeIntensity"] = eff.shakeIntensity;
+                effJson["shakeDuration"] = eff.shakeDuration;
+            }
+            else
+            {
+                effJson["assetKey"] = eff.assetKey;
+            }
+            stateJson["effects"].push_back(effJson);
+        }
 
         stateJson["transitions"] = nlohmann::json::object();
         for (const auto& [eventKey, transition] : cfg.transitions)
@@ -1087,6 +1211,7 @@ void HEIN::CombatStateMachineComponent::DeserializeStatesFromJSON(const nlohmann
             m_stateConfigs[cfg.stateName] = cfg;
         }
     }
+    EnsureDefaultCombatSoundCues();
     RebuildAllStates();
 }
 
@@ -1536,6 +1661,26 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
                 cfg.effects.push_back(newShake);
                 configChanged = true;
             }
+            ImGui::SameLine();
+            if (ImGui::Button("+ Add Sound Cue"))
+            {
+                StateEffectConfig newSound;
+                newSound.type = StateEffectType::SoundCue;
+                newSound.triggerTime = (cfg.hitboxStart > 0.0f) ? cfg.hitboxStart : 0.1f;
+                newSound.assetKey = "Slash1";
+                if (m_owner)
+                {
+                    if (auto* sc = m_owner->GetComponent<SoundComponent>())
+                    {
+                        if (!sc->GetCues().empty())
+                        {
+                            newSound.assetKey = sc->GetCues().front().cueName;
+                        }
+                    }
+                }
+                cfg.effects.push_back(newSound);
+                configChanged = true;
+            }
 
             int effectToDelete = -1;
             for (int effIdx = 0; effIdx < static_cast<int>(cfg.effects.size()); ++effIdx)
@@ -1565,6 +1710,57 @@ void HEIN::CombatStateMachineComponent::OnInspectorGUI(GameContext& /*gameContex
                 {
                     if (ImGui::SliderFloat("Shake Intensity", &eff.shakeIntensity, 0.0f, 2.0f, "%.2f")) configChanged = true;
                     if (ImGui::SliderFloat("Shake Duration", &eff.shakeDuration, 0.05f, 2.0f, "%.2f s")) configChanged = true;
+                }
+                else if (eff.type == StateEffectType::SoundCue)
+                {
+                    SoundComponent* soundComp = m_owner ? m_owner->GetComponent<SoundComponent>() : nullptr;
+                    if (!soundComp)
+                    {
+                        ImGui::TextDisabled("No SoundComponent on this Actor yet.");
+                        if (m_owner && ImGui::Button("+ Attach SoundComponent with Combat Preset"))
+                        {
+                            soundComp = m_owner->AddComponent<SoundComponent>();
+                            soundComp->ApplyCombatCharacterPreset();
+                            soundComp->Start();
+                        }
+                    }
+                    else
+                    {
+                        const auto& cues = soundComp->GetCues();
+                        if (!cues.empty())
+                        {
+                            if (ImGui::BeginCombo("SoundComponent Cue", eff.assetKey.empty() ? "<Select Cue>" : eff.assetKey.c_str()))
+                            {
+                                for (const auto& c : cues)
+                                {
+                                    bool isSel = (eff.assetKey == c.cueName);
+                                    if (ImGui::Selectable(c.cueName.c_str(), isSel))
+                                    {
+                                        eff.assetKey = c.cueName;
+                                        configChanged = true;
+                                    }
+                                    if (isSel) ImGui::SetItemDefaultFocus();
+                                }
+                                ImGui::EndCombo();
+                            }
+                        }
+                    }
+
+                    char cueBuf[128] = { 0 };
+                    strncpy_s(cueBuf, eff.assetKey.c_str(), sizeof(cueBuf) - 1);
+                    if (ImGui::InputText("Sound Cue Key", cueBuf, sizeof(cueBuf)))
+                    {
+                        eff.assetKey = cueBuf;
+                        configChanged = true;
+                    }
+                    if (soundComp)
+                    {
+                        ImGui::SameLine();
+                        if (ImGui::SmallButton("Test Play"))
+                        {
+                            soundComp->PlayCueOrFallbackPath(eff.assetKey, AudioBus::CombatSFX, 1.0f);
+                        }
+                    }
                 }
                 ImGui::PopID();
             }

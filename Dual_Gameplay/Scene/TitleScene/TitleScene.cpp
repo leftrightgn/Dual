@@ -4,7 +4,7 @@
 //--------------------------------------------------------------------------------------
 #include "pch.h"
 #include "TitleScene.h"
-#include "../../Factory/ActorFactory.h"
+#include "Factory/ActorFactory.h"
 #include "../../External/Engine/Camera/CameraController.h"
 #include "../../External/Engine/Camera/DebugCameraMode.h"
 #include "../../External/Engine/Camera/ManualCameraMode.h"
@@ -12,6 +12,9 @@
 #include "../../External/Engine/Common/json.hpp"
 #include "../../External/Engine/Components/LightComponent.h"
 #include "../../External/Engine/Components/TransformComponent.h"
+#include "../../External/Engine/Components/SoundComponent.h"
+#include "../../External/Engine/Message/Messenger.h"
+#include "../../External/Engine/System/AudioSystem.h"
 #include "../../External/Engine/Factory/ComponentFactory.h"
 #include "../../External/Engine/Framework/GameContext.h"
 #include "../../External/Engine/ImGui/imgui.h"
@@ -59,6 +62,7 @@ namespace HEIN
 {
 void TitleScene::OnEnter(GameContext& gameContext)
 {
+    HEIN::Messenger::ResetTermination();
     // Initialize Core Pipeline & Shadow System
     m_shadowSystem.Initialize(gameContext.deviceResources.GetD3DDevice(), GameConstants::Shadow::DefaultMapWidth, GameConstants::Shadow::DefaultMapHeight);
 
@@ -238,9 +242,31 @@ void TitleScene::OnEnter(GameContext& gameContext)
 
     // Rebind pointers and camera
     auto startAct = m_actorManager.GetActorByName(L"StartButton");
-    if (startAct) { m_startButtonID = startAct->GetID(); m_startButton = startAct->GetComponent<HEIN::UIButtonComponent>(); }
+    if (startAct)
+    {
+        m_startButtonID = startAct->GetID();
+        m_startButton = startAct->GetComponent<UIButtonComponent>();
+        if (!startAct->GetComponent<SoundComponent>())
+        {
+            auto* sfx = startAct->AddComponent<SoundComponent>();
+            sfx->ApplyUIButtonPreset();
+        }
+    }
     auto exitAct = m_actorManager.GetActorByName(L"ExitButton");
-    if (exitAct) { m_exitButtonID = exitAct->GetID(); m_exitButton = exitAct->GetComponent<HEIN::UIButtonComponent>(); }
+    if (exitAct)
+    {
+        m_exitButtonID = exitAct->GetID();
+        m_exitButton = exitAct->GetComponent<UIButtonComponent>();
+        if (!exitAct->GetComponent<SoundComponent>())
+        {
+            auto* sfx = exitAct->AddComponent<SoundComponent>();
+            sfx->ApplyUIButtonPreset();
+        }
+    }
+    if (auto* audio = AudioSystem::GetInstance())
+    {
+        audio->PlayBGM("Resources/Audio/BGM_Intro.wav", 0.55f, 1.2f);
+    }
     auto camAct = m_actorManager.GetActorByName(L"TitleCamera");
     if (camAct)
     {
@@ -334,12 +360,16 @@ void TitleScene::UnloadEditor(GameContext& gameContext)
     m_actorManager.ReleaseEditorResources();
     if (gameContext.debugCollisionRenderer != nullptr)
     {
-        gameContext.debugCollisionRenderer->ReleaseDebugMemory();
+        gameContext.debugCollisionRenderer->Clear();
     }
     gameContext.isEditorMode = false;
     gameContext.showColliders = false;
     gameContext.showUI = true;
-    Mouse::Get().SetMode(Mouse::MODE_ABSOLUTE);
+    try
+    {
+        DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    }
+    catch (...) {}
 }
 
 void TitleScene::SaveScene(GameContext& /*gameContext*/)
@@ -361,23 +391,12 @@ void TitleScene::SaveScene(GameContext& /*gameContext*/)
 
 void TitleScene::OnExit(GameContext& gameContext)
 {
-    // Auto-save on exit to primary DOD path and fallback path
-    nlohmann::json j = m_actorManager.Serialize();
-    std::string serializedStr = j.dump(4);
-
-    std::ofstream primaryFile(GetTitleSceneDataWritePath());
-    if (primaryFile.is_open())
-    {
-        primaryFile << serializedStr;
-    }
-
-    std::ofstream autoSave(GetTitleAutoSaveWritePath());
-    if (autoSave.is_open())
-    {
-        autoSave << serializedStr;
-    }
-
     UnloadEditor(gameContext);
+    if (auto* audio = AudioSystem::GetInstance())
+    {
+        audio->ResetAllDucking();
+        audio->StopAllLoopingSFX();
+    }
     m_actorManager.ClearAllActors();
 
     m_skybox.reset();
@@ -585,28 +604,7 @@ void TitleScene::Update(GameContext& gameContext)
         gameContext.showUI = true;
     }
 
-    // Periodic Background Auto-Save while in editor mode
-    if (m_debugDisplay != nullptr && m_debugDisplay->isMagnified())
-    {
-        m_autoSaveTimer += deltaTime;
-        if (m_autoSaveTimer >= 30.0f)
-        {
-            m_autoSaveTimer = 0.0f;
-            nlohmann::json j = m_actorManager.Serialize();
-            std::string serializedStr = j.dump(4);
-
-            std::ofstream primaryFile(GetTitleSceneDataWritePath());
-            if (primaryFile.is_open())
-            {
-                primaryFile << serializedStr;
-            }
-            std::ofstream autoSave(GetTitleAutoSaveWritePath());
-            if (autoSave.is_open())
-            {
-                autoSave << serializedStr;
-            }
-        }
-    }
+    // Manual save only: Scene saving occurs exclusively when clicking Save/AutoSave button in editor UI
 
     // Safely sync button and camera pointers from ActorManager handles
     HEIN::Actor* startActor = m_actorManager.GetActor(m_startButtonID);

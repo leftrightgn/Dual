@@ -27,6 +27,12 @@ namespace HEIN
 		std::string m_bossIntroAnim = "Idle";
 		std::string m_introTrackName = "Boss_Intro";
 
+		// BGM SoundComponent Cue Bindings per GameFlowState
+		std::string m_introBgmCue = "BGM_Intro";
+		std::string m_gameplayBgmCue = "BGM_Arena";
+		std::string m_victoryBgmCue = "BGM_Victory";
+		std::string m_gameOverBgmCue = "BGM_GameOver";
+
 		// Result UI feedback state
 		bool m_isVictory = false;
 		bool m_isGameOver = false;

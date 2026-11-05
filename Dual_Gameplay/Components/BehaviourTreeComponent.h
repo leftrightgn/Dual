@@ -76,6 +76,7 @@ namespace HEIN
 
 
 		void Update(float deltaTime) override;
+		void LateUpdate(float deltaTime) override;
 
 		std::string GetComponentName() const override { return "BehaviourTreeComponent"; }
 		void OnInspectorGUI(GameContext& gamecontext) override;

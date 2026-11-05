@@ -4,6 +4,17 @@
 //--------------------------------------------------------------------------------------
 #include "pch.h"
 #include "GameScene.h"
+#include "Components/PlayerInputComponent.h"
+#include "Components/CombatStateMachineComponent.h"
+#include "Components/ShockwaveEmitterComponent.h"
+#include "Components/CharacterMovementComponent.h"
+#include "Components/BehaviourTreeComponent.h"
+#include "Components/PossessableComponent.h"
+#include "BlackBoard/CombatBlackBoard.h"
+#include "BlackBoard/PlayerBlackBoard.h"
+#include "BlackBoard/BossBlackBoard.h"
+#include "Factory/ActorFactory.h"
+#include "Framework/GameConstants.h"
 #include "../../../External/Engine/Common/SkeletonProfile.h"
 #include "../../../External/Engine/Common/InputManager.h"
 #include "../../../External/Engine/Camera/CameraController.h"
@@ -16,19 +27,11 @@
 #include "../../../External/Engine/FrameWork/GameContext.h"
 #include "../../../External/Engine/Scene/SceneManager.h"
 #include "../../External/Engine/Components/UIButtonComponent.h"
-#include <Components/PlayerInputComponent.h>
-#include <Components/CombatStateMachineComponent.h>
-#include <Components/ShockwaveEmitterComponent.h>
-#include "../../../External/Engine/Components/HitEffectComponent.h"
-#include <Components/CharacterMovementComponent.h>
-#include <Components/BehaviourTreeComponent.h>
-#include <Components/PossessableComponent.h>
-#include <BlackBoard/CombatBlackBoard.h>
-#include <BlackBoard/PlayerBlackBoard.h>
-#include <BlackBoard/BossBlackBoard.h>
+#include "../../../External/Engine/Components/SoundComponent.h"
+#include "../../../External/Engine/System/AudioSystem.h"
+#include "../../../External/Engine/Components/ParticleComponent.h"
 #include "../../../External/Engine/Components/DamageDealerComponent.h"
 #include "../../../External/Engine/Components/SocketAttachmentComponent.h"
-#include "../../../External/Engine/Components/WeaponTrailComponent.h"
 #include "../../../External/Engine/Message/Messenger.h"
 #include "../../../External/Engine/Components/RigidBodyComponent.h"
 #include "../../../External/Engine/Components/ColliderComponent/CapsuleColliderComponent.h"
@@ -38,7 +41,6 @@
 #include "../../../External/Engine/Components/ColliderComponent/SphereColliderComponent.h"
 #include "../../../External/Engine/Components/TerrainComponent.h"
 #include "../../../External/Engine/Factory/ComponentFactory.h"
-#include <Factory/ActorFactory.h>
 #include "../../../External/Engine/Components/HealthComponent.h"
 #include "../../../External/Engine/ImGui/imgui.h"
 #include "../../../External/Engine/ImGui/ImGuizmo.h"
@@ -226,11 +228,13 @@ void GameScene::OnEnter(GameContext& gameContext)
 
     }
 
-    HEIN::Messenger::DestroyInstance();
-
     // Clean all previous actors to guarantee scene isolation from TitleScene or earlier runs
-
     m_actorManager.ClearAllActors();
+
+    // Recreate a fresh message bus for this scene: destroy any stale bus left by a previous scene,
+    // then lift the termination flag so GetInstance() lazily builds a live bus for every actor Start().
+    HEIN::Messenger::DestroyInstance();
+    HEIN::Messenger::ResetTermination();
 
     gameContext.actorManager = &m_actorManager;
 
@@ -322,7 +326,13 @@ void GameScene::OnEnter(GameContext& gameContext)
 #if HEIN_WITH_EDITOR
         ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouseCursorChange;
 #endif
+        try
+    {
         DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    }
+    catch (...)
+    {
+    }
         while (ShowCursor(TRUE) < 0);
     }
     else
@@ -386,46 +396,29 @@ void GameScene::SaveScene(GameContext& /*gameContext*/)
 }
 
 void GameScene::OnExit(GameContext& gameContext)
-
 {
-
-    // Auto-save on exit ONLY if user was actively in editor mode, not during live gameplay playtests
-
-    if (m_debugDisplay != nullptr && !m_isPlaying)
-
-    {
-
-        SanitizeActorsForSave(m_actorManager);
-
-        nlohmann::json j = m_actorManager.Serialize();
-
-        std::ofstream sceneFile(GetSceneDataWritePath());
-
-        if (sceneFile.is_open())
-
-        {
-
-            sceneFile << j.dump(4);
-
-        }
-
-    }
-
     // Unsubscribe and clear event listeners to prevent dangling callbacks across scenes
-
     if (gameContext.eventManager)
-
     {
-
         gameContext.eventManager->ClearTriggerListeners();
-
     }
 
-    HEIN::Messenger::DestroyInstance();
-
+    // Unload editor resources and detach debug views before clearing actors
     UnloadEditor(gameContext);
+    gameContext.mainCamera = nullptr;
 
+    if (auto* audio = AudioSystem::GetInstance())
+    {
+        audio->ResetAllDucking();
+        audio->StopAllLoopingSFX();
+    }
+
+    // Clear all actors and attached components while Messenger is still fully valid
     m_actorManager.ClearAllActors();
+    gameContext.actorManager = nullptr;
+
+    // Destroy Messenger instance after all component observers have safely unregistered
+    Messenger::DestroyInstance();
 
     m_hitboxDebugScope = HitboxDebugScope::Off;
     m_wasGameViewFocused = false;
@@ -437,7 +430,13 @@ void GameScene::OnExit(GameContext& gameContext)
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
 #endif
     ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
-    DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    try
+    {
+        DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    }
+    catch (...)
+    {
+    }
     while (ShowCursor(TRUE) < 0);
 
     m_skybox.reset();
@@ -459,7 +458,13 @@ void GameScene::OnExit(GameContext& gameContext)
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
 #endif
     ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
-    DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    try
+    {
+        DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    }
+    catch (...)
+    {
+    }
     while (ShowCursor(TRUE) < 0);
 
     if (ID3D11DeviceContext* context = gameContext.deviceResources.GetD3DDeviceContext())
@@ -915,7 +920,13 @@ void GameScene::ProcessInputPhase(GameContext& gameContext)
         ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
 #endif
         ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
+        try
+    {
         DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    }
+    catch (...)
+    {
+    }
         while (ShowCursor(TRUE) < 0);
     }
     else
@@ -2690,35 +2701,21 @@ void GameScene::OpenEditor()
 }
 
 void GameScene::UnloadEditor(GameContext& gameContext)
-
 {
-
     m_debugDisplay.reset();
-
     m_actorManager.ReleaseEditorResources();
-
     if (gameContext.debugCollisionRenderer != nullptr)
-
     {
-
-        gameContext.debugCollisionRenderer->ReleaseDebugMemory();
-
+        gameContext.debugCollisionRenderer->Clear();
     }
-
     gameContext.isEditorMode = false;
-
     gameContext.showColliders = false;
-
     gameContext.showUI = true;
-
-    if (HEIN::CameraController* camera = GetActiveCameraController(gameContext))
-
+    try
     {
-
-        camera->UpdateMouseMode();
-
+        DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
     }
-
+    catch (...) {}
 }
 
 void GameScene::HandleEditorActions(GameContext& gameContext)
@@ -2756,6 +2753,11 @@ void GameScene::HandleEditorActions(GameContext& gameContext)
         m_isPlaying = false;
         m_isGameViewFocused = false;
         gameContext.isGameViewFocused = false;
+        if (auto* audio = AudioSystem::GetInstance())
+        {
+            audio->ResetAllDucking();
+            audio->StopAllLoopingSFX();
+        }
 
     }
 
@@ -3660,8 +3662,11 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
         if (!player->GetComponent<HEIN::ShockwaveEmitterComponent>())
 
             player->AddComponent<HEIN::ShockwaveEmitterComponent>(&m_actorManager);
-        if (!player->GetComponent<HEIN::HitEffectComponent>())
-            player->AddComponent<HEIN::HitEffectComponent>();
+        if (!player->GetComponent<HEIN::ParticleComponent>())
+        {
+            auto* pVFX = player->AddComponent<HEIN::ParticleComponent>();
+            pVFX->LoadAsset("Resources/Data/VFX/CombatImpact.json");
+        }
 
     }
 
@@ -3756,8 +3761,11 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
         if (!enemy->GetComponent<HEIN::ShockwaveEmitterComponent>())
 
             enemy->AddComponent<HEIN::ShockwaveEmitterComponent>(&m_actorManager);
-        if (!enemy->GetComponent<HEIN::HitEffectComponent>())
-            enemy->AddComponent<HEIN::HitEffectComponent>();
+        if (!enemy->GetComponent<HEIN::ParticleComponent>())
+        {
+            auto* eVFX = enemy->AddComponent<HEIN::ParticleComponent>();
+            eVFX->LoadAsset("Resources/Data/VFX/CombatImpact.json");
+        }
 
         if (auto* model = enemy->GetComponent<HEIN::SkinnedModelComponent>())
 
@@ -3875,54 +3883,18 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
 
     }
 
-    // Ensure every weapon actor in the scene has a WeaponTrailComponent (preserving serialized customizations if already present)
-
+    // Ensure every weapon actor in the scene has a ParticleComponent for slash trails
     for (const auto& pair : m_actorManager.GetAllActors())
-
     {
-
         HEIN::Actor* actor = pair.second.get();
-
         if (!actor || !actor->GetComponent<HEIN::DamageDealerComponent>()) continue;
 
-        if (!actor->GetComponent<HEIN::WeaponTrailComponent>())
-
+        if (!actor->GetComponent<HEIN::ParticleComponent>())
         {
-
-            auto* trail = actor->AddComponent<HEIN::WeaponTrailComponent>(&m_actorManager);
-
-            HEIN::Actor* wielder = m_actorManager.GetActor(actor->GetOwnerID());
-
-            if (!wielder && actor->GetParentID() != HEIN::INVALID_ACTOR_ID)
-
-            {
-
-                wielder = m_actorManager.GetActor(actor->GetParentID());
-
-            }
-
-            const bool isBossWeapon = (wielder != nullptr && wielder->GetActorType() == HEIN::ActorType::Enemy);
-
-            if (isBossWeapon)
-
-            {
-
-                trail->ApplyBossBloodflamePreset();
-
-            }
-
-            else
-
-            {
-
-                trail->ApplyTarnishedGoldPreset();
-
-            }
-
+            auto* trail = actor->AddComponent<HEIN::ParticleComponent>(&m_actorManager);
+            trail->LoadAsset("Resources/Data/VFX/GoldenSlashTrail.json");
             trail->AutoFitOffsetsFromWeapon();
-
         }
-
     }
 
     // Ensure any actor with TerrainComponent also has a TerrainColliderComponent for physical collisions
@@ -3989,6 +3961,69 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
 
     }
 
+    // Resolve GameManager from loaded level data (guarantees correct trigger distance and intro state)
+    Actor* gmActor = m_actorManager.GetActorByName(L"GameManager");
+    if (!gmActor)
+    {
+        gmActor = m_actorManager.CreateActor(L"GameManager");
+        gmActor->SetActorType(ActorType::Default);
+    }
+    if (!gmActor->GetComponent<GameFlowStateMachineComponent>())
+    {
+        gmActor->AddComponent<GameFlowStateMachineComponent>();
+    }
+    SoundComponent* bgmSound = gmActor->GetComponent<SoundComponent>();
+    if (!bgmSound)
+    {
+        bgmSound = gmActor->AddComponent<SoundComponent>();
+    }
+    if (bgmSound->GetCues().empty())
+    {
+        bgmSound->ApplyBGMPreset();
+    }
+    m_gameManagerID = gmActor->GetID();
+    if (auto* flowComp = gmActor->GetComponent<GameFlowStateMachineComponent>())
+    {
+        m_hasPlayedIntro = flowComp->HasPlayedIntro();
+    }
+
+    // Ensure actors with CombatStateMachineComponent or UIButtonComponent have default SoundComponent configurations
+    for (const auto& pair : m_actorManager.GetAllActors())
+    {
+        Actor* actor = pair.second.get();
+        if (!actor) continue;
+
+        if (auto* csm = actor->GetComponent<CombatStateMachineComponent>())
+        {
+            SoundComponent* combatSound = actor->GetComponent<SoundComponent>();
+            if (!combatSound)
+            {
+                combatSound = actor->AddComponent<SoundComponent>();
+            }
+            if (combatSound->GetCues().empty())
+            {
+                combatSound->ApplyCombatCharacterPreset();
+            }
+            csm->EnsureDefaultCombatSoundCues();
+        }
+
+        if (auto* uiBtn = actor->GetComponent<UIButtonComponent>())
+        {
+            if (uiBtn->GetElementType() == UIElementType::Button)
+            {
+                SoundComponent* btnSound = actor->GetComponent<SoundComponent>();
+                if (!btnSound)
+                {
+                    btnSound = actor->AddComponent<SoundComponent>();
+                }
+                if (btnSound->GetCues().empty())
+                {
+                    btnSound->ApplyUIButtonPreset();
+                }
+            }
+        }
+    }
+
     // Call Start() on all loaded actors so components initialize and subscribe to Messenger
 
     for (const auto& pair : m_actorManager.GetAllActors())
@@ -4003,23 +4038,6 @@ void GameScene::PostSceneLoadInit(GameContext& gameContext)
 
         }
 
-    }
-
-    // Resolve GameManager from loaded level data (guarantees correct trigger distance and intro state)
-    HEIN::Actor* gmActor = m_actorManager.GetActorByName(L"GameManager");
-    if (!gmActor)
-    {
-        gmActor = m_actorManager.CreateActor(L"GameManager");
-        gmActor->SetActorType(HEIN::ActorType::Default);
-    }
-    if (!gmActor->GetComponent<HEIN::GameFlowStateMachineComponent>())
-    {
-        gmActor->AddComponent<HEIN::GameFlowStateMachineComponent>();
-    }
-    m_gameManagerID = gmActor->GetID();
-    if (auto* flowComp = gmActor->GetComponent<HEIN::GameFlowStateMachineComponent>())
-    {
-        m_hasPlayedIntro = flowComp->HasPlayedIntro();
     }
 
     // Re-hook the camera modes to the loaded player model
@@ -4128,7 +4146,13 @@ void GameScene::TriggerVictory(GameContext& gameContext)
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
 #endif
     ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
-    DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    try
+    {
+        DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    }
+    catch (...)
+    {
+    }
     while (ShowCursor(TRUE) < 0);
 
     // Resolve font path from discovered assets
@@ -4530,7 +4554,13 @@ void GameScene::TriggerGameOver(GameContext& gameContext)
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
 #endif
     ::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
-    DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    try
+    {
+        DirectX::Mouse::Get().SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+    }
+    catch (...)
+    {
+    }
     while (ShowCursor(TRUE) < 0);
 
     // Resolve font path from discovered assets

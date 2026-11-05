@@ -177,11 +177,16 @@ void HEIN::BehaviourTreeComponent::Update(float deltaTime)
 			blackboard->aggroRange = m_aggroRange;
 		}
 	}
+}
 
+void HEIN::BehaviourTreeComponent::LateUpdate(float /*deltaTime*/)
+{
+#if HEIN_WITH_EDITOR
 	if (m_showNodeEditor)
 	{
 		RenderNodeGraph();
 	}
+#endif
 }
 
 #if HEIN_WITH_EDITOR
@@ -217,11 +222,6 @@ void HEIN::BehaviourTreeComponent::OnInspectorGUI(GameContext& /*gamecontext*/)
 				}
 			}
 		}
-	}
-
-	if (m_showNodeEditor)
-	{
-		RenderNodeGraph();
 	}
 }
 #else

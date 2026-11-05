@@ -6,6 +6,7 @@
 #include "../../External/Engine/Components/HealthComponent.h"
 #include "../../External/Engine/Components/ColliderComponent/CapsuleColliderComponent.h"
 #include "../../External/Engine/Components/SkinnedModelComponent.h"
+#include "../../External/Engine/Components/SoundComponent.h"
 #include "../../External/Engine/Components/TransformComponent.h"
 #include "../../External/Engine/Message/Messenger.h"
 #include "Components/CombatStateMachineComponent.h"
@@ -370,6 +371,55 @@ void HEIN::UniversalCombatState::Update(Actor* owner, CombatStateMachineComponen
                             effect.knockbackForce,
                             effect.isGroundOnly
                         );
+                    }
+                }
+                else if (effect.type == StateEffectType::SoundCue)
+                {
+                    if (auto* soundComp = owner->GetComponent<SoundComponent>())
+                    {
+                        soundComp->PlayCueOrFallbackPath(effect.assetKey, AudioBus::CombatSFX, 1.0f);
+                    }
+                    else if (!effect.assetKey.empty())
+                    {
+                        SidechainDuckConfig noDuck;
+                        DirectX::SimpleMath::Vector3 pos = DirectX::SimpleMath::Vector3::Zero;
+                        if (auto* tr = owner->GetComponent<TransformComponent>())
+                        {
+                            pos = tr->GetPosition();
+                        }
+                        if (auto* audio = AudioSystem::GetInstance())
+                        {
+                            if (!audio->PlayCue(
+                                effect.assetKey,
+                                AudioBus::CombatSFX,
+                                1.0f,
+                                0.0f,
+                                false,
+                                false,
+                                pos,
+                                15.0f,
+                                160.0f,
+                                noDuck,
+                                owner->GetID(),
+                                effect.assetKey
+                            ))
+                            {
+                                audio->PlayCue(
+                                    effect.assetKey + ".wav",
+                                    AudioBus::CombatSFX,
+                                    1.0f,
+                                    0.0f,
+                                    false,
+                                    false,
+                                    pos,
+                                    15.0f,
+                                    160.0f,
+                                    noDuck,
+                                    owner->GetID(),
+                                    effect.assetKey
+                                );
+                            }
+                        }
                     }
                 }
             }

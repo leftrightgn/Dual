@@ -98,6 +98,7 @@ namespace HEIN
 		void Start() override;
 
 		void Update(float deltaTime) override;
+		void LateUpdate(float deltaTime) override;
 
 
 		std::string GetComponentName() const override { return "CombatStateMachineComponent"; }
@@ -173,6 +174,7 @@ namespace HEIN
 		
 		const std::string& GetCurrentStateName() const { return m_currentStateName; }
 		const std::unordered_map<std::string, StateConfig>& GetConfigs() const { return m_stateConfigs; }
+		void EnsureDefaultCombatSoundCues();
 
 		// --- Modular Asset Configuration ---
 		const std::string& GetConfigPath() const { return m_configPath; }

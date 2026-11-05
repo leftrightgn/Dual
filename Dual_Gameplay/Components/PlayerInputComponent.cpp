@@ -34,7 +34,10 @@ HEIN::PlayerInputComponent::~PlayerInputComponent()
 void HEIN::PlayerInputComponent::Start()
 {
 	m_blackboard = m_owner->GetComponent<HEIN::CombatBlackBoard>();
-	Messenger::GetInstance()->Register(m_owner->GetID(), this);
+	if (Messenger* msg = Messenger::GetInstance())
+	{
+		msg->Register(m_owner->GetID(), this);
+	}
 }
 
 void HEIN::PlayerInputComponent::ProcessInput(const GameContext& gameContext)
